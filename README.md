@@ -1,6 +1,6 @@
 # GenOlympiad
 
-GenOlympiad is a benchmark of 801 hard text prompts for text-to-image models. Each task has a prompt and an evaluation program. The program asks a judge VLM easy and hard questions about the generated image, and it scores the answers withcode. The tasks cover nine capability axes: text fidelity (83 tasks), counterfactual instruction following (95), symbolic systems (83), world-knowledge grounding (82), physical consistency (92), quantitative precision (87), spatial and 3-D reasoning (83), latent computation (109) and long-range consistency (87). The strict score of a task is 100 only when every hard question passes. The relaxed score is the weight sum of the hard questions that pass.
+GenOlympiad is a benchmark of 801 hard text prompts for text-to-image models. Each task has a prompt and an evaluation program. The program asks a judge VLM easy and hard questions about the generated image, and it scores the answers with code. The tasks cover nine capability axes: text fidelity (83 tasks), counterfactual instruction following (95), symbolic systems (83), world-knowledge grounding (82), physical consistency (92), quantitative precision (87), spatial and 3-D reasoning (83), latent computation (109) and long-range consistency (87). The strict score of a task is 100 only when every hard question passes. The relaxed score is the weight sum of the hard questions that pass.
 
 ## News
 
