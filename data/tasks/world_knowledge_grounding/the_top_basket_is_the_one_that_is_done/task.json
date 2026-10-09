@@ -1,0 +1,331 @@
+{
+  "id": "the_top_basket_is_the_one_that_is_done",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photograph for a dim sum kitchen's production record, taken on the steaming range at the moment the cover is lifted.\n\nThree bamboo baskets are stacked one on top of another over a single wok of boiling water, the cover on top. All three baskets were loaded with the same prawn dumplings, made the same size from the same dough and the same filling, laid out the same way in each basket, and all three went on to the range in the one movement at the one moment. The cover is being lifted part way through the steam and not at the end of it, so the batch is caught while it is still coming on.\n\nThe chef wants a picture that shows him the state of the batch, so the contents of all three baskets have to be visible at once -- shoot it from a little above and to one side, with the baskets fanned just enough that nothing is hidden. What the dumplings in each basket look like at this moment is for you to work out -- I am deliberately not telling you, and I am not telling you anything about any one basket.\n\nThe record has to stand on its own, so nothing may be added that does the reading for the chef: no timer, no thermometer, no clock, no chalk board, no ticket, no arrow, no caption and no writing anywhere in the frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is lit. Does this picture show food in more than one stacked basket or tray? A photograph, a scan or an illustration ALL count as yes. Answer NO only if the image shows a blank sheet that just states an answer, or shows no food at all. Answer yes or no only.",
+  "reference": {
+    "skins_tag": "yes",
+    "swells_tag": "yes",
+    "surfaces_tag": "yes",
+    "clean_frame": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_top_skins_have_gone_clear_while_the_bottom_ones_are_still_milky",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the top basket of the stack, with the dumplings in it",
+          "out": "tb"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the skin on these dumplings milky and opaque, or is it clear enough to show the pink filling through it? Answer milky or clear.",
+          "boxes": "tb",
+          "pad": 0.12,
+          "out": "ts"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Name how the dumplings are set out in the basket, using one word from this list: crowded (the dumplings fill the basket and no bare basket shows between one dumpling and the next) or roomy (bare basket shows between one dumpling and the next). Write that one word and nothing else.",
+          "boxes": "tb",
+          "pad": 0.12,
+          "out": "tw"
+        },
+        {
+          "read": "boxes",
+          "target": "the middle basket of the stack, with the dumplings in it",
+          "out": "mb"
+        },
+        {
+          "fail_if": ["mb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the surface of these dumplings glossy and wet-looking, or is it dull and floury? Answer glossy or floury.",
+          "boxes": "mb",
+          "pad": 0.12,
+          "out": "mg"
+        },
+        {
+          "read": "boxes",
+          "target": "the bottom basket of the stack, with the dumplings in it",
+          "out": "bb"
+        },
+        {
+          "fail_if": ["bb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the skin on these dumplings milky and opaque, or is it clear enough to show the pink filling through it? Answer milky or clear.",
+          "boxes": "bb",
+          "pad": 0.12,
+          "out": "bs"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Name how the dumplings are set out in the basket, using one word from this list: crowded (the dumplings fill the basket and no bare basket shows between one dumpling and the next) or roomy (bare basket shows between one dumpling and the next). Write that one word and nothing else.",
+          "boxes": "bb",
+          "pad": 0.12,
+          "out": "bw"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the surface of these dumplings glossy and wet-looking, or is it dull and floury? Answer glossy or floury.",
+          "boxes": "bb",
+          "pad": 0.12,
+          "out": "bg"
+        },
+        {
+          "run": "compare_skins",
+          "args": ["ts", "bs"],
+          "out": "sn"
+        },
+        {
+          "fail_if": ["sn.refused"]
+        },
+        {
+          "compare": "sn.tag",
+          "to": "reference.skins_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_top_dumplings_have_swelled_and_the_bottom_ones_still_stand_apart",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the top basket of the stack, with the dumplings in it",
+          "out": "tb"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the skin on these dumplings milky and opaque, or is it clear enough to show the pink filling through it? Answer milky or clear.",
+          "boxes": "tb",
+          "pad": 0.12,
+          "out": "ts"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Name how the dumplings are set out in the basket, using one word from this list: crowded (the dumplings fill the basket and no bare basket shows between one dumpling and the next) or roomy (bare basket shows between one dumpling and the next). Write that one word and nothing else.",
+          "boxes": "tb",
+          "pad": 0.12,
+          "out": "tw"
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["tw", "[[['crowded'],'swollen'],[['roomy'],'apart']]"],
+          "out": "tw__mapped"
+        },
+        {
+          "read": "boxes",
+          "target": "the middle basket of the stack, with the dumplings in it",
+          "out": "mb"
+        },
+        {
+          "fail_if": ["mb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the surface of these dumplings glossy and wet-looking, or is it dull and floury? Answer glossy or floury.",
+          "boxes": "mb",
+          "pad": 0.12,
+          "out": "mg"
+        },
+        {
+          "read": "boxes",
+          "target": "the bottom basket of the stack, with the dumplings in it",
+          "out": "bb"
+        },
+        {
+          "fail_if": ["bb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the skin on these dumplings milky and opaque, or is it clear enough to show the pink filling through it? Answer milky or clear.",
+          "boxes": "bb",
+          "pad": 0.12,
+          "out": "bs"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Name how the dumplings are set out in the basket, using one word from this list: crowded (the dumplings fill the basket and no bare basket shows between one dumpling and the next) or roomy (bare basket shows between one dumpling and the next). Write that one word and nothing else.",
+          "boxes": "bb",
+          "pad": 0.12,
+          "out": "bw"
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["bw", "[[['crowded'],'swollen'],[['roomy'],'apart']]"],
+          "out": "bw__mapped"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the surface of these dumplings glossy and wet-looking, or is it dull and floury? Answer glossy or floury.",
+          "boxes": "bb",
+          "pad": 0.12,
+          "out": "bg"
+        },
+        {
+          "run": "compare_swelling",
+          "args": ["tw__mapped", "bw__mapped"],
+          "out": "sw"
+        },
+        {
+          "fail_if": ["sw.refused"]
+        },
+        {
+          "compare": "sw.tag",
+          "to": "reference.swells_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_middle_surfaces_have_gone_glossy_while_the_bottom_ones_are_floury",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the top basket of the stack, with the dumplings in it",
+          "out": "tb"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the skin on these dumplings milky and opaque, or is it clear enough to show the pink filling through it? Answer milky or clear.",
+          "boxes": "tb",
+          "pad": 0.12,
+          "out": "ts"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Name how the dumplings are set out in the basket, using one word from this list: crowded (the dumplings fill the basket and no bare basket shows between one dumpling and the next) or roomy (bare basket shows between one dumpling and the next). Write that one word and nothing else.",
+          "boxes": "tb",
+          "pad": 0.12,
+          "out": "tw"
+        },
+        {
+          "read": "boxes",
+          "target": "the middle basket of the stack, with the dumplings in it",
+          "out": "mb"
+        },
+        {
+          "fail_if": ["mb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the surface of these dumplings glossy and wet-looking, or is it dull and floury? Answer glossy or floury.",
+          "boxes": "mb",
+          "pad": 0.12,
+          "out": "mg"
+        },
+        {
+          "read": "boxes",
+          "target": "the bottom basket of the stack, with the dumplings in it",
+          "out": "bb"
+        },
+        {
+          "fail_if": ["bb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the skin on these dumplings milky and opaque, or is it clear enough to show the pink filling through it? Answer milky or clear.",
+          "boxes": "bb",
+          "pad": 0.12,
+          "out": "bs"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Name how the dumplings are set out in the basket, using one word from this list: crowded (the dumplings fill the basket and no bare basket shows between one dumpling and the next) or roomy (bare basket shows between one dumpling and the next). Write that one word and nothing else.",
+          "boxes": "bb",
+          "pad": 0.12,
+          "out": "bw"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the surface of these dumplings glossy and wet-looking, or is it dull and floury? Answer glossy or floury.",
+          "boxes": "bb",
+          "pad": 0.12,
+          "out": "bg"
+        },
+        {
+          "run": "compare_surfaces",
+          "args": ["mg", "bg"],
+          "out": "sf"
+        },
+        {
+          "fail_if": ["sf.refused"]
+        },
+        {
+          "compare": "sf.tag",
+          "to": "reference.surfaces_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_on_the_range_tells_the_chef_how_far_the_batch_has_gone",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a timer, a thermometer, a clock, a chalk board, a ticket or a caption",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a timer, a thermometer, a clock, a chalk board, a ticket or a caption? Answer yes or no. Answer no if the cut-out shows a bamboo basket, its rim or its slats, a dumpling, steam, the cover, the wok, the range top, or a hand holding the cover.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as a timer, a thermometer, a clock, a chalk board, a ticket or a caption? Answer yes or no. Answer no if it belongs there -- a bamboo basket, its rim or its slats, a dumpling, steam, the cover, the wok, the range top, or a hand holding the cover.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_frame",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

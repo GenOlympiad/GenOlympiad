@@ -1,0 +1,227 @@
+{
+  "id": "mobile_subtree_arms",
+  "axis": "physical_consistency",
+  "prompt": "A pen-and-ink patent plate on aged paper, fine line work only, no shading: one suspended balance ornament of four straight horizontal beams and five cast weights, drawn in elevation.\n\nConstruction: a cord from the plate's top edge carries a RED beam. From the RED beam's left tip a cord drops to a GREEN beam; from its right tip a cord drops to a cast ACORN of 14 grams. From the GREEN beam's left tip a cord drops to a BLUE beam; from its right tip a cord drops to a cast LEAF of 70 grams. From the BLUE beam's left tip a cord drops to a cast BELL of 21 grams; from its right tip a cord drops to a YELLOW beam. From the YELLOW beam's left tip a cord drops to a cast KEY of 1 gram and from its right tip to a cast RING of 6 grams. Beams and cords are weightless.\n\nThe ornament hangs motionless with every beam level, so all four beams balance separately: load times arm to the left equals load times arm to the right, each arm running from that beam's tip to its own supporting cord. The load hanging at a tip is the sum of everything beneath that tip, so a tip bearing a whole lower beam bears the total of all the castings under it. Accumulate upward from the lowest beam. All four cords are tied strongly off-centre, at four clearly different fractions, none of them near a beam's middle.\n\nEvery beam is exactly horizontal and every cord exactly vertical. The beams are washed in four flat unbroken tints -- the topmost RED, then GREEN, then BLUE, the lowest YELLOW -- with no hatching or grain over them, and the whole ornament sits inside the plate. Flat colours, thick clean outlines, plain white background, items well separated, no text, no numerals, no arrows, no rulers, no scale marks, no labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a patent-style drawing of a suspended balance ornament seen from the side: several level beams, cords dropping from their tips, and small cast weights hanging beneath them. Ignoring artistic quality and styling, does the image actually DEPICT that requested subject? A photograph, an illustration, a schematic or a clean diagram of it ALL count as yes. Answer NO only if it instead shows a bare sheet, a page of text or a drawing with no suspended ornament in it, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_look": "Ignore whether the ornament would really balance -- judge only the draughtsmanship. Check three things: every beam is horizontal, every cord hangs straight down, and no part of the ornament runs off the plate's edge. Are all three true? Answer yes or no only.",
+    "bar_colours": ["red", "green", "blue", "yellow"],
+    "arm_ratios": [0.142857, 2.5, 0.333333, 6.0],
+    "spread": 42.0,
+    "max_tilt": 6.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bars_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "straight horizontal coloured bar of the mobile",
+          "out": "bar",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bar.unreadable"]
+        },
+        {
+          "read_crop": "What colour is the straight bar in this picture? Answer with one colour word only.",
+          "boxes": "bar",
+          "out": "col"
+        },
+        {
+          "read": "boxes",
+          "target": "the place where the topmost coloured bar is hung",
+          "expected_n": 1,
+          "out": "cord"
+        },
+        {
+          "fail_if": ["cord.unreadable"]
+        },
+        {
+          "run": "all_bars_measured",
+          "args": ["bar", "col", "cord", "reference.bar_colours"],
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "bars_hang_level",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a straight bar of the hanging mobile that is tilted at a slant, with one of its ends clearly higher than the other",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_lv"
+        },
+        {
+          "fail_if": ["sweep_lv.unreadable"]
+        },
+        {
+          "compare": "sweep_lv.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "arm_ratio_each_bar",
+      "weight": 2.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "straight horizontal coloured bar of the mobile",
+          "out": "bar",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bar.unreadable"]
+        },
+        {
+          "read_crop": "What colour is the straight bar in this picture? Answer with one colour word only.",
+          "boxes": "bar",
+          "out": "col"
+        },
+        {
+          "read": "boxes",
+          "target": "the place where the topmost coloured bar is hung",
+          "expected_n": 1,
+          "out": "cord"
+        },
+        {
+          "fail_if": ["cord.unreadable"]
+        },
+        {
+          "run": "arm_ratio_score",
+          "args": ["bar", "col", "cord", "reference.bar_colours", "reference.arm_ratios"],
+          "code": {
+            "inline": "f_code_2"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "arm_ratio_spread",
+      "weight": 1.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "straight horizontal coloured bar of the mobile",
+          "out": "bar",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bar.unreadable"]
+        },
+        {
+          "read_crop": "What colour is the straight bar in this picture? Answer with one colour word only.",
+          "boxes": "bar",
+          "out": "col"
+        },
+        {
+          "read": "boxes",
+          "target": "the place where the topmost coloured bar is hung",
+          "expected_n": 1,
+          "out": "cord"
+        },
+        {
+          "fail_if": ["cord.unreadable"]
+        },
+        {
+          "run": "arm_spread_score",
+          "args": ["bar", "col", "cord", "reference.bar_colours", "reference.spread"],
+          "code": {
+            "inline": "f_code_3"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "d1_arm_overlay",
+      "weight": 0.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "straight horizontal coloured bar of the mobile",
+          "out": "bar",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bar.unreadable"]
+        },
+        {
+          "read_crop": "What colour is the straight bar in this picture? Answer with one colour word only.",
+          "boxes": "bar",
+          "out": "col"
+        },
+        {
+          "read": "boxes",
+          "target": "the place where the topmost coloured bar is hung",
+          "expected_n": 1,
+          "out": "cord"
+        },
+        {
+          "fail_if": ["cord.unreadable"]
+        },
+        {
+          "run": "report_arm_ratios",
+          "args": ["bar", "col", "cord", "reference.bar_colours", "reference.arm_ratios"],
+          "code": {
+            "inline": "f_code_4"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "d2_appearance_compliance",
+      "weight": 0.0,
+      "steps": [
+        {
+          "ask": "reference.q_look",
+          "retries": 2,
+          "out": "lk"
+        },
+        {
+          "compare": "lk",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "2:3"
+}

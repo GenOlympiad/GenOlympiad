@@ -1,0 +1,91 @@
+{
+  "id": "clapperboard_slate_take_marks",
+  "axis": "symbolic_systems",
+  "prompt": "The second assistant has to leave the floor with the board and the log agreeing, so the gap between takes is photographed with both of them in the frame.\n\nA camera assistant holds up a slate on a sound stage. Beside it the continuity log lies open on the trolley, its current line ruled off and highlighted; that line prints the scene, the slate number and the take for the material about to be recorded, and its remarks box is annotated as a tail slate on a mute take. The slate itself is a printed board with a scene field, a slate field and a take field, and a hinged arm across its head. House practice is that the board and the log agree field for field, and that the way the board is held is itself part of the record.\n\nWhat has been written up on the board, and how it is being held, are what the log does not show.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a camera assistant holding up a slate on a stage with an open continuity log on a trolley beside him? Answer yes or no only.",
+  "reference": {
+    "part1": "every_across_number_in_grid",
+    "part2": "upside_down_arm_open"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the three figures written into the fields on the slate, taking the scene field first, then the slate field, then the take field, and write them in that order separated by commas.",
+          "out": "a_part1_g"
+        },
+        {
+          "fail_if": ["a_part1_g.unreadable"]
+        },
+        {
+          "ask": "Read the three figures printed on the highlighted line of the continuity log, taking them in the same order, and write them in that order separated by commas.",
+          "out": "a_part1_x"
+        },
+        {
+          "fail_if": ["a_part1_x.unreadable"]
+        },
+        {
+          "run": "subset_check",
+          "args": ["a_part1_g", "a_part1_x"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the slate the assistant is holding and say how it is being held. Answer with one of: it is held upside down with its hinged arm standing open; it is held the right way up with its hinged arm standing open; it is held the right way up with its hinged arm closed.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "the_chain_counter_owes_the_sounder_its_scope",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The officer of the watch files one photograph of the anchor panel each time the ship brings up, so the panel is shot square on with the bow window in frame.\n\nThe bridge anchor panel carries two readouts, each in its own recess: an echo sounder in green segment figures showing 33 metres of water, and a chain counter in red segment figures. The laminated anchoring table screwed to the panel gives the scope factor for today's weather band as 5, the length of one shackle as 27.5 metres, and, along its lower half, the paint cycle that runs red, then white, then blue, and repeats from the first shackle out. The ship's particulars card taped beside it gives the hawse pipe at 12 metres above the water. Through the bow window one painted ring on the chain shows outside the hawse pipe, in daylight and free of rust.\n\nHow much cable is out, and which ring is showing, is what the panel does not write down.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a bridge anchor panel with two separate segment readouts and an anchoring table screwed beside them? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "ring_painted_blue"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the chain counter on the anchor panel, the readout in red figures, and give the number of shackles it is showing.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "8.5", "9.5"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look through the bow window at the painted ring on the chain outside the hawse pipe. Answer with one of: the ring showing outside the hawse pipe is painted red; the ring showing outside the hawse pipe is painted white; the ring showing outside the hawse pipe is painted blue.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

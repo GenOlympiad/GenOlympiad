@@ -1,0 +1,274 @@
+{
+  "id": "hanoi_illegal_freeze",
+  "axis": "latent_computation",
+  "prompt": "A crisp studio photograph, taken level with the base, of a colour-coded parts rack in a workshop: a flat base with THREE upright pegs standing on it, marked A (left), B (middle) and C (right).\n\nIt carries 5 round rings of clearly different widths -- ring 1 (the narrowest) is red, ring 2 is amber, ring 3 is green, ring 4 is blue, ring 5 is purple (the widest) -- each with its own size number printed large on its face. The stacking rule is the usual one -- a ring rests either on the base or on a ring wider than itself, never on a narrower one.\n\nAt the start the rings lie like this:\n    - peg A holds, from the BOTTOM upward: disk 5, then disk 2\n    - peg B holds, from the BOTTOM upward: disk 4, then disk 3\n    - peg C holds, from the BOTTOM upward: disk 1\n\nA child then played with the toy and a camera logged every move she tried, in this order:\n     1. take the TOP ring off peg C and put it on peg B\n     2. take the TOP ring off peg A and put it on peg C\n     3. take the TOP ring off peg B and put it on peg A\n     4. take the TOP ring off peg C and put it on peg B\n     5. take the TOP ring off peg A and put it on peg C\n     6. take the TOP ring off peg B and put it on peg A\n     7. take the TOP ring off peg C and put it on peg B\n     8. take the TOP ring off peg A and put it on peg C\n     9. take the TOP ring off peg B and put it on peg C\n    10. take the TOP ring off peg A and put it on peg B\n    11. take the TOP ring off peg C and put it on peg B\n    12. take the TOP ring off peg B and put it on peg A\n    13. take the TOP ring off peg A and put it on peg C\n\nThe play does NOT get to the end of that list: at some point a logged move CANNOT be made, because it would put a wider ring onto a narrower one. Everything before that move is carried out; that move and everything after it is not.\n\nShow the toy EXACTLY as it stands the moment the play stops. Every ring must sit on the peg it really occupies then, in the correct order; a peg holding no ring must be drawn empty.\n\nKeep the picture clean: no move list, no annotations, no captions. The only characters in the image are the letters on the base and the number printed on each ring.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a workshop parts rack with stacking rings: a base with three upright pegs carrying round stacking rings of graduated widths? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_disks": 5,
+    "n_pegs": 3,
+    "s_A": "5",
+    "c_A": 1,
+    "s_B": "4,3",
+    "c_B": 2,
+    "s_C": "2,1",
+    "c_C": 2,
+    "enforce_notext": true,
+    "q_notext": "The peg letters on the base and the size number printed on each ring do not count. Apart from those, is there a separate line of text or numbers that lists moves or states where the rings sit? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "peg_contents_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "upright peg standing on the base of the stacking toy -- ONE box per peg, covering that peg as a whole upright column from its top tip down to where it stands on the flat base, with any rings threaded on that peg inside the same box; box every peg, including a peg standing empty; do not put two pegs in one box and do not box the base or the background on its own.",
+          "sweep": true,
+          "votes": 3,
+          "out": "pb"
+        },
+        {
+          "fail_if": ["pb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking toy. Does this cut-out show ONE single upright peg standing on the flat base -- just one peg, not two pegs side by side, and not only bare background or bare table? Answer yes or no only.",
+          "boxes": "pb",
+          "pad": 0.06,
+          "out": "pc"
+        },
+        {
+          "fail_if": ["pc.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "round ring threaded on one of the upright pegs -- one box per single ring, covering that ring from its left rim to its right rim with the size number printed on its face inside; two rings stacked one on another are still two rings, so box each on its own; do not box a bare peg, the flat base, a peg letter, or a whole stack in one box.",
+          "sweep": true,
+          "votes": 3,
+          "out": "db"
+        },
+        {
+          "fail_if": ["db.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking toy. Does this cut-out show exactly ONE whole round ring threaded on a peg -- one single ring, not two of them stacked on top of each other, not a bare peg, and not just the flat base or the background? Answer yes or no only.",
+          "boxes": "db",
+          "pad": 0.06,
+          "out": "dc"
+        },
+        {
+          "fail_if": ["dc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one round flat ring from a stacking toy, and a size number is printed large on the face of that ring. What number is printed on it? Answer with that single number and nothing else. If you cannot see any number printed on it, answer 0.",
+          "boxes": "db",
+          "pad": 0.04,
+          "out": "dn"
+        },
+        {
+          "fail_if": ["dn.unreadable"]
+        },
+        {
+          "run": "read_peg_stacks",
+          "args": ["pb", "pc", "db", "dc", "dn", "reference"],
+          "out": "st"
+        },
+        {
+          "compare_set": "st.A",
+          "to": "reference.s_A",
+          "out": "fA_raw"
+        },
+        {
+          "compare_tolerance": "fA_raw",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "fA"
+        },
+        {
+          "compare_set": "st.B",
+          "to": "reference.s_B",
+          "out": "fB_raw"
+        },
+        {
+          "compare_tolerance": "fB_raw",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "fB"
+        },
+        {
+          "compare_set": "st.C",
+          "to": "reference.s_C",
+          "out": "fC_raw"
+        },
+        {
+          "compare_tolerance": "fC_raw",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "fC"
+        },
+        {
+          "all": ["fA", "fB", "fC"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "stack_heights_joint",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "upright peg standing on the base of the stacking toy -- ONE box per peg, covering that peg as a whole upright column from its top tip down to where it stands on the flat base, with any rings threaded on that peg inside the same box; box every peg, including a peg standing empty; do not put two pegs in one box and do not box the base or the background on its own.",
+          "sweep": true,
+          "votes": 3,
+          "out": "pb2"
+        },
+        {
+          "fail_if": ["pb2.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking toy. Does this cut-out show ONE single upright peg standing on the flat base -- just one peg, not two pegs side by side, and not only bare background or bare table? Answer yes or no only.",
+          "boxes": "pb2",
+          "pad": 0.06,
+          "out": "pc2"
+        },
+        {
+          "fail_if": ["pc2.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "round ring threaded on one of the upright pegs -- one box per single ring, covering that ring from its left rim to its right rim with the size number printed on its face inside; two rings stacked one on another are still two rings, so box each on its own; do not box a bare peg, the flat base, a peg letter, or a whole stack in one box.",
+          "sweep": true,
+          "votes": 3,
+          "out": "db2"
+        },
+        {
+          "fail_if": ["db2.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking toy. Does this cut-out show exactly ONE whole round ring threaded on a peg -- one single ring, not two of them stacked on top of each other, not a bare peg, and not just the flat base or the background? Answer yes or no only.",
+          "boxes": "db2",
+          "pad": 0.06,
+          "out": "dc2"
+        },
+        {
+          "fail_if": ["dc2.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one round flat ring from a stacking toy, and a size number is printed large on the face of that ring. What number is printed on it? Answer with that single number and nothing else. If you cannot see any number printed on it, answer 0.",
+          "boxes": "db2",
+          "pad": 0.04,
+          "out": "dn2"
+        },
+        {
+          "fail_if": ["dn2.unreadable"]
+        },
+        {
+          "run": "read_peg_stacks",
+          "args": ["pb2", "pc2", "db2", "dc2", "dn2", "reference"],
+          "out": "st2"
+        },
+        {
+          "compare_band": "st2.h_A",
+          "to": "reference.c_A",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "gA"
+        },
+        {
+          "compare_band": "st2.h_B",
+          "to": "reference.c_B",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "gB"
+        },
+        {
+          "compare_band": "st2.h_C",
+          "to": "reference.c_C",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "gC"
+        },
+        {
+          "all": ["gA", "gB", "gC"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "disk_conservation",
+      "weight": 0.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "round ring threaded on one of the upright pegs -- one box per single ring, covering that ring from its left rim to its right rim with the size number printed on its face inside; two rings stacked one on another are still two rings, so box each on its own; do not box a bare peg, the flat base, a peg letter, or a whole stack in one box.",
+          "sweep": true,
+          "votes": 3,
+          "out": "db3"
+        },
+        {
+          "fail_if": ["db3.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking toy. Does this cut-out show exactly ONE whole round ring threaded on a peg -- one single ring, not two of them stacked on top of each other, not a bare peg, and not just the flat base or the background? Answer yes or no only.",
+          "boxes": "db3",
+          "pad": 0.06,
+          "out": "dc3"
+        },
+        {
+          "fail_if": ["dc3.unreadable"]
+        },
+        {
+          "run": "count_confirmed_disks",
+          "args": ["db3", "dc3", "reference"],
+          "out": "tot"
+        },
+        {
+          "compare_band": "tot.n",
+          "to": "reference.n_disks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

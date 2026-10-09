@@ -1,0 +1,84 @@
+{
+  "id": "delay_speaker_ms_from_its_own_run",
+  "axis": "long_range_consistency",
+  "prompt": "The hall was handed over last night and the tuning crew photographs the delay stacks before the covers go back on, so the consultant can sign the alignment off.\n\nThe room runs long and narrow. The main hang sits at the stage lip. Three delay rings hang from the side columns, each with its own amplifier panel below it showing a figure in milliseconds in large digits. A tape scale runs along the side wall, printed in metres from the stage lip and numbered every 5. The stage lip is the zero of that scale, the main hang is on the zero, and the three rings hang on the 12, 24 and 36 metre marks. The works note taped to the rack takes sound through this room at 343 metres a second, and asks that each ring be set to the time sound takes to reach it from the main hang.\n\nWhat figure stands on each of the three panels is what the note does not give.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture look down a long narrow auditorium with speaker rings hung off the side columns, lit amplifier panels under them and a metre tape scale running along the side wall? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "back_largest"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the figure on the amplifier panel below the middle delay ring and write that number of milliseconds.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "66", "74"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Three amplifier panels hang from the side columns, each showing a figure in milliseconds. Compare the three figures. Answer with one of: the largest figure is on the panel nearest the stage; the largest figure is on the panel at the back of the room; all three panels show the same figure.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

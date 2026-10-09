@@ -1,0 +1,213 @@
+{
+  "id": "baseball_baserunner_state",
+  "axis": "latent_computation",
+  "prompt": "A youth-league baseball coaching whiteboard, drawn top-down, shows the standard diamond with HOME plate at the bottom and FIRST (right), SECOND (top), THIRD (left) bases. Starting with the bases EMPTY, four batters come up in order and the following plays happen, one after another: (1) a WALK, (2) a WALK, (3) a SINGLE, (4) a DOUBLE. Runners advance only as forced. Work the play sequence forward and draw the diamond's FINAL state after the double: place a runner marker on EACH base that is occupied at that moment, and leave empty bases with no marker. Also write the number of RUNS that have scored so far in a small box beside home plate. Draw a clean diamond with clear base markers. Do NOT write the list of plays or any running tally on the board.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show youth-league baseball coaching whiteboard drawn top-down, the diamond marked with a runner on each occupied base plus a small runs box? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "on_first": false,
+    "on_second": true,
+    "on_third": true,
+    "runs": 2,
+    "q_form": "Look at this image. Is it a top-down baseball diamond diagram with home plate and three bases? Answer ONLY 'yes' or 'no'.",
+    "q_first": "Look ONLY at this baseball diamond diagram. Is there a runner marker sitting ON FIRST base (the base on the right side of the diamond)? Report ONLY what is drawn; do NOT reason about the plays. Answer ONLY 'yes' or 'no'.",
+    "q_second": "Look ONLY at this baseball diamond diagram. Is there a runner marker sitting ON SECOND base (the top base of the diamond)? Report ONLY what is drawn. Answer ONLY 'yes' or 'no'.",
+    "q_third": "Look ONLY at this baseball diamond diagram. Is there a runner marker sitting ON THIRD base (the base on the left side of the diamond)? Report ONLY what is drawn. Answer ONLY 'yes' or 'no'.",
+    "q_runs": "Read ONLY the number printed in the small RUNS box beside home plate of this diagram. Report ONLY the digits actually printed; do NOT do any sums yourself. Output only digits.",
+    "yn_first": "no",
+    "yn_second": "yes",
+    "yn_third": "yes",
+    "n_occupied": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "joint_bases",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_first",
+          "out": "a1"
+        },
+        {
+          "ask": "reference.q_second",
+          "out": "a2"
+        },
+        {
+          "ask": "reference.q_third",
+          "out": "a3"
+        },
+        {
+          "read_number": "reference.q_runs",
+          "out": "rn"
+        },
+        {
+          "run": null,
+          "expression": "j(a1,a2,a3,rn,reference.yn_first,reference.yn_second,reference.yn_third,reference.runs)",
+          "code": {
+            "inline": "j_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "runs_value",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_runs",
+          "out": "rn2"
+        },
+        {
+          "fail_if": ["rn2.unreadable"]
+        },
+        {
+          "compare_tolerance": "rn2",
+          "to": "reference.runs",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_runs_box",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the number of RUNS written in the small box beside home plate on the whiteboard. Report just the whole number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.runs",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_occupied_bases",
+      "weight": 0.75,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a base of the diamond other than home plate with a runner marker sitting on it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE base of a drawn baseball diamond with a runner marker sitting on that base, rather than an empty base or bare board? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_occupied",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_first_empty",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is FIRST base (the right base of the diamond) shown with NO runner marker on it? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_play_list",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written list of the plays or a running tally written on the whiteboard",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

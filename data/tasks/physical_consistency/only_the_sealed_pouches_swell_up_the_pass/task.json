@@ -1,0 +1,86 @@
+{
+  "id": "only_the_sealed_pouches_swell_up_the_pass",
+  "axis": "physical_consistency",
+  "prompt": "The transfer shed photographs each consignment as it comes off the truck, so the whole line-up and the note go into one frame.\n\nFour foil pouches lie in a row on a stainless bench in a transfer shed high in the mountains. Each pouch carries a large letter across its face: A, B, C and D. A vent mark, a ring of fine holes inside a printed circle, sits on the face of pouch B and on the face of pouch D; the faces of the others carry no such mark. Standing beside them from the same consignment are tinned cans with rolled seams and stiff walls, their lids in view. The note weighted down at the edge of the bench gives the height the load was packed at, gives the height of this shed far above it, and lists the packing forms.\n\nWhich pouches have gone taut, and what the cans have done at this height, is what the note does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a row of lettered foil pouches on a bench beside tinned cans from the same consignment, with a note weighted down at the edge? Answer yes or no only.",
+  "reference": {
+    "part1": "2",
+    "part2": "bodies_straight"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "foil pouches that have gone taut and pillow shaped with their seal fins turned out",
+          "out": "r_part1",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part1.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the tinned cans standing beside the pouches. Answer with one of: bodies straight; bodies bulged; lids sprung.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

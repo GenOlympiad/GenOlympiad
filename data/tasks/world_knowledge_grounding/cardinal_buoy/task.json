@@ -1,0 +1,419 @@
+{
+  "id": "cardinal_buoy",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photorealistic photograph of a buoy maintenance yard on a bright morning: one steel navigation buoy has been craned out of the water and now stands upright on timber blocks on the concrete apron, freshly repainted, viewed from the side against a plain grey workshop wall. A chalked works ticket propped against the blocks at its foot reads only 'WEST CARDINAL - READY FOR LAYING'. The buoy wears the horizontal painted colour bands and, up on its mast, the two solid black cone topmark shapes that the IALA buoyage system lays down for that mark. Nothing else is written anywhere in the yard, no people appear, and there is no second buoy.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show one navigation buoy standing upright ashore and seen from the side, its body ringed by horizontal painted bands, with two solid dark cone-shaped symbols carried on the mast above the body. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "q_form": "Ignoring whether any of its details are correct, does this picture show a solid, real-looking channel buoy of the sort that is moored in the sea to mark a hazard? Answer yes or no only.",
+    "mark": "west",
+    "cones": ["down", "up"],
+    "bands": ["yellow", "black", "yellow"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "buoy_marks_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the topmark of the buoy",
+          "context": "the whole buoy standing in the water",
+          "out": "tmk"
+        },
+        {
+          "fail_if": ["tmk.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of the black cone shapes on the mast of a sea buoy, stacked one above the other. Look at the HIGHEST cone. Does its sharp point aim UP towards the sky, or DOWN towards the water? Answer with one word: up or down.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "cu"
+        },
+        {
+          "read_crop": "This is a close-up of the black cone shapes on the mast of a sea buoy, stacked one above the other. Look at the LOWEST cone. Does its sharp point aim UP towards the sky, or DOWN towards the water? Answer with one word: up or down.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "cl"
+        },
+        {
+          "read_crop": "This is a close-up of the mast of a sea buoy. How many solid black cone shapes are stacked on it? Answer with a single number.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "ck"
+        },
+        {
+          "run": "topmark_pair_for_readable",
+          "args": ["tmk", "cu", "cl", "ck"],
+          "out": "tw"
+        },
+        {
+          "fail_if": ["tw.refused"]
+        },
+        {
+          "read_crop": "This picture shows a sea buoy. Look at the UPRIGHT COLUMN of its body -- the tall narrow part that carries the paint. Do not include the thin mast or the small black cone shapes above it, and do not include the WIDER drum, slab or float at the very bottom that the column stands on. Reading from the TOP of that column downwards, name the colour of every horizontal band painted on it, in order, including any band at the very bottom of the column. Answer with the colour words only, separated by commas, and nothing else, for example: black, yellow",
+          "out": "bs"
+        },
+        {
+          "fail_if": ["bs.unreadable"]
+        },
+        {
+          "run": "read_topmark_and_bands",
+          "args": ["tw.tm", "tw.cn", "bs"],
+          "out": "m"
+        },
+        {
+          "run": "hold_readable",
+          "args": ["m"],
+          "out": "held"
+        },
+        {
+          "fail_if": ["held.no_read"]
+        },
+        {
+          "run": "readable_frac",
+          "args": ["m"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "topmark_cone_orientation",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the topmark of the buoy",
+          "context": "the whole buoy standing in the water",
+          "out": "tmk"
+        },
+        {
+          "fail_if": ["tmk.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of the black cone shapes on the mast of a sea buoy, stacked one above the other. Look at the HIGHEST cone. Does its sharp point aim UP towards the sky, or DOWN towards the water? Answer with one word: up or down.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "cu"
+        },
+        {
+          "read_crop": "This is a close-up of the black cone shapes on the mast of a sea buoy, stacked one above the other. Look at the LOWEST cone. Does its sharp point aim UP towards the sky, or DOWN towards the water? Answer with one word: up or down.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "cl"
+        },
+        {
+          "read_crop": "This is a close-up of the mast of a sea buoy. Write down every solid black cone shape stacked on it, working from the top down, each with a few plain words saying which way its point faces. Separate one item from the next with a semicolon; write no running total and nothing else. If no solid black cone is on the mast, write the single word NONE.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "ck"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["ck", "empty_as='0'"],
+          "out": "ck__std"
+        },
+        {
+          "fail_if": ["ck__std.refused"]
+        },
+        {
+          "run": "topmark_pair_for_cone_orientation",
+          "args": ["tmk", "cu", "cl", "ck__std"],
+          "out": "tw"
+        },
+        {
+          "fail_if": ["tw.refused"]
+        },
+        {
+          "read_crop": "This picture shows a sea buoy. Look at the UPRIGHT COLUMN of its body -- the tall narrow part that carries the paint. Do not include the thin mast or the small black cone shapes above it, and do not include the WIDER drum, slab or float at the very bottom that the column stands on. Reading from the TOP of that column downwards, name the colour of every horizontal band painted on it, in order, including any band at the very bottom of the column. Answer with the colour words only, separated by commas, and nothing else, for example: black, yellow",
+          "out": "bs"
+        },
+        {
+          "fail_if": ["bs.unreadable"]
+        },
+        {
+          "run": "read_topmark_and_bands",
+          "args": ["tw.tm", "tw.cn", "bs"],
+          "out": "m"
+        },
+        {
+          "run": "hold_cone_orientation",
+          "args": ["m"],
+          "out": "held"
+        },
+        {
+          "fail_if": ["held.no_read"]
+        },
+        {
+          "run": "cones_frac",
+          "args": ["m", "reference.cones"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "body_band_sequence",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the topmark of the buoy",
+          "context": "the whole buoy standing in the water",
+          "out": "tmk"
+        },
+        {
+          "fail_if": ["tmk.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of the black cone shapes on the mast of a sea buoy, stacked one above the other. Look at the HIGHEST cone. Does its sharp point aim UP towards the sky, or DOWN towards the water? Answer with one word: up or down.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "cu"
+        },
+        {
+          "read_crop": "This is a close-up of the black cone shapes on the mast of a sea buoy, stacked one above the other. Look at the LOWEST cone. Does its sharp point aim UP towards the sky, or DOWN towards the water? Answer with one word: up or down.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "cl"
+        },
+        {
+          "read_crop": "This is a close-up of the mast of a sea buoy. Write down every solid black cone shape stacked on it, working from the top down, each with a few plain words saying which way its point faces. Separate one item from the next with a semicolon; write no running total and nothing else. If no solid black cone is on the mast, write the single word NONE.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "ck"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["ck", "empty_as='0'"],
+          "out": "ck__std"
+        },
+        {
+          "fail_if": ["ck__std.refused"]
+        },
+        {
+          "run": "topmark_pair_for_band_sequence",
+          "args": ["tmk", "cu", "cl", "ck__std"],
+          "out": "tw"
+        },
+        {
+          "fail_if": ["tw.refused"]
+        },
+        {
+          "read_crop": "This picture shows a sea buoy. Look at the UPRIGHT COLUMN of its body -- the tall narrow part that carries the paint. Do not include the thin mast or the small black cone shapes above it, and do not include the WIDER drum, slab or float at the very bottom that the column stands on. Reading from the TOP of that column downwards, name the colour of every horizontal band painted on it, in order, including any band at the very bottom of the column. Answer with the colour words only, separated by commas, and nothing else, for example: black, yellow",
+          "out": "bs"
+        },
+        {
+          "fail_if": ["bs.unreadable"]
+        },
+        {
+          "run": "read_topmark_and_bands",
+          "args": ["tw.tm", "tw.cn", "bs"],
+          "out": "m"
+        },
+        {
+          "run": "hold_band_sequence",
+          "args": ["m"],
+          "out": "held"
+        },
+        {
+          "fail_if": ["held.no_read"]
+        },
+        {
+          "run": "bands_frac",
+          "args": ["m", "reference.bands"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_halves_name_the_same_mark",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the topmark of the buoy",
+          "context": "the whole buoy standing in the water",
+          "out": "tmk"
+        },
+        {
+          "fail_if": ["tmk.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of the black cone shapes on the mast of a sea buoy, stacked one above the other. Look at the HIGHEST cone. Does its sharp point aim UP towards the sky, or DOWN towards the water? Answer with one word: up or down.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "cu"
+        },
+        {
+          "read_crop": "This is a close-up of the black cone shapes on the mast of a sea buoy, stacked one above the other. Look at the LOWEST cone. Does its sharp point aim UP towards the sky, or DOWN towards the water? Answer with one word: up or down.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "cl"
+        },
+        {
+          "read_crop": "This is a close-up of the mast of a sea buoy. Write down every solid black cone shape stacked on it, working from the top down, each with a few plain words saying which way its point faces. Separate one item from the next with a semicolon; write no running total and nothing else. If no solid black cone is on the mast, write the single word NONE.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "ck"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["ck", "empty_as='0'"],
+          "out": "ck__std"
+        },
+        {
+          "fail_if": ["ck__std.refused"]
+        },
+        {
+          "run": "topmark_pair_for_both_halves",
+          "args": ["tmk", "cu", "cl", "ck__std"],
+          "out": "tw"
+        },
+        {
+          "fail_if": ["tw.refused"]
+        },
+        {
+          "read_crop": "This picture shows a sea buoy. Look at the UPRIGHT COLUMN of its body -- the tall narrow part that carries the paint. Do not include the thin mast or the small black cone shapes above it, and do not include the WIDER drum, slab or float at the very bottom that the column stands on. Reading from the TOP of that column downwards, name the colour of every horizontal band painted on it, in order, including any band at the very bottom of the column. Answer with the colour words only, separated by commas, and nothing else, for example: black, yellow",
+          "out": "bs"
+        },
+        {
+          "fail_if": ["bs.unreadable"]
+        },
+        {
+          "run": "read_topmark_and_bands",
+          "args": ["tw.tm", "tw.cn", "bs"],
+          "out": "m"
+        },
+        {
+          "run": "hold_both_halves",
+          "args": ["m"],
+          "out": "held"
+        },
+        {
+          "fail_if": ["held.no_read"]
+        },
+        {
+          "run": "both_halves_frac",
+          "args": ["m", "reference.cones", "reference.bands"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "band_structure",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the topmark of the buoy",
+          "context": "the whole buoy standing in the water",
+          "out": "tmk"
+        },
+        {
+          "fail_if": ["tmk.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of the black cone shapes on the mast of a sea buoy, stacked one above the other. Look at the HIGHEST cone. Does its sharp point aim UP towards the sky, or DOWN towards the water? Answer with one word: up or down.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "cu"
+        },
+        {
+          "read_crop": "This is a close-up of the black cone shapes on the mast of a sea buoy, stacked one above the other. Look at the LOWEST cone. Does its sharp point aim UP towards the sky, or DOWN towards the water? Answer with one word: up or down.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "cl"
+        },
+        {
+          "read_crop": "This is a close-up of the mast of a sea buoy. Write down every solid black cone shape stacked on it, working from the top down, each with a few plain words saying which way its point faces. Separate one item from the next with a semicolon; write no running total and nothing else. If no solid black cone is on the mast, write the single word NONE.",
+          "boxes": "tmk",
+          "pad": 0.35,
+          "out": "ck"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["ck", "empty_as='0'"],
+          "out": "ck__std"
+        },
+        {
+          "fail_if": ["ck__std.refused"]
+        },
+        {
+          "run": "topmark_pair_for_band_structure",
+          "args": ["tmk", "cu", "cl", "ck__std"],
+          "out": "tw"
+        },
+        {
+          "fail_if": ["tw.refused"]
+        },
+        {
+          "read_crop": "This picture shows a sea buoy. Look at the UPRIGHT COLUMN of its body -- the tall narrow part that carries the paint. Do not include the thin mast or the small black cone shapes above it, and do not include the WIDER drum, slab or float at the very bottom that the column stands on. Reading from the TOP of that column downwards, name the colour of every horizontal band painted on it, in order, including any band at the very bottom of the column. Answer with the colour words only, separated by commas, and nothing else, for example: black, yellow",
+          "out": "bs"
+        },
+        {
+          "fail_if": ["bs.unreadable"]
+        },
+        {
+          "run": "read_topmark_and_bands",
+          "args": ["tw.tm", "tw.cn", "bs"],
+          "out": "m"
+        },
+        {
+          "run": "hold_band_structure",
+          "args": ["m"],
+          "out": "held"
+        },
+        {
+          "fail_if": ["held.no_read"]
+        },
+        {
+          "run": "band_structure_frac",
+          "args": ["m", "reference.bands"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_looks_like_a_real_buoy",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fq"
+        },
+        {
+          "fail_if": ["fq.unreadable"]
+        },
+        {
+          "compare": "fq",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

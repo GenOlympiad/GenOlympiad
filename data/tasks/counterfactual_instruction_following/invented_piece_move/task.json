@@ -1,0 +1,261 @@
+{
+  "id": "invented_piece_move",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean, top-down 8x8 chessboard (files a to h left to right, ranks 1 to 8 bottom to top, with small file/rank labels), squares in the usual alternating light/dark pattern.\n\nIMPORTANT PIECE RULE: this uses a MADE-UP chess piece called the 'Skip'. The Skip does NOT move like a knight. From its square, the Skip can move to any square that is EITHER exactly TWO squares away DIAGONALLY, OR exactly THREE squares away in a straight line (horizontally or vertically). It cannot move any other way.\n\nPlace the Skip on square d5 (mark d5 clearly). Then HIGHLIGHT (fill with a bright blue colour) EVERY square the Skip can reach from d5 in one move under the rule above, and leave all other squares plain. Highlight exactly those reachable squares -- do NOT highlight the knight-move squares, and do NOT miss any reachable square. Do not print any square names or other text besides the small a-h / 1-8 edge labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a chess/checkers BOARD (an 8x8 grid of alternating light and dark squares) with some squares highlighted. Ignoring which squares are highlighted and ignoring artistic quality, does the image actually DEPICT such a checkered board? A clean diagram counts as yes. Answer NO only if it shows a blank card, a plain panel printing text, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "bb0": [0.5607, 0.2176, 0.6143, 0.2943],
+    "q0": "This is a cropped picture of ONE square from a checkerboard (square f7). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp0": "blue",
+    "bb1": [0.3273, 0.2176, 0.381, 0.2943],
+    "q1": "This is a cropped picture of ONE square from a checkerboard (square b7). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp1": "blue",
+    "bb2": [0.5607, 0.551, 0.6143, 0.6276],
+    "q2": "This is a cropped picture of ONE square from a checkerboard (square f3). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp2": "blue",
+    "bb3": [0.3273, 0.551, 0.381, 0.6276],
+    "q3": "This is a cropped picture of ONE square from a checkerboard (square b3). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp3": "blue",
+    "bb4": [0.619, 0.3843, 0.6727, 0.461],
+    "q4": "This is a cropped picture of ONE square from a checkerboard (square g5). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp4": "blue",
+    "bb5": [0.269, 0.3843, 0.3227, 0.461],
+    "q5": "This is a cropped picture of ONE square from a checkerboard (square a5). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp5": "blue",
+    "bb6": [0.444, 0.1343, 0.4977, 0.211],
+    "q6": "This is a cropped picture of ONE square from a checkerboard (square d8). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp6": "blue",
+    "bb7": [0.444, 0.6343, 0.4977, 0.711],
+    "q7": "This is a cropped picture of ONE square from a checkerboard (square d2). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp7": "blue",
+    "bb8": [0.5023, 0.2176, 0.556, 0.2943],
+    "q8": "This is a cropped picture of ONE square from a checkerboard (square e7). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp8": "plain",
+    "bb9": [0.5607, 0.301, 0.6143, 0.3776],
+    "q9": "This is a cropped picture of ONE square from a checkerboard (square f6). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp9": "plain",
+    "bb10": [0.3857, 0.2176, 0.4393, 0.2943],
+    "q10": "This is a cropped picture of ONE square from a checkerboard (square c7). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp10": "plain",
+    "bb11": [0.3273, 0.301, 0.381, 0.3776],
+    "q11": "This is a cropped picture of ONE square from a checkerboard (square b6). Is this square HIGHLIGHTED with a bright BLUE marker filling it, or is it a plain board square (a plain light or dark checker square with no blue highlight)? Answer with one word only: blue (if it has the blue highlight) or plain.",
+    "exp11": "plain",
+    "n_pts": 12
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "reachable_set_count",
+      "weight": 6.0,
+      "steps": [
+        {
+          "crop": "reference.bb0",
+          "out": "c0"
+        },
+        {
+          "ask": "reference.q0",
+          "image": "c0",
+          "out": "a0"
+        },
+        {
+          "crop": "reference.bb1",
+          "out": "c1"
+        },
+        {
+          "ask": "reference.q1",
+          "image": "c1",
+          "out": "a1"
+        },
+        {
+          "crop": "reference.bb2",
+          "out": "c2"
+        },
+        {
+          "ask": "reference.q2",
+          "image": "c2",
+          "out": "a2"
+        },
+        {
+          "crop": "reference.bb3",
+          "out": "c3"
+        },
+        {
+          "ask": "reference.q3",
+          "image": "c3",
+          "out": "a3"
+        },
+        {
+          "crop": "reference.bb4",
+          "out": "c4"
+        },
+        {
+          "ask": "reference.q4",
+          "image": "c4",
+          "out": "a4"
+        },
+        {
+          "crop": "reference.bb5",
+          "out": "c5"
+        },
+        {
+          "ask": "reference.q5",
+          "image": "c5",
+          "out": "a5"
+        },
+        {
+          "crop": "reference.bb6",
+          "out": "c6"
+        },
+        {
+          "ask": "reference.q6",
+          "image": "c6",
+          "out": "a6"
+        },
+        {
+          "crop": "reference.bb7",
+          "out": "c7"
+        },
+        {
+          "ask": "reference.q7",
+          "image": "c7",
+          "out": "a7"
+        },
+        {
+          "crop": "reference.bb8",
+          "out": "c8"
+        },
+        {
+          "ask": "reference.q8",
+          "image": "c8",
+          "out": "a8"
+        },
+        {
+          "crop": "reference.bb9",
+          "out": "c9"
+        },
+        {
+          "ask": "reference.q9",
+          "image": "c9",
+          "out": "a9"
+        },
+        {
+          "crop": "reference.bb10",
+          "out": "c10"
+        },
+        {
+          "ask": "reference.q10",
+          "image": "c10",
+          "out": "a10"
+        },
+        {
+          "crop": "reference.bb11",
+          "out": "c11"
+        },
+        {
+          "ask": "reference.q11",
+          "image": "c11",
+          "out": "a11"
+        },
+        {
+          "fail_if": [
+            "a0.unreadable",
+            "a1.unreadable",
+            "a2.unreadable",
+            "a3.unreadable",
+            "a4.unreadable",
+            "a5.unreadable",
+            "a6.unreadable",
+            "a7.unreadable",
+            "a8.unreadable",
+            "a9.unreadable",
+            "a10.unreadable",
+            "a11.unreadable"
+          ]
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a0", "reference.exp0"],
+          "out": "s0"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a1", "reference.exp1"],
+          "out": "s1"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a2", "reference.exp2"],
+          "out": "s2"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a3", "reference.exp3"],
+          "out": "s3"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a4", "reference.exp4"],
+          "out": "s4"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a5", "reference.exp5"],
+          "out": "s5"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a6", "reference.exp6"],
+          "out": "s6"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a7", "reference.exp7"],
+          "out": "s7"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a8", "reference.exp8"],
+          "out": "s8"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a9", "reference.exp9"],
+          "out": "s9"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a10", "reference.exp10"],
+          "out": "s10"
+        },
+        {
+          "run": "square_marking_matches",
+          "args": ["a11", "reference.exp11"],
+          "out": "s11"
+        },
+        {
+          "product": ["s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "id": "tent_guyline_angles",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "a photorealistic straight-on photograph of a FESTIVAL tent on flat ground held by taut GUY LINES, 3 guy ropes running from the tent down to ground pegs. Paint every guy rope a crisp bright RED. GEOMETRY IS THE SUBJECT and must be EXACT (do NOT default to ropes at random angles): for a properly pitched tent on level ground, all 3 guy lines are tensioned to meet the ground at the SAME angle -- every red guy rope makes an identical angle with the flat ground, so the whole set of ropes shares one common ground angle. Photoreal tent and 3 red guy lines, level ground, no text, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a tent with several red guy ropes running to the ground. Ignoring quality, does it depict a tent with several red guy lines to ground pegs? A photo or render both count. Answer NO only for a blank panel or no tent/ropes. Answer yes or no only.",
+  "reference": {
+    "core": 5.0,
+    "margin": 11.0,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "n_guys": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "guys_equal_angle",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one taut bright red guy rope running from the tent down to a peg in the ground",
+          "retries": 4,
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "guyline_angle_set",
+          "args": ["rd", "src"],
+          "out": "cv"
+        },
+        {
+          "fail_if": ["cv.unreadable"]
+        },
+        {
+          "compare_band": "cv.spread",
+          "to": 0.0,
+          "core": "reference.core",
+          "margin": "reference.margin",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

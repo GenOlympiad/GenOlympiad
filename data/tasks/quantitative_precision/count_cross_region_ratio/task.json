@@ -1,0 +1,398 @@
+{
+  "id": "count_cross_region_ratio",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic photograph taken square-on to a laboratory bench of plain pale grey worktop against a plain white wall. On the bench lies a shallow grey tray holding flat RED plastic discs, all the same size, lying flat in a single layer, scattered irregularly inside the tray with a clear gap between every pair -- no two discs touching or overlapping, never in a row, never in a grid. On the plain WHITE MAGNETIC BOARD hanging above the bench, well away from the tray, flat GREEN magnets are stuck on, scattered irregularly and well apart -- never in rows, never in a grid, never gathered into little groups. The number of green magnets on the board must come out EXACTLY FOUR TIMES the number of red discs in the tray. You may choose how many red discs lie in the tray, as long as there are at least 12 of them. Nothing else anywhere in the picture is green or red, and there are no plants or leaves. Every counted object is FLAT matte single colour, evenly lit, with no glossy highlight and no printed pattern, and no two of them touch or overlap. Even light, sharp focus, seen flat-on with no perspective distortion, so every disc looks the same size as every other and every magnet looks the same size as every other. No text, no numerals, no labels.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a laboratory bench holding a tray of flat red discs, with flat green magnets on the plain white board above? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q": "Count the red objects lying in the tray or on the floor in the near part of the scene in this image. Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This picture should show these countable objects: a laboratory bench holding a tray of flat red discs, with flat green magnets on the plain white board above. Look at the individual objects being counted. Is each one a flat red plastic disc, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "nmin": 12,
+    "qa": "Count the red objects lying in the tray or on the floor in the near part of the scene in this image. Answer with the integer number only.",
+    "qb": "Count the green tags, cards or pins on the wall or board behind in this image. Answer with the integer number only.",
+    "is_k4": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "density_floor",
+      "weight": 1.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "flat RED object lying in the shallow tray on the bench or table in the near part of the scene",
+          "context": "the shallow tray standing on the bench or table in the near part of the scene",
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "read_crop": "Is there anything RED in this picture? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.unreadable"]
+        },
+        {
+          "count_yes": "rc",
+          "out": "rn"
+        },
+        {
+          "run": "floor_score",
+          "args": ["rn.n", "reference.nmin"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cross_region_identity_k2",
+      "weight": 3.5,
+      "only_if": "reference.is_k2",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "flat RED object lying in the shallow tray on the bench or table in the near part of the scene",
+          "context": "the shallow tray standing on the bench or table in the near part of the scene",
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "read_crop": "Is there anything RED in this picture? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.unreadable"]
+        },
+        {
+          "count_yes": "rc",
+          "out": "rn"
+        },
+        {
+          "read": "boxes",
+          "target": "the plain wall or board behind and above the bench",
+          "expected_n": 1,
+          "out": "gb"
+        },
+        {
+          "fail_if": ["gb.unreadable"]
+        },
+        {
+          "run": "strips_k2",
+          "args": ["gb", "3"],
+          "out": "gband"
+        },
+        {
+          "read_crop": "This is a strip cut from a bigger picture. Write down every green piece you can see in this strip, one piece per item, and for each one say in a few plain words where it sits. Take a piece as belonging to this strip when the middle of that piece lies inside the strip. If there is no green piece in this strip, write the single word NONE. Write no running total. Separate one item from the next with a semicolon, and add nothing else.",
+          "boxes": "gband",
+          "pad": 0.0,
+          "out": "gc"
+        },
+        {
+          "fail_if": ["gc.unreadable"]
+        },
+        {
+          "run": "count_enumerated_items",
+          "args": ["gc", "'0'"],
+          "out": "gc__mapped"
+        },
+        {
+          "fail_if": ["gc__mapped.refused"]
+        },
+        {
+          "run": "strip_total_k2",
+          "args": ["gc__mapped", "'green pieces on the wall'"],
+          "out": "gn"
+        },
+        {
+          "fail_if": ["gn.unread"]
+        },
+        {
+          "run": "implausible",
+          "args": ["rn.n", "gn.n", "3"],
+          "out": "bad"
+        },
+        {
+          "fail_if": ["bad"]
+        },
+        {
+          "run": "count_ratio_gap",
+          "args": ["rn.n", "gn.n", "2", "0"],
+          "out": "gapv"
+        },
+        {
+          "compare_band": "gapv",
+          "to": 0,
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cross_region_identity_k3",
+      "weight": 3.5,
+      "only_if": "reference.is_k3",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "flat RED object lying in the shallow tray on the bench or table in the near part of the scene",
+          "context": "the shallow tray standing on the bench or table in the near part of the scene",
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "read_crop": "Is there anything RED in this picture? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.unreadable"]
+        },
+        {
+          "count_yes": "rc",
+          "out": "rn"
+        },
+        {
+          "read": "boxes",
+          "target": "the plain wall or board behind and above the bench",
+          "expected_n": 1,
+          "out": "gb"
+        },
+        {
+          "fail_if": ["gb.unreadable"]
+        },
+        {
+          "run": "strips_k3",
+          "args": ["gb", "3"],
+          "out": "gband"
+        },
+        {
+          "read_crop": "This is a strip cut from a bigger picture. Write down every green piece you can see in this strip, one piece per item, and for each one say in a few plain words where it sits. Take a piece as belonging to this strip when the middle of that piece lies inside the strip. If there is no green piece in this strip, write the single word NONE. Write no running total. Separate one item from the next with a semicolon, and add nothing else.",
+          "boxes": "gband",
+          "pad": 0.0,
+          "out": "gc"
+        },
+        {
+          "fail_if": ["gc.unreadable"]
+        },
+        {
+          "run": "count_enumerated_items",
+          "args": ["gc", "'0'"],
+          "out": "gc__mapped"
+        },
+        {
+          "fail_if": ["gc__mapped.refused"]
+        },
+        {
+          "run": "strip_total_k3",
+          "args": ["gc__mapped", "'green pieces on the wall'"],
+          "out": "gn"
+        },
+        {
+          "fail_if": ["gn.unread"]
+        },
+        {
+          "run": "implausible",
+          "args": ["rn.n", "gn.n", "3"],
+          "out": "bad"
+        },
+        {
+          "fail_if": ["bad"]
+        },
+        {
+          "run": "count_ratio_gap",
+          "args": ["rn.n", "gn.n", "3", "0"],
+          "out": "gapv"
+        },
+        {
+          "compare_band": "gapv",
+          "to": 0,
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cross_region_identity_k4",
+      "weight": 3.5,
+      "only_if": "reference.is_k4",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "flat RED object lying in the shallow tray on the bench or table in the near part of the scene",
+          "context": "the shallow tray standing on the bench or table in the near part of the scene",
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "read_crop": "Is there anything RED in this picture? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.unreadable"]
+        },
+        {
+          "count_yes": "rc",
+          "out": "rn"
+        },
+        {
+          "read": "boxes",
+          "target": "the plain wall or board behind and above the bench",
+          "expected_n": 1,
+          "out": "gb"
+        },
+        {
+          "fail_if": ["gb.unreadable"]
+        },
+        {
+          "run": "strips_k4",
+          "args": ["gb", "3"],
+          "out": "gband"
+        },
+        {
+          "read_crop": "This is a strip cut from a bigger picture. Write down every green piece you can see in this strip, one piece per item, and for each one say in a few plain words where it sits. Take a piece as belonging to this strip when the middle of that piece lies inside the strip. If there is no green piece in this strip, write the single word NONE. Write no running total. Separate one item from the next with a semicolon, and add nothing else.",
+          "boxes": "gband",
+          "pad": 0.0,
+          "out": "gc"
+        },
+        {
+          "fail_if": ["gc.unreadable"]
+        },
+        {
+          "run": "count_enumerated_items",
+          "args": ["gc", "'0'"],
+          "out": "gc__mapped"
+        },
+        {
+          "fail_if": ["gc__mapped.refused"]
+        },
+        {
+          "run": "strip_total_k4",
+          "args": ["gc__mapped", "'green pieces on the wall'"],
+          "out": "gn"
+        },
+        {
+          "fail_if": ["gn.unread"]
+        },
+        {
+          "run": "implausible",
+          "args": ["rn.n", "gn.n", "3"],
+          "out": "bad"
+        },
+        {
+          "fail_if": ["bad"]
+        },
+        {
+          "run": "count_ratio_gap",
+          "args": ["rn.n", "gn.n", "4", "0"],
+          "out": "gapv"
+        },
+        {
+          "compare_band": "gapv",
+          "to": 0,
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one flat piece lying in the shallow grey tray on the bench",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_g"
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole flat red plastic disc lying in the tray, rather than some other object, a shapeless blob, or only part of a disc? Answer yes or no only.",
+          "boxes": "box_g",
+          "out": "crop_g"
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a flat red plastic washer",
+    "s2": "a flat red card counter",
+    "s3": "a flat red plastic disc"
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "id": "runway_designator_variation",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The marking contractor has to hand the completion record over before the strip reopens, so the two threshold prints are taped to the record page and photographed together on the tailgate.\n\nThe page carries two overhead prints of the same strip, taken from almost straight above. The left print shows the threshold at the western end of the strip; the right print shows the threshold at the eastern end. The survey block typed at the head of the page gives the strip's true bearing, taken westward to eastward, as 083 degrees, and gives this year's magnetic variation at the site as 6 degrees east. The specification line under it says the threshold marking is the pair of figures painted across the width of the strip at each end, and that both ends were repainted in this one visit. The record gives the survey block and nothing else.\n\nWhat had to be painted at either end is what the record does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a record page carrying two overhead prints of runway thresholds taped side by side? Answer yes or no only.",
+  "reference": {
+    "part1": "left_painted_08",
+    "part2": "right_painted_26"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the pair of figures painted at the threshold in the left-hand print. Answer with one of: the left-hand threshold is painted 08; the left-hand threshold is painted 26; the left-hand threshold is painted 09.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the pair of figures painted at the threshold in the right-hand print. Answer with one of: the right-hand threshold is painted 26; the right-hand threshold is painted 08; the right-hand threshold is painted 27.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

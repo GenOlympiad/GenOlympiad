@@ -1,0 +1,108 @@
+{
+  "id": "housekeeping_floor_contiguous",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed hotel HOUSEKEEPING sheet titled 'SEAVIEW RESORT' (Room Turnover Board -- Wing B). Rooms are listed under FLOOR headers: FLOOR 1 (8 rooms), FLOOR 2 (12 rooms), FLOOR 3 (9 rooms), FLOOR 4 (11 rooms). CRITICAL numbering rule: within each floor block the room numbers are that floor's hundred plus 01, 02, 03 ... with NO gaps and no number from another floor -- so FLOOR 2 lists Room 201, Room 202, ... up to Room 212, contiguously. Each room also shows a housekeeping status. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a hotel housekeeping sheet listing rooms grouped under floor headers, each room with a status. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_total": 40,
+    "fl": 2,
+    "k": 12,
+    "first": 201,
+    "last": 212,
+    "pos": 8,
+    "pos_room": 208,
+    "q_first": "Under the 'FLOOR 2' header, what is the room number of the FIRST room listed in that floor's block (the topmost room under that header)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only.",
+    "q_last": "Under the 'FLOOR 2' header, what is the room number of the LAST room listed in that floor's block (the bottommost room under that header, just above the next floor)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only.",
+    "q_pos": "Under the 'FLOOR 2' header, read down the list of rooms. Report the room number of the 8-th room in that block (counting from the first room under the header). Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only.",
+    "q_count": "Count the TOTAL number of rooms listed across all floor blocks on this sheet. Whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "housekeeping_floor_contiguous_law",
+      "weight": 1.0,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read_crop": "Look at the block of rooms printed under the header 'FLOOR {gt.fl}' on this sheet. Write down the room number of every room in that block, in the order they are printed from top to bottom, stopping where the next floor's header begins. Copy each room number exactly as printed, even if a number looks out of place or a room seems to be missing. Answer with the room numbers separated by commas and nothing else.",
+          "out": "tr"
+        },
+        {
+          "fail_if": ["tr.unreadable"]
+        },
+        {
+          "run": "floor_block_check",
+          "args": [
+            "tr",
+            "reference.k",
+            "reference.first",
+            "reference.last",
+            "reference.pos",
+            "reference.pos_room"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed room line on the sheet, giving a room number and its housekeeping status",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed line listing a room number and its cleaning status, rather than a floor heading or bare paper? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n_total",
+          "core_abs": 3.9,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

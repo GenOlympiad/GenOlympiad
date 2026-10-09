@@ -1,0 +1,191 @@
+{
+  "id": "glass_fracture_type_mark",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A claim has come in on a curtain wall panel and the investigator is recording the evidence this afternoon.\n\nAlready fixed and not yours to move: one laminated pane is cracked but still whole in its frame; the investigator's record card is taped flat on the glass over the place the pane was struck, and that card is the only statement of where the strike was; three numbered zone markers are stuck on the glass, Z1 close to the card, Z2 further out and Z3 out near the frame; the frame and the sealant line are in shot.\n\nWhat the investigator's method sheet says about a struck laminate:\nthe pane holds together because of its interlayer, so the whole crack pattern stays where it formed;\nthe long cracks run outward from the place the pane was struck, so at any point on the pane they run back towards it;\nthe cracks are crowded close together near the strike and are further and further apart away from it.\n\nHow the cracks end up running at each marker, and how close together they end up, is the part I am deliberately not telling you, and no second pane is in the picture to copy. Frame the pane so that the record card and all three markers are in it. Nothing is written on the glass beyond that card and the three markers.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a cracked pane of glass held in a frame? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no glass in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "crack_run": "Z1|Z2|Z3",
+    "crack_scale": "crowded close together|a moderate spacing|far apart",
+    "crack_trend": ["up", "up"],
+    "point_state": "Z1=back towards the record card|Z2=back towards the record card|Z3=back towards the record card",
+    "n_zones": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_cracks_crowd_by_the_strike_and_thin_out_away_from_it",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered zone marker stuck on the glass with the cracks around it",
+          "sweep": true,
+          "out": "sp_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["sp_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what number is on the zone marker? Answer with the number exactly as it is on the marker, or none if no number is on it.",
+          "boxes": "sp_box",
+          "pad": 0.6,
+          "out": "sp_key"
+        },
+        {
+          "fail_if": ["sp_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how far apart are the cracks? Answer with one of: crowded close together, a moderate spacing, far apart, or none if no cracks can be made out.",
+          "boxes": "sp_box",
+          "pad": 0.6,
+          "out": "sp_val"
+        },
+        {
+          "fail_if": ["sp_val.unreadable"]
+        },
+        {
+          "run": "crack_scale_ranks",
+          "args": ["sp_key", "sp_val", "reference.crack_run", "reference.crack_scale"],
+          "out": "sp_v"
+        },
+        {
+          "match_trend": "sp_v.seq",
+          "to": "reference.crack_trend",
+          "min_delta": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_cracks_at_every_marker_run_back_to_the_recorded_strike",
+      "weight": 1.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered zone marker stuck on the glass with the cracks around it",
+          "sweep": true,
+          "out": "pt_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["pt_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what number is on the zone marker? Answer with the number exactly as it is on the marker, or none if no number is on it.",
+          "boxes": "pt_box",
+          "pad": 0.9,
+          "out": "pt_key"
+        },
+        {
+          "fail_if": ["pt_key.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out as a clock face with 12 at the top. Toward which hour do the long cracks in this cut-out run back as they leave it? Answer with a single number from 1 to 12, or none if no cracks can be made out.",
+          "boxes": "pt_box",
+          "pad": 0.9,
+          "out": "pt_val"
+        },
+        {
+          "fail_if": ["pt_val.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the record card taped flat on the glass",
+          "out": "rc_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rc_r.unreadable"]
+        },
+        {
+          "run": "crack_direction_scores",
+          "args": ["pt_key", "pt_val", "pt_box", "rc_r", "reference.point_state"],
+          "out": "pt_v"
+        },
+        {
+          "minimum": ["pt_v.a", "pt_v.b", "pt_v.c"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_zone_marker_carries_its_number",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered zone marker stuck on the glass with the cracks around it",
+          "sweep": true,
+          "out": "zm_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["zm_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a number on the zone marker? Answer yes or no only.",
+          "boxes": "zm_box",
+          "pad": 0.4,
+          "out": "zm_rd"
+        },
+        {
+          "fail_if": ["zm_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["zm_rd"],
+          "out": "zm_v"
+        },
+        {
+          "compare_band": "zm_v.n",
+          "to": "reference.n_zones",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_word_or_arrow_is_added_to_the_glass",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word or arrow on the glass beyond the record card and the three markers",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "pr_sw"
+        },
+        {
+          "fail_if": ["pr_sw.unreadable"]
+        },
+        {
+          "compare": "pr_sw.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

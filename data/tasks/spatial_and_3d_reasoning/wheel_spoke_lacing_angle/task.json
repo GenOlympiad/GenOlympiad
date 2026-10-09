@@ -1,0 +1,69 @@
+{
+  "id": "wheel_spoke_lacing_angle",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "a photorealistic face-on photograph of a BICYCLE WHEEL -- hub in the centre, a round rim, and straight metal SPOKES running from the hub out to the rim. There are 8 spokes. Paint every spoke a crisp bright BLUE so its line is clear. GEOMETRY IS THE SUBJECT and must be EXACT (do NOT default to some spokes pointing straight out and others slanted): this is a LACED (tangential) wheel, so EVERY spoke leaves the hub at the SAME lacing angle -- each spoke makes the identical angle to the straight-out radial direction, all spokes tilted by one common amount in the same rotational sense. The whole set of spokes shares ONE tangential lacing angle. Photoreal wheel, 8 blue spokes, hub and rim, no text, no numbers.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a wheel with a hub, a rim and several blue spokes running from the hub to the rim. Ignoring quality, does it depict a wheel with a hub and several blue spokes? A photo or render both count. Answer NO only for a blank panel or no wheel/spokes. Answer yes or no only.",
+  "reference": {
+    "core": 4.0,
+    "margin": 6.0,
+    "min_segs": 8,
+    "n_spokes": 8
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lacing_consistent",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one straight blue spoke running from the hub of the wheel out to the rim",
+          "retries": 4,
+          "out": "rd",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "spoke_offset_angles",
+          "args": ["rd", "src"],
+          "out": "cv"
+        },
+        {
+          "fail_if": ["cv.unreadable"]
+        },
+        {
+          "compare_band": "cv.offset_spread",
+          "to": 0.0,
+          "core": "reference.core",
+          "margin": "reference.margin",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "id": "menswear_placket_side",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Sign-off morning in the sample room of a shirt factory: four made-up garments are waiting on the inspection bench for the brand's own checker, each on its own dress form, all four standing in one row and facing square out of the picture towards whoever is looking at them.\n\nEach garment is buttoned all the way up, and its work ticket is pinned to the hem so the ticket hangs at the bottom of the garment where the checker can read it. The four tickets carry these style numbers and these classes, word for word:\n\n  STYLE 4110   MEN'S, SINGLE BREASTED\n  STYLE 4120   WOMEN'S, SINGLE BREASTED\n  STYLE 4135   CHILDREN'S, SINGLE BREASTED\n  STYLE 4150   WOMEN'S, DOUBLE BREASTED\n\nThe house rules the checker signs against, taken as read in the trade and reproduced here in full:\n\n  - the overlap is always described AS WORN, from the point of view of the person inside the garment, never from the point of view of the person looking at it;\n  - a men's garment closes with the wearer's own left front lying on top;\n  - a women's garment closes with the wearer's own right front lying on top;\n  - children's wear is made to the women's rule;\n  - a double breasted garment closes the men's way whichever of those classes it was cut for.\n\nOne more thing the trade does without being told: the buttonholes are worked in the ply that lies on top, and the buttons are sewn on the ply that lies underneath.\n\nWork out for yourself, garment by garment, which front lies on top and which front carries the buttonholes -- I am deliberately telling you neither, and the four are not all the same. The picture must let a checker settle it: the whole front opening of every garment down to the hem, the line where one front crosses the other, the buttonholes and the buttons all easy to make out, and the four forms far enough apart that no garment overlaps its neighbour. Nothing is chalked, pinned or lettered on any garment except its own work ticket at the hem: no side marks, no arrows, no notes on the bench.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well they are made. Does this picture show more than one dress form standing in a row, each wearing a shirt that faces out of the picture towards you? A workroom photograph, a studio shot or an illustration all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "style_numbers": ["4110", "4120", "4135", "4150"],
+    "top_side_expected": ["right", "left", "left", "right"],
+    "overlap_state": "match",
+    "button_state": "match"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_front_lies_the_way_its_own_ticket_class_sets_and_carries_the_buttonholes",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the dress forms standing along the inspection bench",
+          "out": "pk_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pk_r.unreadable"]
+        },
+        {
+          "read_crop": "What style number is printed on the work ticket pinned at the hem of the garment in this cut-out? Answer with that number only.",
+          "boxes": "pk_r",
+          "pad": 0.3,
+          "out": "pk_nm",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pk_nm.unreadable"]
+        },
+        {
+          "read_crop": "Look at the front opening of the garment in this cut-out. Which side of that opening is the piece of cloth lying on top, the left-hand side or the right-hand side as you look at the picture? Answer left or right.",
+          "boxes": "pk_r",
+          "pad": 0.3,
+          "out": "pk_tp",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pk_tp.unreadable"]
+        },
+        {
+          "read_crop": "The buttonholes are the small worked slits the buttons pass through. On the garment in this cut-out, which side of the front opening carries them, the left-hand side or the right-hand side as you look at the picture? Answer left or right.",
+          "boxes": "pk_r",
+          "pad": 0.3,
+          "out": "pk_hl",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pk_hl.unreadable"]
+        },
+        {
+          "run": "check_placket_overlap",
+          "args": [
+            "pk_nm",
+            "pk_tp",
+            "pk_hl",
+            "reference.style_numbers",
+            "reference.top_side_expected"
+          ],
+          "out": "pk_s"
+        },
+        {
+          "compare": "pk_s.state",
+          "to": "reference.overlap_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_buttons_are_sewn_on_the_ply_that_lies_underneath",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the dress forms standing along the inspection bench",
+          "out": "bt_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bt_r.unreadable"]
+        },
+        {
+          "read_crop": "What style number is printed on the work ticket pinned at the hem of the garment in this cut-out? Answer with that number only.",
+          "boxes": "bt_r",
+          "pad": 0.3,
+          "out": "bt_nm",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["bt_nm.unreadable"]
+        },
+        {
+          "read_crop": "Look at the front opening of the garment in this cut-out. Which side of that opening is the piece of cloth lying on top, the left-hand side or the right-hand side as you look at the picture? Answer left or right.",
+          "boxes": "bt_r",
+          "pad": 0.3,
+          "out": "bt_tp",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["bt_tp.unreadable"]
+        },
+        {
+          "read_crop": "On the garment in this cut-out, which side of the front opening carries the buttons themselves, the left-hand side or the right-hand side as you look at the picture? Answer left or right.",
+          "boxes": "bt_r",
+          "pad": 0.3,
+          "out": "bt_bn",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["bt_bn.unreadable"]
+        },
+        {
+          "run": "check_button_side",
+          "args": ["bt_nm", "bt_tp", "bt_bn", "reference.style_numbers"],
+          "out": "bt_s"
+        },
+        {
+          "compare": "bt_s.state",
+          "to": "reference.button_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_side_mark_or_note_was_added_on_a_garment_or_on_the_bench",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a chalk mark, an arrow or a written note added on a garment or on the bench",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "mk_r"
+        },
+        {
+          "fail_if": ["mk_r.unreadable"]
+        },
+        {
+          "compare": "mk_r.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

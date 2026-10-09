@@ -1,0 +1,183 @@
+{
+  "id": "uno_legal_final",
+  "axis": "latent_computation",
+  "prompt": "A clear straight-on overhead photo of a family game-night table showing the end of an UNO hand: on the left, a single face-up DISCARD-PILE TOP card; on the right, a fanned row of the player's REMAINING hand cards, each fully visible. The discard pile starts with a RED 7 on top. The player then plays exactly these SIX cards in order onto the pile, each a legal UNO move, and TWICE plays a WILD card that changes the active colour: (1) a RED 4; (2) a BLUE 4; (3) a WILD card, declaring the new colour to be GREEN; (4) a GREEN 8; (5) a WILD card, declaring the new colour to be YELLOW; (6) a YELLOW SKIP. Their starting hand also held a BLUE 2 and a RED 5, which are NOT played. Draw the FINAL state after all six plays: the correct single card now on top of the discard pile (its colour and value are the result of the whole sequence, including both wild colour changes), and the exact remaining hand still held. Do not print any move list, arrows, or explanatory text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show family game-night table, overhead, showing an UNO discard-pile top card (after two wild colour changes) beside the fanned remaining hand? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "top_card": "yellow skip",
+    "top_color": "yellow",
+    "top_value": "skip",
+    "remaining": ["blue 2", "red 5"],
+    "n_remaining": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "final_state_joint",
+      "weight": 4.0,
+      "score": "j.frac",
+      "steps": [
+        {
+          "ask": "This overhead photo shows an UNO discard pile. Look ONLY at the single face-up card on TOP of the discard pile (the pile on the LEFT, not the hand). Report its colour (one of red, green, blue, yellow) and its value (a number 0-9, or Skip/Reverse/Draw). Answer with just the colour word and the value. Do not explain. Read ONLY what is actually drawn in the image as the final state. Do NOT simulate, replay, or apply the rules yourself -- report exactly what the picture shows, even if it looks wrong.",
+          "out": "va",
+          "retries": null
+        },
+        {
+          "fail_if": ["va.unreadable"]
+        },
+        {
+          "run": "top_discard_match",
+          "args": ["va", "reference.top_color", "reference.top_value"],
+          "out": "topf"
+        },
+        {
+          "ask": "This overhead photo shows a fanned UNO hand (the cards on the RIGHT, held by the player). List every card in that hand. For each card give its colour (red/green/blue/yellow) and value (0-9 or Skip/Reverse/Draw). Answer as a comma-separated list. Do not include the discard pile. Read ONLY what is actually drawn in the image as the final state. Do NOT simulate, replay, or apply the rules yourself -- report exactly what the picture shows, even if it looks wrong.",
+          "out": "ha",
+          "retries": null
+        },
+        {
+          "fail_if": ["ha.unreadable"]
+        },
+        {
+          "extract": "(?is)((?:red|green|blue|yellow)\\s*(?:\\d|skip|reverse|draw).*)$",
+          "value": "ha",
+          "out": "hv"
+        },
+        {
+          "fail_if": ["hv.none"]
+        },
+        {
+          "compare_set": "hv",
+          "to": "reference.remaining",
+          "out": "handf"
+        },
+        {
+          "run": "combined_score",
+          "args": ["topf", "handf"],
+          "out": "j"
+        }
+      ]
+    },
+    {
+      "name": "d1_top_card_color",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the COLOUR of the single face-up card on top of the discard pile (left side of the table). Answer one colour word.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.top_color",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_top_card_value",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the VALUE/face printed on the single card on top of the discard pile (left side). Answer the value word or number.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.top_value",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_remaining_hand_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one playing card in the fanned hand on the right-hand side of the table",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole face-up playing card, rather than bare table or only part of a card? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_remaining",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_move_list",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a printed move list, an arrow, or a line of explanatory writing on the table, not counting the cards themselves",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

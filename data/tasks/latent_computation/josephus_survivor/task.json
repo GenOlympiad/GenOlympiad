@@ -1,0 +1,200 @@
+{
+  "id": "josephus_survivor",
+  "axis": "latent_computation",
+  "prompt": "An overhead diagram of a round banquet table with exactly 17 chairs evenly spaced around it, numbered 1 to 17 clockwise. The guests play an elimination game: starting the count at seat 1, they count around clockwise and every third seat counted is eliminated (its number struck through with a cross), then counting continues from the next remaining seat, wrapping around, until only one seat is never eliminated. Draw the table with all 17 numbered seats, put a cross through every eliminated seat, and draw a bold circle around the single surviving seat. Also print that surviving seat's number, and only that number, inside a small box labelled SURVIVOR. No other text or numbers beyond the 1-17 seat labels and the survivor box.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show overhead banquet round-table seating chart with a number of numbered seats where every third seat is struck out until one survivor seat is circled? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 17,
+    "k": 3,
+    "survivor": 11,
+    "n_eliminated": 16.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "survivor",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or fill in the puzzle yourself. There is a small box labelled SURVIVOR. Report the single seat number printed inside that SURVIVOR box.",
+          "out": "rn"
+        },
+        {
+          "fail_if": ["rn.unreadable"]
+        },
+        {
+          "compare_tolerance": "rn",
+          "to": "reference.survivor",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_seat_count",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered seat drawn around the edge of the round banquet table",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole seat position of the round table carrying its own printed seat number, rather than bare tabletop, the SURVIVOR box, or only part of a seat? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_crossed_seats",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered seat around the round banquet table with a cross struck through it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole numbered seat that has a cross struck through it, rather than a seat with no cross, a bold circle on its own, or only part of a seat? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_eliminated",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_circle_matches_box",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "One seat in this diagram has a bold circle drawn around it. Read the number written at that circled seat. Copy the number exactly as it is printed; do not work anything out. Answer with digits only.",
+          "out": "circled"
+        },
+        {
+          "fail_if": ["circled.unreadable"]
+        },
+        {
+          "read_number": "There is a small box labelled SURVIVOR. Read the number printed inside that box. Copy the number exactly as it is printed; do not work anything out. Answer with digits only.",
+          "out": "boxed"
+        },
+        {
+          "fail_if": ["boxed.unreadable"]
+        },
+        {
+          "run": "circled_equals_boxed",
+          "args": ["circled", "boxed"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_one_circled",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is exactly one seat drawn with a bold circle (the survivor) in the diagram? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_survivor_not_crossed",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a cross or strike-through mark drawn over the one seat that has the bold circle around it",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

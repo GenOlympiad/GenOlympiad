@@ -1,0 +1,292 @@
+{
+  "id": "equal_tick_subdivision",
+  "axis": "quantitative_precision",
+  "prompt": "A sharp, evenly-lit straight-on top-down macro PHOTOGRAPH of one plain rectangular PINE BOARD lying flat on a carpenter's workbench, its long clean face filling the frame. A cabinetmaker is laying out shelf-pin holes: divide the board's length into EXACTLY 3 EQUAL parts by drawing EXACTLY 2 straight pencil cross-lines across the board, spaced PERFECTLY EVENLY so every one of the 3 parts between (and outside) the marks is exactly the same length. Not 1 marks, not 3 marks -- exactly 2 interior cross-lines at the equal division positions, none bunched together or drifting. A genuine workshop photograph: real pine grain and pencil graphite, natural light, soft shadow. No ruler numbers, no dimensions, no text, no numerals, no measurement annotations anywhere on the board.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a carpenter's pine board marked with equally spaced pencil cross-lines for shelf-pin holes, straight-on top-down macro of the marked board. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "k_segments": 3,
+    "target_ratio": [1, 1, 1],
+    "K": 3,
+    "d2_q_feature": "This image was supposed to depict: a carpenter's pine board marked with equally spaced pencil cross-lines for shelf-pin holes, straight-on top-down macro of the marked board. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This image should depict: a carpenter's pine board marked with equally spaced pencil cross-lines for shelf-pin holes, straight-on top-down macro of the marked board. Is the object / instrument / worksheet actually shown the KIND of thing described (the right carrier for the measurement), rather than a different object or a generic placeholder? Answer with the single word yes or no only.",
+    "d2_q_single": "This image should depict: a carpenter's pine board marked with equally spaced pencil cross-lines for shelf-pin holes, straight-on top-down macro of the marked board, and only that. Is the measured object / construction shown cleanly on its own, WITHOUT extra distracting objects, clutter, or duplicate copies that are not part of the described scene? Answer yes if only the intended subject is present, no if there is distracting clutter or extra objects. Answer with the single word yes or no only.",
+    "d2_q_precise": "Does this image look like a PRECISE, deliberately constructed measurement or technical drawing -- crisp straight lines, sharp marks, cleanly drawn scale divisions, the look of something laid out with instruments -- as opposed to a rough, wobbly, freehand or sketchy rendering where the geometry is clearly approximate? Answer yes if it looks precisely / deliberately constructed, no if it looks rough or freehand. Answer with the single word yes or no only.",
+    "d2_q_units": "This image should depict: a carpenter's pine board marked with equally spaced pencil cross-lines for shelf-pin holes, straight-on top-down macro of the marked board. Does it show a graduated measuring scale -- a numbered ruler, dial, vernier, gauge, or marked graduations with visible tick marks or numbers -- that a reading could be taken from, rather than the scale being missing or blank? Answer with the single word yes or no only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_segment_count",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "pencil line drawn on the board's face",
+          "context": "the wooden board (the single board lying on the bench, its whole face)",
+          "out": "mk"
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "read_crop": "Does this close-up show a pencil line drawn on the wood -- a deliberate straight pencil mark, not the wood's own grain and not the edge of the board? Answer yes or no only.",
+          "boxes": "mk",
+          "out": "ck"
+        },
+        {
+          "fail_if": ["ck.unreadable"]
+        },
+        {
+          "run": "count_confirmed_marks",
+          "args": ["ck"],
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n_segments",
+          "to": "reference.k_segments",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_equal_spacing",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "wooden board -- the single plain board lying on the bench, boxed end to end",
+          "expected_n": 1,
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "pencil line drawn on the board's face",
+          "context": "the wooden board (the single board lying on the bench, its whole face)",
+          "out": "mk"
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "read_crop": "Does this close-up show a pencil line drawn on the wood -- a deliberate straight pencil mark, not the wood's own grain and not the edge of the board? Answer yes or no only.",
+          "boxes": "mk",
+          "out": "ck"
+        },
+        {
+          "fail_if": ["ck.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "tick_spacing_error",
+          "args": ["bd", "mk", "ck", "src", "reference.target_ratio"],
+          "out": "sub2"
+        },
+        {
+          "fail_if": ["sub2.degenerate"]
+        },
+        {
+          "compare_band": "sub2.max_frac_err",
+          "to": 0.0,
+          "core": 0.03,
+          "margin": 0.12,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "gate": true,
+      "not_scored": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "gate": true,
+      "not_scored": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_single_subject",
+      "weight": 0.6,
+      "gate": true,
+      "not_scored": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_single",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "gate": true,
+      "not_scored": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_units_ref",
+      "weight": 0.6,
+      "gate": true,
+      "not_scored": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_units",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

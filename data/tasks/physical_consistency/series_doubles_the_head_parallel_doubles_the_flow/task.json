@@ -1,0 +1,84 @@
+{
+  "id": "series_doubles_the_head_parallel_doubles_the_flow",
+  "axis": "physical_consistency",
+  "prompt": "The pump skid cannot go out without a witnessed test sheet, so the works photographs the floor with both sets running and every instrument turned towards the camera.\n\nOne test skid carries two sets of pumps of the same model. The set nearest the camera is coupled end to end, the discharge of the first pump feeding the suction of the second. The set behind it stands side by side, both pumps discharging into one shared header. Each set has its own pressure gauge, marked off in metres of head, and its own flow meter, marked off in cubic metres an hour. The works plate on every pump gives the duty of a single pump as 32 metres of head at 18 cubic metres an hour, and the test sheet on the rail says both sets are running at that duty point.\n\nWhat the four instruments come to rest at is what the test sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a test skid carrying two sets of pumps with a pressure gauge and a flow meter on each set? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "end_to_end_gauge_higher"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the flow meter on the set whose two pumps stand side by side on one shared header, and write the reading in cubic metres an hour.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "34", "38"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the two pressure gauges, one on each set, and say how they stand. Answer with one of: the gauge on the set coupled end to end stands higher up its scale than the other gauge; the gauge on the set standing side by side stands higher up its scale than the other gauge; the two gauges stand at the same mark as each other.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "id": "lego_step_n_assembly",
+  "axis": "latent_computation",
+  "prompt": "A toy-brick instruction-booklet page for a small model, drawn as a clean numbered STEP diagram. The booklet has SIX numbered build steps shown down the left as a checklist strip, and a panel on the right that shows the running tallies AT STEP 5 (the build has been executed through step 5; step 6 is not done yet). The steps are: Step 1 lay a base plate of 6 grey bricks (0 red); Step 2 add side walls of 8 bricks, 4 of them red; Step 3 is a CORRECTION step: REMOVE the 2 red placeholder bricks and REPLACE them with 1 grey hinge brick (so this step takes away 2 red bricks and adds 1 grey brick); Step 4 add a red roof of 7 bricks, 6 of them red; Step 5 add 5 window bricks, 3 of them red; Step 6 (NOT yet built) add a 3-brick antenna, 1 of them red. Execute the build THROUGH STEP 5 only, keeping a running count. In the right-hand panel print 'BRICKS:' followed by the TOTAL number of bricks placed so far, and 'RED:' followed by the number of RED bricks placed so far. Remember step 3 REMOVES 2 red bricks and adds only 1 grey one, and do NOT include step 6. Print ONLY those two running totals as large numbers and the step checklist -- do not print any per-step brick counts, and do not print the step-6 numbers.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a toy-brick instruction-booklet page: a numbered build-step checklist with a panel showing running BRICKS and RED tallies? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image shows just a blank card or plain panel with none of that shown, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "total": 25,
+    "red": 11,
+    "q_total": "On the brick-booklet page, read the number printed after 'BRICKS:' in the right-hand step-5 panel. Read only the printed digits; do NOT recompute. Answer with a whole number only.",
+    "q_red": "On the brick-booklet page, read the number printed after 'RED:' in the right-hand step-5 panel. Read only the printed digits; do NOT recompute. Answer with a whole number only.",
+    "q_steps": "How many numbered build steps are shown in the checklist strip down the left side of the booklet page? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "total_red_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_total",
+          "out": "tt"
+        },
+        {
+          "read_number": "reference.q_red",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["tt.unreadable", "rd.unreadable"]
+        },
+        {
+          "compare_band": "tt",
+          "to": "reference.total",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "ft"
+        },
+        {
+          "compare_band": "rd",
+          "to": "reference.red",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "fr"
+        },
+        {
+          "all": ["ft", "fr"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_total",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read_number": "reference.q_total",
+          "out": "t2"
+        },
+        {
+          "fail_if": ["t2.unreadable"]
+        },
+        {
+          "compare_band": "t2",
+          "to": "reference.total",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "step_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "reference.q_steps",
+          "out": "nc"
+        },
+        {
+          "fail_if": ["nc.unreadable"]
+        },
+        {
+          "compare_band": "nc",
+          "to": 6,
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

@@ -1,0 +1,118 @@
+{
+  "id": "seating_boustrophedon",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed EXAM-HALL SEATING CHART titled 'EXAMINATION HALL  --  SEATING PLAN': a grid of 5 rows by 6 columns of seats, one big seat NUMBER printed in each cell. Number the seats in a SNAKE (boustrophedon) order: number row 1 from LEFT to RIGHT (seats 1..6), then number row 2 from RIGHT to LEFT continuing the count, then row 3 LEFT to RIGHT again, and so on, alternating direction every row, so the numbers run 1 up to 30 with no gaps and no repeats. CRITICAL: each row after the first REVERSES direction, so consecutive numbers snake up and down; the seat directly below seat 6 must be seat 7 (the count carries down at the end of the row, not restarting). Print only the numbered seating grid. Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a printed exam-hall SEATING CHART grid whose seats are numbered snaking row by row. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_seats": 30,
+    "R": 5,
+    "C": 6,
+    "s_r": [1, 1, 4, 4],
+    "s_c": [0, 5, 0, 5],
+    "s_val": [12, 7, 25, 30],
+    "q_count": "How many seat cells are in this seating grid in total (rows times columns)? Whole number only.",
+    "q0": "On this seating chart grid (the top row is row 1, the row below it is row 2, and so on; the left-most seat in a row is column 1), read the seat NUMBER printed in the seat at ROW 2, COLUMN 1. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Digits only.",
+    "q1": "On this seating chart grid (the top row is row 1, the row below it is row 2, and so on; the left-most seat in a row is column 1), read the seat NUMBER printed in the seat at ROW 2, COLUMN 6. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Digits only.",
+    "q2": "On this seating chart grid (the top row is row 1, the row below it is row 2, and so on; the left-most seat in a row is column 1), read the seat NUMBER printed in the seat at ROW 5, COLUMN 1. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Digits only.",
+    "q3": "On this seating chart grid (the top row is row 1, the row below it is row 2, and so on; the left-most seat in a row is column 1), read the seat NUMBER printed in the seat at ROW 5, COLUMN 6. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Digits only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "snake_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q0",
+          "out": "v0"
+        },
+        {
+          "fail_if": ["v0.unreadable"]
+        },
+        {
+          "read_number": "reference.q1",
+          "out": "v1"
+        },
+        {
+          "fail_if": ["v1.unreadable"]
+        },
+        {
+          "read_number": "reference.q2",
+          "out": "v2"
+        },
+        {
+          "fail_if": ["v2.unreadable"]
+        },
+        {
+          "read_number": "reference.q3",
+          "out": "v3"
+        },
+        {
+          "fail_if": ["v3.unreadable"]
+        },
+        {
+          "run": "seat_numbers_match",
+          "args": ["v0", "v1", "v2", "v3", "reference.s_val"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one seat cell of the seating grid with a seat number printed in it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole seat cell with a printed seat number in it, rather than blank paper or only part of a cell? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n_seats",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

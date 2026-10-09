@@ -1,0 +1,81 @@
+{
+  "id": "binary_led_number",
+  "axis": "symbolic_systems",
+  "prompt": "A clean straight-on photograph of a ship's-bridge ENGINE-ROOM status strip: a single horizontal row of exactly 12 round indicator lamps set flush in a dark-grey steel panel, evenly spaced, each with a thin brushed rim. The strip displays the register value 3012 in binary using 12 bits, MOST SIGNIFICANT BIT on the LEFTMOST lamp: convert 3012 to its 12-bit binary form, then light lamp k only when its bit is 1 — a lit lamp is a bright glowing amber disc, an off lamp is a flat matte black disc. STRICT: the panel carries nothing but the one row of lamps — no printed number, no digits, no text, no labels, no gauges, no dials, no frame lines. The lamp pattern is the only carrier of the value.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show ship's-bridge engine-room binary status lamp strip set flush in a dark-grey steel panel, photographed straight-on? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "value": 3012,
+    "n": 12,
+    "bits": [1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0],
+    "aspect_min": 9.0,
+    "q_bits": "This image shows a single horizontal row of exactly 12 round indicator lamps. Reading the lamps LEFT to RIGHT, output 12 binary digits separated by single spaces: 1 if that lamp is lit/glowing (bright), 0 if it is dark/off. Output ONLY the 12 digits and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bit_encoding",
+      "weight": 1.0,
+      "score": "b.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the horizontal strip of round indicator lamps set in the steel panel",
+          "expected_n": 1,
+          "out": "strip"
+        },
+        {
+          "run": "lamp_strip_window",
+          "args": ["strip"],
+          "out": "win"
+        },
+        {
+          "crop": "win.bbox",
+          "out": "sc"
+        },
+        {
+          "read": "boxes",
+          "image": "sc",
+          "target": "one round indicator lamp set in the panel",
+          "out": "lamps",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["lamps.unreadable"]
+        },
+        {
+          "read_crop": "This picture shows one round indicator lamp from a panel. Is that lamp LIT (a bright glowing disc) or DARK (a flat unlit disc)? Answer with exactly one word: lit or dark.",
+          "image": "sc",
+          "boxes": "lamps",
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "score_lamp_bits",
+          "args": ["lamps", "st", "reference"],
+          "out": "b"
+        }
+      ]
+    }
+  ]
+}

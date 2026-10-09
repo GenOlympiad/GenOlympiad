@@ -1,0 +1,141 @@
+{
+  "id": "ut_angle_beam_locus",
+  "axis": "latent_computation",
+  "prompt": "The boiler shop's second-shift examiner has one weld left to close out, and the re-check record page must be on the surveyor's desk by morning.\n\nThe job is the circumferential seam on drum B, butt-welded steel plate 20 mm thick. The examiner works from the left side of the weld with an angle-beam probe of the shop's standard 60-degree refraction, and when the signal of interest comes up, the probe's index point stands 62 mm from the weld centreline. On the instrument, the horizontal scale reads the sound path in millimetres, 0 to 100 with a printed number every ten, and the flaw gate brackets one echo standing tall at the 70 mark.\n\nThe record page follows the shop's standing format. The screen photograph goes on the left. On the right the examiner draws the plate in cross-section -- both plate surfaces, the weld centreline, the probe at its stand-off on the top surface -- and lays in the sound path from the probe's index point at the probe's angle, letting it mirror off the far surface of the plate wherever the gated reading runs past what a single leg of this plate can carry, with the flaw marked at the point where the reading says the path ends. Where that mark lands in the steel is the whole point of the page: the surveyor accepts or repairs the weld by it, and no number on the page says it -- the angle, the stand-off and the reading at the gate decide it together.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an inspection record page carrying an instrument screen photo and a hand-drawn technical sketch. A photograph, a rendering or a scan of one all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "path_key": "floor",
+    "landing_key": "top half / second",
+    "screen_mark": "70"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_drawn_beam_path_folds_once_on_the_backwall",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the hand-drawn plate cross-section sketch on the inspection record page",
+          "out": "sk1"
+        },
+        {
+          "fail_if": ["sk1.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a hand-drawn plate cross-section from a weld record. How does the drawn sound-beam line run? Answer straight if it is one straight segment, floor if its only bend sits on the bottom surface line, elsewhere if a bend sits off the bottom line, several if it bends more than once, missing if no beam line is drawn.",
+          "boxes": "sk1",
+          "pad": 0.15,
+          "out": "ps"
+        },
+        {
+          "fail_if": ["ps.unreadable"]
+        },
+        {
+          "run": "beam_path_shape",
+          "args": ["ps", "reference.path_key"],
+          "out": "pv"
+        },
+        {
+          "compare": "pv.obs",
+          "to": "pv.exp",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_flaw_mark_rides_the_second_leg_in_the_top_half",
+      "weight": 2.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the hand-drawn plate cross-section sketch on the inspection record page",
+          "out": "sk2"
+        },
+        {
+          "fail_if": ["sk2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a hand-drawn plate cross-section from a weld record. In which part of the plate's drawn thickness does the flaw mark sit? Answer with exactly one phrase: top half, bottom half, on the bottom edge, outside the plate, or no mark.",
+          "boxes": "sk2",
+          "pad": 0.15,
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a hand-drawn plate cross-section from a weld record. Where along the drawn sound-beam line does the flaw mark sit? Answer first if it sits on the segment leaving the probe, second if it sits past a bend, off if it sits away from the drawn line, none if no flaw mark is drawn.",
+          "boxes": "sk2",
+          "pad": 0.15,
+          "out": "pp"
+        },
+        {
+          "fail_if": ["pp.unreadable"]
+        },
+        {
+          "run": "flaw_landing",
+          "args": ["bd", "pp", "reference.landing_key"],
+          "out": "lv"
+        },
+        {
+          "compare": "lv.obs",
+          "to": "lv.exp",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_screen_echo_stands_at_the_pinned_sound_path",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the instrument screen photograph pasted on the inspection record page",
+          "out": "scr"
+        },
+        {
+          "fail_if": ["scr.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows an ultrasonic flaw-detector screen with a horizontal scale of printed numbers along its bottom. Copy the printed scale number standing nearest to the foot of the tallest echo peak. Answer with the digits of that number only.",
+          "boxes": "scr",
+          "pad": 0.15,
+          "out": "sm"
+        },
+        {
+          "fail_if": ["sm.unreadable"]
+        },
+        {
+          "run": "screen_mark_number",
+          "args": ["sm", "reference.screen_mark"],
+          "out": "mv"
+        },
+        {
+          "compare": "mv.obs",
+          "to": "mv.exp",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

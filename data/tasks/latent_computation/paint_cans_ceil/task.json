@@ -1,0 +1,167 @@
+{
+  "id": "paint_cans_ceil",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photo of a printed home-decorating ESTIMATE slip taped to a wall on a renovation site (a decorator's quote pad, plain print). It estimates the paint needed for one job. Gross wall area: 118 square metres. Doors and windows that are NOT painted total 13 square metres and must be subtracted. The walls get 2 coats. Each tin of paint covers 12 square metres per coat. The slip has a bold field 'TINS TO BUY:' followed by the single whole number of tins to purchase. Work it out in order: subtract the door-and-window area from the gross wall area to get the paintable area, multiply by the number of coats to get the total area actually painted, divide by the coverage per tin, and because you cannot buy a fraction of a tin you must ROUND UP to the next whole tin. Print that whole number of tins there. Also print the gross area, the openings, the coats and the coverage-per-tin as reference lines. Print only these numbers; make the TINS TO BUY value large and legible. No working or division shown.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show decorator's on-site paint estimate slip whose tin count is a multi-surface net-area x coats / coverage rounded up? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "gross": 118,
+    "openings": 13,
+    "coats": 2,
+    "coverage": 12,
+    "net_area": 210,
+    "cans": 18,
+    "floor": 17,
+    "one_coat": 9,
+    "q_cans": "This is a decorator's paint estimate slip. Find the bold field 'TINS TO BUY'. Read the whole number of tins printed on that line. Answer with ONLY that number, digits only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cans",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_cans",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_tolerance": "rd",
+          "to": "reference.cans",
+          "tol": 0.4,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_gross",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the estimate slip, read the printed GROSS wall area reference line (square metres). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.gross",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_openings",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the estimate slip, read the printed doors-and-windows OPENINGS area reference line (square metres). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.openings",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_coverage",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the estimate slip, read the printed COVERAGE-PER-TIN reference line (square metres per coat). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.coverage",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_coats",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the estimate slip, read the printed number of COATS reference line. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.coats",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_extra_working",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Apart from the small number of required result / reference values, does this image show any WORKED-OUT arithmetic, intermediate calculation lines, a written formula, a move list, or an explanation of how the value was obtained? Answer 'yes' if any such working / formula / explanation is visible, 'no' if only the required values (and ordinary labels) appear. Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

@@ -1,0 +1,132 @@
+{
+  "id": "count_occlusion_majority",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic photograph looking straight down on a pale sewing table covered with identical red buttons, with a long strip of white paper laid across part of the table. EXACTLY 30 buttons lie clear of the paper strip, so that MORE than half of each of those buttons is visible. A further 14 buttons are tucked under the strip's edge so that only a THIN SLIVER of each shows -- much less than half of each of those 14 is visible. All the buttons are the same size. Scatter them irregularly with uneven gaps -- never in rows, never in a grid, never arranged as a ring or a decorative border. Even light, sharp focus. No text, no numerals, no labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a sewing table covered in red buttons with a long strip of white paper laid over part of them. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q": "Count only the red buttons that are MORE THAN HALF visible; ignore the ones that are mostly hidden under the paper strip and show only a thin sliver. Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This image should show the countable objects described as: a sewing table covered in red buttons with a long strip of white paper laid over part of them. Look at the individual objects being counted. Are they clearly the correct KIND of object (the right thing, of the right colour where a colour was specified) rather than some other object, blobs, or a mix that does not match the description? Answer with the single word yes or no only.",
+    "n": 30
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "red round object",
+          "propose_boxes": "vlm",
+          "out": "bx",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This picture shows a red round object, and a piece of white paper may lie across part of it. Is the part of the red object you can still see bigger than the part hidden under the white paper? Answer yes if more than half of the red object is visible, and no if less than half of it is visible. Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_boxes",
+          "args": ["cr"],
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one button lying on the sewing table, in the open or half under the paper strip",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_g"
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE red button, lying either fully in the open or with only a sliver showing from under the white paper strip, rather than a button of some other colour, a coin, a bottle cap, or a shapeless blob? Answer yes or no only.",
+          "boxes": "box_g",
+          "out": "crop_g"
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a red bottle cap",
+    "s2": "a red poker chip",
+    "s3": "a red button"
+  }
+}

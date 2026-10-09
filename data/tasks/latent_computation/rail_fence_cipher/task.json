@@ -1,0 +1,161 @@
+{
+  "id": "rail_fence_cipher",
+  "axis": "latent_computation",
+  "prompt": "A cipher-club blackboard photo. Encrypt the 12-letter plaintext MIDNIGHTFROG with a RAIL-FENCE (zigzag) cipher of 3 rails, and show BOTH the zigzag grid and the ciphertext.\n\nWrite the plaintext letter by letter along a zigzag that goes DOWN the 3 rails then back UP, repeatedly: the 1st letter on the top rail, then diagonally down to the middle rail, then the bottom rail, then back up to the middle, up to the top, and so on. Draw the 3 rails as 3 horizontal rows of cells with each letter placed in the column and rail its zigzag path reaches (blank cells stay empty). THEN, underneath, print the CIPHERTEXT: read all the letters off rail by rail, top rail left-to-right first, then the middle rail, then the bottom rail, concatenated into one 12-letter string with no spaces. Label that line CIPHER. Show the zigzag grid and the single CIPHER line, no other text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show cipher-club blackboard showing a 3-rail zigzag rail-fence encryption grid and the read-off ciphertext line? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "plaintext": "MIDNIGHTFROG",
+    "rails": 3,
+    "cipher": "MIFINGTRGDHO",
+    "q_form": "Look at this image. Is it a grid of letters (a few rows) with a line labelled CIPHER printed showing a run of about 12 capital letters? Answer ONLY 'yes' or 'no'.",
+    "q_cipher": "Find the line labelled CIPHER. Report ONLY the letters actually printed on that line in THIS image; do NOT perform the rail-fence encryption yourself or correct what is written. Read the run of capital letters exactly as printed. Output ONLY those letters as one uppercase string, no spaces, no label, nothing else.",
+    "n_letters": 12,
+    "top_first": "M",
+    "bottom_first": "D"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ciphertext",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_cipher",
+          "out": "ans"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "extract_letters",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "run": "cipher_matches",
+          "args": ["read", "reference.cipher"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "layout_rails",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "How many horizontal rails (rows) does the zigzag rail-fence grid have? Give a whole number only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.rails",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_plaintext_letters",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Look at the BOTTOM rail (the lowest of the three horizontal rows) of the zigzag grid. Read the FIRST (left-most) letter placed on that bottom rail. Read ONLY the letter actually written in that cell; do NOT undo the cipher and do NOT count anything. Answer with a single letter only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.bottom_first",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "top_rail_first",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the FIRST letter placed on the TOP rail of the zigzag grid (leftmost cell of the top row). Answer with a single letter.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.top_first",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cipher_labelled",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is there a single line labelled 'CIPHER' printed underneath the zigzag grid? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

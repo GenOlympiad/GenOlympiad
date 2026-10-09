@@ -1,0 +1,194 @@
+{
+  "id": "candlestick_wick_body",
+  "axis": "long_range_consistency",
+  "prompt": "A clean flat CANDLESTICK price chart on a plain white background, the kind on a trading terminal. Draw EXACTLY TEN candlesticks in a left-to-right row for these ten Open/High/Low/Close quotes (in order): #1 O40 H47 L38 C45; #2 O45 H46 L39 C41; #3 O41 H44 L40 C43; #4 O43 H45 L36 C37; #5 O37 H42 L35 C41; #6 O41 H43 L39 C40; #7 O40 H50 L39 C49; #8 O49 H51 L44 C46; #9 O46 H48 L42 C47; #10 O47 H49 L41 C43. For EACH candle: draw a thin vertical WICK line from its Low up to its High, and a thicker rectangular BODY spanning between its Open and its Close -- so the body is always fully CONTAINED inside the wick. Work out each candle's colour yourself: colour it GREEN if its Close is above its Open, RED if its Close is below its Open. Do not print any numbers on the chart. No axis, no gridlines, no legend, no other text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show trading-terminal candlestick chart on white, ten green/red candles derived from raw OHLC quotes? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "candles": [
+      [40, 47, 38, 45],
+      [45, 46, 39, 41],
+      [41, 44, 40, 43],
+      [43, 45, 36, 37],
+      [37, 42, 35, 41],
+      [41, 43, 39, 40],
+      [40, 50, 39, 49],
+      [49, 51, 44, 46],
+      [46, 48, 42, 47],
+      [47, 49, 41, 43]
+    ],
+    "signs": ["up", "down", "up", "down", "up", "down", "up", "down", "up", "down"],
+    "n_candles": 10
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "candle_count",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single candlestick in the price chart: one coloured rectangle with a thin vertical line running through it. ONE box per candle, spanning that candle's whole height from the top end of its thin line down to the bottom end of that line and holding all of its rectangle. Count a box only if a filled green or red rectangle sits inside it; do not box one candle twice and do not box empty white background.",
+          "votes": 3,
+          "out": "kab",
+          "sweep": true
+        },
+        {
+          "fail_if": ["kab.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a price chart drawn as candlesticks. Does this cut-out show exactly ONE whole candlestick -- one coloured rectangle with a thin vertical line running through it -- rather than two candlesticks side by side, only a piece of one candlestick, or just empty background? Answer yes or no only.",
+          "boxes": "kab",
+          "pad": 0.06,
+          "out": "kac"
+        },
+        {
+          "fail_if": ["kac.unreadable"]
+        },
+        {
+          "run": "count_confirmed_candles",
+          "args": ["kab", "kac"],
+          "out": "kn"
+        },
+        {
+          "compare_band": "kn.n",
+          "to": "reference.n_candles",
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "wick_contains_body",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single candlestick in the price chart: one coloured rectangle with a thin vertical line running through it. ONE box per candle, spanning that candle's whole height from the top end of its thin line down to the bottom end of that line and holding all of its rectangle. Count a box only if a filled green or red rectangle sits inside it; do not box one candle twice and do not box empty white background.",
+          "votes": 3,
+          "out": "kbb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["kbb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a price chart drawn as candlesticks. Does this cut-out show exactly ONE whole candlestick -- one coloured rectangle with a thin vertical line running through it -- rather than two candlesticks side by side, only a piece of one candlestick, or just empty background? Answer yes or no only.",
+          "boxes": "kbb",
+          "pad": 0.06,
+          "out": "kbc"
+        },
+        {
+          "fail_if": ["kbc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a price chart. It shows one candlestick: a coloured rectangle with a thin vertical line running through it. Does that thin line stick out ABOVE the top edge of the coloured rectangle? Answer yes or no only.",
+          "boxes": "kbb",
+          "pad": 0.06,
+          "out": "kbu"
+        },
+        {
+          "fail_if": ["kbu.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a price chart. It shows one candlestick: a coloured rectangle with a thin vertical line running through it. Does that thin line stick out BELOW the bottom edge of the coloured rectangle? Answer yes or no only.",
+          "boxes": "kbb",
+          "pad": 0.06,
+          "out": "kbd"
+        },
+        {
+          "fail_if": ["kbd.unreadable"]
+        },
+        {
+          "run": "read_candles",
+          "args": ["kbb", "kbc", "None", "kbu", "kbd"],
+          "out": "od"
+        },
+        {
+          "run": "wicks_on_both_sides",
+          "args": ["od.above", "od.below"],
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.no_read"]
+        },
+        {
+          "run": "frac_of",
+          "args": ["cc"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "updown_sequence",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single candlestick in the price chart: one coloured rectangle with a thin vertical line running through it. ONE box per candle, spanning that candle's whole height from the top end of its thin line down to the bottom end of that line and holding all of its rectangle. Count a box only if a filled green or red rectangle sits inside it; do not box one candle twice and do not box empty white background.",
+          "votes": 3,
+          "out": "kcb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["kcb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a price chart drawn as candlesticks. Does this cut-out show exactly ONE whole candlestick -- one coloured rectangle with a thin vertical line running through it -- rather than two candlesticks side by side, only a piece of one candlestick, or just empty background? Answer yes or no only.",
+          "boxes": "kcb",
+          "pad": 0.06,
+          "out": "kcc"
+        },
+        {
+          "fail_if": ["kcc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a price chart. It shows one candlestick: a coloured rectangle with a thin vertical line running through it. What colour is that rectangle? Answer with a single word, either green or red.",
+          "boxes": "kcb",
+          "pad": 0.04,
+          "out": "kcw"
+        },
+        {
+          "fail_if": ["kcw.unreadable"]
+        },
+        {
+          "run": "read_candles",
+          "args": ["kcb", "kcc", "kcw", "None", "None"],
+          "out": "od2"
+        },
+        {
+          "run": "direction_share",
+          "args": ["od2.signs", "reference['signs']"],
+          "out": "sf"
+        },
+        {
+          "compare_band": "sf",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

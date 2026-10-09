@@ -1,0 +1,203 @@
+{
+  "id": "far_turbines_stand_on_no_water",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A long-lens photograph for a picture library's energy collection, taken at first light from a clifftop viewing platform on a calm, very clear morning, looking straight out to sea.\n\nThese are the conditions to work from. The platform deck stands 10 m above the water. Out from the shore runs a single line of identical wind turbines, each with a tower 90 m from the water up to the nacelle and a rotor turning above that. Four of them are on this bearing and the four distances are 8 km, 30 km, 45 km and 75 km from the platform.\n\nThe air is clear enough that haze takes nothing away, the sea is flat, and the horizon runs sharp right across the frame. Frame it so that the horizon line and everything standing above it are both in shot, and so that a viewer could tell one machine from the next by how big it looks.\n\nWork out for yourself what a viewer at that platform actually sees of each of those four machines -- I am deliberately not telling you how much of any of them is left, and I am not telling you how many of them can be seen at all.\n\nThe horizon, the sea in front of it and every part of every machine that stands above it must be legible in the one frame. The picture carries nothing else: no distance caption, no note about the curve of the earth, and no marker anywhere naming how much of a tower is hidden.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a sea with a horizon across it and wind turbines standing out in the water? A photograph, a render or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no sea at all. Answer yes or no only.",
+  "reference": {
+    "n_visible": 3,
+    "cut_ladder": ["whole", "most", "top"],
+    "visible_tag": "yes",
+    "eaten_tag": "yes",
+    "waterline_tag": "yes",
+    "clean_page": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_three_of_the_four_are_left_above_the_horizon",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the strip of sea and sky along the horizon with the turbines standing on it",
+          "out": "hz"
+        },
+        {
+          "fail_if": ["hz.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this strip. How many wind turbines can you see standing above the horizon? Write the number only. If you cannot see the horizon, answer none.",
+          "boxes": "hz",
+          "pad": 0.05,
+          "out": "hz1"
+        },
+        {
+          "run": "towers_visible_match",
+          "args": ["hz1", "reference.n_visible"],
+          "out": "vv"
+        },
+        {
+          "fail_if": ["vv.refused"]
+        },
+        {
+          "compare": "vv.tag",
+          "to": "reference.visible_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_towers_are_eaten_from_the_bottom_upwards",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the line of wind turbines standing out from the shore with the horizon behind them",
+          "out": "tw"
+        },
+        {
+          "fail_if": ["tw.unreadable"]
+        },
+        {
+          "read_crop": "Look only at the biggest turbine in this cut-out. How much of it can you see? Answer with one of: the whole of it down to where it meets the sea, most of it but the foot is cut off, only the top of it.",
+          "boxes": "tw",
+          "pad": 0.05,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Look only at the middle-sized turbine in this cut-out. How much of it can you see? Answer with one of: the whole of it down to where it meets the sea, most of it but the foot is cut off, only the top of it.",
+          "boxes": "tw",
+          "pad": 0.05,
+          "out": "t2"
+        },
+        {
+          "read_crop": "Look only at the smallest turbine in this cut-out. How much of it can you see? Answer with one of: the whole of it down to where it meets the sea, most of it but the foot is cut off, only the top of it.",
+          "boxes": "tw",
+          "pad": 0.05,
+          "out": "t3"
+        },
+        {
+          "run": "towers_cut_match",
+          "args": ["t1", "t2", "t3", "reference.cut_ladder"],
+          "out": "ev"
+        },
+        {
+          "fail_if": ["ev.refused"]
+        },
+        {
+          "compare": "ev.tag",
+          "to": "reference.eaten_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_the_nearest_machine_meets_the_water",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the line of wind turbines with the sea running in front of them up to the horizon",
+          "out": "wl"
+        },
+        {
+          "fail_if": ["wl.unreadable"]
+        },
+        {
+          "read_crop": "Look only at the middle-sized turbine in this cut-out. Is there any sea showing below the lowest part of it that you can see? Answer yes or no.",
+          "boxes": "wl",
+          "pad": 0.05,
+          "out": "wl1"
+        },
+        {
+          "read_crop": "Look only at the smallest turbine in this cut-out. Is there any sea showing below the lowest part of it that you can see? Answer yes or no.",
+          "boxes": "wl",
+          "pad": 0.05,
+          "out": "wl2"
+        },
+        {
+          "run": "no_sea_below_towers",
+          "args": ["wl1", "wl2"],
+          "out": "wv"
+        },
+        {
+          "fail_if": ["wv.refused"]
+        },
+        {
+          "compare": "wv.tag",
+          "to": "reference.waterline_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_in_the_frame_gives_the_distances_away",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a distance caption printed on the picture, other than the sea, the sky, the horizon, the machines and the platform rail",
+          "out": "zg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["zg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "zg",
+          "pad": 0.15,
+          "out": "zgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a distance caption printed on the picture? Answer yes or no. Answer no if the cut-out shows the flat sea, the open sky, the sharp horizon line, a tower standing out of the water, a nacelle, a turning rotor, or the railing of the viewing platform.",
+          "boxes": "zg",
+          "pad": 0.15,
+          "out": "zgy"
+        },
+        {
+          "read_crop": "This is a wide cut-out: the thing asked about is in the middle, and what surrounds it shows what it sits on. Was it put there as a caption on the picture giving how far a machine stands away? Answer yes or no. Answer no if it is part of the seascape as photographed -- flat water, open sky, the horizon across the frame, a tower with its nacelle and rotor, or the platform railing.",
+          "boxes": "zg",
+          "pad": 0.8,
+          "out": "zgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["zg", "zgw", "zgy", "zgz"],
+          "out": "zgc"
+        },
+        {
+          "fail_if": ["zgc.refused"]
+        },
+        {
+          "compare": "zgc.clean",
+          "to": "reference.clean_page",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

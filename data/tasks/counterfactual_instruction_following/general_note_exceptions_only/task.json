@@ -1,0 +1,182 @@
+{
+  "id": "general_note_exceptions_only",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A subcontract fabricator is quoting a laser-cut steel bracket, and the drawing office owes him the ballooned first-article drawing he quotes from. The picture is that drawing, taped flat on the quoting desk and square to the camera.\n\nThe part is a flat plate with two round holes and two shaped corners. Six features on it are ballooned for first-article inspection, one numbered balloon each, numbered 1 to 6, and every balloon carries its number and the size of its feature.\n\nOne line above the title block, on every drawing this office issues, stands the general note, word for word:\nUNTOLERANCED LINEAR DIMENSIONS +/-0.2 -- UNSPECIFIED RADII R3\n\nThe inspection schedule the office works from gives each ballooned feature its size and the tolerance or radius that actually governs it:\n  balloon 1  overall width                120.0   +/-0.2\n  balloon 2  overall height                80.0   +/-0.2\n  balloon 3  left hole diameter            12.0   +/-0.05\n  balloon 4  right hole diameter           12.0   +/-0.2\n  balloon 5  top left corner radius        R3\n  balloon 6  bottom right corner radius    R8\n\nThe house rule for this sheet: a feature that agrees with the general note is dimensioned by its size alone and carries no tolerance or radius of its own, because the note already governs it; a feature that departs from the general note carries the figure the schedule gives it, and only such a feature may carry one.\n\nWhich of the six departs and which agrees is the drawing office's own reading of the schedule -- I am deliberately not telling you which balloons need a figure of their own and which have to be left bare. Keep the balloons far enough apart that each one is read on its own. Apart from the six balloons with their numbers and sizes, whatever the house rule sends, the general note and the title block, nothing else belongs on the sheet face.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an engineering drawing of a flat metal part with numbered balloons on it? A photograph, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no drawing on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "balloon_keys": ["1", "2", "3", "4", "5", "6"],
+    "deviating": ["3", "6"],
+    "membership_expected": "1=bare,2=bare,3=noted,4=bare,5=bare,6=noted",
+    "carried_expected": "3=0.05,6=r8",
+    "n_balloons": 6
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_the_balloons_that_depart_from_the_general_note_carry_a_figure_of_their_own",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered inspection balloon printed on the drawing",
+          "sweep": true,
+          "out": "mem_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["mem_box.unreadable"]
+        },
+        {
+          "read_crop": "What number is printed inside the balloon in this cut-out? Answer with that number only.",
+          "boxes": "mem_box",
+          "pad": 0.25,
+          "out": "mem_key"
+        },
+        {
+          "fail_if": ["mem_key.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one printed size. What tolerance or radius figure is printed beside that size? If more than one size is printed here, read the one nearest the middle of this cut-out. Answer with that figure exactly as it is written, or none if the size stands alone.",
+          "boxes": "mem_box",
+          "pad": 0.25,
+          "out": "mem_note"
+        },
+        {
+          "fail_if": ["mem_note.unreadable"]
+        },
+        {
+          "run": "balloon_note_presence",
+          "args": ["mem_key", "mem_note", "reference.balloon_keys"],
+          "out": "memv"
+        },
+        {
+          "compare": "memv.s",
+          "to": "reference.membership_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_figure_that_is_carried_is_the_one_the_inspection_schedule_gives",
+      "weight": 1.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered inspection balloon printed on the drawing",
+          "sweep": true,
+          "out": "fig_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["fig_box.unreadable"]
+        },
+        {
+          "read_crop": "What number is printed inside the balloon in this cut-out? Answer with that number only.",
+          "boxes": "fig_box",
+          "pad": 0.25,
+          "out": "fig_key"
+        },
+        {
+          "fail_if": ["fig_key.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one printed size. What tolerance or radius figure is printed beside that size? If more than one size is printed here, read the one nearest the middle of this cut-out. Answer with that figure exactly as it is written, or none if the size stands alone.",
+          "boxes": "fig_box",
+          "pad": 0.25,
+          "out": "fig_note"
+        },
+        {
+          "fail_if": ["fig_note.unreadable"]
+        },
+        {
+          "run": "read_carried_figures",
+          "args": ["fig_key", "fig_note", "reference.deviating"],
+          "out": "figv"
+        },
+        {
+          "compare": "figv.s",
+          "to": "reference.carried_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_figure_on_the_sheet_repeats_one_the_general_note_already_gives",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a tolerance or radius figure repeating one the general note already gives",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_gn"
+        },
+        {
+          "fail_if": ["sweep_gn.unreadable"]
+        },
+        {
+          "compare": "sweep_gn.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sheet_carries_its_six_numbered_balloons",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered inspection balloon printed on the drawing",
+          "sweep": true,
+          "out": "cen_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE numbered balloon with a size written beside it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_box",
+          "pad": 0.25,
+          "out": "cen_q"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_balloons",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

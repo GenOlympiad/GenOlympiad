@@ -1,0 +1,112 @@
+{
+  "id": "washer_program_state",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photograph of a FRONT-LOAD WASHING MACHINE program panel. On the left a round PROGRAM DIAL whose rim is divided into six labelled segments in clockwise order starting from the top: PREWASH, MAIN WASH, RINSE 1, RINSE 2, SPIN, DONE; a black pointer needle points OUT from the centre to exactly ONE segment (the segment the wash is currently in), and that segment is highlighted green. On the right a dark rectangular LCD showing 'TIME REMAINING' with a large number of minutes, and below the dial a line 'CURRENT: <segment name>'. The program runs its segments strictly in the listed order, each for its own fixed duration: PREWASH lasts 12 minutes; MAIN WASH lasts 47 minutes; RINSE 1 lasts 9 minutes; RINSE 2 lasts 11 minutes; SPIN lasts 14 minutes. The cycle was STARTED at 09:20 and the wall-clock time in the photo is 10:26. IMPORTANT EXCEPTION: partway through, the lid was opened and the machine sat PAUSED for 16 minutes (it did not advance while paused), so the actual running time is 16 minutes LESS than the clock time since it started. Work out how many minutes the machine has ACTUALLY been running, then which segment the dial is now in and how many minutes REMAIN until the whole program finishes (remaining = total of all segment durations minus actual running minutes). Point the needle at that segment, highlight it, print that segment's name after 'CURRENT:', and show the remaining minutes on the LCD. Do NOT print the elapsed time, the start time, the pause length or any segment durations anywhere in the image — only the current segment name and the remaining minutes. Neat appliance-panel style.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a washing-machine PROGRAM PANEL with a round labelled program dial (a pointer to one segment) and a countdown LCD? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cur_seg": "MAIN WASH",
+    "remain": 43,
+    "seg_labels": ["PREWASH", "MAIN WASH", "RINSE 1", "RINSE 2", "SPIN", "DONE"],
+    "q_remain": "On the washing-machine panel, read the number of minutes shown on the 'TIME REMAINING' countdown LCD. Read ONLY the digits actually printed there; do NOT recompute. Answer with digits only.",
+    "q_seg": "On the washing-machine panel, which ONE program segment is the dial pointer currently pointing at / highlighted (also written after 'CURRENT:')? Answer with the exact segment label only, choosing from: PREWASH, MAIN WASH, RINSE 1, RINSE 2, SPIN, DONE.",
+    "q_nseg": "How many labelled segments are marked around the rim of the round program dial? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "state_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_remain",
+          "out": "rm"
+        },
+        {
+          "ask": "reference.q_seg",
+          "out": "sg"
+        },
+        {
+          "fail_if": ["rm.unreadable", "sg.unreadable"]
+        },
+        {
+          "compare_band": "rm",
+          "to": "reference.remain",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "fr"
+        },
+        {
+          "compare": "sg",
+          "to": "reference.cur_seg",
+          "out": "fs"
+        },
+        {
+          "all": ["fr", "fs"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_remain",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read_number": "reference.q_remain",
+          "out": "r2"
+        },
+        {
+          "fail_if": ["r2.unreadable"]
+        },
+        {
+          "compare_band": "r2",
+          "to": "reference.remain",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "seg_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "reference.q_nseg",
+          "out": "nc"
+        },
+        {
+          "fail_if": ["nc.unreadable"]
+        },
+        {
+          "compare_band": "nc",
+          "to": 6,
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

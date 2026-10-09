@@ -1,0 +1,96 @@
+{
+  "id": "headstock_peg_string",
+  "axis": "symbolic_systems",
+  "prompt": "Render a clean, straight-on diagram of a classic 3+3 GUITAR HEADSTOCK titled 'GUITAR HEADSTOCK -- STRING WINDING (3+3)'. Show six tuning pegs: THREE down the LEFT side (top-left, middle-left, bottom-left) and THREE down the RIGHT side (top-right, middle-right, bottom-right); label each peg with its position (top-left, middle-left, bottom-left, top-right, middle-right, bottom-right) next to the peg button. At the bottom draw a NUT with six small string slots in a row. Run one string from each nut slot up to its tuning peg per this stringing: the string in nut slot 1 (counting slots left to right along the nut) winds up to the top-left tuning peg; the string in nut slot 2 (counting slots left to right along the nut) winds up to the middle-left tuning peg; the string in nut slot 3 (counting slots left to right along the nut) winds up to the bottom-left tuning peg; the string in nut slot 4 (counting slots left to right along the nut) winds up to the top-right tuning peg; the string in nut slot 5 (counting slots left to right along the nut) winds up to the middle-right tuning peg; the string in nut slot 6 (counting slots left to right along the nut) winds up to the bottom-right tuning peg. Keep the strings tidy so each one runs cleanly to its peg without crossing over another peg. Then draw the string from nut slot 1 in bright red; draw the string from nut slot 5 in bright blue; draw every OTHER string in thin grey. Make the pegs large round buttons and the bright coloured strings thick and unmistakable, each ending clearly ON its tuning peg. Do NOT print any string names, note names or numbers on the strings -- show the routing only by the drawn coloured string reaching its peg.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a guitar HEADSTOCK stringing diagram: a headstock with several round tuning pegs (three on the left, three on the right) and strings running from a nut up to the pegs. Ignoring artistic quality, does the image actually DEPICT that -- a guitar headstock with tuning pegs and strings? A clean diagram counts as yes. Answer NO only if it shows just plain text, a blank card, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "wiring": {
+      "0": "top-left",
+      "1": "middle-left",
+      "2": "bottom-left",
+      "3": "top-right",
+      "4": "middle-right",
+      "5": "bottom-right"
+    },
+    "hl_slots": [0, 4],
+    "hl_colours": ["red", "blue"],
+    "targets": ["top-left", "middle-right"],
+    "positions": [
+      "top-left",
+      "middle-left",
+      "bottom-left",
+      "top-right",
+      "middle-right",
+      "bottom-right"
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "peg_positions",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "round tuning peg button on the guitar headstock",
+          "votes": 3,
+          "out": "hpb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["hpb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a drawing of a guitar headstock with round tuning pegs and strings running to them. Does this cut-out show exactly ONE whole round tuning peg button -- one single one on its own, not two of them together, not just a part of one, and not only the plain background of the headstock with no peg on it? Answer yes or no only.",
+          "boxes": "hpb",
+          "pad": 0.12,
+          "out": "hpc"
+        },
+        {
+          "fail_if": ["hpc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a guitar headstock drawing. It shows one round tuning peg with string or strings drawn near it. If more than one peg is visible, take the peg nearest the middle of this cut-out. What colour is the string that runs up to that peg and ends on it? Answer with one colour word. If the string that ends there is a thin grey one, answer grey. If no string ends on that peg at all, answer none.",
+          "boxes": "hpb",
+          "pad": 0.6,
+          "out": "hpv"
+        },
+        {
+          "fail_if": ["hpv.unreadable"]
+        },
+        {
+          "run": "peg_colours",
+          "args": ["hpb", "hpc", "hpv", "reference"],
+          "out": "pp"
+        },
+        {
+          "run": null,
+          "expression": "score(pp.p0,pp.p1,reference)",
+          "code": {
+            "inline": "score_code"
+          },
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

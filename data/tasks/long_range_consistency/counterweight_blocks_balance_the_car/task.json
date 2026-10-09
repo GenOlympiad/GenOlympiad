@@ -1,0 +1,86 @@
+{
+  "id": "counterweight_blocks_balance_the_car",
+  "axis": "long_range_consistency",
+  "prompt": "The lift cannot go forward for its statutory inspection until the balance has been made up, so the installer photographs the hoistway square-on with the car door open and the counterweight frame in the same frame.\n\nThe car nameplate beside the door is stamped: car dead weight 1460 kg, rated load 1200 kg. The acceptance sheet hanging on the machine-room rail gives the balance factor for this lift as 0.45. The weight card wired to the counterweight frame gives the frame's own weight as 240 kg and each filler block as 220 kg. The yard's test blocks stand on the car floor; they are lettered P, Q, R and S and are stamped 300 kg, 240 kg, 200 kg and 120 kg. Blocks are stacked on the frame from the bottom up.\n\nHow many blocks belong on the frame, and which lettered blocks belong in the car, is what the sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a lift car with lettered test blocks on its floor and a counterweight frame hanging beside it in the same hoistway? Answer yes or no only.",
+  "reference": {
+    "part1": "8",
+    "part2": "blocks_p_and_q"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "filler blocks stacked on the counterweight frame",
+          "out": "r_part1",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part1.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the test blocks standing on the car floor and say which of them are there. Answer with one of: the blocks standing in the car are the ones lettered P and Q; the blocks standing in the car are the ones lettered R and S; all four lettered blocks are standing in the car.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

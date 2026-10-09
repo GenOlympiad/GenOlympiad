@@ -1,0 +1,179 @@
+{
+  "id": "karnaugh_map",
+  "axis": "symbolic_systems",
+  "prompt": "Render a clean, straight-on printed KARNAUGH MAP (K-map) titled 'KARNAUGH MAP F(A,B,C,D)' for a 4-variable boolean function F(A,B,C,D). Draw a 4x4 grid. Label the ROWS with the variable pair AB and the COLUMNS with the variable pair CD, and -- importantly -- use GRAY-CODE order for BOTH header sequences: 00, 01, 11, 10 (NOT plain binary 00, 01, 10, 11), so that adjacent cells differ in only one bit. Then fill each cell with the function value (0 or 1): a cell is 1 exactly when its (A,B,C,D) input -- read from its row's AB label and column's CD label -- is one of the function's minterms. The function F is 1 for these minterm index numbers (where the index = the 4-bit number A B C D): [0, 2, 5, 7, 8, 10, 13]. Every other cell is 0. Write a clear 0 or 1 in every cell. Keep the Gray-code header labels (00 01 11 10) and the cell digits large and legible.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a KARNAUGH MAP: a 4x4 grid with two-bit labels (the labels are 00, 01, 11 and 10) on the rows and columns and a 0 or 1 written in each cell. Ignoring artistic quality, does the image actually DEPICT that -- a labelled 4x4 grid of 0s and 1s? A clean diagram counts as yes. Answer NO only if it shows just plain text, a blank card, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "func_set": [0, 2, 5, 7, 8, 10, 13],
+    "query_cells": [
+      ["00", "11"],
+      ["01", "11"],
+      ["10", "10"]
+    ],
+    "targets": [0, 1, 1],
+    "n_q": 3,
+    "q_cells": {
+      "00_11": "This is a Karnaugh map: a 4x4 grid with two-bit row labels down the left (for AB) and two-bit column labels across the top (for CD). Find the ROW whose left-hand label is '00' and the COLUMN whose top label is '11'. Read the single digit (0 or 1) written in the cell where that row and that column meet. Report ONLY that one digit. Answer with just 0 or 1.",
+      "01_11": "This is a Karnaugh map: a 4x4 grid with two-bit row labels down the left (for AB) and two-bit column labels across the top (for CD). Find the ROW whose left-hand label is '01' and the COLUMN whose top label is '11'. Read the single digit (0 or 1) written in the cell where that row and that column meet. Report ONLY that one digit. Answer with just 0 or 1.",
+      "10_10": "This is a Karnaugh map: a 4x4 grid with two-bit row labels down the left (for AB) and two-bit column labels across the top (for CD). Find the ROW whose left-hand label is '10' and the COLUMN whose top label is '10'. Read the single digit (0 or 1) written in the cell where that row and that column meet. Report ONLY that one digit. Answer with just 0 or 1."
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "kmap_cells_exact",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of sixteen square cells that hold the single digits -- the four-by-four grid of squares taken together as one rectangle, not the two-digit labels printed along its top edge or down its left edge, and not the title above it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_kmap_grid",
+          "args": ["image", "anc", "'cols'"],
+          "out": "pc"
+        },
+        {
+          "fail_if": ["pc.no_plan"]
+        },
+        {
+          "read_crop": "This is one narrow strip cut from just above a printed grid of squares. What two-digit label is printed here? Answer with just those two digits, for example 00 or 10, and nothing else. If nothing is printed here, answer the single word none.",
+          "boxes": "pc.cells",
+          "pad": 0.0,
+          "out": "cl"
+        },
+        {
+          "run": "plan_kmap_grid",
+          "args": ["image", "anc", "'rows'"],
+          "out": "pr"
+        },
+        {
+          "fail_if": ["pr.no_plan"]
+        },
+        {
+          "read_crop": "This is one narrow strip cut from just left of a printed grid of squares. What two-digit label is printed here? Answer with just those two digits, for example 00 or 10, and nothing else. If nothing is printed here, answer the single word none.",
+          "boxes": "pr.cells",
+          "pad": 0.0,
+          "out": "rl"
+        },
+        {
+          "run": "plan_kmap_grid",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one square cell cut out of a printed grid. Is the digit written inside this square a 0 or a 1? Answer with just 0 or just 1. If nothing is written in the square, answer the single word blank.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "cd"
+        },
+        {
+          "run": "check_kmap_values",
+          "args": ["cl", "rl", "cd", "reference"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "score_queried_squares",
+          "args": ["res.a0", "res.a1", "res.a2", "reference"],
+          "out": "frac"
+        },
+        {
+          "run": "paint_kmap_grid",
+          "args": ["pl", "res"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        }
+      ]
+    },
+    {
+      "name": "d1_gray_headers",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "On this Karnaugh map, read the FOUR column header labels across the top, left to right. Report them as four two-digit labels separated by spaces. Answer with just the four labels.",
+          "out": "hd"
+        },
+        {
+          "fail_if": ["hd.unreadable"]
+        },
+        {
+          "compare_token": "hd",
+          "to": "00 01 11 10",
+          "keep": "digits",
+          "mode": "equals",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

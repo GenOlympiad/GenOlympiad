@@ -1,0 +1,96 @@
+{
+  "id": "capillary_rise_inverse",
+  "axis": "quantitative_precision",
+  "prompt": "A clean diagram of a row of 3 vertical wicks of DIFFERENT width standing in a shared water tray, each with liquid drawn up inside it. By capillary action the rise height is INVERSELY proportional to the tube width -- the NARROWER the tube, the HIGHER the liquid climbs -- so rise x width is the SAME for every tube. For each tube draw a GREEN vertical bar marking how high the liquid rose and an ORANGE horizontal bar marking the tube width, and make the narrow tubes rise higher so that (rise x width) is constant across all tubes. Do NOT draw the liquid at the same height in every tube. Plain background, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a row of 3 vertical wicks of DIFFERENT width standing in a shared water tray, each with liquid drawn up inside it, with a green vertical rise bar and an orange horizontal width bar for each tube. Ignoring artistic quality, does the image show several vertical tubes each with a green vertical bar and an orange horizontal bar? Answer NO only if those are missing or it is unrelated. Answer yes or no.",
+  "reference": {
+    "h_lo": [40, 70, 50],
+    "h_hi": [85, 255, 255],
+    "w_lo": [10, 120, 120],
+    "w_hi": [25, 255, 255],
+    "min_items": 3,
+    "size_min": 0.15,
+    "tol": 0.11,
+    "min_frac": 0.0002,
+    "enforce_notext": true,
+    "q_notext": "Is there any printed number or written measurement note anywhere in this diagram? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rise_product",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one green vertical bar marking how high the liquid rose -- box each green bar separately, one box per bar, covering that bar's whole length from its TOP end down to its BOTTOM end and no wider than the bar itself; do not box the orange horizontal width bar, the glass tube or wick, the water in the dish, or any other green tint that is not one of those drawn marker bars.",
+          "out": "hb"
+        },
+        {
+          "fail_if": ["hb.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the orange horizontal bars",
+          "out": "wb"
+        },
+        {
+          "fail_if": ["wb.unreadable"]
+        },
+        {
+          "run": "rise_width_product_score",
+          "args": ["hb", "wb", "reference"],
+          "out": "pi"
+        },
+        {
+          "fail_if": ["pi.degenerate"]
+        },
+        {
+          "compare_band": "pi.frac",
+          "to": 1.0,
+          "core": 0.15,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

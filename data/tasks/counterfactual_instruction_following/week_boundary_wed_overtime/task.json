@@ -1,0 +1,228 @@
+{
+  "id": "week_boundary_wed_overtime",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Straight down onto the timekeeper's desk in a machine shop office, lamp on: one worker's attendance sheet lies square on the desk and the whole of it is in the frame, every part of it readable.\n\nThe sheet is one long row of day columns, ten of them, each headed with its date and its weekday and carrying the hours that worker was on the shop floor that day. This run of ten days is: Monday the 6th, 8 hours; Tuesday the 7th, 9; Wednesday the 8th, 7; Thursday the 9th, 8; Friday the 10th, 10; Saturday the 11th, 6; Sunday the 12th, 0; Monday the 13th, 10; Tuesday the 14th, 9; Wednesday the 15th, 7.\n\nThis plant does not keep its hours by the calendar week. Its working week runs from a Wednesday to the following Tuesday, and overtime is whatever such a week comes to above 40 hours. The timekeeper rules a heavy line down the sheet at every boundary between one working week and the next, and rules one wide total cell beneath the columns, reaching under exactly the days of the one complete plant week this sheet holds. Inside that cell go two headed entries, HOURS and OVERTIME.\n\nThe sheet goes to the payroll clerk as ruled, so the lines have to be this plant's week and not the calendar's. Work out for yourself where the boundaries fall, how far the total cell reaches and what goes inside it -- I am deliberately not telling you any of it. A sheet ruled on the calendar week pays the wrong overtime and the case ends in arbitration.\n\nEvery date, weekday, figure and ruled line must be large and sharp. Nothing may appear on the sheet beyond the ten day columns, the boundary lines and the one total cell with its two entries: no working, no notes, no arrows.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed sheet laid out as a row of dated day columns with figures in them and a wide cell ruled underneath? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "divider": "10:no 11:no 12:no 13:no 14:no 15:yes 6:no 7:no 8:yes 9:no",
+    "span": "10:yes 11:yes 12:yes 13:yes 14:yes 15:no 6:no 7:no 8:yes 9:yes",
+    "hours": "10:10 11:6 12:0 13:10 14:9 15:7 6:8 7:9 8:7 9:8",
+    "summary": "hours:50 overtime:10"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_heavy_lines_fall_where_the_plants_week_opens",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a dated day column of the attendance sheet",
+          "sweep": true,
+          "out": "col_box"
+        },
+        {
+          "fail_if": ["col_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date number printed at the head of this column. Write the number only.",
+          "boxes": "col_box",
+          "pad": 0.15,
+          "out": "date_txt"
+        },
+        {
+          "fail_if": ["date_txt.unreadable"]
+        },
+        {
+          "read_crop": "Is a heavy ruled line drawn down the left-hand edge of this column? Answer yes or no only.",
+          "boxes": "col_box",
+          "pad": 0.15,
+          "out": "rule_txt"
+        },
+        {
+          "fail_if": ["rule_txt.unreadable"]
+        },
+        {
+          "run": "pair_dates_with_words",
+          "args": ["date_txt", "rule_txt"],
+          "out": "cuts"
+        },
+        {
+          "compare": "cuts.canon",
+          "to": "reference.divider",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_total_cell_reaches_across_that_week_and_no_further",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a dated day column of the attendance sheet",
+          "sweep": true,
+          "out": "span_box"
+        },
+        {
+          "fail_if": ["span_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date number printed at the head of this column. Write the number only.",
+          "boxes": "span_box",
+          "pad": 0.15,
+          "out": "sdate_txt"
+        },
+        {
+          "fail_if": ["sdate_txt.unreadable"]
+        },
+        {
+          "read_crop": "Does the wide total cell below the columns reach under this column? Answer yes or no only.",
+          "boxes": "span_box",
+          "pad": 0.15,
+          "out": "reach_txt"
+        },
+        {
+          "fail_if": ["reach_txt.unreadable"]
+        },
+        {
+          "run": "pair_dates_with_words",
+          "args": ["sdate_txt", "reach_txt"],
+          "out": "reach"
+        },
+        {
+          "compare": "reach.canon",
+          "to": "reference.span",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_column_carries_the_hours_it_was_given",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a dated day column of the attendance sheet",
+          "sweep": true,
+          "out": "hr_box"
+        },
+        {
+          "fail_if": ["hr_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date number printed at the head of this column. Write the number only.",
+          "boxes": "hr_box",
+          "pad": 0.15,
+          "out": "hdate_txt"
+        },
+        {
+          "fail_if": ["hdate_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the hours figure printed in this column. Write the number only.",
+          "boxes": "hr_box",
+          "pad": 0.15,
+          "out": "hrs_txt"
+        },
+        {
+          "fail_if": ["hrs_txt.unreadable"]
+        },
+        {
+          "run": "pair_dates_with_figures",
+          "args": ["hdate_txt", "hrs_txt"],
+          "out": "daily"
+        },
+        {
+          "compare": "daily.canon",
+          "to": "reference.hours",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_cell_carries_what_those_seven_days_come_to",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a headed entry printed in the band of the sheet below the day columns",
+          "sweep": true,
+          "out": "ent_box"
+        },
+        {
+          "fail_if": ["ent_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the heading printed at the start of this entry. Write the heading only.",
+          "boxes": "ent_box",
+          "pad": 0.2,
+          "out": "ehead_txt"
+        },
+        {
+          "fail_if": ["ehead_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written in this entry. Write the figure only.",
+          "boxes": "ent_box",
+          "pad": 0.2,
+          "out": "eval_txt"
+        },
+        {
+          "fail_if": ["eval_txt.unreadable"]
+        },
+        {
+          "run": "pair_headings_with_figures",
+          "args": ["ehead_txt", "eval_txt"],
+          "out": "cell"
+        },
+        {
+          "compare": "cell.canon",
+          "to": "reference.summary",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_added_to_the_sheet",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, a note or an arrow added beyond the columns and the total cell",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

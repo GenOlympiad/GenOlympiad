@@ -1,0 +1,325 @@
+{
+  "id": "kenken_6x6",
+  "axis": "latent_computation",
+  "prompt": "A clean printed page from a puzzle book showing a single 6 by 6 KenKen grid, already fully solved. The grid is divided by bold outlines into cages (groups of one or more cells), and each cage has a small arithmetic clue printed in its top-left corner giving a target number and an operation. The solution must be a Latin square: each row contains the numbers 1 to 6 with no repeats, and each column contains 1 to 6 with no repeats. In addition, the numbers in each cage must combine with the cage's operation to make its target (a plus cage's cells sum to the target; a times cage's cells multiply to it; a minus or divide cage of two cells gives the target as their difference or quotient; a single-cell cage just shows that number). The cages and their clues are: a plus-11 cage at cells (row2,col2)(row2,col3)(row3,col2); a minus-1 cage at (row4,col6)(row4,col5); a plus-8 cage at (row5,col3)(row5,col4)(row6,col3); a times-40 cage at (row3,col4)(row3,col3)(row3,col5); a plus-9 cage at (row4,col1)(row3,col1)(row5,col1); a plus-5 cage at (row1,col2)(row1,col1); a plus-7 cage at (row1,col3)(row1,col4); a single cell equal to 4 at (row2,col1); a times-4 cage at (row4,col3)(row4,col2); a minus-1 cage at (row5,col5)(row5,col6); a times-30 cage at (row2,col4)(row2,col5)(row1,col5); a single cell equal to 3 at (row4,col4); a times-3 cage at (row6,col6)(row6,col5); a single cell equal to 4 at (row1,col6); a plus-15 cage at (row6,col1)(row6,col2)(row5,col2); a divide-3 cage at (row3,col6)(row2,col6); and a single cell equal to 4 at (row6,col4). Rows are numbered 1-6 top to bottom and columns 1-6 left to right. Draw the completed grid with one digit 1-6 centred in every cell; keep the cage outlines and clues and add no other writing.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show puzzle-book page showing a 6x6 KenKen grid divided into outlined cages each printed with an arithmetic target, fully solved with a Latin-square filling? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 6,
+    "solution": [
+      [3, 2, 6, 1, 5, 4],
+      [4, 5, 3, 6, 1, 2],
+      [1, 3, 5, 2, 4, 6],
+      [2, 1, 4, 3, 6, 5],
+      [6, 4, 1, 5, 2, 3],
+      [5, 6, 2, 4, 3, 1]
+    ],
+    "cages": [
+      {
+        "cells": [
+          [1, 1],
+          [1, 2],
+          [2, 1]
+        ],
+        "op": "+",
+        "target": 11
+      },
+      {
+        "cells": [
+          [3, 5],
+          [3, 4]
+        ],
+        "op": "-",
+        "target": 1
+      },
+      {
+        "cells": [
+          [4, 2],
+          [4, 3],
+          [5, 2]
+        ],
+        "op": "+",
+        "target": 8
+      },
+      {
+        "cells": [
+          [2, 3],
+          [2, 2],
+          [2, 4]
+        ],
+        "op": "*",
+        "target": 40
+      },
+      {
+        "cells": [
+          [3, 0],
+          [2, 0],
+          [4, 0]
+        ],
+        "op": "+",
+        "target": 9
+      },
+      {
+        "cells": [
+          [0, 1],
+          [0, 0]
+        ],
+        "op": "+",
+        "target": 5
+      },
+      {
+        "cells": [
+          [0, 2],
+          [0, 3]
+        ],
+        "op": "+",
+        "target": 7
+      },
+      {
+        "cells": [
+          [1, 0]
+        ],
+        "op": "=",
+        "target": 4
+      },
+      {
+        "cells": [
+          [3, 2],
+          [3, 1]
+        ],
+        "op": "*",
+        "target": 4
+      },
+      {
+        "cells": [
+          [4, 4],
+          [4, 5]
+        ],
+        "op": "-",
+        "target": 1
+      },
+      {
+        "cells": [
+          [1, 3],
+          [1, 4],
+          [0, 4]
+        ],
+        "op": "*",
+        "target": 30
+      },
+      {
+        "cells": [
+          [3, 3]
+        ],
+        "op": "=",
+        "target": 3
+      },
+      {
+        "cells": [
+          [5, 5],
+          [5, 4]
+        ],
+        "op": "*",
+        "target": 3
+      },
+      {
+        "cells": [
+          [0, 5]
+        ],
+        "op": "=",
+        "target": 4
+      },
+      {
+        "cells": [
+          [5, 0],
+          [5, 1],
+          [4, 1]
+        ],
+        "op": "+",
+        "target": 15
+      },
+      {
+        "cells": [
+          [2, 5],
+          [1, 5]
+        ],
+        "op": "/",
+        "target": 3
+      },
+      {
+        "cells": [
+          [5, 3]
+        ],
+        "op": "=",
+        "target": 4
+      }
+    ],
+    "clue_plus11": 11,
+    "cell_r2c1": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "grid_cells",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_grid": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or calculate the puzzle yourself. the 6x6 grid of digits, read row by row (left-to-right, top-to-bottom); report only the 36 digits filled in the cells, ignoring the small cage clue numbers.",
+          "rows": 6,
+          "cols": 6,
+          "retries": 3,
+          "out": "rg"
+        },
+        {
+          "fail_if": ["rg.no_matrix", "rg.wrong_shape", "rg.illegible"]
+        },
+        {
+          "compare_grid": "rg.values",
+          "to": "reference.solution",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "latin_and_cages",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_grid": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or calculate the puzzle yourself. the 6x6 grid of digits, read row by row; report only the 36 digits filled in the cells, ignoring the small cage clue numbers in the corners.",
+          "rows": 6,
+          "cols": 6,
+          "retries": 3,
+          "out": "rg"
+        },
+        {
+          "fail_if": ["rg.no_matrix", "rg.wrong_shape", "rg.illegible"]
+        },
+        {
+          "run": "check_kenken_grid",
+          "args": ["rg['values']", "reference.cages"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_grid_size",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square cell in the top row of the puzzle grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole square puzzle cell rather than several cells side by side or only part of a cell? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_clue_target_plus11",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the target NUMBER printed in the top-left corner of the plus cage at cells (row2,col2)(row2,col3)(row3,col2). Read only the printed clue number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.clue_plus11",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_single_cell_r2c1",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the digit written in the cell at row 2, column 1 (the single-cell '=4' cage) of the solved KenKen grid. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.cell_r2c1",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_cages_kept",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Are the bold cage outlines and their small corner clue labels still drawn on the completed grid, with exactly one digit centred in every cell? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

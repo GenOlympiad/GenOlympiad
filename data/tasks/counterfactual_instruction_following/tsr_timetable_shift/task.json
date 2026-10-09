@@ -1,0 +1,181 @@
+{
+  "id": "tsr_timetable_shift",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of the running notice for one booked service, pinned flat on the control-office desk and shot square on, with the restriction order lying beside it. Both sheets must be readable in the one picture.\n\nThe notice carries one row per station, each row giving the station name, its milepost and the time the train is booked to arrive there. Today's booked times are: MARSDEN, mp 0.0, 09:00. KIRKBY, mp 12.0, 09:14. ASHWELL, mp 25.0, 09:27. DENBY, mp 38.0, 09:41. ELVET, mp 51.0, 09:55. FORDHAM, mp 64.0, 10:08. The line speed over the whole route is 60 mph.\n\nThe order beside it reads word for word: TEMPORARY SPEED RESTRICTION -- 20 mph BETWEEN mp 28.0 AND mp 34.0 -- IN FORCE TODAY. The office convention is that every row whose time has been altered carries the correction mark struck across it, and no other row does.\n\nThis is the notice that goes out to the crew, so it has to be today's notice and not yesterday's. Work out for yourself which rows change, by how much, and which rows must stay exactly as booked -- I am deliberately not telling you where the change starts or what it comes to. A notice that moves the wrong rows sends a connection at the far end away without its passengers.\n\nEvery name, milepost and time must be large and sharp. Nothing may be added to the sheets beyond the rows, the mileposts, the times and the correction marks: no working, no notes, no arrows.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed sheet listing station names with times beside them, and a second printed order next to it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "arrivals": "ashwell:0927 denby:0953 elvet:1007 fordham:1020 kirkby:0914 marsden:0900",
+    "marks": "ashwell:no denby:yes elvet:yes fordham:yes kirkby:no marsden:no",
+    "n_rows": 6,
+    "q_row_cert": "Does this cut-out show ONE whole station row of the notice, rather than a heading or only part of a row? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_times_move_only_from_the_first_station_beyond_the_stretch",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a station row printed on the running notice",
+          "sweep": true,
+          "out": "row_box"
+        },
+        {
+          "fail_if": ["row_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a timetable. Copy the station name printed on that row. Ignore anything printed on a row above or below it. Write the name only and nothing else.",
+          "boxes": "row_box",
+          "pad": 0.15,
+          "out": "stn_txt"
+        },
+        {
+          "fail_if": ["stn_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the arrival time printed on this row. Write the time only.",
+          "boxes": "row_box",
+          "pad": 0.15,
+          "out": "time_txt"
+        },
+        {
+          "fail_if": ["time_txt.unreadable"]
+        },
+        {
+          "run": "labelled_pairs",
+          "args": ["stn_txt", "time_txt"],
+          "out": "board"
+        },
+        {
+          "compare": "board.canon",
+          "to": "reference.arrivals",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_correction_marks_stop_where_the_delay_starts",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a station row printed on the running notice",
+          "sweep": true,
+          "out": "mark_box"
+        },
+        {
+          "fail_if": ["mark_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a timetable. Copy the station name printed on that row. Ignore anything printed on a row above or below it. Write the name only and nothing else.",
+          "boxes": "mark_box",
+          "pad": 0.15,
+          "out": "mstn_txt"
+        },
+        {
+          "fail_if": ["mstn_txt.unreadable"]
+        },
+        {
+          "read_crop": "Is there a correction mark struck across this row? Answer yes or no only.",
+          "boxes": "mark_box",
+          "pad": 0.15,
+          "out": "mark_txt"
+        },
+        {
+          "fail_if": ["mark_txt.unreadable"]
+        },
+        {
+          "run": "labelled_pairs",
+          "args": ["mstn_txt", "mark_txt"],
+          "out": "struck"
+        },
+        {
+          "compare": "struck.canon",
+          "to": "reference.marks",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "six_station_rows_stand_on_the_notice",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a station row printed on the running notice",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_added_to_the_notice",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, an arrow or a note added beyond the station rows, their correction marks and the order",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

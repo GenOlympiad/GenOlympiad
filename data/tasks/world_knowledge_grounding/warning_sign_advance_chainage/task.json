@@ -1,0 +1,84 @@
+{
+  "id": "warning_sign_advance_chainage",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The road authority's inspector signs the sign-setting sheet from the driving seat, so the survey vehicle is pulled up on the hard shoulder and the shot is taken forward along the carriageway.\n\nA single carriageway runs out towards a bend. Hectometre posts stand along the verge, each with its chainage painted on a white plate, and a larger chainage board stands at the mouth of the bend reading 12+400. A speed limit plate further back on the same verge gives the posted limit as 100. The setting sheet taped to the dashboard gives one rule: a bend warning sign goes ahead of the hazard by a distance in metres equal to three times the posted limit figure, and the small plate slung under the sign carries that same distance in metres.\n\nWhere the warning sign has been planted, and what its small plate reads, is what the sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture look forward along a road towards a bend, with a warning sign and chainage posts standing on the verge? Answer yes or no only.",
+  "reference": {
+    "part1": "post_at_12_100",
+    "part2": "in_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the chainage painted on the white plate of the hectometre post standing beside the bend warning sign. Answer with one of: the post beside the sign reads 12+100; the post beside the sign reads 12+400; the post beside the sign reads 12+700.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the number printed on the small plate slung under the bend warning sign and give it in metres.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part2", "280", "320"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

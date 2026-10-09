@@ -1,0 +1,59 @@
+{
+  "id": "brick_bond_pattern",
+  "axis": "latent_computation",
+  "prompt": "A straight-on photograph of a brick wall laid in a traditional ENGLISH BOND, five horizontal courses (rows) tall, labelled R1 at the top down to R5 at the bottom on the right edge. In an English bond the courses ALTERNATE: the top course R1 is a STRETCHER course of a few long bricks laid lengthwise; R2 is a HEADER course of many short square brick-ends; R3 is stretchers again; R4 headers; R5 stretchers. So the courses go long-brick, short-brick, long-brick, short-brick, long-brick from top to bottom. Lay every course full width with even mortar joints. Red brick, straight-on, evenly lit, only the small R1..R5 row labels as text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show straight-on brick-wall photo laid in an English bond that alternates stretcher courses of few long bricks with header courses of many short brick-ends? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "course_signs": ["up", "down", "up", "down"],
+    "n_courses": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "course_alternation",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "This brick wall has 5 horizontal courses (rows), labelled R1 (top) to R5 (bottom) at the right edge. Write down every brick face you can see. Begin each item with the label of the course that face lies in -- R1, R2, R3, R4 or R5 -- then a few plain words saying where along that course it sits. Two faces are two separate faces only if you can see a mortar joint between them; a long face and a short face are each one face. Separate one item from the next with a semicolon; write no running total and nothing else.",
+          "out": "counts"
+        },
+        {
+          "fail_if": ["counts.unreadable"]
+        },
+        {
+          "run": "count_items_per_label",
+          "args": ["counts", "[\"R1\", \"R2\", \"R3\", \"R4\", \"R5\"]"],
+          "out": "counts__std"
+        },
+        {
+          "fail_if": ["counts__std.refused"]
+        },
+        {
+          "match_trend": "counts__std.seq",
+          "to": "reference.course_signs",
+          "min_delta": 1,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

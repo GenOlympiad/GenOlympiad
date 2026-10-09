@@ -1,0 +1,177 @@
+{
+  "id": "hyphen_break_position",
+  "axis": "text_fidelity",
+  "prompt": "A straight-on photograph of a printed examination paper from a college of typography, lying on a desk -- pale green ledger stock, dark ink, a ruled margin down the left edge, heading at the top left. Headed 'PAPER 2 - WORD DIVISION' with the small line 'Ten items; some words recur'. Compose EXACTLY 10 numbered items (1. to 10.). Each item is a sentence you write yourself about a botanical garden, and it must contain the item's assigned word.\n\nAssigned words and their division points:\n1. greenhouse - divide after 4 letters\n2. watercress - divide after 8 letters\n3. moorland - divide after 6 letters\n4. beekeeper - divide after 4 letters\n5. hedgerow - divide after 5 letters\n6. greenhouse - divide after 7 letters\n7. moorland - divide after 3 letters\n8. watercress - divide after 5 letters\n9. beekeeper - divide after 7 letters\n10. hedgerow - divide after 3 letters\n\nCRITICAL TYPESETTING LAW: every item is a sentence of NINE words or more, occupying exactly TWO rows of type. The upper row has to FINISH on the assigned word cut after the assigned quantity of letters, with a hyphen standing at that row's right-hand end; the leftover letters of that word have to START the lower row. Several words appear twice in this list with DIFFERENT division points -- divide each occurrence where its own item says, never where you divided it before.\n\nPlain page, no diagrams, no marginal notes.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a printed examination paper carrying a numbered list of written items. Ignoring artistic quality and ignoring whether the wording is correct, does the image DEPICT that -- a printed paper carrying a numbered list of printed lines? A photograph, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_read": "This image is a printed sheet with 10 numbered entries, and every entry is printed across TWO physical rows of type. Copy out both rows of every entry, one row at a time, EXACTLY letter for letter as they stand on the paper. Many words are printed in two pieces, so a row may end in the middle of a word and the next row may begin in the middle of a word: copy the letters you actually see, do not complete a word, do not correct its spelling, and never move a letter or a word from one row into the other -- each row ends exactly where that printed row of type ends on the paper. Copy every hyphen in the place it is actually printed: a hyphen may sit in the middle of a row with more printed text after it on the same row, or it may be the very last character of a row. Prefix each row with its entry number and the letter A for the entry's FIRST row or B for the entry's SECOND row, followed by a colon, exactly like this: 3A: text of the third entry's first row | 3B: text of the third entry's second row. Separate one row from the next with a single pipe character | and nothing else. Do not transcribe the title or any heading. Output only the 20 tagged rows separated by |.",
+    "n_entries": 10,
+    "words": [
+      "greenhouse",
+      "watercress",
+      "moorland",
+      "beekeeper",
+      "hedgerow",
+      "greenhouse",
+      "moorland",
+      "watercress",
+      "beekeeper",
+      "hedgerow"
+    ],
+    "cuts": [4, 8, 6, 4, 5, 7, 3, 5, 7, 3],
+    "min_words": 9,
+    "evidence": true,
+    "q_evidence": "This picture shows a printed page with hollow rectangles drawn on it, and a written list beside it. Is every hollow rectangle drawn around a numbered line of the page's own numbered list -- rather than around the heading, or sitting in blank paper with no text inside it? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered entry of the printed list, both of its printed rows -- the box starts at that entry's printed number and covers BOTH the upper row and the row directly under it, down to the bottom of the lower row. Count a box only if a printed entry number stands inside it; do not box the heading or title line, do not box one row on its own, and do not put two numbered entries in one box.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "entries_box"
+        },
+        {
+          "fail_if": ["entries_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one numbered entry of a printed list, set over two rows of type. If more than one numbered entry is visible, take the one nearest the middle of this cut-out. Copy both its rows exactly, letter for letter. Write the entry number, the letter A, a colon and the first row; then a vertical bar; then the entry number, the letter B, a colon and the second row. Copy a word that is split across the two rows exactly as it stands, hyphen included.",
+          "boxes": "entries_box",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "run": "breaks_at_required_point",
+          "args": [
+            "' | '.join(a.answers)",
+            "reference.n_entries",
+            "reference.words",
+            "reference.cuts",
+            "reference.min_words"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered entry of the printed list, both of its printed rows -- the box starts at that entry's printed number and covers BOTH the upper row and the row directly under it, down to the bottom of the lower row. Count a box only if a printed entry number stands inside it; do not box the heading or title line, do not box one row on its own, and do not put two numbered entries in one box.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "entries_box"
+        },
+        {
+          "fail_if": ["entries_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one numbered entry of a printed list, set over two rows of type. If more than one numbered entry is visible, take the one nearest the middle of this cut-out. Copy both its rows exactly, letter for letter. Write the entry number, the letter A, a colon and the first row; then a vertical bar; then the entry number, the letter B, a colon and the second row. Copy a word that is split across the two rows exactly as it stands, hyphen included.",
+          "boxes": "entries_box",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "run": "breaks_at_required_point",
+          "args": [
+            "' | '.join(a.answers)",
+            "reference.n_entries",
+            "reference.words",
+            "reference.cuts",
+            "reference.min_words"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "break_is_row_end",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered entry of the printed list, both of its printed rows -- the box starts at that entry's printed number and covers BOTH the upper row and the row directly under it, down to the bottom of the lower row. Count a box only if a printed entry number stands inside it; do not box the heading or title line, do not box one row on its own, and do not put two numbered entries in one box.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "entries_box"
+        },
+        {
+          "fail_if": ["entries_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one numbered entry of a printed list, set over two rows of type. If more than one numbered entry is visible, take the one nearest the middle of this cut-out. Copy both its rows exactly, letter for letter. Write the entry number, the letter A, a colon and the first row; then a vertical bar; then the entry number, the letter B, a colon and the second row. Copy a word that is split across the two rows exactly as it stands, hyphen included.",
+          "boxes": "entries_box",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "run": "two_row_breaks",
+          "args": ["' | '.join(a.answers)", "reference.n_entries"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

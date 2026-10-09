@@ -1,0 +1,86 @@
+{
+  "id": "fire_damper_at_every_crossing",
+  "axis": "long_range_consistency",
+  "prompt": "The reviewing engineer signs this sheet before the ductwork goes out to the installer, so it is photographed flat on the light table with the whole run in frame.\n\nA ventilation floor plan for one storey is pinned down under the lamp. A single main supply duct, shown as a double line, runs from the left edge of the sheet to the right edge. Heavy dashed lines cut across the plan and each is tagged with the two fire compartments it divides: A from B, B from C, and C from D. Small squares with a diagonal bar sit on the duct here and there. The title panel carries the office rule the checker signs to: a fire damper is set wherever the duct passes out of one fire compartment into the next, and at no other point on the run.\n\nWhere the dampers fall along the duct is what the title panel does not fix.",
+  "difficulty": "s1",
+  "easy_question": "Is this a photograph of a ventilation floor plan sheet on which one long supply duct crosses several heavy dashed compartment lines Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "on_the_boundaries"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "square symbols with a diagonal bar sitting on the main supply duct",
+          "out": "r_part1",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part1.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Working from left to right along the duct, look at each small square with a diagonal bar. Answer with one of: Each small square sits on one of the heavy dashed lines; At least one small square sits on the duct away from any dashed line; The small squares are spread evenly along the duct.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

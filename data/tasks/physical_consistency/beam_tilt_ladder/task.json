@@ -1,0 +1,149 @@
+{
+  "id": "beam_tilt_ladder",
+  "axis": "physical_consistency",
+  "prompt": "A wall chart from an old physics classroom, photographed straight on: eight simple lever diagrams printed one above another on faded cream card in flat solid ink, no shading, well separated. Each lever is one straight thick VERMILION rod balanced on a small black wedge under its own middle, with identical small black discs stacked at its two ends. Counting the levers from the top of the chart: the first carries 2 discs on the left and 9 on the right; the second carries 6 on the left and 6 on the right; the third carries 8 on the left and 5 on the right; the fourth carries 3 on the left and 1 on the right; the fifth carries 7 on the left and 7 on the right; the sixth carries 1 on the left and 6 on the right; the seventh carries 9 on the left and 3 on the right; the eighth carries 4 on the left and 5 on the right.\n\nRespect the law of the lever throughout. Loading one end more heavily than the other drags that end downward; matching loads hold the rod flat; and the extent of the dip answers to a single quantity, the excess of discs carried by the heavier end, priced at two and a half degrees away from horizontal per excess disc. Reason out each rod in isolation from the pair of counts printed for it, then ink it at precisely that inclination. Inclination here is data, not styling: seven discs of excess must read as seven times the steepness of one disc of excess, leaving the sharpest rod on this chart far beyond the gentlest inclined one, and any evenly loaded rod perfectly flat. Steer clear of one token slope repeated down the chart, and steer clear of slopes marching in tidy order.\n\nEvery rod is perfectly straight along its whole length, never bent or curved. Flat printed ink, rods clearly separated, no protractors, no angle marks, no text, no numerals.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a printed classroom chart of several simple levers one above another, each a straight coloured rod balanced on a wedge at its middle with small discs stacked at its two ends. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "k": 8,
+    "deg_per_weight": 2.5,
+    "loads": [
+      [2, 9],
+      [6, 6],
+      [8, 5],
+      [3, 1],
+      [7, 7],
+      [1, 6],
+      [9, 3],
+      [4, 5]
+    ],
+    "targets": [17.5, 0.0, -7.5, -5.0, 0.0, 12.5, -15.0, 2.5],
+    "magnitude_ratio": 7.0,
+    "lo": [0, 110, 90],
+    "hi": [16, 255, 255]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "beams_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "measure_beam_tilts",
+          "args": ["image", "reference.lo", "reference.hi", "reference.k"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "beam_count_score",
+          "args": ["m", "reference.k"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "per_beam_signed_tilt",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "measure_beam_tilts",
+          "args": ["image", "reference.lo", "reference.hi", "reference.k"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "tilt_match_score",
+          "args": ["m", "reference.targets"],
+          "code": {
+            "inline": "f_code_2"
+          },
+          "out": "frac"
+        },
+        {
+          "run": "beam_marks",
+          "args": ["image", "reference.lo", "reference.hi", "reference.targets"],
+          "out": "bmk"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "bmk.ref_anchors",
+          "found_anchors": "bmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [225, 0, 235],
+          "label": "each beam the gauge found, with the axis it measured through it",
+          "out": "bmv1",
+          "polylines": "bmk.mk_measured.polylines",
+          "rects": "bmk.mk_measured.rects"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "bmk.ref_anchors",
+          "found_anchors": "bmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 175, 0],
+          "label": "the tilt each beam was supposed to be drawn at",
+          "out": "bmv2",
+          "polylines": "bmk.mk_want.polylines"
+        }
+      ]
+    },
+    {
+      "name": "magnitude_spread",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "measure_beam_tilts",
+          "args": ["image", "reference.lo", "reference.hi", "reference.k"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "tilt_range_score",
+          "args": ["m", "reference.targets"],
+          "code": {
+            "inline": "f_code_3"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_beam_tilt_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "draw_tilt_overlay",
+          "args": ["image", "reference.lo", "reference.hi", "reference.targets"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

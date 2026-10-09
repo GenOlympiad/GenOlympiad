@@ -1,0 +1,140 @@
+{
+  "id": "chargeable_weight_per_box",
+  "axis": "long_range_consistency",
+  "prompt": "The booking counter of an air freight forwarder at the end of the day, photographed straight down at the two papers the customer is handed: the PACKING LIST on the left and the QUOTATION on the right.\n\nThe consignment is five pieces. The packing list has one line per piece, the piece number at the left, then that piece's gross weight and its volumetric weight, both in kilogrammes:\npiece 1  gross 34.0  volumetric 22.5\npiece 2  gross 12.5  volumetric 41.0\npiece 3  gross 28.0  volumetric 19.8\npiece 4  gross 9.5  volumetric 33.2\npiece 5  gross 47.0  volumetric 30.0\n\nHow this account is charged, which the counter clerk knows without looking it up: each piece is charged on the greater of its own two weights, and the consignment's chargeable weight is what the five pieces come to once each of them has been settled that way. This account is quoted to one decimal place and takes no rounding step.\n\nThe last column of the packing list is headed CHARGED ON. It takes the letter G on a line charged on that piece's gross weight and the letter V on a line charged on that piece's volumetric weight, and one letter goes on every line. The quotation on the right has a single line, TOTAL CHARGEABLE WEIGHT, and its figure comes off the packing list.\n\nWork the letters and the total out for yourself -- I am deliberately not telling you which weight wins on any piece, and I am not telling you the total. Nothing on the papers may hand it over: no sum, no tick beside a weight, no column of settled weights, no note about the rule. All five piece lines with their numbers and their letter, and the total on the quotation, have to be legible in the one frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two printed papers side by side, the left one a list of numbered lines with weights on them and the right one a short quotation? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image instead shows a blank card that just states an answer, or shows only one paper with no list of numbered lines. Answer yes or no only.",
+  "reference": {
+    "charged_on": "1=G|2=V|3=G|4=V|5=G",
+    "total_text": "183.2"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_piece_is_settled_on_its_own_basis",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered piece line of the packing list, from its number across to its last column",
+          "sweep": true,
+          "out": "pcs"
+        },
+        {
+          "fail_if": ["pcs.unreadable"]
+        },
+        {
+          "read_crop": "Copy the piece number printed at the left of this line. Write the number only.",
+          "boxes": "pcs",
+          "pad": 0.05,
+          "out": "pnx"
+        },
+        {
+          "fail_if": ["pnx.unreadable"]
+        },
+        {
+          "read_crop": "Copy the single letter printed in the last column of this line. Write the letter only.",
+          "boxes": "pcs",
+          "pad": 0.05,
+          "out": "plx"
+        },
+        {
+          "fail_if": ["plx.unreadable"]
+        },
+        {
+          "run": "charge_basis_by_piece",
+          "args": ["pnx", "plx"],
+          "out": "bs"
+        },
+        {
+          "compare": "bs.seq",
+          "to": "reference.charged_on",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "quoted_total_is_the_settled_one",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the figure on the total chargeable weight line of the quotation",
+          "sweep": true,
+          "out": "tot"
+        },
+        {
+          "fail_if": ["tot.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one printed line. Copy the figure printed on that line. Ignore anything printed on a line above or below it. Write the number only and nothing else.",
+          "boxes": "tot",
+          "pad": 0.3,
+          "out": "totx"
+        },
+        {
+          "fail_if": ["totx.unreadable"]
+        },
+        {
+          "run": "quoted_weight",
+          "args": ["totx"],
+          "out": "qt"
+        },
+        {
+          "compare": "qt.txt",
+          "to": "reference.total_text",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_weight_columns_present",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the two weight columns of the packing list with their headings",
+          "sweep": true,
+          "out": "wcl"
+        },
+        {
+          "fail_if": ["wcl.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show two columns of weights under written headings? Answer yes or no only.",
+          "boxes": "wcl",
+          "pad": 0.15,
+          "out": "wclx"
+        },
+        {
+          "fail_if": ["wclx.unreadable"]
+        },
+        {
+          "compare": "wclx.answers.0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

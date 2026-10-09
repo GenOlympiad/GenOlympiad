@@ -1,0 +1,654 @@
+{
+  "id": "oxbow_cutoff",
+  "axis": "physical_consistency",
+  "prompt": "One plate from a river-survey atlas: THREE tall panels printed side by side in a single row on white paper, headed FIRST SURVEY, SECOND SURVEY and THIRD SURVEY. All three are plan-view charts of the SAME stretch of one river, surveyed decades apart. Draw them as an engraved survey chart: black outlines, water filled a plain pale blue, land left white with a light stipple, a north arrow and small tick marks along the left and right edge of each panel. No writing except the three headings and the letter N beside each arrow.\n\nIn every panel the river runs down the page, entering at the top edge halfway across and leaving at the bottom edge halfway across -- the same two crossing points in all three panels.\n\nBetween those crossing points the river makes TWO bends, one after the other, and they bulge to opposite banks:\n  * the UPPER bend, about three tenths of the way down the panel, bulges WEST, to the left of the page;\n  * the LOWER bend, about three quarters of the way down the panel, bulges EAST, to the right of the page.\n\nFIRST SURVEY: draw both bends, each reaching about as far out as the other. Their necks -- the strips of land caught between the two arms of a bend -- are not equal: the UPPER bend's neck is already the narrower of the two, about two thirds the width of the LOWER bend's neck.\n\nSECOND SURVEY: the same two bends, in the same places, bulging to the same banks and reaching just as far. The LOWER bend has hardly changed at all: its neck is almost exactly as wide as it was. The UPPER bend, though, has closed right up -- its neck is now a sliver, only about as wide as the river channel itself. It is thin, but it is still unbroken land, and the water is still ONE single continuous course from the top edge to the bottom edge.\n\nTHIRD SURVEY: the same stretch after the flood that followed. EXACTLY ONE of the two bends does not survive it. Work out for yourself which one it must be, what happens to it, and what is left behind on the ground. The other bend must still be there in the third panel, unchanged and still carrying the river.\n\nIn every panel the water must be ONE single course with no forks, no side channels and no islands splitting the flow -- apart from whatever the THIRD SURVEY itself requires.\n",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show THREE separate tall panels printed side by side in one row on a sheet of white paper, each one a black outline drawing with a heading above it and small tick marks along its left and right edges. Ignoring drawing quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- one single undivided drawing, a photograph, or a page of text. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "q_overlay": "Two thick arrows have been drawn on this image, one ORANGE and one GREEN. Do the ORANGE arrow and the GREEN arrow point in the same direction? Answer yes or no only.",
+    "layout": "row",
+    "flow": "v",
+    "water": "blue",
+    "want_comps": [1, 1, 2],
+    "two_loops": true,
+    "q_notext": "The panel headings FIRST SURVEY, SECOND SURVEY and THIRD SURVEY and the letter N beside each north arrow do not count. Apart from those, is there any other printed text anywhere in this picture? Answer yes or no only.",
+    "enforce_notext": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "single_unbranched_channel",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["reference.layout"],
+          "out": "pan"
+        },
+        {
+          "read_crop": "This is a plan-view map showing water on land. How many separate pieces of water are there on this map -- pieces that do not touch each other anywhere? Answer with a single number and nothing else.",
+          "boxes": "pan.all",
+          "pad": 0,
+          "out": "rn"
+        },
+        {
+          "read_crop": "This is a plan-view map of a river. Does the river split into two channels that run apart and then join up again, so that water goes round both sides of an island? Answer YES or NO.",
+          "boxes": "pan.p12pair",
+          "pad": 0,
+          "out": "rbranch"
+        },
+        {
+          "read_crop": "These are two plan-view maps of the same river at two different times, the earlier one first. In each map the river makes a big loop, and between the two arms of that loop there is a neck of land. Is that neck of land NARROWER in the second map than it is in the first map? Answer YES or NO.",
+          "boxes": "pan.p12",
+          "pad": 0,
+          "out": "rneck"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Apart from one big loop, the river runs roughly straight from one edge of the map to the other. Which side of that straight course does the loop bulge towards? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p2",
+          "pad": 0,
+          "out": "rloop2"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river, with one separate curved pond of water lying near it that is not joined to the river. On which side of the river does that pond lie? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "rlake3"
+        },
+        {
+          "read_crop": "This is a plan-view map of a river with a separate curved, crescent-shaped pond lying near it. Does the hollow inside of that crescent face TOWARDS the river, or AWAY from the river? Answer with one word: TOWARDS or AWAY.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "ropen3"
+        },
+        {
+          "run": "oxbow_read",
+          "args": ["rn", "rbranch", "rneck", "rloop2", "rlake3", "ropen3"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.no_read"]
+        },
+        {
+          "run": "score_unbranched",
+          "args": ["rd"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cutoff_event_topology",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["reference.layout"],
+          "out": "pan"
+        },
+        {
+          "read_crop": "This is a plan-view map showing water on land. Write down every separate piece of water on this map -- pieces that do not touch each other anywhere -- each with a few plain words saying where on the map it lies and what shape it has. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no water on this map, write the single word NONE.",
+          "boxes": "pan.all",
+          "pad": 0,
+          "out": "rn"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rn", "empty_as='0'"],
+          "out": "rn__std"
+        },
+        {
+          "fail_if": ["rn__std.refused"]
+        },
+        {
+          "read_crop": "This is a plan-view map of a river. Does the river split into two channels that run apart and then join up again, so that water goes round both sides of an island? Answer YES or NO.",
+          "boxes": "pan.p12pair",
+          "pad": 0,
+          "out": "rbranch"
+        },
+        {
+          "read_crop": "These are two plan-view maps of the same river at two different times, the earlier one first. In each map the river makes a big loop, and between the two arms of that loop there is a neck of land. Is that neck of land NARROWER in the second map than it is in the first map? Answer YES or NO.",
+          "boxes": "pan.p12",
+          "pad": 0,
+          "out": "rneck"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Apart from one big loop, the river runs roughly straight from one edge of the map to the other. Which side of that straight course does the loop bulge towards? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p2",
+          "pad": 0,
+          "out": "rloop2"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river, with one separate curved pond of water lying near it that is not joined to the river. On which side of the river does that pond lie? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "rlake3"
+        },
+        {
+          "read_crop": "This is a plan-view map of a river with a separate curved, crescent-shaped pond lying near it. Does the hollow inside of that crescent face TOWARDS the river, or AWAY from the river? Answer with one word: TOWARDS or AWAY.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "ropen3"
+        },
+        {
+          "run": "oxbow_read",
+          "args": ["rn__std", "rbranch", "rneck", "rloop2", "rlake3", "ropen3"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.no_read"]
+        },
+        {
+          "run": "score_water_counts",
+          "args": ["rd", "reference.want_comps"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "neck_narrows_monotonically",
+      "weight": 2.0,
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["reference.layout"],
+          "out": "pan"
+        },
+        {
+          "read_crop": "This is a plan-view map showing water on land. Write down every separate piece of water on this map -- pieces that do not touch each other anywhere -- each with a few plain words saying where on the map it lies and what shape it has. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no water on this map, write the single word NONE.",
+          "boxes": "pan.all",
+          "pad": 0,
+          "out": "rn"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rn", "empty_as='0'"],
+          "out": "rn__std"
+        },
+        {
+          "fail_if": ["rn__std.refused"]
+        },
+        {
+          "read_crop": "This is a plan-view map of a river. Does the river split into two channels that run apart and then join up again, so that water goes round both sides of an island? Answer YES or NO.",
+          "boxes": "pan.p12pair",
+          "pad": 0,
+          "out": "rbranch"
+        },
+        {
+          "read_crop": "These are two plan-view maps of the same river at two different times, the earlier one first. In each map the river makes a big loop, and between the two arms of that loop there is a neck of land. Is that neck of land NARROWER in the second map than it is in the first map? Answer YES or NO.",
+          "boxes": "pan.p12",
+          "pad": 0,
+          "out": "rneck"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Apart from one big loop, the river runs roughly straight from one edge of the map to the other. Which side of that straight course does the loop bulge towards? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p2",
+          "pad": 0,
+          "out": "rloop2"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river, with one separate curved pond of water lying near it that is not joined to the river. On which side of the river does that pond lie? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "rlake3"
+        },
+        {
+          "read_crop": "This is a plan-view map of a river with a separate curved, crescent-shaped pond lying near it. Does the hollow inside of that crescent face TOWARDS the river, or AWAY from the river? Answer with one word: TOWARDS or AWAY.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "ropen3"
+        },
+        {
+          "run": "oxbow_read",
+          "args": ["rn__std", "rbranch", "rneck", "rloop2", "rlake3", "ropen3"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.no_read"]
+        },
+        {
+          "run": "score_neck",
+          "args": ["rd"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "oxbow_lies_on_the_abandoned_side",
+      "weight": 4.0,
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["reference.layout"],
+          "out": "pan"
+        },
+        {
+          "read_crop": "This is a plan-view map showing water on land. Write down every separate piece of water on this map -- pieces that do not touch each other anywhere -- each with a few plain words saying where on the map it lies and what shape it has. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no water on this map, write the single word NONE.",
+          "boxes": "pan.all",
+          "pad": 0,
+          "out": "rn"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rn", "empty_as='0'"],
+          "out": "rn__std"
+        },
+        {
+          "fail_if": ["rn__std.refused"]
+        },
+        {
+          "read_crop": "This is a plan-view map of a river. Does the river split into two channels that run apart and then join up again, so that water goes round both sides of an island? Answer YES or NO.",
+          "boxes": "pan.p12pair",
+          "pad": 0,
+          "out": "rbranch"
+        },
+        {
+          "read_crop": "These are two plan-view maps of the same river at two different times, the earlier one first. In each map the river makes a big loop, and between the two arms of that loop there is a neck of land. Is that neck of land NARROWER in the second map than it is in the first map? Answer YES or NO.",
+          "boxes": "pan.p12",
+          "pad": 0,
+          "out": "rneck"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Apart from one big loop, the river runs roughly straight from one edge of the map to the other. Which side of that straight course does the loop bulge towards? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p2",
+          "pad": 0,
+          "out": "rloop2"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river, with one separate curved pond of water lying near it that is not joined to the river. On which side of the river does that pond lie? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "rlake3"
+        },
+        {
+          "read_crop": "This is a plan-view map of a river with a separate curved, crescent-shaped pond lying near it. Does the hollow inside of that crescent face TOWARDS the river, or AWAY from the river? Answer with one word: TOWARDS or AWAY.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "ropen3"
+        },
+        {
+          "run": "oxbow_read",
+          "args": ["rn__std", "rbranch", "rneck", "rloop2", "rlake3", "ropen3"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.no_read"]
+        },
+        {
+          "run": "score_lake_side",
+          "args": ["rd"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "crescent_opens_towards_the_new_course",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["reference.layout"],
+          "out": "pan"
+        },
+        {
+          "read_crop": "This is a plan-view map showing water on land. Write down every separate piece of water on this map -- pieces that do not touch each other anywhere -- each with a few plain words saying where on the map it lies and what shape it has. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no water on this map, write the single word NONE.",
+          "boxes": "pan.all",
+          "pad": 0,
+          "out": "rn"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rn", "empty_as='0'"],
+          "out": "rn__std"
+        },
+        {
+          "fail_if": ["rn__std.refused"]
+        },
+        {
+          "read_crop": "This is a plan-view map of a river. Does the river split into two channels that run apart and then join up again, so that water goes round both sides of an island? Answer YES or NO.",
+          "boxes": "pan.p12pair",
+          "pad": 0,
+          "out": "rbranch"
+        },
+        {
+          "read_crop": "These are two plan-view maps of the same river at two different times, the earlier one first. In each map the river makes a big loop, and between the two arms of that loop there is a neck of land. Is that neck of land NARROWER in the second map than it is in the first map? Answer YES or NO.",
+          "boxes": "pan.p12",
+          "pad": 0,
+          "out": "rneck"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Apart from one big loop, the river runs roughly straight from one edge of the map to the other. Which side of that straight course does the loop bulge towards? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p2",
+          "pad": 0,
+          "out": "rloop2"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river, with one separate curved pond of water lying near it that is not joined to the river. On which side of the river does that pond lie? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "rlake3"
+        },
+        {
+          "read_crop": "This is a plan-view map of a river with a separate curved, crescent-shaped pond lying near it. Does the hollow inside of that crescent face TOWARDS the river, or AWAY from the river? Answer with one word: TOWARDS or AWAY.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "ropen3"
+        },
+        {
+          "run": "oxbow_read",
+          "args": ["rn__std", "rbranch", "rneck", "rloop2", "rlake3", "ropen3"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.no_read"]
+        },
+        {
+          "run": "score_lake_opening",
+          "args": ["rd"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "new_course_keeps_the_old_crossings",
+      "weight": 1.5,
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["reference.layout"],
+          "out": "pan"
+        },
+        {
+          "run": "edge_crossing_questions",
+          "args": ["reference.flow"],
+          "out": "qs"
+        },
+        {
+          "read_crop": "This is a plan-view map showing water on land. Write down every separate piece of water on this map -- pieces that do not touch each other anywhere -- each with a few plain words saying where on the map it lies and what shape it has. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no water on this map, write the single word NONE.",
+          "boxes": "pan.all",
+          "pad": 0,
+          "out": "rn"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rn", "empty_as='0'"],
+          "out": "rn__std"
+        },
+        {
+          "fail_if": ["rn__std.refused"]
+        },
+        {
+          "read_crop": "This is a plan-view map of a river. Does the river split into two channels that run apart and then join up again, so that water goes round both sides of an island? Answer YES or NO.",
+          "boxes": "pan.p12pair",
+          "pad": 0,
+          "out": "rbranch"
+        },
+        {
+          "read_crop": "These are two plan-view maps of the same river at two different times, the earlier one first. In each map the river makes a big loop, and between the two arms of that loop there is a neck of land. Is that neck of land NARROWER in the second map than it is in the first map? Answer YES or NO.",
+          "boxes": "pan.p12",
+          "pad": 0,
+          "out": "rneck"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Apart from one big loop, the river runs roughly straight from one edge of the map to the other. Which side of that straight course does the loop bulge towards? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p2",
+          "pad": 0,
+          "out": "rloop2"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river, with one separate curved pond of water lying near it that is not joined to the river. On which side of the river does that pond lie? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "rlake3"
+        },
+        {
+          "read_crop": "This is a plan-view map of a river with a separate curved, crescent-shaped pond lying near it. Does the hollow inside of that crescent face TOWARDS the river, or AWAY from the river? Answer with one word: TOWARDS or AWAY.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "ropen3"
+        },
+        {
+          "read_crop": "qs.q_in",
+          "boxes": "pan.all",
+          "pad": 0,
+          "out": "rin"
+        },
+        {
+          "read_crop": "qs.q_out",
+          "boxes": "pan.all",
+          "pad": 0,
+          "out": "rout"
+        },
+        {
+          "run": "oxbow_read",
+          "args": ["rn__std", "rbranch", "rneck", "rloop2", "rlake3", "ropen3", "rin", "rout"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.no_read"]
+        },
+        {
+          "run": "score_edge_crossings",
+          "args": ["rd"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_the_designated_bend_is_cut",
+      "weight": 2.5,
+      "only_if": "reference.two_loops",
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["reference.layout"],
+          "out": "pan"
+        },
+        {
+          "read_crop": "This is a plan-view map showing water on land. Write down every separate piece of water on this map -- pieces that do not touch each other anywhere -- each with a few plain words saying where on the map it lies and what shape it has. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no water on this map, write the single word NONE.",
+          "boxes": "pan.all",
+          "pad": 0,
+          "out": "rn"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rn", "empty_as='0'"],
+          "out": "rn__std"
+        },
+        {
+          "fail_if": ["rn__std.refused"]
+        },
+        {
+          "read_crop": "This is a plan-view map of a river. Does the river split into two channels that run apart and then join up again, so that water goes round both sides of an island? Answer YES or NO.",
+          "boxes": "pan.p12pair",
+          "pad": 0,
+          "out": "rbranch"
+        },
+        {
+          "read_crop": "These are two plan-view maps of the same river at two different times, the earlier one first. In each map the river makes a big loop, and between the two arms of that loop there is a neck of land. Is that neck of land NARROWER in the second map than it is in the first map? Answer YES or NO.",
+          "boxes": "pan.p12",
+          "pad": 0,
+          "out": "rneck"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Apart from one big loop, the river runs roughly straight from one edge of the map to the other. Which side of that straight course does the loop bulge towards? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p2",
+          "pad": 0,
+          "out": "rloop2"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river, with one separate curved pond of water lying near it that is not joined to the river. On which side of the river does that pond lie? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "rlake3"
+        },
+        {
+          "read_crop": "This is a plan-view map of a river with a separate curved, crescent-shaped pond lying near it. Does the hollow inside of that crescent face TOWARDS the river, or AWAY from the river? Answer with one word: TOWARDS or AWAY.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "ropen3"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Leave out any separate pond that is not joined to the river. Write down every big loop the river itself makes -- a place where it swings well out to one side and comes back -- each with a few plain words saying where on the map it lies and which way it swings. Separate one item from the next with a semicolon; write no running total and nothing else. If the river makes no such loop, write the single word NONE.",
+          "boxes": "pan.p2",
+          "pad": 0,
+          "out": "rloops2"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rloops2", "empty_as='0'"],
+          "out": "rloops2__std"
+        },
+        {
+          "fail_if": ["rloops2__std.refused"]
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Leave out any separate pond that is not joined to the river. Write down every big loop the river itself makes -- a place where it swings well out to one side and comes back -- each with a few plain words saying where on the map it lies and which way it swings. Separate one item from the next with a semicolon; write no running total and nothing else. If the river makes no such loop, write the single word NONE.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "rloops3"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rloops3", "empty_as='0'"],
+          "out": "rloops3__std"
+        },
+        {
+          "fail_if": ["rloops3__std.refused"]
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Apart from one big loop, the river runs roughly straight from one edge of the map to the other. Which side of that straight course does the loop bulge towards? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "rloop3"
+        },
+        {
+          "run": "oxbow_read",
+          "args": [
+            "rn__std",
+            "rbranch",
+            "rneck",
+            "rloop2",
+            "rlake3",
+            "ropen3",
+            "None",
+            "None",
+            "rloops2__std",
+            "rloops3__std",
+            "rloop3"
+          ],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.no_read"]
+        },
+        {
+          "run": "score_one_bend",
+          "args": ["rd"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_process_overlay",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["reference.layout"],
+          "out": "pan"
+        },
+        {
+          "read_crop": "This is a plan-view map showing water on land. How many separate pieces of water are there on this map -- pieces that do not touch each other anywhere? Answer with a single number and nothing else.",
+          "boxes": "pan.all",
+          "pad": 0,
+          "out": "rn"
+        },
+        {
+          "read_crop": "This is a plan-view map of a river. Does the river split into two channels that run apart and then join up again, so that water goes round both sides of an island? Answer YES or NO.",
+          "boxes": "pan.p12pair",
+          "pad": 0,
+          "out": "rbranch"
+        },
+        {
+          "read_crop": "These are two plan-view maps of the same river at two different times, the earlier one first. In each map the river makes a big loop, and between the two arms of that loop there is a neck of land. Is that neck of land NARROWER in the second map than it is in the first map? Answer YES or NO.",
+          "boxes": "pan.p12",
+          "pad": 0,
+          "out": "rneck"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river running through land. Apart from one big loop, the river runs roughly straight from one edge of the map to the other. Which side of that straight course does the loop bulge towards? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p2",
+          "pad": 0,
+          "out": "rloop2"
+        },
+        {
+          "read_crop": "This is a plan-view map of one river, with one separate curved pond of water lying near it that is not joined to the river. On which side of the river does that pond lie? Answer with ONE word: LEFT, RIGHT, TOP or BOTTOM.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "rlake3"
+        },
+        {
+          "read_crop": "This is a plan-view map of a river with a separate curved, crescent-shaped pond lying near it. Does the hollow inside of that crescent face TOWARDS the river, or AWAY from the river? Answer with one word: TOWARDS or AWAY.",
+          "boxes": "pan.p3",
+          "pad": 0,
+          "out": "ropen3"
+        },
+        {
+          "run": "oxbow_read",
+          "args": ["rn", "rbranch", "rneck", "rloop2", "rlake3", "ropen3"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.no_read"]
+        },
+        {
+          "run": "score_read_present",
+          "args": ["rd"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

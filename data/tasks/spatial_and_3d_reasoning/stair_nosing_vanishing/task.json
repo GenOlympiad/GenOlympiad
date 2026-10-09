@@ -1,0 +1,94 @@
+{
+  "id": "stair_nosing_vanishing",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "a clean architectural perspective RENDER of an indoor WOODEN STAIRCASE receding away from the viewer. There are 5 steps. Paint a single crisp bright-RED line along the front NOSING EDGE of every step (the horizontal front lip of each tread), 5 red lines in all. PERSPECTIVE IS THE SUBJECT and must be EXACT (do NOT default to drawing the nosing edges as evenly stacked horizontal lines): because all the nosing edges are parallel in the real world and recede from the camera, when you EXTEND each red nosing line it must meet all the others at ONE single shared vanishing point. Every red edge, extended, passes through that one common point. Photoreal materials, correct converging perspective, no text, no numbers, no grid, no drawn vanishing lines beyond the 5 red nosing edges themselves.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a staircase receding from the camera with a red line drawn along the front edge of each step. Ignoring quality, does it depict a staircase with several roughly-parallel red edge lines across the step fronts? A photo or a render both count. Answer NO only for a blank panel or no staircase. Answer yes or no only.",
+  "reference": {
+    "core": 0.07,
+    "margin": 0.09,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "n_edges": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shared_vp",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a bright red stripe painted along the front edge of one stair step",
+          "retries": 4,
+          "out": "rd",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "read_crop": "One straight red line crosses this close-up. Does the line run from the bottom-left corner up to the top-right corner, or from the top-left corner down to the bottom-right corner? Answer with exactly one word: up-right or down-right.",
+          "boxes": "rd",
+          "out": "dir"
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "vanishing_scatter",
+          "args": ["rd", "dir", "src"],
+          "out": "cv"
+        },
+        {
+          "fail_if": ["cv.unreadable"]
+        },
+        {
+          "compare_band": "cv.scatter_frac",
+          "to": 0.0,
+          "core": "reference.core",
+          "margin": "reference.margin",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

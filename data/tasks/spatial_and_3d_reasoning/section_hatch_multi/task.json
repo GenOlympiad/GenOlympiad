@@ -1,0 +1,210 @@
+{
+  "id": "section_hatch_multi",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Render a black-on-white engineering section drawing on a very light grey sheet of one gate valve, cut straight through and shown as a single sectional view. Four different parts appear in the cut: the VALVE BODY, the BONNET bolted on top of it, the flat GATE DISC inside, and the STEM that lifts the disc. The body and the bonnet are each cut on BOTH sides of the stem.\n\nSection hatching -- thin, straight, evenly spaced parallel lines -- fills the cut solid of every one of the %d parts. The part outlines are drawn as THICK continuous lines, clearly thicker than the thin hatching.\nFollow the sectioning convention exactly:\n- Every region of cut solid that belongs to the SAME part must be hatched at exactly the SAME angle and with exactly the SAME line spacing as the other regions of that same part. Several of these parts are cut in more than one place, and each of those places must repeat that part's own hatch direction.\n- Wherever TWO DIFFERENT parts touch each other, their hatching must run at CLEARLY DIFFERENT angles -- turned well away from one another -- so that the two parts can be told apart at a glance along the line where they meet. Work out an allocation of hatch directions to the four parts that satisfies this everywhere in the drawing.\nCentred on plain paper, nothing else in the picture. No text, no numbers, no labels, no dimensions, no title block, no leader lines.\n",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a drawing in which one or more outlined areas are filled with fine, closely spaced ruled lines (hatching). Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank panel, printed text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption anywhere on it (as opposed to being purely a drawing with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "n_parts": 4,
+    "no_voids": false
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.8,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_part_is_hatched",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "only_if": "reference.no_voids",
+      "steps": [
+        {
+          "run": "hatch_map",
+          "args": ["image", "reference.n_parts"],
+          "out": "hm"
+        },
+        {
+          "fail_if": ["hm.no_read"]
+        },
+        {
+          "run": "no_blank_parts",
+          "args": ["hm.n_blank"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "touching_parts_hatched_apart",
+      "weight": 4.0,
+      "steps": [
+        {
+          "run": "hatch_map",
+          "args": ["image", "reference.n_parts"],
+          "out": "hm"
+        },
+        {
+          "fail_if": ["hm.no_read"]
+        },
+        {
+          "run": "hatch_gap_score",
+          "args": ["hm.min_adjacent_gap"],
+          "code": {
+            "inline": "f_code_2"
+          },
+          "out": "frac"
+        },
+        {
+          "run": "hatch_overlay_marked",
+          "args": ["image", "reference.n_parts"],
+          "out": "hmk"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "hmk.ref_anchors",
+          "found_anchors": "hmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [30, 120, 235],
+          "label": "each part of the section that should carry hatching",
+          "out": "hv1",
+          "rects": "hmk.mk_regions.rects"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "hmk.ref_anchors",
+          "found_anchors": "hmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [230, 40, 40],
+          "label": "two touching parts whose hatching runs the same way",
+          "out": "hv2",
+          "polylines": "hmk.mk_pair_same_direction.polylines"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "hmk.ref_anchors",
+          "found_anchors": "hmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 175, 0],
+          "label": "two touching parts whose hatching runs different ways",
+          "out": "hv3",
+          "polylines": "hmk.mk_pair_different_direction.polylines"
+        }
+      ]
+    },
+    {
+      "name": "d2_distinct_direction_count",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "hatch_map",
+          "args": ["image", "reference.n_parts"],
+          "out": "hm"
+        },
+        {
+          "fail_if": ["hm.no_read"]
+        },
+        {
+          "compare_band": "hm.n_clusters",
+          "to": "reference.n_parts",
+          "core_abs": 0.499,
+          "margin_abs": 2.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_hatch_overlay",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "run": "hatch_overlay_marked",
+          "args": ["image", "reference.n_parts"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "image": "ov.path",
+          "rects": "ov.mk_regions.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [30, 120, 235],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "polylines": "ov.mk_pair_same_direction.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "polylines": "ov.mk_pair_different_direction.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "ask": "Blue rectangles have been drawn around the hatched areas of this section drawing, and a number has been printed inside each one. Is each blue rectangle sitting around an area that is filled with parallel hatching lines? Answer yes or no only.",
+          "image": "ovm3.path",
+          "out": "q"
+        },
+        {
+          "fail_if": ["q.unreadable"]
+        },
+        {
+          "compare": "q",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

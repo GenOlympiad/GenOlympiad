@@ -1,0 +1,96 @@
+{
+  "id": "dusk_window_warmcool_reflection",
+  "axis": "physical_consistency",
+  "prompt": "A photo taken from inside a warm-lit room, looking at a WINDOW at dusk. Render the single sheet of window glass carrying TWO overlaid colour temperatures: the outdoor world seen THROUGH the glass is COOL BLUE (twilight outside), while the warm room behind the viewer (an orange lamp) is REFLECTED on the same glass in WARM ORANGE, the two superimposed on the one pane. Make the through-the-glass view cool blue and the room's reflection warm orange, both on the window. No text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a window at dusk showing a cool outdoor view through the glass and a warm room reflected on the glass? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel printing an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_through": "This shows a window pane. Look at the part you can see THROUGH the glass -- the view of the world on the far side. What colour family is that part as it is actually drawn? Answer with exactly one word: blue or orange.",
+    "q_reflection": "Now look at the REST of the window pane -- the part of the glass that is not that see-through view. What colour family is that other part as it is actually drawn? If the whole pane is one single colour, with no second differently-coloured part on it at all, say so instead. Answer with exactly one word: orange, blue, or uniform."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "dusk_window_warmcool_reflection_point",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "reference.q_through",
+          "out": "raw_f0"
+        },
+        {
+          "fail_if": ["raw_f0.unreadable"]
+        },
+        {
+          "compare": "raw_f0",
+          "to": "blue",
+          "out": "f0"
+        },
+        {
+          "ask": "reference.q_reflection",
+          "out": "raw_f1"
+        },
+        {
+          "fail_if": ["raw_f1.unreadable"]
+        },
+        {
+          "compare": "raw_f1",
+          "to": "orange",
+          "out": "f1"
+        },
+        {
+          "all": ["f0", "f1"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_q_reflection",
+      "weight": 0.6,
+      "not_scored": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the pane of glass inside the window frame",
+          "propose_boxes": "vlm",
+          "expected_n": 1,
+          "out": "pane_box"
+        },
+        {
+          "fail_if": ["pane_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a window pane. Part of it is a see-through view of the outdoors. What colour family is the rest of the pane drawn in? If the whole pane is one single colour, say uniform. Answer with one word: orange, blue, or uniform.",
+          "boxes": "pane_box",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare": "rd.answers.0",
+          "to": "orange",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

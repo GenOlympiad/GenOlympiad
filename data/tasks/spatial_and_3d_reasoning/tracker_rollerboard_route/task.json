@@ -1,0 +1,86 @@
+{
+  "id": "tracker_rollerboard_route",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The organ builder has to show the foreman which key talks to which pallet before the chest is closed up, so the case front is off and the action is photographed straight on.\n\nAlong the bottom runs a set of keys, from the bottom C up to the G above it, one key for every semitone, each stamped with its number counting up from the bottom key as number 1. Above, the chest face carries a row of numbered holes, split down its middle into a left half and a right half. Between the two, a roller board carries slanted rollers, and painted trackers run from the key ends over the rollers up to the holes, each tracker hung with a large paper tag. The chest is laid out C side and C sharp side: odd numbered keys are served from the left half, even numbered keys from the right half.\n\nWhich hole each tracker reaches is what the shop drawing does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show the inside of an organ with a run of keys along the bottom and rods running up to a panel of holes above? Answer yes or no only.",
+  "reference": {
+    "part1": "8",
+    "part2": "has_gaps"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "painted tracker rod hung with a paper tag between the key ends and the chest face",
+          "out": "r_part1",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part1.unreadable"]
+        },
+        {
+          "run": "count_boxes",
+          "args": ["r_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the number written on the paper tag of each tracker, taking the trackers in the order of the chest holes they run up to, from the left-hand end of the chest face across to the right-hand end. Write the numbers in that order.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "consecutive_from_one",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

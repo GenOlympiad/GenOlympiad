@@ -1,0 +1,383 @@
+{
+  "id": "jet_reach_nonmonotone",
+  "axis": "physical_consistency",
+  "prompt": "A hand-drawn Victorian waterworks engraving on cream paper, fine ink hatching only and no photographic shading. A masonry cistern stands at the left of a long flagstone apron running away to the right-hand edge of the plate. A float valve pins the water surface one metre above the apron. Six brass cocks pierce the cistern's right face and six slender jets spring horizontally from them, arch over and strike the flagstones. Each jet is tinted its own flat colour. Taking each cock by its height above the apron: the cock at 20 centimetres runs PURPLE, the cock at 98 centimetres runs YELLOW, the cock at 8 centimetres runs ORANGE, the cock at 50 centimetres runs RED, the cock at 2 centimetres runs GREEN, and the cock at 80 centimetres runs BLUE.\n\nCast every jet by calculation, never by eye. A jet's speed where it leaves the cock grows with how far that cock lies beneath the water surface; its time in the air grows with how far the cock stands above the apron; the distance it flies is the speed times the time. Worked honestly, two separate pairs among these six must strike the flagstones at identical distances, and the jet that flies furthest belongs to neither the highest nor the lowest cock. Do not arrange the six landing points in any rising or falling order.\n\nEach jet leaves its cock horizontally as one clean tinted line, carries no spray or mist, and lands on the apron within the plate; the cistern's right face is one straight vertical edge. Flat tints, crisp outlines, plain background, items well separated, no text, no numerals, no arrows, no rulers, no scale marks, no labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a large upright liquid container with several slender streams springing sideways from its side and falling onto a long flat surface below. Ignoring styling and artistic quality, is that what the image shows? Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "q_look": "Ignore whether anything in this picture is physically correct. Judged only on craft -- is this a clean, competently made, artefact-free picture of its subject, the kind a professional would be happy to publish? Answer yes or no only.",
+    "colours": ["green", "red", "yellow", "purple", "blue", "orange"],
+    "hole_cm": [2, 50, 98, 20, 80, 8],
+    "reach_units": [28.0, 100.0, 28.0, 80.0, 80.0, 54.2586],
+    "ref_index": 0,
+    "spread": 3.5714,
+    "argmax_colour": "red",
+    "tie_pairs": [
+      [0, 2],
+      [3, 4]
+    ],
+    "apart_pairs": [
+      [1, 2],
+      [3, 2],
+      [1, 4],
+      [1, 0]
+    ],
+    "core_rel": 0.2,
+    "margin_rel": 0.1,
+    "n_colours": 6
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "streams_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the tall vessel the coloured streams shoot out of",
+          "expected_n": 1,
+          "out": "ves"
+        },
+        {
+          "fail_if": ["ves.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the landing mark of a coloured stream",
+          "sweep": true,
+          "out": "lnd"
+        },
+        {
+          "fail_if": ["lnd.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a splash of coloured water on the ground. What colour is that water? Answer with a single colour word and nothing else.",
+          "boxes": "lnd",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "col"
+        },
+        {
+          "run": "jet_nodes_for_readable",
+          "args": ["ves", "lnd", "col", "reference.colours"],
+          "out": "jb"
+        },
+        {
+          "fail_if": ["jb.refused"]
+        },
+        {
+          "run": "streams_found_score",
+          "args": ["jb.nodes", "reference.colours", "reference.n_colours"],
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "reach_ratio_per_jet",
+      "weight": 6.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the tall vessel the coloured streams shoot out of",
+          "expected_n": 1,
+          "out": "ves"
+        },
+        {
+          "fail_if": ["ves.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the landing mark of a coloured stream",
+          "sweep": true,
+          "out": "lnd"
+        },
+        {
+          "fail_if": ["lnd.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a splash of coloured water on the ground. What colour is that water? Answer with a single colour word and nothing else.",
+          "boxes": "lnd",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "col"
+        },
+        {
+          "run": "jet_nodes_for_ratio",
+          "args": ["ves", "lnd", "col", "reference.colours"],
+          "out": "jb"
+        },
+        {
+          "fail_if": ["jb.refused"]
+        },
+        {
+          "run": "reach_ratio_score",
+          "args": [
+            "jb.nodes",
+            "reference.colours",
+            "reference.reach_units",
+            "reference.ref_index",
+            "reference.core_rel",
+            "reference.margin_rel"
+          ],
+          "code": {
+            "inline": "f_code_2"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "reach_spread",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the tall vessel the coloured streams shoot out of",
+          "expected_n": 1,
+          "out": "ves"
+        },
+        {
+          "fail_if": ["ves.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the landing mark of a coloured stream",
+          "sweep": true,
+          "out": "lnd"
+        },
+        {
+          "fail_if": ["lnd.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a splash of coloured water on the ground. What colour is that water? Answer with a single colour word and nothing else.",
+          "boxes": "lnd",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "col"
+        },
+        {
+          "run": "jet_nodes_for_spread",
+          "args": ["ves", "lnd", "col", "reference.colours"],
+          "out": "jb"
+        },
+        {
+          "fail_if": ["jb.refused"]
+        },
+        {
+          "run": "read_reach_spread",
+          "args": ["jb.nodes", "reference.colours"],
+          "out": "m"
+        },
+        {
+          "compare_band": "m.spread",
+          "to": "reference.spread",
+          "core_rel": 0.25,
+          "margin_rel": 0.15,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tied_pairs_and_separations",
+      "weight": 3.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the tall vessel the coloured streams shoot out of",
+          "expected_n": 1,
+          "out": "ves"
+        },
+        {
+          "fail_if": ["ves.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the landing mark of a coloured stream",
+          "sweep": true,
+          "out": "lnd"
+        },
+        {
+          "fail_if": ["lnd.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a splash of coloured water on the ground. What colour is that water? Answer with a single colour word and nothing else.",
+          "boxes": "lnd",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "col"
+        },
+        {
+          "run": "jet_nodes_for_ties",
+          "args": ["ves", "lnd", "col", "reference.colours"],
+          "out": "jb"
+        },
+        {
+          "fail_if": ["jb.refused"]
+        },
+        {
+          "run": "tie_separation_score",
+          "args": [
+            "jb.nodes",
+            "reference.colours",
+            "reference.tie_pairs",
+            "reference.apart_pairs",
+            "reference.reach_units"
+          ],
+          "code": {
+            "inline": "f_code_3"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "furthest_jet_identity",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the tall vessel the coloured streams shoot out of",
+          "expected_n": 1,
+          "out": "ves"
+        },
+        {
+          "fail_if": ["ves.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the landing mark of a coloured stream",
+          "sweep": true,
+          "out": "lnd"
+        },
+        {
+          "fail_if": ["lnd.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a splash of coloured water on the ground. What colour is that water? Answer with a single colour word and nothing else.",
+          "boxes": "lnd",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "col"
+        },
+        {
+          "run": "jet_nodes_for_furthest",
+          "args": ["ves", "lnd", "col", "reference.colours"],
+          "out": "jb"
+        },
+        {
+          "fail_if": ["jb.refused"]
+        },
+        {
+          "run": "read_reach_spread",
+          "args": ["jb.nodes", "reference.colours"],
+          "out": "m"
+        },
+        {
+          "compare": "m.argmax",
+          "to": "reference.argmax_colour",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_reach_overlay",
+      "weight": 0.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the tall vessel the coloured streams shoot out of",
+          "expected_n": 1,
+          "out": "ves"
+        },
+        {
+          "fail_if": ["ves.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the landing mark of a coloured stream",
+          "sweep": true,
+          "out": "lnd"
+        },
+        {
+          "fail_if": ["lnd.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a splash of coloured water on the ground. What colour is that water? Answer with a single colour word and nothing else.",
+          "boxes": "lnd",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "col"
+        },
+        {
+          "run": "jet_nodes_for_overlay",
+          "args": ["ves", "lnd", "col", "reference.colours"],
+          "out": "jb"
+        },
+        {
+          "fail_if": ["jb.refused"]
+        },
+        {
+          "run": "reach_ratio_overlay",
+          "args": [
+            "jb.nodes",
+            "reference.colours",
+            "reference.reach_units",
+            "reference.ref_index",
+            "reference.core_rel",
+            "reference.margin_rel"
+          ],
+          "code": {
+            "inline": "f_code_4"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "d2_appearance_only",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "ask": "reference.q_look",
+          "retries": 2,
+          "out": "lk"
+        },
+        {
+          "fail_if": ["lk.unreadable"]
+        },
+        {
+          "compare": "lk",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

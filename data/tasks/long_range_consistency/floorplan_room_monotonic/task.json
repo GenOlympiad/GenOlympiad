@@ -1,0 +1,58 @@
+{
+  "id": "floorplan_room_monotonic",
+  "axis": "long_range_consistency",
+  "prompt": "A clean architectural FLOOR PLAN, drawn straight-on. There is a single L-SHAPED CORRIDOR: it runs DOWN the left side of the plan from an ENTRANCE at the top, then TURNS and runs RIGHT along the bottom. Along the OUTER wall of this corridor are exactly 6 room DOORS, each with a small ROOM-NUMBER plate. CRITICAL long-range consistency: the room NUMBERING must run WITH the corridor -- as you WALK the corridor from the entrance (first down the left leg, then right along the bottom leg), the room numbers on the doors you pass must be STRICTLY INCREASING, one after another, in that exact walking order. Number the 6 doors, in walking order from the entrance, as: 101, 102, 103, 104, 105, 106. Put the FIRST number on the door nearest the entrance and the LAST number on the door at the far end of the bottom leg. Do NOT assume the numbers simply increase top-to-bottom on the page -- they must increase along the actual corridor path, including around the corner. Do not put a higher number before a lower one along the walk.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict an architectural FLOOR PLAN with an L-shaped corridor and numbered room DOORS along it. Ignoring artistic quality, does the image DEPICT that -- a floor plan with a corridor and numbered doors? A diagram, plan or render all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_doors": 6,
+    "walk": ["101", "102", "103", "104", "105", "106"],
+    "q_walk": "Follow the L-shaped CORRIDOR from the ENTRANCE (marked at the top): walk DOWN the left leg, then AROUND THE CORNER and RIGHT along the bottom leg. Take the doors one at a time in the order you pass them, starting at the door nearest the entrance, and read the room number printed on each. Write only those room numbers, in walking order, separated by commas with no spaces and no other words -- like 12,7,30.",
+    "q_list": "List every ROOM NUMBER printed on a door in this floor plan, separated by commas. Give only the numbers."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "numbers_increase_along_corridor",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_sequence": "reference.q_walk",
+          "n": "reference.n_doors",
+          "out": "wk"
+        },
+        {
+          "fail_if": ["wk.unreadable"]
+        },
+        {
+          "run": "room_numbers_increase",
+          "args": ["wk", "reference"],
+          "out": "mk"
+        },
+        {
+          "compare": "mk.fmono",
+          "to": 1.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "id": "invented_dot_code",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Please draw a small message card for code workshop that shows an INVENTED dot-code. Each letter is a vertical column of 3 dots (top, middle, bottom); each dot is either FILLED (solid) or EMPTY.\n\nFirst print a small LEGEND table with these seven entries (dot-pattern = letter): a column with only the TOP dot(s) filled = 'C'; a column with only the MIDDLE dot(s) filled = 'A'; a column with only the BOTTOM dot(s) filled = 'T'; a column with only the TOP/MIDDLE dot(s) filled = 'R'; a column with only the MIDDLE/BOTTOM dot(s) filled = 'N'; a column with only the TOP/BOTTOM dot(s) filled = 'S'; a column with only the TOP/MIDDLE/BOTTOM dot(s) filled = 'O'. Draw each legend entry as a column of 3 dots (filled or empty) with its letter beside it.\n\nThen, BELOW the legend, print a short coded WORD made of 3 dot-columns that spells \"ROT\" USING THIS LEGEND (not standard braille): a column with TOP, MIDDLE filled then a column with TOP, MIDDLE, BOTTOM filled then a column with BOTTOM filled. Draw only the dot columns for the coded word — do NOT print the plain letters of the word anywhere. Keep all text in English. This is our own code, so ignore any standard braille alphabet.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a small code card: a LEGEND table of 3-dot column patterns mapped to letters, and a short coded word made of dot columns. Never mind how well it is drawn, or what it decodes to. Does the image DEPICT such a dot-code card with a legend and dot-column glyphs? A photo, render or clean graphic all count as yes. Answer NO only if it is blank or unrelated. Answer yes or no only.",
+  "reference": {
+    "word": "ROT"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "decoded_word",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "large upright dot-column glyph of the coded word, printed below the legend table on the card",
+          "votes": 3,
+          "out": "dkb",
+          "sweep": true,
+          "context": "lower part of the card, below the legend table, that holds the LARGE dot columns of the coded word (the columns that have no letter printed beside them)"
+        },
+        {
+          "fail_if": ["dkb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a small card printing a code made of columns of dots. The card has a row of small dot patterns near the top, each with a letter printed beside it, and lower down a few LARGE dot columns with no letter beside them. Does this cut-out show exactly ONE whole LARGE dot column from the lower part -- one single upright column of dot places -- rather than two of those columns together, only a part of one, one of the small patterns from the top row, or just the blank card? Answer yes or no only.",
+          "boxes": "dkb",
+          "pad": 0.08,
+          "out": "dkc"
+        },
+        {
+          "fail_if": ["dkc.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "single round dot place inside one of the large dot columns of the coded word below the legend table (a solid dot or an empty outline dot)",
+          "votes": 3,
+          "out": "dtb",
+          "sweep": true,
+          "context": "lower part of the card, below the legend table, that holds the LARGE dot columns of the coded word (the columns that have no letter printed beside them)"
+        },
+        {
+          "fail_if": ["dtb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a small card printing a code made of columns of dots. The card has a row of small dot patterns near the top, each with a letter printed beside it, and lower down a few LARGE dot columns with no letter beside them. Does this cut-out show exactly ONE whole round dot place taken from one of those LARGE lower columns -- one single dot place, and it counts whether it is solid or an empty outline -- rather than two dot places together, only a part of one, a dot from the small top row, or just the blank card? Answer yes or no only.",
+          "boxes": "dtb",
+          "pad": 0.3,
+          "out": "dtc"
+        },
+        {
+          "fail_if": ["dtc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one round dot place from a printed code. Is this one solidly filled in with dark colour, or is it just an empty outline circle with nothing inside it? Answer with one word, either filled or empty.",
+          "boxes": "dtb",
+          "pad": 0.3,
+          "out": "dtv"
+        },
+        {
+          "fail_if": ["dtv.unreadable"]
+        },
+        {
+          "run": "read_dot_columns",
+          "args": ["dkb", "dkc", "dtb", "dtc", "dtv", "reference"],
+          "out": "dw"
+        },
+        {
+          "run": "word_matches_reference",
+          "args": ["dw.c1", "dw.c2", "dw.c3", "reference.word"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

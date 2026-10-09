@@ -1,0 +1,236 @@
+{
+  "id": "dst_backward_itinerary",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The arrivals hall of a coastal airport late at night, taken from the passenger side: the information display fills most of the frame and one passenger holds her printed boarding pass up in front of it, both of them readable in the same photograph.\n\nThe display gives arriving flights with two clock columns side by side, headed LOCAL and UTC, and the boarding pass carries the flight number and the arrival time of the flight it belongs to.\n\nThese are the facts the airline handed the display for flight QN 412. It leaves Halworth at 23:50 by the clock in Halworth, which runs eight hours ahead of co-ordinated universal time the whole year round. It is in the air for 10 hours 15 minutes. The country it lands in normally runs two hours ahead of co-ordinated universal time, and on the night of this flight that country puts its clocks back one hour at 03:00 -- 03:00 becomes 02:00 -- while QN 412 is still in the air.\n\nThe row for QN 412 has to carry both of its clock figures, and the boarding pass has to carry the same arrival time as that row, digit for digit, and the same flight number. Work the arrival out for yourself -- I am deliberately not telling you either figure, and I am not telling you what the gap between the two columns comes to. Both clock figures, the flight number on the row and the whole face of the pass have to be readable at that size, and every clock figure on this picture is set as hours and minutes with a colon between them, on the row and on the pass alike. Nothing may be written on the display or on the pass beyond their own printed fields: no working, no offset figure, no note about the clock change.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an airport information display with two clock columns on it and a printed boarding pass held up in front of the display? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no display in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "arrival_local": "03:05",
+    "offset_hours": 1,
+    "pass_key": "0305|QN412"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_pass_and_the_row_carry_the_same_arrival_digit_for_digit",
+      "weight": 4.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of the arrivals display that carries the flight number QN 412",
+          "sweep": true,
+          "out": "brow_box"
+        },
+        {
+          "fail_if": ["brow_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out of one arrivals row, copy the time standing in the column headed LOCAL. Write the hours and minutes and nothing else. If that column has no time in it, answer the single word blank.",
+          "boxes": "brow_box",
+          "pad": 0.3,
+          "out": "brow_loc"
+        },
+        {
+          "fail_if": ["brow_loc.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the printed boarding pass the passenger holds up in front of the display",
+          "sweep": true,
+          "out": "bpass_box"
+        },
+        {
+          "fail_if": ["bpass_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out of a boarding pass, copy the arrival time printed on it. Write the hours and minutes and nothing else. If no arrival time is printed on it, answer the single word blank.",
+          "boxes": "bpass_box",
+          "pad": 0.25,
+          "out": "bpass_t"
+        },
+        {
+          "fail_if": ["bpass_t.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out of a boarding pass, copy the flight number printed on it. Write the letters and digits and nothing else. If no flight number is printed on it, answer the single word blank.",
+          "boxes": "bpass_box",
+          "pad": 0.25,
+          "out": "bpass_f"
+        },
+        {
+          "fail_if": ["bpass_f.unreadable"]
+        },
+        {
+          "run": "pass_matches_row",
+          "args": ["brow_loc", "bpass_t", "bpass_f", "reference.pass_key"],
+          "out": "bindv"
+        },
+        {
+          "compare": "bindv.s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_gap_between_the_columns_is_the_offset_left_after_the_clocks_go_back",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of the arrivals display that carries the flight number QN 412",
+          "sweep": true,
+          "out": "row_box"
+        },
+        {
+          "fail_if": ["row_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out of one arrivals row, copy the time standing in the column headed LOCAL. Write the hours and minutes and nothing else. If that column has no time in it, answer the single word blank.",
+          "boxes": "row_box",
+          "pad": 0.3,
+          "out": "loc_rd"
+        },
+        {
+          "fail_if": ["loc_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out of one arrivals row, copy the time standing in the column headed UTC. Write the hours and minutes and nothing else. If that column has no time in it, answer the single word blank.",
+          "boxes": "row_box",
+          "pad": 0.3,
+          "out": "utc_rd"
+        },
+        {
+          "fail_if": ["utc_rd.unreadable"]
+        },
+        {
+          "run": "hours_local_ahead",
+          "args": ["loc_rd", "utc_rd"],
+          "out": "gapv"
+        },
+        {
+          "compare": "gapv.h",
+          "to": "reference.offset_hours",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_local_column_carries_the_time_the_new_offset_gives",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of the arrivals display that carries the flight number QN 412",
+          "sweep": true,
+          "out": "row2_box"
+        },
+        {
+          "fail_if": ["row2_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out of one arrivals row, copy the time standing in the column headed LOCAL. Write the hours and minutes and nothing else. If that column has no time in it, answer the single word blank.",
+          "boxes": "row2_box",
+          "pad": 0.3,
+          "out": "loc2_rd"
+        },
+        {
+          "fail_if": ["loc2_rd.unreadable"]
+        },
+        {
+          "run": "read_local_time",
+          "args": ["loc2_rd"],
+          "out": "locv"
+        },
+        {
+          "compare": "locv.s",
+          "to": "reference.arrival_local",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_clock_columns_on_the_row_carry_a_figure_at_all",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of the arrivals display that carries the flight number QN 412",
+          "sweep": true,
+          "out": "row3_box"
+        },
+        {
+          "fail_if": ["row3_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out of one arrivals row, copy the time standing in the column headed LOCAL. Write the hours and minutes and nothing else. If that column has no time in it, answer the single word blank.",
+          "boxes": "row3_box",
+          "pad": 0.3,
+          "out": "loc3_rd"
+        },
+        {
+          "fail_if": ["loc3_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out of one arrivals row, copy the time standing in the column headed UTC. Write the hours and minutes and nothing else. If that column has no time in it, answer the single word blank.",
+          "boxes": "row3_box",
+          "pad": 0.3,
+          "out": "utc3_rd"
+        },
+        {
+          "fail_if": ["utc3_rd.unreadable"]
+        },
+        {
+          "run": "both_columns_read",
+          "args": ["loc3_rd", "utc3_rd"],
+          "out": "presv"
+        },
+        {
+          "compare": "presv.v",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_or_offset_note_stands_on_the_display_or_the_pass",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, an offset figure or a note about the clock change written on the display or the pass",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

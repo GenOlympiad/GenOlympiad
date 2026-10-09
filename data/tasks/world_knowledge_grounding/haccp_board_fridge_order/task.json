@@ -1,0 +1,236 @@
+{
+  "id": "haccp_board_fridge_order",
+  "axis": "world_knowledge_grounding",
+  "prompt": "It is the quiet half-hour before service, and the auditor has stopped in the doorway of a chain restaurant's prep room with her clipboard still down at her side. From where she is standing the glass-door chiller stands open along one wall and the board rack sits on the prep bench opposite, and this is what she sees: both of them, readable, in the one picture.\n\nThe chiller has five glass shelves and the shelf edges carry a large moulded letter each, A at the top down to E at the bottom. Every shelf holds exactly one tray. Taped inside the open door is today's delivery docket, which reads word for word: DELIVERY -- COOKED GAMMON / DRESSED SALAD / RAW SALMON / RAW BEEF / RAW CHICKEN. Everything on that docket has already been put away, one item to a shelf.\n\nFour of those items are being worked on at the bench, each lying on its own board in the rack: the gammon, the salad, the salmon and the beef. The chicken is not being worked on.\n\nThis is the picture the auditor will judge the kitchen on, so it has to be the kitchen a chain would pass. Work out for yourself which shelf each delivery goes on and which board each item belongs on -- I am deliberately not telling you the storage order and I am not telling you the board code. Nothing may be written into the picture beyond the shelf letters, the docket and whatever wording the boards and packaging already carry: no lists, no arrows, no notes.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an open chilled cabinet with trays of food in it and a rack of boards on a bench? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "shelf_map": "a:gammon b:salad c:salmon d:beef e:chicken",
+    "board_map": "beef:red gammon:yellow salad:green salmon:blue",
+    "no_raw_above_cooked": "yes",
+    "n_trays": 5,
+    "q_food_cert": "Does this cut-out show ONE whole tray of food on a shelf, rather than a shelf edge or only part of a tray? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_shelf_letters_carry_the_risk_order",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a tray of food on a shelf inside the open chiller",
+          "sweep": true,
+          "out": "tray_box"
+        },
+        {
+          "fail_if": ["tray_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one tray on a shelf. Copy the letter moulded into the edge of the shelf that tray stands on. If more than one shelf edge is visible in this cut-out, take the one nearest the tray in the middle of it. Write the letter only, or the word none if no letter can be seen.",
+          "boxes": "tray_box",
+          "pad": 0.45,
+          "out": "shelf_txt"
+        },
+        {
+          "fail_if": ["shelf_txt.unreadable"]
+        },
+        {
+          "read_crop": "Which food is on the tray in this cut-out? Answer with one word: gammon, salad, salmon, beef, chicken, or none if you cannot tell.",
+          "boxes": "tray_box",
+          "pad": 0.3,
+          "out": "food_txt"
+        },
+        {
+          "fail_if": ["food_txt.unreadable"]
+        },
+        {
+          "run": "shelf_order",
+          "args": ["shelf_txt", "food_txt", "reference.shelf_map"],
+          "out": "shelves"
+        },
+        {
+          "fail_if": ["shelves.unreadable"]
+        },
+        {
+          "run": "frac_of",
+          "args": ["shelves"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_board_colour_belongs_to_its_food",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a coloured board in the rack on the prep bench",
+          "sweep": true,
+          "out": "board_area"
+        },
+        {
+          "fail_if": ["board_area.unreadable"]
+        },
+        {
+          "read_crop": "Which food is lying on the board in this cut-out? Answer with one word: gammon, salad, salmon, beef, or none if you cannot tell.",
+          "boxes": "board_area",
+          "pad": 0.3,
+          "out": "bfood_txt"
+        },
+        {
+          "fail_if": ["bfood_txt.unreadable"]
+        },
+        {
+          "read_crop": "What colour is the board itself in this cut-out? Answer with one word: red, yellow, green, blue, or none if it is some other colour.",
+          "boxes": "board_area",
+          "pad": 0.2,
+          "out": "bcol_txt"
+        },
+        {
+          "fail_if": ["bcol_txt.unreadable"]
+        },
+        {
+          "run": "board_match",
+          "args": ["bfood_txt", "bcol_txt", "reference.board_map"],
+          "out": "boards"
+        },
+        {
+          "fail_if": ["boards.unreadable"]
+        },
+        {
+          "run": "frac_of",
+          "args": ["boards"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_raw_sits_over_anything_cooked",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a tray of food on a shelf inside the open chiller",
+          "sweep": true,
+          "out": "stk_box"
+        },
+        {
+          "fail_if": ["stk_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one tray on a shelf. Copy the letter moulded into the edge of the shelf that tray stands on. If more than one shelf edge is visible in this cut-out, take the one nearest the tray in the middle of it. Write the letter only, or the word none if no letter can be seen.",
+          "boxes": "stk_box",
+          "pad": 0.45,
+          "out": "stk_let"
+        },
+        {
+          "fail_if": ["stk_let.unreadable"]
+        },
+        {
+          "read_crop": "Which food is on the tray in this cut-out? Answer with one word: gammon, salad, salmon, beef, chicken, or none if you cannot tell.",
+          "boxes": "stk_box",
+          "pad": 0.3,
+          "out": "stk_food"
+        },
+        {
+          "fail_if": ["stk_food.unreadable"]
+        },
+        {
+          "run": "raw_below_cooked",
+          "args": ["stk_let", "stk_food"],
+          "out": "stk"
+        },
+        {
+          "fail_if": ["stk.unreadable"]
+        },
+        {
+          "compare": "stk.ok",
+          "to": "reference.no_raw_above_cooked",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_list_or_note_is_written_into_the_picture",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a list, an arrow or a written note added into the room beyond the docket and the packaging",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "note_sweep"
+        },
+        {
+          "fail_if": ["note_sweep.unreadable"]
+        },
+        {
+          "compare": "note_sweep.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "five_trays_stand_in_the_chiller",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a tray of food on a shelf inside the open chiller",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_food_cert",
+          "boxes": "box_read",
+          "pad": 0.35,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_trays",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

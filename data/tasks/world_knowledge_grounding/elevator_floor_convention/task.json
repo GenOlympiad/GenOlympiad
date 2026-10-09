@@ -1,0 +1,115 @@
+{
+  "id": "elevator_floor_convention",
+  "axis": "world_knowledge_grounding",
+  "prompt": "Render a realistic close-up illustration of an ELEVATOR BUTTON PANEL inside a building in United States. The panel serves 15 above-ground floors. Print a round numbered button for each served floor, arranged with the LOWEST floor at the bottom and higher floors above it. Number the floors following the local building convention used in United States for which floor numbers are conventionally omitted, so that exactly 15 buttons are shown for the 15 served floors. Print each button's floor number clearly and legibly. Caption the panel with the country name United States.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a close-up illustration of an elevator button panel in United States showing its served above-ground floors? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "country": "United States",
+    "n": 15,
+    "taboo": [13],
+    "labels": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16],
+    "top_label": 16,
+    "bottom_label": 1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "floor_sequence",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "round button on the elevator button panel",
+          "votes": 3,
+          "out": "fbb",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["fbb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of an elevator button panel. Does this cut-out show exactly ONE whole round floor button -- one single one on its own, not two of them together, not just a part of one, and not only the plain background of the panel with no button on it? Answer yes or no only.",
+          "boxes": "fbb",
+          "pad": 0.1,
+          "out": "fbc"
+        },
+        {
+          "fail_if": ["fbc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one round button from a lift panel, with a floor number printed on it. What number is printed on this button? Answer with just that number and nothing else. If a letter is printed on it instead of a number, answer with that letter. If nothing is printed on it, answer none.",
+          "boxes": "fbb",
+          "pad": 0.06,
+          "out": "fbv"
+        },
+        {
+          "fail_if": ["fbv.unreadable"]
+        },
+        {
+          "run": "buttons_bottom_to_top",
+          "args": ["fbb", "fbc", "fbv"],
+          "out": "bt"
+        },
+        {
+          "run": "floor_labels_score",
+          "args": ["bt.labels", "reference"],
+          "out": "cv"
+        },
+        {
+          "run": "frac_of",
+          "args": ["cv"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "taboo_absent",
+      "weight": 1.5,
+      "steps": [
+        {
+          "run": "skipped_number_question",
+          "args": ["reference"],
+          "out": "tq"
+        },
+        {
+          "ask": "tq",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "run": "skipped_number_absent",
+          "args": ["rd", "reference"],
+          "out": "cm"
+        },
+        {
+          "run": "frac_of",
+          "args": ["cm"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

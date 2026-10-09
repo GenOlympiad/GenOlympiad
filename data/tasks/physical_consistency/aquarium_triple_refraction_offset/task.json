@@ -1,0 +1,154 @@
+{
+  "id": "aquarium_triple_refraction_offset",
+  "axis": "physical_consistency",
+  "prompt": "A clean side-view illustration of a science demo: a straight wooden dowel is dipped into a rectangular GLASS AQUARIUM half-full of water, seen from the side. Draw a bright red dashed vertical reference line straight down through where the dowel enters. Obey double refraction: where the dowel crosses the thick GLASS WALL band its apparent segment is displaced to the RIGHT of the red line, and where it continues into the WATER below its apparent segment is displaced to the LEFT of the red line -- the two displacements are on OPPOSITE sides. The top (air) part stays on the line. No text.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a straight rod dipped through the glass and water of a fish tank, with a red vertical guide line? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel printing an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_glass_side": "A straight rod passes down through the middle glass layer and the lower blue water layer of a tank. A red dashed VERTICAL guide line is drawn straight down the middle. Look ONLY at the part of the rod inside the MIDDLE (glass) layer. Is that part on the LEFT or the RIGHT of the red dashed line? Answer with exactly one word: left or right. Judge the picture as drawn.",
+    "q_water_side": "A straight rod passes down through the middle glass layer and the lower blue WATER layer of a tank. A red dashed VERTICAL guide line runs straight down the middle. Look ONLY at the part of the rod inside the LOWER BLUE WATER layer (nearest the bottom). Is that part on the LEFT or the RIGHT of the red dashed line? Answer with exactly one word: left or right. Judge the picture as drawn.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "aquarium_triple_refraction_offset_point",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "pale glass band running across the middle of the tank, between the air above it and the blue water below it",
+          "expected_n": 1,
+          "out": "raw_f0_box"
+        },
+        {
+          "fail_if": ["raw_f0_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture of a tank. A red dashed line runs down through this cut-out, and a straight rod passes through it as well. Is that piece of rod on the LEFT or on the RIGHT of the red dashed line? Answer with exactly one word: left or right. Judge the picture exactly as it is drawn.",
+          "boxes": "raw_f0_box",
+          "pad": 0.05,
+          "out": "raw_f0_cr"
+        },
+        {
+          "fail_if": ["raw_f0_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "raw_f0_cr",
+          "out": "raw_f0"
+        },
+        {
+          "compare": "raw_f0",
+          "to": "right",
+          "out": "f0"
+        },
+        {
+          "read": "boxes",
+          "target": "the blue water in the lower part of the tank, below the pale glass band",
+          "expected_n": 1,
+          "out": "raw_f1_box"
+        },
+        {
+          "fail_if": ["raw_f1_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture of a tank. A red dashed line runs down through this cut-out, and a straight rod passes through it as well. Is that piece of rod on the LEFT or on the RIGHT of the red dashed line? Answer with exactly one word: left or right. Judge the picture exactly as it is drawn.",
+          "boxes": "raw_f1_box",
+          "pad": 0.05,
+          "out": "raw_f1_cr"
+        },
+        {
+          "fail_if": ["raw_f1_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "raw_f1_cr",
+          "out": "raw_f1"
+        },
+        {
+          "compare": "raw_f1",
+          "to": "left",
+          "out": "f1"
+        },
+        {
+          "all": ["f0", "f1"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_q_water_side",
+      "weight": 0.6,
+      "not_scored": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the blue water in the lower part of the tank, below the pale glass band",
+          "expected_n": 1,
+          "out": "raw_frac_box"
+        },
+        {
+          "fail_if": ["raw_frac_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture of a tank. A red dashed line runs down through this cut-out, and a straight rod passes through it as well. Is that piece of rod on the LEFT or on the RIGHT of the red dashed line? Answer with exactly one word: left or right. Judge the picture exactly as it is drawn.",
+          "boxes": "raw_frac_box",
+          "pad": 0.05,
+          "out": "raw_frac_cr"
+        },
+        {
+          "fail_if": ["raw_frac_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "raw_frac_cr",
+          "out": "raw_frac"
+        },
+        {
+          "compare": "raw_frac",
+          "to": "left",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

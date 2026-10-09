@@ -1,0 +1,84 @@
+{
+  "id": "roast_log_development_time",
+  "axis": "long_range_consistency",
+  "prompt": "The roaster cannot release the lots until the bags have been labelled against the log page in front of the buyer, so the bench is shot with the bags already sealed.\n\nA printed roast log page lies on a roasting bench with three temperature curves drawn side by side, one for each lot. Beside every curve stand two printed boxes, one for the minute first crack was heard and one for the minute the batch was dropped, both counted in whole minutes from charge. The page gives lot 21 first crack at 9 and drop at 10, and lot 22 first crack at 8 and drop at 10. For lot 23 it gives first crack at 9, and the plan above the bench had it held on for 3 minutes after first crack. Three sealed bags stand along the bench in lot order, each label printed with its lot number and a box headed DEVELOPMENT.\n\nWhat goes in the remaining boxes is what the page does not print.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a roasting bench with a printed log page carrying three temperature curves side by side and three sealed coffee bags standing along the bench? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "consecutive_from_one"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the drop time printed in its box beside the curve for lot 23, and give it in whole minutes.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "11.5", "12.5"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the number printed in the box headed DEVELOPMENT on each of the three bag labels, taking the bags in the order their lot numbers run, and give those numbers in that order.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "consecutive_from_one",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "hydraulic_valve_envelope_ports",
+  "axis": "symbolic_systems",
+  "prompt": "The rig cannot go to the customer until the circuit on the board agrees with the valve actually bolted to the bench, so the commissioning engineer brings valve and board into one frame for the sign-off shot.\n\nA seat-type directional valve is bolted port-face-up to a hydraulic test bench. Its ported openings are stamped with their letters, P, A and T, one letter beside each opening. The plate riveted to the body reads: solenoid at the head end, return spring at the cap end, 350 bar working pressure. On the magnetic board behind the bench a fitter has marked up the rig circuit in heavy pen, and the symbol for this valve has been put into it in its place. Written beside the board is the rig requirement: with the coil off, the actuator port must drain back to tank.\n\nWhat that symbol has to be built out of is what the plate does not spell out.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a hydraulic valve bolted to a test bench with a hand-drawn circuit on a magnetic board behind it? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "2"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Count the ported openings stamped with a letter on the upward face of the valve body. Write the number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Count the boxes drawn end to end inside the symbol for this valve on the board. Write the number only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "cleanroom_pressure_cascade",
+  "axis": "physical_consistency",
+  "prompt": "The suite cannot go back into production until the cascade is photographed for the validation file, so the engineer opens the corridor shutter and takes one frame down the line of rooms.\n\nThree rooms run one behind another off the corridor. A sign on each doorframe gives that room's grade: the innermost is grade B, the room next to it grade C, and the room on the corridor grade D. A dial gauge is fixed on the wall inside each room and reads that room's pressure against the corridor. A light ribbon hangs in the gap under every door. The house rule the file works to is printed on the corridor wall: air must always run from the cleaner room towards the less clean one, and every doorway in the line must hold a real difference across it, never a dead one.\n\nWhat each gauge pointer reads and which way each ribbon lies is the whole of the file entry and the wall says none of it.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a row of rooms behind glazed doors with a round dial gauge on the wall inside each? Answer yes or no only.",
+  "reference": {
+    "part1": "falls_at_every_step",
+    "part2": "blown_towards_c"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the pointer on the dial gauge inside each room, taking the rooms in the order their door signs grade them, B then C then D. Answer with one of: the readings get smaller at every step along that order; the readings get larger at some step along that order; the three gauges read the same as each other.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the ribbon hanging in the gap under the door between the room graded B and the room graded C. Answer with one of: it is blown out towards the room graded C; it is blown out towards the room graded B; it hangs straight down and is not blown either way.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "id": "thumbnail_grid_spacing",
+  "axis": "quantitative_precision",
+  "prompt": "A flat top-down photograph of a photographer's contact-sheet layout guide on a light table: a sheet of pale card printed with a registration dot at the centre of each thumbnail cell, laid out as a grid of 6 rows and 8 columns -- exactly 48 small round black dots in total. The dots must be spaced PERFECTLY EVENLY: every horizontal gap between neighbouring dots in a row is the same, and every vertical gap between neighbouring dots in a column is the same, so the 48 dots form a crisp uniform 6-by-8 lattice with no row or column bunched closer or spread wider than the others. Exactly 48 dots, 8 across and 6 down, uniformly spaced. Draw only the black dots; no borders, no image thumbnails, no numbers, no text, evenly lit, dots clearly darker than the card.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a sheet of pale card printed with lots of small round black dots laid out in rows and columns. Ignoring artistic quality, and ignoring whether the dots are the right number or evenly spread or not, does the image DEPICT that? Answer NO only if the picture is unrelated to that description or contains no such arrangement at all. Answer yes or no only.",
+  "reference": {
+    "n_marks": 48,
+    "rows": 6,
+    "cols": 8
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "mark_count",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "small black dot",
+          "out": "bc",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bc.unreadable"]
+        },
+        {
+          "read_crop": "Is there a round black dot in this picture? Answer yes or no only.",
+          "boxes": "bc",
+          "out": "dc"
+        },
+        {
+          "fail_if": ["dc.unreadable"]
+        },
+        {
+          "run": "count_yes",
+          "args": ["dc"],
+          "out": "nm"
+        },
+        {
+          "compare_band": "nm.n",
+          "to": 48,
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "weight": 2.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "small black dot",
+          "out": "bg"
+        },
+        {
+          "fail_if": ["bg.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "centres",
+          "args": ["bg", "src"],
+          "out": "cen"
+        },
+        {
+          "fail_if": ["cen.degenerate"]
+        },
+        {
+          "run": "grid_spacing_error",
+          "args": ["cen['centers']", "reference['rows']", "reference['cols']"],
+          "out": "err"
+        },
+        {
+          "compare_band": "err",
+          "to": 0.0,
+          "core": 0.04,
+          "margin": 0.08,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static",
+  "count_noun": "a black dot"
+}

@@ -1,0 +1,230 @@
+{
+  "id": "claims_endorsement_annual_deductible",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of the claim computation sheet for one motor loss, lying square under the lamp on the adjuster's desk with the policy schedule and the endorsement open beside it. The sheet has to be readable in the one picture.\n\nThe office writes a computation as numbered lines down the left, one figure to a line, each line with its own heading. What is on file for this claim: the assessed loss is 46,800. The policy's main cover carries a deductible of 2,000 each and every claim. Endorsement E14, in force since renewal, replaces that basis with an annual aggregate deductible of 5,000 for the policy year, and 3,800 of that aggregate has already been eroded by earlier claims this year.\n\nTwo house rules govern the paper. A wording that has been superseded stays on the sheet, ruled through, on the line immediately above the wording that replaced it, and only the replacement carries the endorsement's reference beside it. Whatever deductible is still to be borne is the last line before the payment.\n\nThis sheet is what the payment is raised from, so it has to be this year's computation and not last year's. Work out for yourself what is left of the aggregate and what falls to be paid -- I am deliberately not telling you either, and I am not telling you which line ends up where. A voucher computed on the superseded basis pays out money the treaty will not reimburse.\n\nEvery line number, heading and figure must be large and sharp. Nothing may appear on the sheet beyond the numbered lines, their headings, their figures, the rule-through and the endorsement reference: no working, no notes, no arrows.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed sheet whose lines are numbered down the left, each line carrying a heading and a money figure? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "amounts": "1:46800 2:2000 3:5000 4:1200 5:45600",
+    "basis": "1:neither 2:each 3:annual 4:neither 5:neither",
+    "struck": "1:no 2:yes 3:no 4:no 5:no",
+    "cited": "1:no 2:no 3:yes 4:no 5:no"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_balance_of_the_aggregate_stands_between_the_two_wordings_and_the_payment",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered line of the claim computation sheet",
+          "sweep": true,
+          "out": "line_box"
+        },
+        {
+          "fail_if": ["line_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one printed line with a line number at its left. Copy that line number -- the number nearest the left edge of this cut-out. Ignore anything printed on a line above or below it. Write the number only and nothing else.",
+          "boxes": "line_box",
+          "pad": 0.15,
+          "out": "num_txt"
+        },
+        {
+          "fail_if": ["num_txt.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one printed line. Copy the money figure printed on that line. Ignore anything printed on a line above or below it. Write the figure only and nothing else.",
+          "boxes": "line_box",
+          "pad": 0.15,
+          "out": "amt_txt"
+        },
+        {
+          "fail_if": ["amt_txt.unreadable"]
+        },
+        {
+          "run": "read_numbered_lines",
+          "args": ["num_txt", "amt_txt"],
+          "out": "sheet"
+        },
+        {
+          "compare": "sheet.canon",
+          "to": "reference.amounts",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_wording_that_the_endorsement_replaced_is_the_one_ruled_through",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered line of the claim computation sheet",
+          "sweep": true,
+          "out": "base_box"
+        },
+        {
+          "fail_if": ["base_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one printed line with a line number at its left. Copy that line number -- the number nearest the left edge of this cut-out. Ignore anything printed on a line above or below it. Write the number only and nothing else.",
+          "boxes": "base_box",
+          "pad": 0.15,
+          "out": "bnum_txt"
+        },
+        {
+          "fail_if": ["bnum_txt.unreadable"]
+        },
+        {
+          "read_crop": "Does the heading on this line name an each and every claim deductible, an annual aggregate deductible, or neither of those? Answer with one word: each, annual, or neither.",
+          "boxes": "base_box",
+          "pad": 0.15,
+          "out": "basis_txt"
+        },
+        {
+          "fail_if": ["basis_txt.unreadable"]
+        },
+        {
+          "run": "read_labelled_entries",
+          "args": ["bnum_txt", "basis_txt", "'neither'"],
+          "out": "wording"
+        },
+        {
+          "compare": "wording.canon",
+          "to": "reference.basis",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "one_line_and_one_line_only_carries_the_rule_through",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered line of the claim computation sheet",
+          "sweep": true,
+          "out": "str_box"
+        },
+        {
+          "fail_if": ["str_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one printed line with a line number at its left. Copy that line number -- the number nearest the left edge of this cut-out. Ignore anything printed on a line above or below it. Write the number only and nothing else.",
+          "boxes": "str_box",
+          "pad": 0.15,
+          "out": "snum_txt"
+        },
+        {
+          "fail_if": ["snum_txt.unreadable"]
+        },
+        {
+          "read_crop": "Is this line ruled through with a line drawn across its own text? Answer yes or no only.",
+          "boxes": "str_box",
+          "pad": 0.15,
+          "out": "strike_txt"
+        },
+        {
+          "fail_if": ["strike_txt.unreadable"]
+        },
+        {
+          "run": "read_labelled_entries",
+          "args": ["snum_txt", "strike_txt", "'no'"],
+          "out": "ruled"
+        },
+        {
+          "compare": "ruled.canon",
+          "to": "reference.struck",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_endorsement_reference_stands_beside_the_wording_that_took_over",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered line of the claim computation sheet",
+          "sweep": true,
+          "out": "cit_box"
+        },
+        {
+          "fail_if": ["cit_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one printed line with a line number at its left. Copy that line number -- the number nearest the left edge of this cut-out. Ignore anything printed on a line above or below it. Write the number only and nothing else.",
+          "boxes": "cit_box",
+          "pad": 0.15,
+          "out": "cnum_txt"
+        },
+        {
+          "fail_if": ["cnum_txt.unreadable"]
+        },
+        {
+          "read_crop": "Is an endorsement reference beginning with the letter E printed beside this line? Answer yes or no only.",
+          "boxes": "cit_box",
+          "pad": 0.15,
+          "out": "cite_txt"
+        },
+        {
+          "fail_if": ["cite_txt.unreadable"]
+        },
+        {
+          "run": "read_labelled_entries",
+          "args": ["cnum_txt", "cite_txt", "'no'"],
+          "out": "refs"
+        },
+        {
+          "compare": "refs.canon",
+          "to": "reference.cited",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_added_to_the_sheet",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, a note or an arrow added beyond the numbered lines",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

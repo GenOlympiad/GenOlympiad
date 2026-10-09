@@ -1,0 +1,151 @@
+{
+  "id": "rebar_hook_face_inward",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Concrete is booked for tomorrow, so the reinforcement in this column has to be signed off tonight and the inspector takes the frame that goes with the certificate.\n\nA finished column cage stands ready with the formwork panel waiting alongside it, its inner face toward the cage. Four ties are in view up the height of the cage, and each carries a small numbered tag wired to it by the steel fixer: 1 at the bottom, then 2, 3 and 4 going up. Longitudinal bars run in the four corners. The camera is close in on the cage from the side the formwork will close on, so the ends of every tie and the four corners are all in view.\n\nSeismic detailing turns a tie into a closed hoop by bending each end back into the concrete core, not out toward the cover, because a hook that opens outward straightens the moment the cover spalls and the tie is worth nothing. The two ends of one tie are bent at different corners, and successive ties along the member put their hooks at different corners again, so that no one corner collects the hooks of the whole cage.\n\nWhere each hook is and which way it turns is what the certificate rests on, and I am deliberately not telling you. Nothing is drawn on the picture: no clause numbers, no angle marks, no chalk on the steel. Keep the ends of all four ties and the four corner bars easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a reinforcement cage for a concrete column with tie hoops around longitudinal bars and formwork nearby? A photograph, an illustration or a printed panel all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "ties": ["1", "2", "3", "4"],
+    "hook_want": "inward",
+    "n_checks": 7,
+    "n_units": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_hook_turns_into_the_core_and_no_two_ties_in_a_row_hook_at_the_same_corner",
+      "weight": 3.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered tie hoop on the cage with both its ends",
+          "out": "rb_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rb_r.unreadable"]
+        },
+        {
+          "read_crop": "What number is on the tag wired to the tie in this cut-out? Answer with that number only.",
+          "boxes": "rb_r",
+          "pad": 0.2,
+          "out": "rb_k",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rb_k.unreadable"]
+        },
+        {
+          "read_crop": "Do the bent ends of this tie turn into the middle of the hoop or outward past the bars? Answer with one of: inward, outward, no hook visible.",
+          "boxes": "rb_r",
+          "pad": 0.2,
+          "out": "rb_d",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rb_d.unreadable"]
+        },
+        {
+          "read_crop": "At which corner of this tie do its bent ends sit? Answer with one of: near left, near right, far left, far right.",
+          "boxes": "rb_r",
+          "pad": 0.2,
+          "out": "rb_c",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rb_c.unreadable"]
+        },
+        {
+          "run": "check_tie_hooks",
+          "args": ["rb_k", "rb_d", "rb_c", "reference.ties", "reference.hook_want"],
+          "out": "bs"
+        },
+        {
+          "compare_band": "bs.n",
+          "to": "reference.n_checks",
+          "core_abs": 0.499,
+          "margin_abs": 2.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_cage_shows_its_four_numbered_ties",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered tie hoop on the cage with both its ends",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole tie hoop with its numbered tag and both its ends, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.2,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_clause_number_angle_mark_or_chalk_was_added_to_the_steel",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a clause number, an angle mark or chalk writing added to the steel",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

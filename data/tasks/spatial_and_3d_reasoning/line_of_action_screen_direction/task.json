@@ -1,0 +1,143 @@
+{
+  "id": "line_of_action_screen_direction",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A storyboard page from a coverage session, taken face on and big enough to read.\n\nThe upper half of the page is the camera plan of one scene at a cafe table, drawn with the window wall along the top of the page, the counter along the bottom, the door at the right-hand edge and the kitchen at the left-hand edge. VERA sits with her back to the window and OTTO sits opposite her with his back to the counter, so the line between the two of them runs from the window wall down to the counter. Four camera positions are marked on the plan and numbered 1 to 4: cameras 1, 2 and 4 stand on the door side of that line, at the coat stand, by the second table and at the till; camera 3 stands on the kitchen side of it, beyond the service hatch. VERA wears a striped jumper and OTTO wears a dark waistcoat.\n\nThe lower half of the page is a row of four storyboard frames, numbered 1 to 4 to match the cameras, each frame holding what its own camera sees of the two of them across the table.\n\nThe house rule this board works to is lettered under the frames, word for word: 'The line between the two speakers is the axis of the scene. While the camera stays on one side of that axis each speaker keeps facing the same way frame after frame; a camera taken across to the other side turns both speakers the other way round.'\n\nWhich way each of them faces in each of the four frames, you work out for yourself -- I am deliberately telling you none of it. No frame may carry a caption, an arrow or a note about which way anybody faces: the only wording on the page is the four camera numbers on the plan, the two names, the four frame numbers and the house rule as given.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a row of numbered storyboard frames of two people at a table, with a plan view above them? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "turn_frames": "vera turns at 3, otto turns at 3",
+    "vera_opening_side": "left",
+    "no_caption_clean": "yes",
+    "q_frame_number": "Copy the frame number printed on this cut-out. Write only the number.",
+    "q_vera_facing": "In this cut-out, is the woman in the striped jumper facing towards the left edge of the frame or towards the right edge? Answer with one word: left or right.",
+    "q_otto_facing": "In this cut-out, is the man in the dark waistcoat facing towards the left edge of the frame or towards the right edge? Answer with one word: left or right."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_crossed_frame_is_the_only_one_where_each_speaker_changes_hands",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one storyboard frame in the row at the foot of the page",
+          "sweep": true,
+          "out": "fr"
+        },
+        {
+          "fail_if": ["fr.unreadable"]
+        },
+        {
+          "read_crop": "Copy the frame number printed on this cut-out. If more than one frame number is printed here, copy the one nearest the middle of the cut-out. If no number is printed on it, write the word none. Write the number or the word none only.",
+          "boxes": "fr",
+          "pad": 0.2,
+          "out": "fn"
+        },
+        {
+          "fail_if": ["fn.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_vera_facing",
+          "boxes": "fr",
+          "pad": 0.2,
+          "out": "vfc"
+        },
+        {
+          "fail_if": ["vfc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_otto_facing",
+          "boxes": "fr",
+          "pad": 0.2,
+          "out": "ofc"
+        },
+        {
+          "fail_if": ["ofc.unreadable"]
+        },
+        {
+          "run": "speaker_turns",
+          "args": ["fn", "vfc", "ofc"],
+          "out": "ts"
+        },
+        {
+          "compare_set": "ts.turns",
+          "to": "reference.turn_frames",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_first_set_up_puts_vera_on_the_side_the_plan_gives",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the first storyboard frame in the row at the foot of the page",
+          "out": "f1"
+        },
+        {
+          "fail_if": ["f1.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_vera_facing",
+          "boxes": "f1",
+          "pad": 0.2,
+          "out": "v1"
+        },
+        {
+          "fail_if": ["v1.unreadable"]
+        },
+        {
+          "run": "majority_side",
+          "args": ["v1"],
+          "out": "v1v"
+        },
+        {
+          "compare": "v1v.txt",
+          "to": "reference.vera_opening_side",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_frame_states_a_facing_in_words",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a caption or arrow on a frame saying which way a speaker faces",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "cap_sweep"
+        },
+        {
+          "fail_if": ["cap_sweep.unreadable"]
+        },
+        {
+          "compare": "cap_sweep.clean",
+          "to": "reference.no_caption_clean",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

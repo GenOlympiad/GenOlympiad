@@ -1,0 +1,60 @@
+{
+  "id": "acrostic_double_orthogonal",
+  "axis": "text_fidelity",
+  "prompt": "A striking, straight-on image of a painted wooden letter mosaic board: a 8-by-8 square GRID of cells, exactly ONE capital LETTER per cell, all cells filled. It must satisfy TWO reading constraints at once: reading the LEFTMOST COLUMN from top to bottom spells 'MERIDIAN', and reading the TOP ROW from left to right spells 'MARIGOLD'. The top-left corner cell is the shared first letter 'M'. Fill the remaining interior cells with any other capital letters. Make every letter large and clearly legible. Print only the letter grid. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed 8-by-8 grid of single capital letters (a decorative letter panel). Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 8,
+    "across": "MARIGOLD",
+    "down": "MERIDIAN",
+    "q_down": "Read ONLY the leftmost vertical column of this letter grid, from the TOP cell down to the BOTTOM cell, one letter per cell. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Write the letters you see as a single word, top to bottom.",
+    "q_across": "Read ONLY the top horizontal row of this letter grid, from the LEFT cell to the RIGHT cell, one letter per cell. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Write the letters you see as a single word, left to right."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "double_acrostic_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_down",
+          "out": "down"
+        },
+        {
+          "fail_if": ["down.unreadable"]
+        },
+        {
+          "ask": "reference.q_across",
+          "out": "across"
+        },
+        {
+          "fail_if": ["across.unreadable"]
+        },
+        {
+          "run": "column_and_row_spell_words",
+          "args": ["down", "across", "reference.down", "reference.across"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

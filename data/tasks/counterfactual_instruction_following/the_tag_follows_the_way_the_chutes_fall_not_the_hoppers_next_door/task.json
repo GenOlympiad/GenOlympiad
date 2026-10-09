@@ -1,0 +1,191 @@
+{
+  "id": "the_tag_follows_the_way_the_chutes_fall_not_the_hoppers_next_door",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The bin gallery of a feed mill, photographed square on from the walkway that runs along it, with the whole run of hoppers and every chute between them in the one frame.\n\nSix painted steel hoppers stand on the frame at different levels, each with its own letter painted large on the side facing the walkway. Their outlet flanges sit at these heights above the mill floor: A at 12 metres, B at 9 metres, C at 14 metres, D at 9 metres, E at 5 metres, F at 11 metres. A plain steel chute joins each of these pairs of hoppers and no other pair: A and B, B and E, C and A, C and F, F and D, D and E. Every chute is a bare gravity chute with no blower and no conveyor on it, so meal only ever travels down one.\n\nA hook for a quarantine tag hangs on the front of every hopper. This morning a sack of the wrong meal went into hopper A, and the mill's standing instruction is the one that catches people out: a tag goes on every hopper that meal from A can reach by running down one chute or a string of chutes, on no other hopper, and not on A itself.\n\nWhich hoppers those are is for you to work out from the levels. I am deliberately not telling you which way any chute runs. Nothing else belongs in the picture: no arrow, no flow diagram and no written note beyond the painted letters and the tags themselves.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is made. Does this picture show a row of steel hoppers standing at different heights on a frame with chutes running between them? A photograph, a scan or an illustration ALL count as yes. Answer NO only if the image is a blank sheet that just states an answer, or shows nothing of the kind at all. Answer yes or no only.",
+  "reference": {
+    "tag_e": "yes",
+    "tag_c": "no",
+    "tag_count": 2,
+    "clean_frame": "yes"
+  },
+  "checks": [
+    {
+      "name": "the_tag_carries_on_down_the_second_chute",
+      "weight": 2.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the steel hopper with the letter E painted on its side",
+          "out": "he"
+        },
+        {
+          "fail_if": ["he.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a quarantine tag hanging on the hook on the front of this hopper? Answer yes or no.",
+          "boxes": "he",
+          "pad": 0.15,
+          "out": "hev"
+        },
+        {
+          "run": "yesno",
+          "args": ["hev", "'the tag hook on hopper E'"],
+          "out": "her"
+        },
+        {
+          "fail_if": ["her.refused"]
+        },
+        {
+          "compare": "her.tag",
+          "to": "reference.tag_e",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_hopper_standing_above_the_spill_stays_clear",
+      "weight": 2.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the steel hopper with the letter C painted on its side",
+          "out": "hc"
+        },
+        {
+          "fail_if": ["hc.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a quarantine tag hanging on the hook on the front of this hopper? Answer yes or no.",
+          "boxes": "hc",
+          "pad": 0.15,
+          "out": "hcv"
+        },
+        {
+          "run": "yesno",
+          "args": ["hcv", "'the tag hook on hopper C'"],
+          "out": "hcr"
+        },
+        {
+          "fail_if": ["hcr.refused"]
+        },
+        {
+          "compare": "hcr.tag",
+          "to": "reference.tag_c",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_two_hoppers_in_the_gallery_carry_a_tag",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the run of six steel hoppers standing along the bin gallery",
+          "out": "gc"
+        },
+        {
+          "fail_if": ["gc.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, write down every quarantine tag hanging on the hook on the front of a hopper, each with a few plain words saying which hopper along the row it hangs on. Separate one item from the next with a semicolon; write no running total and nothing else. If no hopper has one, write the single word NONE.",
+          "boxes": "gc",
+          "pad": 0.2,
+          "out": "gcv"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["gcv", "empty_as='0'"],
+          "out": "gcv__std"
+        },
+        {
+          "fail_if": ["gcv__std.refused"]
+        },
+        {
+          "run": "read_count",
+          "args": ["gcv__std", "'the tagged hoppers in the gallery'"],
+          "out": "gcn"
+        },
+        {
+          "fail_if": ["gcn.refused"]
+        },
+        {
+          "compare": "gcn.n",
+          "to": "reference.tag_count",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_in_the_gallery_shows_which_way_the_meal_runs",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, a flow diagram, or a written note in the bin gallery",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: an arrow, a flow diagram, or a written note? Answer yes or no. Answer no if the cut-out shows a painted letter on a hopper, a quarantine tag on its hook, a steel chute, the walkway handrail, or a hopper and its frame.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as an arrow, a flow diagram, or a written note? Answer yes or no. Answer no if it belongs there -- a painted letter on a hopper, a quarantine tag on its hook, a steel chute, the walkway handrail, or a hopper and its frame.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_frame",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

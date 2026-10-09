@@ -1,0 +1,181 @@
+{
+  "id": "highjump_attempt_marks_countback",
+  "axis": "symbolic_systems",
+  "prompt": "The chief judge's field card for the men's high jump, lying on the referee's table at the end of the event, ready to go up with the result package. This is the official record, not the board the crowd watches.\n\nThe bar opened at 1.75 m and went up by 5 cm at a time, and the card has one column for every height the bar reached, headed with that height, and one line per athlete headed with the athlete's bib number and surname. Four athletes, in bib order: 114 LINDQVIST, 152 OKONKWO, 189 DUARTE, 207 MBEKI. Each height gives an athlete three attempts, and the judge writes one mark per attempt in that height's boxes: the letter O for a clearance, the letter X for a failure, and a dash for a height the athlete chose to skip. An athlete's competition ends the moment three failures have been taken in a row, and after that the line carries nothing at all. A place column runs down the right-hand edge.\n\nHow the event went, height by height. At 1.75 m: LINDQVIST went over at the second attempt; OKONKWO and DUARTE each went over at the first; MBEKI skipped the height. At 1.80 m: LINDQVIST went over at the first attempt; DUARTE at the second; MBEKI at the third; OKONKWO went out. At 1.85 m: LINDQVIST and MBEKI each went over at the second attempt; DUARTE went out. At 1.90 m: neither of the two athletes still in the event got over it. Where two athletes have cleared the same greatest height, the one who took fewer attempts at that height is placed ahead; if that is still level, the one with fewer failures over the whole event is placed ahead.\n\nFill the card in the way the referee's table would. Work the places out for yourself -- I am deliberately not telling you who finishes where, and I am not telling you where any line stops. Nothing else goes on the card: no total of failures, no ranking list, no working.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed athletics record card with a line for each competitor, rows of small boxes holding short letter marks, and a narrow column of figures at one edge? A photograph of a card, a document mockup or an illustration all count as yes. Answer no only if the image instead shows a bare card stating an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "card_rows": "xo o xo xxx|o xxx|o xo xxx|- xxo xo xxx",
+    "place_pairs": "114 1, 152 4, 189 3, 207 2",
+    "clean_expected": "yes",
+    "n_athlete_lines": 4,
+    "bib_order": "114|152|189|207"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_line_stops_where_the_third_failure_in_a_row_falls",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one athlete's whole line across the field card",
+          "out": "mk_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mk_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the bib number printed at the left-hand end of this line. Write the number only.",
+          "boxes": "mk_r",
+          "pad": 0.15,
+          "out": "mk_k"
+        },
+        {
+          "fail_if": ["mk_k.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one athlete's whole line on the field card. Copy what is written in the attempt boxes of the line from left to right, with one space between boxes -- the letters O and X and the dash only. Do not copy the bib number, the surname or the place figure. Write nothing for a box that has nothing in it.",
+          "boxes": "mk_r",
+          "pad": 0.15,
+          "out": "mk_q"
+        },
+        {
+          "fail_if": ["mk_q.unreadable"]
+        },
+        {
+          "run": "attempts_by_bib",
+          "args": ["mk_k", "mk_q", "reference.bib_order"],
+          "out": "mk_s"
+        },
+        {
+          "compare": "mk_s.seq",
+          "to": "reference.card_rows",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_bib_carries_the_place_the_countback_gives_it",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one athlete's whole line across the field card",
+          "out": "pl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pl_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the bib number printed at the left-hand end of this line. Write the number only.",
+          "boxes": "pl_r",
+          "pad": 0.1,
+          "out": "pl_k"
+        },
+        {
+          "fail_if": ["pl_k.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure printed in the place column at the right-hand end of this line. Write the number only.",
+          "boxes": "pl_r",
+          "pad": 0.1,
+          "out": "pl_v"
+        },
+        {
+          "fail_if": ["pl_v.unreadable"]
+        },
+        {
+          "run": "pair_keys_with_values",
+          "args": ["pl_k", "pl_v"],
+          "out": "pl_s"
+        },
+        {
+          "compare_set": "pl_s.seq",
+          "to": "reference.place_pairs",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_ranking_list_or_working_is_added_to_the_card",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written total of failures or a separate list of the finishing order",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sw_r"
+        },
+        {
+          "fail_if": ["sw_r.unreadable"]
+        },
+        {
+          "compare": "sw_r.clean",
+          "to": "reference.clean_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "four_athlete_lines_on_the_card",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one athlete's line on the field card",
+          "out": "cs_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["cs_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show one whole competitor line of the card, with a bib number at its left-hand end, rather than a column heading? Answer yes or no only.",
+          "boxes": "cs_r",
+          "pad": 0.3,
+          "out": "cs_q"
+        },
+        {
+          "fail_if": ["cs_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cs_q"],
+          "out": "cs_n"
+        },
+        {
+          "compare_band": "cs_n.n",
+          "to": "reference.n_athlete_lines",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

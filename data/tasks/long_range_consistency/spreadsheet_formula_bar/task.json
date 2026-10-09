@@ -1,0 +1,495 @@
+{
+  "id": "spreadsheet_formula_bar",
+  "axis": "long_range_consistency",
+  "prompt": "A crisp screenshot of a desktop spreadsheet application window (title bar 'SheetCalc — site_order.xlsx', a menu row, then the formula-bar row, then the grid with column headers A to E and row numbers 1 to 7) showing a small site-materials order sheet. The grid cells contain: A1 'ITEM', B1 'UNIT £', C1 'QTY'; A2 'Cement bags', B2 286, C2 17; A3 'Rebar rods', B3 152, C3 23; A4 'Delivery fee', B4 449; A6 'TOTAL PAYABLE'. Cell D6 is the currently selected cell, marked with the app's bold blue selection outline. Because D6 is selected, the Name Box (the small white box at the far left of the formula-bar row) shows D6, and the formula bar next to the fx symbol shows the cell's stored formula =B2*C2+B3*C3+B4 exactly as written. Inside cell D6 itself the grid must display the VALUE that this formula evaluates to using the cell contents listed above (a spreadsheet shows results in the grid, not formulas). No other cell is selected, no other numbers appear anywhere, straight-on flat view of the window.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a desktop spreadsheet application window with a formula bar and a selected cell? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "value": 8807,
+    "sel": "D6",
+    "q_val": "On the spreadsheet grid, what number is displayed INSIDE the selected cell (the cell with the bold blue outline)? Read what is PRINTED in that cell, do not do any sums yourself. Respond with the number only, as digits, and nothing else.",
+    "q_name": "What cell reference is shown in the Name Box -- the small white box at the far LEFT of the formula-bar row, above the column headers? Answer with the reference only, a column letter followed by a row number, and nothing else.",
+    "q_selpos": "On the grid itself, the selected cell with the bold blue outline sits in which column letter and row number? Use the printed column headers and row numbers. Answer with the reference only, and nothing else.",
+    "q_formula": "Transcribe EXACTLY the text shown in the formula bar -- the long white field to the right of the fx symbol, above the column headers. Read what is PRINTED there; do not do any sums or complete anything. Answer with that text only.",
+    "q_b3": "What number is printed in grid cell B3 (column B, row 3)? Respond with the number only, as digits, and nothing else.",
+    "q_c2": "What number is printed in grid cell C2 (column C, row 2)? Respond with the number only, as digits, and nothing else.",
+    "q_b4": "What number is printed in grid cell B4 (column B, row 4)? Respond with the number only, as digits, and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ui_state_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the spreadsheet's grid of ruled cells",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "single_box_plan",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.q_val",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rnum"
+        },
+        {
+          "fail_if": ["rnum.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_selpos",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rsel"
+        },
+        {
+          "fail_if": ["rsel.unreadable"]
+        },
+        {
+          "run": "outlined_value_and_ref",
+          "args": ["rnum", "rsel"],
+          "out": "sel"
+        },
+        {
+          "fail_if": ["sel.no_read"]
+        },
+        {
+          "read": "boxes",
+          "target": "the small white name box at the far left of the formula-bar row",
+          "expected_n": 1,
+          "out": "ann"
+        },
+        {
+          "fail_if": ["ann.unreadable"]
+        },
+        {
+          "run": "single_box_plan",
+          "args": ["image", "ann"],
+          "out": "pln"
+        },
+        {
+          "fail_if": ["pln.no_plan"]
+        },
+        {
+          "read_crop": "This is the small name box cut out of a spreadsheet's formula-bar row. What cell reference is printed inside it -- a column letter followed by a row number? Answer with just that reference and nothing else.",
+          "boxes": "pln.cells",
+          "pad": 0.0,
+          "out": "rnb"
+        },
+        {
+          "fail_if": ["rnb.unreadable"]
+        },
+        {
+          "run": "first_answer_text",
+          "args": ["rnb"],
+          "out": "nbv"
+        },
+        {
+          "read": "boxes",
+          "target": "the long white formula field to the right of the fx symbol on the formula-bar row",
+          "expected_n": 1,
+          "out": "anf"
+        },
+        {
+          "fail_if": ["anf.unreadable"]
+        },
+        {
+          "run": "single_box_plan",
+          "args": ["image", "anf"],
+          "out": "plf"
+        },
+        {
+          "fail_if": ["plf.no_plan"]
+        },
+        {
+          "read_crop": "This is the formula field cut out of a spreadsheet's formula-bar row. Copy out exactly the text printed inside it, character for character. Answer with that text only.",
+          "boxes": "plf.cells",
+          "pad": 0.0,
+          "out": "rfx"
+        },
+        {
+          "fail_if": ["rfx.unreadable"]
+        },
+        {
+          "run": "first_answer_text",
+          "args": ["rfx"],
+          "out": "fxv"
+        },
+        {
+          "compare_tolerance": "sel.v",
+          "to": "reference.value",
+          "tol": 0.5,
+          "out": "f_v"
+        },
+        {
+          "compare": "nbv.v",
+          "to": "reference.sel",
+          "out": "f_nb"
+        },
+        {
+          "compare": "sel.ref",
+          "to": "reference.sel",
+          "out": "f_sp"
+        },
+        {
+          "compare_token": "fxv.v",
+          "to": "=",
+          "mode": "starts_with",
+          "out": "f_fx"
+        },
+        {
+          "all": ["f_v", "f_nb", "f_sp", "f_fx"],
+          "out": "frac"
+        },
+        {
+          "run": "paint_read_boxes",
+          "args": ["pl", "sel", "pln", "plf", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "d1_cell_b3",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of spreadsheet cells from A1 to E7 -- one rectangle over the whole cell grid, blank cells included",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "sheet_grid_plan",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "pick_named_square",
+          "args": ["pl", "'B3'"],
+          "out": "cell"
+        },
+        {
+          "fail_if": ["cell.no_plan"]
+        },
+        {
+          "read_crop": "This is one cell cut out of a spreadsheet grid. What number is printed inside this cell? Answer with digits only and nothing else. If no number is printed here, answer the single word blank.",
+          "boxes": "cell.cells",
+          "pad": 0.0,
+          "out": "rnum"
+        },
+        {
+          "run": "first_answer_text",
+          "args": ["rnum"],
+          "out": "raw"
+        },
+        {
+          "run": "hold_b3_text",
+          "args": ["raw"],
+          "out": "held"
+        },
+        {
+          "fail_if": ["held.no_read"]
+        },
+        {
+          "run": "first_answer_number",
+          "args": ["rnum", "{'idx': 0}"],
+          "out": "num"
+        },
+        {
+          "compare_tolerance": "num.v",
+          "to": 152,
+          "tol": 0.5,
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["cell", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "d2_cell_c2",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of spreadsheet cells from A1 to E7 -- one rectangle over the whole cell grid, blank cells included",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "sheet_grid_plan",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "pick_named_square",
+          "args": ["pl", "'C2'"],
+          "out": "cell"
+        },
+        {
+          "fail_if": ["cell.no_plan"]
+        },
+        {
+          "read_crop": "This is one cell cut out of a spreadsheet grid. What number is printed inside this cell? Answer with digits only and nothing else. If no number is printed here, answer the single word blank.",
+          "boxes": "cell.cells",
+          "pad": 0.0,
+          "out": "rnum"
+        },
+        {
+          "run": "first_answer_text",
+          "args": ["rnum"],
+          "out": "raw"
+        },
+        {
+          "run": "hold_c2_text",
+          "args": ["raw"],
+          "out": "held"
+        },
+        {
+          "fail_if": ["held.no_read"]
+        },
+        {
+          "run": "first_answer_number",
+          "args": ["rnum", "{'idx': 0}"],
+          "out": "num"
+        },
+        {
+          "compare_tolerance": "num.v",
+          "to": 17,
+          "tol": 0.5,
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["cell", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "d3_cell_b4",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of spreadsheet cells from A1 to E7 -- one rectangle over the whole cell grid, blank cells included",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "sheet_grid_plan",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "pick_named_square",
+          "args": ["pl", "'B4'"],
+          "out": "cell"
+        },
+        {
+          "fail_if": ["cell.no_plan"]
+        },
+        {
+          "read_crop": "This is one cell cut out of a spreadsheet grid. What number is printed inside this cell? Answer with digits only and nothing else. If no number is printed here, answer the single word blank.",
+          "boxes": "cell.cells",
+          "pad": 0.0,
+          "out": "rnum"
+        },
+        {
+          "run": "first_answer_text",
+          "args": ["rnum"],
+          "out": "raw"
+        },
+        {
+          "run": "hold_b4_text",
+          "args": ["raw"],
+          "out": "held"
+        },
+        {
+          "fail_if": ["held.no_read"]
+        },
+        {
+          "run": "first_answer_number",
+          "args": ["rnum", "{'idx': 0}"],
+          "out": "num"
+        },
+        {
+          "compare_tolerance": "num.v",
+          "to": 449,
+          "tol": 0.5,
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["cell", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ]
+}

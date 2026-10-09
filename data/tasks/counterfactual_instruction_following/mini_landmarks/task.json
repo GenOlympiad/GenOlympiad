@@ -1,0 +1,65 @@
+{
+  "id": "mini_landmarks",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean model-village display showing these famous world landmarks, each landmark with a single person standing next to it for scale, each pair clearly separated from the others: Eiffel Tower, pyramid, obelisk, clock tower, triumphal arch, tall statue, pyramid, obelisk, clock tower, Eiffel Tower. IMPORTANT SCALE RULE: this is a MINIATURE park -- every landmark is built tiny. Draw EVERY landmark SHORTER than the person standing beside it, so each person towers over its little landmark. No landmark may be drawn taller than its person; every single landmark must be shorter than the person next to it. Do not label anything and do not add any caption or text.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a park of several famous landmarks (Eiffel Tower, pyramid, obelisk, clock tower, triumphal arch, tall statue, pyramid, obelisk, clock tower, Eiffel Tower), each with a small person figure beside it for scale. Ignoring the exact sizes and artistic quality, does the image actually DEPICT that -- landmarks each with a person beside them? A photo, illustration, flat graphic or clean diagram all count as yes. Answer NO only if it shows a blank card, a plain panel printing an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "count_object": "a monument with a person standing next to it",
+    "q_item": "This is a close-up cut out of a bigger picture. It shows one monument or landmark with a single person standing next to it on the same ground. Look at how tall each of them looks in this picture. Is the monument TALLER than the person, or SHORTER than the person? Report only what you can actually see; do not think about how big the real thing would be. Answer with one word only: taller or shorter.",
+    "exp_item": "shorter",
+    "n_objects": 10
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "mini_landmarks_count",
+      "weight": 6.0,
+      "score": "cen.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "little model landmark",
+          "propose_boxes": "vlm",
+          "votes": 3,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item",
+          "boxes": "bx",
+          "pad": 0.5,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "all_pairs_match",
+          "args": ["cr", "reference"],
+          "out": "cen"
+        }
+      ]
+    }
+  ]
+}

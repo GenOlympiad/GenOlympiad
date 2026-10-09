@@ -1,0 +1,328 @@
+{
+  "id": "delayed_queue",
+  "axis": "long_range_consistency",
+  "prompt": "A seven-panel photo strip of the same dairy milking shed, panels side by side left to right. Each panel is numbered 1 to 7 in its top-left corner and has a day slate hung by the door naming what was delivered at that moment. In panel order the 7 day slates read: CHURN, FEED, FEED, CHURN, NOTHING, CHURN, NOTHING. Now the rule about the red warning bell. A CHURN delivery makes it ringing exactly THREE panels later than the panel it arrived in. A FEED delivery makes it ringing exactly ONE panel later than the panel it arrived in. Nothing makes it ringing in the panel where the delivery itself arrives, and a delivery whose effect would fall past the last panel simply never shows. If two deliveries happen to fall due in the same panel it is simply ringing in that panel — not twice and not more strongly. In every other panel the red warning bell is silent. I am deliberately not listing the answer anywhere in this request; work it out from the figures printed in the picture.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a strip of separate numbered panels in a row, each panel showing the same doorway with a single word written on a card or slate beside it. Ignoring artistic quality, and ignoring whether the details are right or wrong, does the image DEPICT that? Answer NO only if the picture is unrelated to that description or contains no such arrangement at all. Answer yes or no only.",
+  "reference": {
+    "q_verbatim": "Transcribe EVERY line of printed, painted, chalked or written text you can see anywhere in this picture — including text on boards, signs, slates, placards, plates, cards, labels and stickers. Copy each line exactly as it appears, character by character. Do NOT correct spelling or arithmetic and do not leave any line out. Separate the lines with spaces.",
+    "q_region_text": "This picture is one part cut out of a longer photo strip. Copy out every line of printed, painted, chalked or written text you can see in it -- on boards, signs, slates, placards, plates, cards, labels and stickers. If part of a neighbouring panel shows at the left or right edge of this picture, ignore it and copy only the part in the middle. Copy each line exactly as it appears, character by character; do not correct the spelling, do not correct any figure and do not leave a line out. Put a single space between one line and the next, and write nothing else.",
+    "q_slot_mark": "This picture is a strip of 7 separate panels standing side by side in one row, numbered 1 to 7. Work through the panels in that order, panel 1 first. Look at the red warning bell in each panel. Write RINGING where the red warning bell is ringing, or SILENT where the red warning bell is silent. Judge each one on its own; the same word may come up several times in a row. Give exactly 7 answers separated by semicolons, in panel order, and write nothing else.",
+    "q_slot_word": "This picture is a strip of 7 separate panels standing side by side in one row, numbered 1 to 7. Work through the panels in that order, panel 1 first. In each panel, read the single word written on the day slate hung by the door. Copy that word exactly as it is written. Give exactly 7 answers separated by semicolons, in panel order, and write nothing else.",
+    "exp_lines": ["CHURN", "FEED", "FEED", "CHURN", "NOTHING", "CHURN", "NOTHING"],
+    "count_noun": "a numbered panel of the strip",
+    "na": 7,
+    "qa": "This picture is a strip of 7 separate panels in a single row, numbered 1 to 7. Go through the panels in order from panel 1 to panel 7. For EACH panel report two things joined by a space: first the single word written on that panel's day slate, then one word — RINGING if the red warning bell in that panel is ringing, or SILENT if it is silent. Judge every panel on its own — the panels do not have to agree with one another, and the same answer may come up several times in a row. Give exactly 7 answers separated by semicolons, in panel order, and nothing else. ...'.",
+    "qa2": "The picture is a row of 7 separate photographs numbered 1 to 7, each with a word written on a card or slate by the door. Working from the first to the last, tell me for each in turn the word written there, then a space, then RINGING or SILENT according to the state of the red warning bell in that photograph. Judge every panel on its own — the panels do not have to agree with one another, and the same answer may come up several times in a row. Give exactly 7 answers separated by semicolons, in panel order, and nothing else.",
+    "expa": [
+      "CHURN SILENT",
+      "FEED SILENT",
+      "FEED RINGING",
+      "CHURN RINGING",
+      "NOTHING SILENT",
+      "CHURN SILENT",
+      "NOTHING RINGING"
+    ],
+    "q_cell_word": "This picture is one panel cut out of a photo strip of a dairy milking shed. A day slate hangs by the door in this panel with a single word written on it. Copy that word exactly as it is written. If more than one slate is visible in this panel, copy the word on the slate nearest the middle of this cut-out. Answer with just that one word and nothing else.",
+    "q_cell_mark": "This picture is one panel cut out of a photo strip of a dairy milking shed. Look at the red warning bell in this panel. If more than one bell is visible in this panel, judge the one nearest the middle of this cut-out. Answer RINGING if that bell is ringing, or SILENT if it is silent. Answer with just that one word and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 8.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole numbered panel of the photo strip",
+          "out": "anc",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "ag_wh",
+          "args": ["image"],
+          "out": "wh"
+        },
+        {
+          "run": "plan_panels_for_law",
+          "args": ["anc", "wh", "0.01"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.q_cell_word",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "r0"
+        },
+        {
+          "read_crop": "reference.q_cell_mark",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "r1"
+        },
+        {
+          "run": "pack_panel_reads",
+          "args": ["r0", "r1"],
+          "out": "pk"
+        },
+        {
+          "run": "panel_slots_verdict",
+          "args": ["[compose_reads(\"ww\", pk.c0, pk.c1)]", "[reference.expa]"],
+          "out": "res"
+        },
+        {
+          "run": "hold_law_holds_res",
+          "args": ["res"],
+          "out": "res_h"
+        },
+        {
+          "fail_if": ["res_h.unreadable"]
+        },
+        {
+          "run": "paint_panel_results",
+          "args": ["pl", "res", "pk"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "binding_agreement",
+      "weight": 1.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole numbered panel of the photo strip",
+          "out": "anc",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "ag_wh",
+          "args": ["image"],
+          "out": "wh"
+        },
+        {
+          "run": "plan_panels_for_binding",
+          "args": ["anc", "wh", "0.01"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.q_cell_word",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "r0"
+        },
+        {
+          "read_crop": "reference.q_cell_mark",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "r1"
+        },
+        {
+          "run": "pack_panel_reads",
+          "args": ["r0", "r1"],
+          "out": "pk"
+        },
+        {
+          "run": "panel_slots_verdict",
+          "args": ["[compose_reads(\"ww\", pk.c0, pk.c1)]", "[reference.expa]"],
+          "out": "res"
+        },
+        {
+          "run": "hold_binding_agreement_res",
+          "args": ["res"],
+          "out": "res_h"
+        },
+        {
+          "fail_if": ["res_h.unreadable"]
+        },
+        {
+          "run": "paint_panel_results",
+          "args": ["pl", "res", "pk"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "data_present",
+      "weight": 2.0,
+      "pass_at": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole numbered panel of the photo strip",
+          "out": "anc",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "ag_wh",
+          "args": ["image"],
+          "out": "wh"
+        },
+        {
+          "run": "plan_panels_for_text",
+          "args": ["anc", "wh", "0.04"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.q_region_text",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rt"
+        },
+        {
+          "run": "blank_panel_reads",
+          "args": ["rt"],
+          "out": "tx"
+        },
+        {
+          "run": "hold_data_present_tx",
+          "args": ["tx"],
+          "out": "tx_h"
+        },
+        {
+          "fail_if": ["tx_h.no_read"]
+        },
+        {
+          "run": "line_coverage",
+          "args": ["join_answers(rt.answers)", "reference.exp_lines"],
+          "out": "frac"
+        },
+        {
+          "run": "paint_text_panels",
+          "args": ["pl", "tx", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a numbered panel of the strip",
+  "aspect_ratio": "3:2"
+}

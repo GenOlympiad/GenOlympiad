@@ -1,0 +1,195 @@
+{
+  "id": "merged_cells_span",
+  "axis": "long_range_consistency",
+  "prompt": "A clean printed equipment-hire invoice from a plant-hire company, one table with the columns DAY, EQUIPMENT, DAILY CHARGE and SITE CREW FEE (amounts in pounds) and six day rows, Monday 4 May through Saturday 9 May. The EQUIPMENT column uses MERGED cells: 'Mobile crane' is written once inside a single tall cell spanning the Monday-Tuesday-Wednesday rows, 'Concrete pump' once in a merged cell spanning the Thursday-Friday rows, and 'Scaffold strip-down' sits in the Saturday row alone; the day and charge cells beside a merged block stay separate rows, so the merged cells must line up with them. The DAILY CHARGE cells read, Monday to Saturday: 462, 438, 391, 517, 526, 284. The SITE CREW FEE column shows 145 for Monday, 152 for Tuesday and 149 for Wednesday, and then ONE merged cell spanning the Thursday-Friday-Saturday rows containing the single flat weekend-crew fee of 310, printed once (one charge covering all three days). At the bottom, a TOTAL PAYABLE row: work out and print the grand total, which is the sum of the six daily charges plus the crew fees, counting the flat 310 fee exactly ONCE. Print no totals or numbers other than the figures described. Straight-on view, black print on white paper, thin table rules.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed equipment-hire invoice table with merged cells and a total row? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "total": 3374,
+    "q_total": "What amount is printed in the TOTAL PAYABLE row of this invoice? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_m1": "Look at the EQUIPMENT column. Is 'Mobile crane' written ONCE inside a single tall merged cell that covers several day rows, or is it repeated in a separate cell on each of its rows? Answer with exactly one word: MERGED or REPEATED.",
+    "q_s1": "Write down every day row that the table cell containing 'Mobile crane' reaches into, working from the top down, each copying the day name printed at the start of that row. Separate one item from the next with a semicolon; write no running total and nothing else. If that cell reaches into no day row, write the single word NONE.",
+    "q_m2": "Look at the SITE CREW FEE column. Is the fee 310 written ONCE inside a single tall merged cell that covers several day rows, or is 310 repeated in a separate cell on each of those rows? Answer with exactly one word: MERGED or REPEATED.",
+    "q_s2": "Write down every day row that the table cell containing the fee 310 reaches into, working from the top down, each copying the day name printed at the start of that row. Separate one item from the next with a semicolon; write no running total and nothing else. If that cell reaches into no day row, write the single word NONE.",
+    "q_thu": "What DAILY CHARGE is printed in the Thursday 7 May row? Respond with the number only, as digits, and nothing else.",
+    "q_pump": "How many day rows does the table cell containing 'Concrete pump' vertically cover? Respond with a single digit and nothing else.",
+    "q_tue": "What SITE CREW FEE is printed in the Tuesday 5 May row? Respond with the number only, as digits, and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "span_total_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_total",
+          "out": "tt"
+        },
+        {
+          "ask": "reference.q_m1",
+          "out": "m1"
+        },
+        {
+          "ask": "reference.q_s1",
+          "out": "s1"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["s1", "empty_as='0'"],
+          "out": "s1__std"
+        },
+        {
+          "fail_if": ["s1__std.refused"]
+        },
+        {
+          "ask": "reference.q_m2",
+          "out": "m2"
+        },
+        {
+          "ask": "reference.q_s2",
+          "out": "s2"
+        },
+        {
+          "fail_if": [
+            "tt.unreadable",
+            "m1.unreadable",
+            "s1.unreadable",
+            "m2.unreadable",
+            "s2.unreadable"
+          ]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["s2", "empty_as='0'"],
+          "out": "s2__std"
+        },
+        {
+          "fail_if": ["s2__std.refused"]
+        },
+        {
+          "compare_tolerance": "tt",
+          "to": "reference.total",
+          "tol": 0.5,
+          "out": "f_t"
+        },
+        {
+          "compare": "m1",
+          "to": "MERGED",
+          "out": "f_m1"
+        },
+        {
+          "compare_tolerance": "s1__std.n",
+          "to": 3,
+          "tol": 0.5,
+          "out": "f_s1"
+        },
+        {
+          "compare": "m2",
+          "to": "MERGED",
+          "out": "f_m2"
+        },
+        {
+          "compare_tolerance": "s2__std.n",
+          "to": 3,
+          "tol": 0.5,
+          "out": "f_s2"
+        },
+        {
+          "all": ["f_t", "f_m1", "f_s1", "f_m2", "f_s2"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_thursday_charge",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read_number": "reference.q_thu",
+          "out": "tc"
+        },
+        {
+          "fail_if": ["tc.unreadable"]
+        },
+        {
+          "compare_tolerance": "tc",
+          "to": 517,
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_pump_span",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "day row of the table that the tall merged cell reading Concrete pump reaches across",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_ps"
+        },
+        {
+          "fail_if": ["box_ps.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed table row that names a day of the week rather than bare background or only part of a row? Answer yes or no only.",
+          "boxes": "box_ps",
+          "out": "crop_ps"
+        },
+        {
+          "fail_if": ["crop_ps.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_ps"],
+          "out": "cnt_ps"
+        },
+        {
+          "compare_tolerance": "cnt_ps.n",
+          "to": 2,
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_tuesday_fee",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read_number": "reference.q_tue",
+          "out": "tf"
+        },
+        {
+          "fail_if": ["tf.unreadable"]
+        },
+        {
+          "compare_tolerance": "tf",
+          "to": 152,
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

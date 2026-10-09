@@ -1,0 +1,114 @@
+{
+  "id": "timeline_era_boundary",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed TIMELINE table titled 'GEOLOGICAL COLUMN -- LOCAL SECTION' (Formation ages (Ma)). It lists 8 consecutive geological units down the page, each with a FROM value and a TO value. CRITICAL rule: the units tile the axis with no gap and no overlap -- each row's TO value equals the NEXT row's FROM value (they share the same boundary age). In particular row 3's TO value equals row 4's FROM value. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a timeline table listing consecutive eras or geological units, each with a start year and an end year. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 8,
+    "q_end_i": "In the timeline table, what is the TO value on row 3 (the 'Grey Marl' row)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only.",
+    "q_start_j": "In the timeline table, what is the FROM value on row 4 (the 'Coal Measures' row)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only.",
+    "q_start_i": "In the timeline table, what is the FROM value on row 3 (the 'Grey Marl' row)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only.",
+    "q_end_j": "In the timeline table, what is the TO value on row 4 (the 'Coal Measures' row)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only.",
+    "q_count": "How many era/unit rows are listed in this timeline table? Whole number only.",
+    "decreasing": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "timeline_era_boundary_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_end_i",
+          "out": "end_i"
+        },
+        {
+          "fail_if": ["end_i.unreadable"]
+        },
+        {
+          "read_number": "reference.q_start_j",
+          "out": "start_j"
+        },
+        {
+          "fail_if": ["start_j.unreadable"]
+        },
+        {
+          "read_number": "reference.q_start_i",
+          "out": "start_i"
+        },
+        {
+          "fail_if": ["start_i.unreadable"]
+        },
+        {
+          "read_number": "reference.q_end_j",
+          "out": "end_j"
+        },
+        {
+          "fail_if": ["end_j.unreadable"]
+        },
+        {
+          "run": "check_era_boundary",
+          "args": ["end_i", "start_j", "start_i", "end_j", "reference.decreasing"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one era row of the timeline table, showing an era name with its start and end values",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole printed table row naming a single era or unit with its start and end values, rather than the heading row? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 1.4,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

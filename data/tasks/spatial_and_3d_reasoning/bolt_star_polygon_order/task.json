@@ -1,0 +1,135 @@
+{
+  "id": "bolt_star_polygon_order",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A workshop photograph from a pipe fitting crew: a stainless eight-stud pipe flange lies ready for torquing on the bench, face towards the camera, nuts on. Around the rim the flange carries its cast position letters, A to H, running clockwise from the top -- they are part of the casting and every one is in view. The fitter has chalked one pass number beside each nut, 1 through 8, the order the crew will pull the studs.\n\nChalk the eight pass numbers the way the torque chart for an eight-stud flange demands -- work the walk out yourself; I am deliberately not telling you which letter takes which number. What I can tell you is what gets the sheet thrown back: a walk that simply runs round the rim letter by letter, any two passes landing on the same stud, or any chalked line, arrow or path drawn between the studs -- the crew chalk numbers only, never the walk itself.\n\nEvery cast letter and every chalked number must be sharp and readable, one number beside each nut, nothing else chalked or added anywhere on the flange or the bench.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a round bolted flange with several nuts arranged in a circle and small letters or numbers near them? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_studs": 8,
+    "no_chords": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chalk_walk_crosses_the_rim",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one chalked pass number beside a flange nut",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_num"
+        },
+        {
+          "fail_if": ["box_num.unreadable"]
+        },
+        {
+          "read_crop": "Copy the cast position letter nearest the chalked number in this cut-out. Write the letter only.",
+          "boxes": "box_num",
+          "pad": 0.45,
+          "out": "letters"
+        },
+        {
+          "fail_if": ["letters.unreadable"]
+        },
+        {
+          "read_crop": "Copy the chalked pass number in this cut-out. Write the number only.",
+          "boxes": "box_num",
+          "pad": 0.45,
+          "out": "numbers"
+        },
+        {
+          "fail_if": ["numbers.unreadable"]
+        },
+        {
+          "run": "classify_tightening_walk",
+          "args": ["letters", "numbers"],
+          "out": "walk"
+        },
+        {
+          "compare": "walk.state",
+          "to": "star",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "eight_studs_certificate",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one nut on a stud of the flange",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nut"
+        },
+        {
+          "fail_if": ["box_nut.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE nut on a flange stud, rather than a chalk number or a cast letter alone? Answer yes or no only.",
+          "boxes": "box_nut",
+          "pad": 0.35,
+          "out": "cert_nut"
+        },
+        {
+          "fail_if": ["cert_nut.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cert_nut"],
+          "out": "n_nut"
+        },
+        {
+          "compare_band": "n_nut.n",
+          "to": "reference.n_studs",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_walk_is_drawn_on_the_flange",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a chalked line, arrow or path drawn between studs across the flange face",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_ch"
+        },
+        {
+          "fail_if": ["sweep_ch.unreadable"]
+        },
+        {
+          "compare": "sweep_ch.clean",
+          "to": "reference.no_chords",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

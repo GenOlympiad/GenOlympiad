@@ -1,0 +1,122 @@
+{
+  "id": "theatre_rake_c_value",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A sightline section for the steep rear gallery of a heritage playhouse, drawn for the refurbishment consent file. The section runs from the stage front to the back wall: the setting-out point P is the stage-front edge at stage-floor level, and behind it rise five stepped rows of gallery seating, tagged R1 to R5 from front to back. Each row's seated eye position is drawn as a small eye mark above its step, and next to every eye mark the sheet letters that row's eye height above stage-floor level in millimetres.\n\nThe house sightline standard is the one the consent officer checks: every row's eye must see the point P clear over the head of the spectator in front, with 120 mm of clearance between that row's sightline to P and the eye of the row in front. Row R1 is fixed by the existing structure: its eye sits 960 mm above stage-floor level and 3000 mm back from P, and the rows sit 1000 mm apart in plan. The rake must hold the standard exactly, row by row, with no spare height anywhere.\n\nLetter the eye heights of rows R2 to R5 yourself -- I am deliberately not telling you those four figures, and they do not sit on a straight ramp. The section must carry no drawn sightline from any seat towards the stage, no formula and no other working: only the datum at P, the stepped profile, the five tagged eye marks and their five height figures.\n\nThe stepped profile, the five eye marks and the five lettered height figures must be large and easy to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a sectional drawing of stepped seating rows behind a stage edge, with height figures lettered on it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank sheet that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "chain": "r1:960|r2:1440|r3:1950|r4:2484|r5:3038",
+    "mono": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "eye_height_chain_matches_the_recurrence",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row tag with its lettered eye height figure beside an eye mark on the section",
+          "sweep": true,
+          "out": "box_rows"
+        },
+        {
+          "fail_if": ["box_rows.unreadable"]
+        },
+        {
+          "read_crop": "Copy the row tag and the millimetre figure printed in this cut-out, separated by one space. Write nothing else.",
+          "boxes": "box_rows",
+          "pad": 0.35,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.unreadable"]
+        },
+        {
+          "run": "read_row_heights",
+          "args": ["cells"],
+          "out": "j"
+        },
+        {
+          "compare": "j.chain",
+          "to": "reference.chain",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rises_steepen_towards_the_back",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a tagged eye height figure lettered on the gallery section",
+          "sweep": true,
+          "out": "box_rows2"
+        },
+        {
+          "fail_if": ["box_rows2.unreadable"]
+        },
+        {
+          "read_crop": "Copy the row tag and the height figure printed in this cut-out, separated by one space. Write nothing else.",
+          "boxes": "box_rows2",
+          "pad": 0.35,
+          "out": "cells2"
+        },
+        {
+          "fail_if": ["cells2.unreadable"]
+        },
+        {
+          "run": "read_row_heights",
+          "args": ["cells2"],
+          "out": "j2"
+        },
+        {
+          "compare": "j2.mono",
+          "to": "reference.mono",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_selfdrawn_sightline",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a drawn sightline running from a seat towards the stage on the section",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_sl"
+        },
+        {
+          "fail_if": ["sweep_sl.unreadable"]
+        },
+        {
+          "compare": "sweep_sl.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

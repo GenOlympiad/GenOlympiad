@@ -1,0 +1,140 @@
+{
+  "id": "bee_space_frame",
+  "axis": "quantitative_precision",
+  "prompt": "One overhead photograph goes into the hive log at every inspection, and the apiary owner reads the state of the colony off it before deciding whether the box needs pulling apart.\n\nToday's frame: the lid is off hive 14 and the six frames hang in the body as the last visit left them, each top bar branded with its number, 1 to 6. The log header carries the yard's bee-space figure, 8 millimetres, as always -- the header stays on the log page, not in the picture. One thing is on record from the last visit: frame 2 was left shifted toward frame 1 when the box was closed up, and nobody has touched the hive since.\n\nWhat the bees will have done about that in the weeks between -- what appears in which seam, and what the seams at the proper gap look like -- is exactly what the owner reads off this photograph, and I am deliberately not telling you any of it. The colony answers a wrong gap in its own way, and the two directions of wrong get two different answers.\n\nNothing is written over the photograph: no labels, no arrows, no captions. Every top bar and every seam between the bars stays easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an opened beehive from above with several frames hanging inside it? A photograph, an illustration or a printed panel all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "seam_want": "1=resin|2=both|3=comb|4=neither|5=neither|6=neither",
+    "n_frames": 6,
+    "n_bars": 6
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_shifted_frame_draws_burr_comb_on_its_wide_side_and_propolis_on_its_tight_side_while_every_true_gap_stays_bare",
+      "weight": 3.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered wooden frame top bar inside the open hive body",
+          "out": "fb_box",
+          "sweep": true
+        },
+        {
+          "fail_if": ["fb_box.unreadable"]
+        },
+        {
+          "read_crop": "What number is branded on the top bar centred in this cut-out? Answer with that number only.",
+          "boxes": "fb_box",
+          "pad": 0.45,
+          "out": "fb_key",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fb_key.unreadable"]
+        },
+        {
+          "read_crop": "Immediately beside this bar, what stands out in the seams to its neighbours: a ridge of wavy comb, a rim of dark resin sealing a seam, both, or neither? Answer with one of: comb, resin, both, neither.",
+          "boxes": "fb_box",
+          "pad": 0.45,
+          "out": "fb_val",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fb_val.unreadable"]
+        },
+        {
+          "run": "count_key_matches",
+          "args": ["fb_key", "fb_val", "reference.seam_want"],
+          "out": "bear_v"
+        },
+        {
+          "compare_band": "bear_v.n",
+          "to": "reference.n_frames",
+          "core_abs": 0.499,
+          "margin_abs": 3.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_hive_carries_its_six_numbered_top_bars",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered wooden frame top bar inside the open hive body",
+          "out": "cen_box",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole numbered frame top bar, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_box",
+          "pad": 0.3,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_bars",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_label_arrow_or_caption_was_written_over_the_hive_photograph",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written label, an arrow or a caption added over the hive photograph",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "pro_sw"
+        },
+        {
+          "fail_if": ["pro_sw.unreadable"]
+        },
+        {
+          "compare": "pro_sw.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "id": "weaving_draft_drawdown",
+  "axis": "symbolic_systems",
+  "prompt": "The workshop has to file this draft with its woven sample before the warp comes off, so the draft is photographed on the loom head with the cloth beside it.\n\nThe draft is set out in the usual four blocks. The threading block along the top says which of the eight shafts each warp end goes through, and it runs 1, 2, 3, 4, 1, 2, 3, 4 from the left. The tie-up block in the corner says which shafts each of the six treadles lifts, and its third treadle lifts shafts 1 and 3 together. The treadling block down the side says which treadle is pressed for each pick, and its third pick is on the third treadle. The fourth block is the drawdown: a square in it goes dark where its own warp end is lifted for that pick and stays light where it is not.\n\nWhat the fourth block holds is what the three input blocks do not show.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a weaving draft pinned at a loom head with a length of woven cloth lying beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "no_two_alike",
+    "part2": "columns_are_alike",
+    "vocab": ["dark", "light"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the squares of the drawdown block along the row for the third pick, taking them from the left-hand end, and write for each square in turn whether it is dark or light.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "neighbours_alike",
+          "args": ["a_part1", "reference.vocab"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the column of the drawdown standing over the first warp end and the column standing over the fifth warp end, and say how the two compare. Answer with one of: the two columns carry exactly the same run of dark and light squares; the two columns carry opposite squares, dark where the other is light; the two columns are unlike but not opposite.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

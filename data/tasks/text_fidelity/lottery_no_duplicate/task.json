@@ -1,0 +1,88 @@
+{
+  "id": "lottery_no_duplicate",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed raffle/lottery number sheet titled 'STAFF SOCIAL CLUB PRIZE DRAW'. Subtitle 'This week's issued draw numbers (no number repeats)'. Print SIXTY two-digit ticket numbers arranged in a neat grid of 6 rows by 10 columns, each number in its own boxed cell, large and legible. Use EXACTLY these sixty numbers, in this order, filling the grid left-to-right then top-to-bottom: 76 68 38 99 48 25 67 29 44 65 90 19 69 79 93 66 78 35 11 51 73 23 01 80 34 52 83 14 64 24 31 97 88 09 42 54 55 46 86 53 27 06 98 07 62 26 81 60 91 63 72 39 87 40 15 21 18 04 12 58. CRITICAL: every one of the sixty numbers must be DIFFERENT -- no value may appear twice anywhere on the sheet. Print exactly sixty boxed two-digit numbers, nothing else.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed raffle/lottery sheet showing a grid of two-digit ticket numbers. Ignoring artistic quality, does the image DEPICT that -- a printed grid of numbers? A photo, scan or clean sheet all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_numbers": 60,
+    "q_count": "How many two-digit numbers are printed on this sheet? Give a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_duplicate_number",
+      "weight": 1.0,
+      "score": "res.all_unique",
+      "steps": [
+        {
+          "read_crop": "This sheet prints a grid of two-digit ticket numbers, each in its own cell. Write out every two-digit number on the sheet, reading each row from left to right and then moving down to the next row. Copy each number exactly as printed, even if the same value turns up more than once. Answer with the numbers separated by single spaces and nothing else -- no commas, no other words.",
+          "out": "tr"
+        },
+        {
+          "fail_if": ["tr.unreadable"]
+        },
+        {
+          "run": "count_and_duplicates",
+          "args": ["tr", "reference.n_numbers"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "score": "res2.count_ok",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed two-digit ticket number in its own cell of the grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "nums_box"
+        },
+        {
+          "fail_if": ["nums_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one cell of a printed sheet. What two-digit number is printed in it? Answer with just those two digits.",
+          "boxes": "nums_box",
+          "sort": "reading_order",
+          "out": "tr2"
+        },
+        {
+          "fail_if": ["tr2.unreadable"]
+        },
+        {
+          "run": "count_and_duplicates",
+          "args": ["' '.join(tr2.answers)", "reference.n_numbers"],
+          "out": "res2"
+        },
+        {
+          "fail_if": ["res2.unreadable"]
+        }
+      ]
+    }
+  ]
+}

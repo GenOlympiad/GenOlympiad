@@ -1,0 +1,184 @@
+{
+  "id": "geologic_right_hand_strike",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A survey draughtsman is inking the last three attitude readings of the season onto the outcrop map of sheet 47-C, which goes to the client this evening. The picture is that finished sheet lying flat on the light table, square to the camera, with the field notebook open beside it.\n\nThe base map is already on the sheet and none of it moves: the north arrow at the top, aimed at the top edge of the sheet; the grid ticks; and three outcrop dots lettered L-1, L-2 and L-3, well apart from one another.\n\nThese are the three readings on the open notebook page, to be inked up onto the map:\nL-1   strike 042   dip 38\nL-2   strike 178   dip 24\nL-3   strike 312   dip 61\n\nThe drafting standard in the margin of every sheet in this series says: attitudes on this map follow the right-hand rule, so walk along the strike bearing and the bed dips away on your right. One attitude symbol is a long bar inked along the strike bearing through its own outcrop dot, a short tick across the middle of that bar on the dip side, and the dip reading written beside the tick.\n\nWhich side of its bar each tick goes on is the part you have to work out -- I am deliberately not telling you, and there is no worked example anywhere on the sheet to copy. Ink the three symbols at a size that tells the long bar from the short tick. Other than the north arrow, the grid figures, the three outcrop letters and the three dip readings, no further word, arrow or note belongs on the map face.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a survey map sheet with a north arrow on it and lettered dots on the map face? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no map on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "dip_dirs": "L-1=132,L-2=268,L-3=42",
+    "strike_bearings": "L-1=42,L-2=178,L-3=312",
+    "n_outcrops": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_tick_sits_in_the_right_hand_half_of_its_own_strike_bar",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lettered outcrop dot with the ink work around it on the map face",
+          "sweep": true,
+          "out": "spot_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["spot_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which outcrop letter is printed beside the dot? Answer with the letter exactly as it is printed.",
+          "boxes": "spot_box",
+          "pad": 0.9,
+          "out": "key_rd"
+        },
+        {
+          "fail_if": ["key_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, a short tick sticks out from one side of the long bar. Which edge or corner of the cut-out is the free end of that tick nearest to? Answer with one of: top, top right, right, bottom right, bottom, bottom left, left, top left, or none if no tick is drawn here.",
+          "boxes": "spot_box",
+          "pad": 0.9,
+          "out": "tick_rd"
+        },
+        {
+          "fail_if": ["tick_rd.unreadable"]
+        },
+        {
+          "run": "worst_tick_gap",
+          "args": ["key_rd", "tick_rd", "reference.dip_dirs"],
+          "out": "tickv"
+        },
+        {
+          "compare_compass": "tickv.gap",
+          "to": 0,
+          "core": 25.0,
+          "margin": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_long_bar_lies_along_the_strike_bearing_booked_for_it",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lettered outcrop dot with the ink work around it on the map face",
+          "sweep": true,
+          "out": "bar_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["bar_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which outcrop letter is printed beside the dot? Answer with the letter exactly as it is printed.",
+          "boxes": "bar_box",
+          "pad": 0.9,
+          "out": "bkey_rd"
+        },
+        {
+          "fail_if": ["bkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which way does the long bar run across the picture? Answer with one of: up and down, left and right, lower left to upper right, upper left to lower right, or none if no long bar is drawn here.",
+          "boxes": "bar_box",
+          "pad": 0.9,
+          "out": "bar_rd"
+        },
+        {
+          "fail_if": ["bar_rd.unreadable"]
+        },
+        {
+          "run": "worst_bar_gap",
+          "args": ["bkey_rd", "bar_rd", "reference.strike_bearings"],
+          "out": "barv"
+        },
+        {
+          "compare_compass": "barv.gap",
+          "to": 0,
+          "core": 25.0,
+          "margin": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_outcrop_dot_carries_its_dip_reading",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lettered outcrop dot with the ink work around it on the map face",
+          "sweep": true,
+          "out": "dip_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["dip_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a number written beside the dot as well as its letter? Answer yes or no only.",
+          "boxes": "dip_box",
+          "pad": 0.9,
+          "out": "dip_rd"
+        },
+        {
+          "fail_if": ["dip_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["dip_rd"],
+          "out": "dipn"
+        },
+        {
+          "compare_band": "dipn.n",
+          "to": "reference.n_outcrops",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_word_or_arrow_is_added_to_the_map_face",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word or arrow on the map face beyond the north arrow, the grid figures, the letters and the dip readings",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

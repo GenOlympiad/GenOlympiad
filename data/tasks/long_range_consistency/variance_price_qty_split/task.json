@@ -1,0 +1,187 @@
+{
+  "id": "variance_price_qty_split",
+  "axis": "long_range_consistency",
+  "prompt": "An operations review pack lying open on a plant controller's desk at a food ingredients works, photographed straight down on the month's material page. The page has two parts: the USAGE AND PRICE TABLE across the top and, under it, the COST BRIDGE that steps from the budget to the actual.\n\nThe month, for the one raw material this page is about. Standard usage 12,000 kg at a standard price of 4.50 the kilogramme. Actual usage 12,800 kg at an actual price of 4.25 the kilogramme. The table carries those four figures in its four columns and nothing else.\n\nThe bridge under the table opens with a full column standing on the baseline for the BUDGET cost and closes with a full column standing on the baseline for the ACTUAL cost. Between them stand the floating steps, one for each recognised cause of the difference, each step beginning where the one before it ended. Every floating step carries the name of its cause, its own figure, and the word ADVERSE where it pushes the cost up or FAVOURABLE where it pulls the cost down.\n\nThis works to the standard costing convention, which the controller applies without writing it down: each cause is taken one at a time, and the causes together account for the whole of the difference between budget and actual with nothing left over to explain.\n\nWork the bridge out for yourself -- I am deliberately not telling you how many floating steps there are, what any of them is worth, or which way any of them goes. Keep the arithmetic off the page: no formula, no residual step, no note explaining the convention. The four table columns, both end columns of the bridge and every floating step with its name, its figure and its word have to be legible in the one frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a page carrying a small table of figures above a chart of upright blocks, some standing on a baseline and some floating above it? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image instead shows a blank card that just states an answer, or shows no chart of blocks at all. Answer yes or no only.",
+  "reference": {
+    "step_figures": "price=3200|usage=3600",
+    "step_sides": "price=favourable|usage=adverse",
+    "n_steps": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_cause_is_priced_on_its_own_multiplier",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one floating step of the bridge together with the writing on it",
+          "sweep": true,
+          "out": "stp"
+        },
+        {
+          "fail_if": ["stp.unreadable"]
+        },
+        {
+          "read_crop": "Copy the name of the cause written on this step. Write the words only.",
+          "boxes": "stp",
+          "pad": 0.15,
+          "out": "csx"
+        },
+        {
+          "fail_if": ["csx.unreadable"]
+        },
+        {
+          "read_crop": "Copy the money figure written on this step. Write the digits only.",
+          "boxes": "stp",
+          "pad": 0.15,
+          "out": "amx"
+        },
+        {
+          "fail_if": ["amx.unreadable"]
+        },
+        {
+          "run": "read_variance_figures",
+          "args": ["csx", "amx"],
+          "out": "sl"
+        },
+        {
+          "compare": "sl.seq",
+          "to": "reference.step_figures",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_causes_pull_opposite_ways",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a floating step of the bridge with its cause name and its marking word",
+          "sweep": true,
+          "out": "stw"
+        },
+        {
+          "fail_if": ["stw.unreadable"]
+        },
+        {
+          "read_crop": "Copy the name of the cause written on this step. Write the words only.",
+          "boxes": "stw",
+          "pad": 0.15,
+          "out": "cwx"
+        },
+        {
+          "fail_if": ["cwx.unreadable"]
+        },
+        {
+          "read_crop": "Is this step marked adverse or favourable? Answer with one word: adverse or favourable.",
+          "boxes": "stw",
+          "pad": 0.15,
+          "out": "swx"
+        },
+        {
+          "fail_if": ["swx.unreadable"]
+        },
+        {
+          "run": "read_variance_sides",
+          "args": ["cwx", "swx"],
+          "out": "sd"
+        },
+        {
+          "compare": "sd.seq",
+          "to": "reference.step_sides",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_is_left_over_to_explain",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a block of the bridge that floats clear of the baseline instead of standing on it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "flt"
+        },
+        {
+          "fail_if": ["flt.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show one block hanging clear of the baseline, rather than a full column resting on it? Answer yes or no only.",
+          "boxes": "flt",
+          "pad": 0.3,
+          "out": "fltx"
+        },
+        {
+          "fail_if": ["fltx.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["fltx"],
+          "out": "fn"
+        },
+        {
+          "compare_band": "fn.n",
+          "to": "reference.n_steps",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_usage_and_price_table_stands_above_the_bridge",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the usage and price table at the top of the page",
+          "sweep": true,
+          "out": "upt"
+        },
+        {
+          "fail_if": ["upt.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show a table with four columns of figures under headings? Answer yes or no only.",
+          "boxes": "upt",
+          "pad": 0.15,
+          "out": "uptx"
+        },
+        {
+          "fail_if": ["uptx.unreadable"]
+        },
+        {
+          "compare": "uptx.answers.0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

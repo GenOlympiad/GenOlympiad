@@ -1,0 +1,84 @@
+{
+  "id": "the_bottles_that_may_not_lie_down_are_the_ones_with_the_maroon_shoulder",
+  "axis": "world_knowledge_grounding",
+  "prompt": "Dispatch gate check at an industrial gas distributor, mid-morning. The dropside delivery truck has just been loaded for a fabrication shop: four cylinders on the open bed, maroon-shouldered dissolved acetylene and black-and-white oxygen in equal number, nothing else aboard. The standing lines from the despatch book travel with the driver. Dissolved acetylene, because of the porous mass and the acetone held in the shell, is carried and stored standing on its base at all times; compressed gases carry no such restriction. Valve protection: every cylinder travels with its cap screwed home. The gateman's photograph goes into the day's file, taken at ground level square onto the open bed, the side rails low enough that no cylinder is hidden behind them, every cylinder on that bed and the valve end of each one inside a single frame, flat overcast light.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph show the open bed of a gas delivery vehicle loaded with industrial cylinders, shot at ground level square onto the bed, with every cylinder and its valve end inside the frame and nothing cropped away by the side rails? Answer yes or no only.",
+  "reference": {
+    "part1": "capped",
+    "part2": "2"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Say in a few plain words what is on the valve end of the cylinders.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "How many of the cylinders are standing on end? Answer with a whole number.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

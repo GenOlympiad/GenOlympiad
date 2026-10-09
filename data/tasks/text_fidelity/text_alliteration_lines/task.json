@@ -1,0 +1,91 @@
+{
+  "id": "text_alliteration_lines",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on scan of a printed classroom worksheet titled 'ALLITERATION DRILL - SHEET TWO', sub-heading 'Harbour vocabulary practice'. Print EXACTLY 10 numbered lines (1. to 10.), each at least FIVE words long.\n\nCRITICAL WRITING LAW: every word of a line must begin with that line's assigned letter: line 1 = S, line 2 = T, line 3 = W, line 4 = R, line 5 = K, line 6 = L, line 7 = N, line 8 = V, line 9 = D, line 10 = G. Every word, including short joining words -- if a word does not start with the line's letter, do not use it. Compose the sentences yourself.\n\nBlack text on white paper, nothing else on the sheet.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a board or worksheet with numbered lines of text. Ignoring artistic quality and ignoring whether the wording is correct, does the image DEPICT that -- a printed page carrying a numbered list of text lines? A photo, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_lines": 10,
+    "initials": ["s", "t", "w", "r", "k", "l", "n", "v", "d", "g"],
+    "min_words": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_crop": "This page carries a numbered list of written lines. Write those numbered lines out again, exactly as they are printed. Put each one on its own line, starting with the number it carries, then a full stop, then that line's words. Copy every word letter for letter, and keep each word's capital letters and small letters exactly as they are printed. Do not fix spelling, do not change the order of the words, do not add a word and do not leave one out. Leave out the title, any sub-heading, and any text that carries no number. Write out the list and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Look at every numbered line of text on this page and transcribe it word for word. Begin each transcribed line with its printed number followed by a full stop, then that line's words in the order they appear, with upper-case and lower-case letters exactly as printed. Reproduce anything that looks like a mistake just as it stands -- never correct it, complete it or tidy it up. Ignore the heading, the sub-heading and any line without a number. Output only the transcribed lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "score_alliteration",
+          "args": ["[t1, t2]", "reference.n_lines", "reference.initials", "reference.min_words"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read_crop": "This page carries a numbered list of written lines. Write those numbered lines out again, exactly as they are printed. Put each one on its own line, starting with the number it carries, then a full stop, then that line's words. Copy every word letter for letter, and keep each word's capital letters and small letters exactly as they are printed. Do not fix spelling, do not change the order of the words, do not add a word and do not leave one out. Leave out the title, any sub-heading, and any text that carries no number. Write out the list and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Look at every numbered line of text on this page and transcribe it word for word. Begin each transcribed line with its printed number followed by a full stop, then that line's words in the order they appear, with upper-case and lower-case letters exactly as printed. Reproduce anything that looks like a mistake just as it stands -- never correct it, complete it or tidy it up. Ignore the heading, the sub-heading and any line without a number. Output only the transcribed lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "score_alliteration",
+          "args": ["[t1, t2]", "reference.n_lines", "reference.initials", "reference.min_words"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

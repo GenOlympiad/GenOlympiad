@@ -1,0 +1,183 @@
+{
+  "id": "projectile_range",
+  "axis": "latent_computation",
+  "prompt": "A clean physics-exam BALLISTIC diagram: a ball is launched from ground level over flat ground, with a horizontal ground ruler marked in metres beneath the trajectory. The launch speed is v0 = 25 metres per second, the launch angle is 27 degrees above the horizontal, and gravity g = 9.8 metres per second squared. Draw the parabolic flight path and mark where the ball LANDS on the ground ruler. Using the range formula R equals v0 squared times sine of (2 times the angle) divided by g, compute the horizontal range and place the landing mark at that computed distance on the metre scale, with the range value labelled. Note the angle is 27 degrees, NOT 45 degrees, so this is not the maximum possible range. Neat black-on-white exam figure; the launch speed, the 27-degree angle and the computed landing range all labelled, the metre ticks legible, no worked steps or extra text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show physics-exam ballistic diagram of a ball launched at 27 degrees over a ground metre scale with the computed landing range marked, straight-on? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "v0": 25.0,
+    "theta": 27.0,
+    "g": 9.8,
+    "range": 51.5955,
+    "display": 51.6,
+    "decoy_45": 63.8,
+    "q_val": "This is a projectile-motion diagram with a horizontal ground scale marked in metres. A ball is launched and lands on the ground; its landing point is marked against the metre scale. Read the horizontal RANGE (the ground distance from the launch point to where the ball lands), in metres. Answer with the number only (as digits, no unit).",
+    "q_ang": "The launch angle of the projectile above the horizontal is labelled on the diagram in degrees. Read the printed launch angle. Answer with the number only.",
+    "q_form": "Does this image show a projectile / ballistic scene: a curved trajectory of a launched ball above a horizontal ground distance scale? A diagram, illustration or photo all count. Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fm"
+        },
+        {
+          "fail_if": ["fm.unreadable"]
+        },
+        {
+          "compare": "fm",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "landing_range",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read_number": "reference.q_val",
+          "out": "rv"
+        },
+        {
+          "fail_if": ["rv.unreadable"]
+        },
+        {
+          "compare_band": "rv",
+          "to": "reference.range",
+          "core": 1.0,
+          "margin": 5.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "launch_angle",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read_number": "reference.q_ang",
+          "out": "av"
+        },
+        {
+          "fail_if": ["av.unreadable"]
+        },
+        {
+          "compare_band": "av",
+          "to": "reference.theta",
+          "core": 1.0,
+          "margin": 5.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "launch_speed",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the launch speed v0 labelled on the diagram, in metres per second. Read only the printed launch-speed number.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.v0",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "launch_angle_deg",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the launch angle labelled on the diagram, in degrees. Read only the printed angle number.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.theta",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "landing_mark_drawn",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is there a landing mark drawn where the parabolic flight path meets the horizontal metre ruler on the ground? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_extra_working",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Apart from the small number of required result / reference values, does this image show any WORKED-OUT arithmetic, intermediate calculation lines, a written formula, a move list, or an explanation of how the value was obtained? Answer 'yes' if any such working / formula / explanation is visible, 'no' if only the required values (and ordinary labels) appear. Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

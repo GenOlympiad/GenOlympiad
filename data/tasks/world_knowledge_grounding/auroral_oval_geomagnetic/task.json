@@ -1,0 +1,238 @@
+{
+  "id": "auroral_oval_geomagnetic",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A small tour company writes up a notice every evening so guests know whether to book the midnight coach. What is wanted is a photograph of tonight's board on its easel in the hotel lobby: a ruled table of four rows under four column headings, TOWN, LATITUDE, GEOMAGNETIC LATITUDE and TONIGHT, with a tick or a cross in the last column of every row.\n\nTonight's figures, which the company was given by the forecast service: the planetary index is Kp 5, and at Kp 5 the auroral oval reaches down to 56 degrees geomagnetic latitude. A town sees the aurora overhead only if its own geomagnetic latitude is 56 degrees or more.\n\nThe four towns on tonight's board, with the ordinary map latitude of each, which goes in the LATITUDE column as given: Tromso 69.6 north, Churchill 58.8 north, Yakutsk 62.0 north, Moscow 55.8 north.\n\nWhat belongs in the GEOMAGNETIC LATITUDE column, and which rows get a tick, are for you to supply -- I am deliberately not giving you a single geomagnetic figure, and geomagnetic latitude is not the same thing as the map latitude beside it. Do not put anything else on the board: no map, no note about which town is furthest north, no explanation.\n\nEvery row must be large and sharp enough to read, each figure in degrees to one decimal or as a whole number, and every tick or cross unmistakable.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a notice board carrying a ruled table with several rows of place names and figures? A photograph, a drawing or a document mockup all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "tick_seq": "churchill=tick|moscow=cross|tromso=tick|yakutsk=cross",
+    "geo_token": "allwithin",
+    "lat_seq": "churchill=58.8|moscow=55.8|tromso=69.6|yakutsk=62.0",
+    "agree_token": "agree",
+    "q_town": "Copy the town name printed at the left of the row in this cut-out.",
+    "q_geo": "Copy the figure printed in the GEOMAGNETIC LATITUDE column of the row in this cut-out. Write the number only.",
+    "q_lat": "Copy the figure printed in the LATITUDE column of the row in this cut-out. Write the number only.",
+    "q_tick": "In this cut-out, is the mark in the last column of the row a tick or a cross? Answer with one word: tick or cross."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_four_ticks_tonights_boundary_calls_for",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ruled row of the table on the notice board",
+          "out": "rw",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_town",
+          "boxes": "rw",
+          "pad": 0.3,
+          "out": "tq",
+          "sort": "reading_order",
+          "layout": "column"
+        },
+        {
+          "fail_if": ["tq.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_tick",
+          "boxes": "rw",
+          "pad": 0.3,
+          "out": "kq",
+          "sort": "reading_order",
+          "layout": "column"
+        },
+        {
+          "fail_if": ["kq.unreadable"]
+        },
+        {
+          "run": "join_rows",
+          "args": ["tq", "kq", "4"],
+          "out": "tk"
+        },
+        {
+          "fail_if": ["tk.unreadable"]
+        },
+        {
+          "compare": "tk.seq",
+          "to": "reference.tick_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_geomagnetic_latitude_of_each_town",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ruled row of the table on the notice board",
+          "out": "rw2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rw2.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_town",
+          "boxes": "rw2",
+          "pad": 0.3,
+          "out": "tq2",
+          "sort": "reading_order",
+          "layout": "column"
+        },
+        {
+          "fail_if": ["tq2.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_geo",
+          "boxes": "rw2",
+          "pad": 0.3,
+          "out": "gq",
+          "sort": "reading_order",
+          "layout": "column"
+        },
+        {
+          "fail_if": ["gq.unreadable"]
+        },
+        {
+          "run": "towns_off_band",
+          "args": ["tq2", "gq"],
+          "out": "gj"
+        },
+        {
+          "fail_if": ["gj.unreadable"]
+        },
+        {
+          "compare": "gj.token",
+          "to": "reference.geo_token",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_ticks_agree_with_the_figures_the_board_itself_prints",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ruled row of the table on the notice board",
+          "out": "rw3",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rw3.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_geo",
+          "boxes": "rw3",
+          "pad": 0.3,
+          "out": "gq2",
+          "sort": "reading_order",
+          "layout": "column"
+        },
+        {
+          "fail_if": ["gq2.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_tick",
+          "boxes": "rw3",
+          "pad": 0.3,
+          "out": "kq2",
+          "sort": "reading_order",
+          "layout": "column"
+        },
+        {
+          "fail_if": ["kq2.unreadable"]
+        },
+        {
+          "run": "marks_match_figures",
+          "args": ["gq2", "kq2", "56"],
+          "out": "ag"
+        },
+        {
+          "fail_if": ["ag.unreadable"]
+        },
+        {
+          "compare": "ag.token",
+          "to": "reference.agree_token",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_map_latitudes_the_company_was_given",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ruled row of the table on the notice board",
+          "out": "rw4",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rw4.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_town",
+          "boxes": "rw4",
+          "pad": 0.3,
+          "out": "tq3",
+          "sort": "reading_order",
+          "layout": "column"
+        },
+        {
+          "fail_if": ["tq3.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_lat",
+          "boxes": "rw4",
+          "pad": 0.3,
+          "out": "lq",
+          "sort": "reading_order",
+          "layout": "column"
+        },
+        {
+          "fail_if": ["lq.unreadable"]
+        },
+        {
+          "run": "join_rows",
+          "args": ["tq3", "lq", "4"],
+          "out": "lj"
+        },
+        {
+          "fail_if": ["lj.unreadable"]
+        },
+        {
+          "compare": "lj.seq",
+          "to": "reference.lat_seq",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

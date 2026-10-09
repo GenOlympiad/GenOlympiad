@@ -1,0 +1,183 @@
+{
+  "id": "nonstandard_die",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A clean, front-on studio photograph of a SINGLE large white cubic gaming die resting on a plain pale surface, tilted so that THREE faces are visible at once: the TOP face, the front-LEFT face, and the front-RIGHT face. Draw dark round pips (dots) on each visible face with EXACTLY these counts, arranged clearly and well spaced so each pip is easy to count:\n  - the TOP face shows exactly 2 pips;\n  - the front-LEFT face shows exactly 2 pips;\n  - the front-RIGHT face shows exactly 4 pips.\nUse these exact pip counts on those three faces even if they are not the counts an ordinary die would show. One die, three visible faces, large dark pips on light faces, sharp and well lit. Do NOT print any numbers, letters or text anywhere in the image; show the counts only as drawn pips.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a single large cubic gaming die shown in three-quarter view so three faces are visible? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "top": 2,
+    "left": 2,
+    "right": 4,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed NUMBER, digit or numeral written on it (for example a caption stating a count or a measurement)? Answer yes if you can see any printed number, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "top_pips",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the single large cubic gaming die standing on the pale surface",
+          "expected_n": 1,
+          "votes": 3,
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows one cubic gaming die resting on a pale surface, tilted so that three of its faces can be seen at once. Look at the die's TOP face -- the face that points up towards the ceiling. Write down every dark round dot drawn on that one face, each with a few plain words saying where on the face it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If that face carries no dot, write the single word NONE.",
+          "boxes": "fb",
+          "pad": 0.05,
+          "out": "fc"
+        },
+        {
+          "fail_if": ["fc.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["fc", "empty_as='0'"],
+          "out": "fc__std"
+        },
+        {
+          "fail_if": ["fc__std.refused"]
+        },
+        {
+          "run": "read_face_pips",
+          "args": ["fc__std"],
+          "out": "fp"
+        },
+        {
+          "run": "count_matches_reference",
+          "args": ["fp.n", "reference.top"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "left_pips",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the single large cubic gaming die standing on the pale surface",
+          "expected_n": 1,
+          "votes": 3,
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows one cubic gaming die resting on a pale surface, tilted so that three of its faces can be seen at once. Look at the die's front-LEFT face -- the face below the top one that turns towards the left side of the picture. Write down every dark round dot drawn on that one face, each with a few plain words saying where on the face it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If that face carries no dot, write the single word NONE.",
+          "boxes": "fb",
+          "pad": 0.05,
+          "out": "fc"
+        },
+        {
+          "fail_if": ["fc.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["fc", "empty_as='0'"],
+          "out": "fc__std"
+        },
+        {
+          "fail_if": ["fc__std.refused"]
+        },
+        {
+          "run": "read_face_pips",
+          "args": ["fc__std"],
+          "out": "fp"
+        },
+        {
+          "run": "count_matches_reference",
+          "args": ["fp.n", "reference.left"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "right_pips",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the single large cubic gaming die standing on the pale surface",
+          "expected_n": 1,
+          "votes": 3,
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows one cubic gaming die resting on a pale surface, tilted so that three of its faces can be seen at once. Look at the die's front-RIGHT face -- the face below the top one that turns towards the right side of the picture. Write down every dark round dot drawn on that one face, each with a few plain words saying where on the face it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If that face carries no dot, write the single word NONE.",
+          "boxes": "fb",
+          "pad": 0.05,
+          "out": "fc"
+        },
+        {
+          "fail_if": ["fc.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["fc", "empty_as='0'"],
+          "out": "fc__std"
+        },
+        {
+          "fail_if": ["fc__std.refused"]
+        },
+        {
+          "run": "read_face_pips",
+          "args": ["fc__std"],
+          "out": "fp"
+        },
+        {
+          "run": "count_matches_reference",
+          "args": ["fp.n", "reference.right"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

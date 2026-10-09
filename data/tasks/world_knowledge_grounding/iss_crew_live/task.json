@@ -1,0 +1,127 @@
+{
+  "id": "iss_crew_live",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A large digital CREW BOARD in the bright lobby of a space-agency visitor centre, a family reading it, showing who is currently living aboard the International Space Station. Show the actual crew aboard the ISS as of 2026-07-16 (the pinned status for this board). Design it as a clean status display: a header 'ISS CREW ABOARD', then in big clear numerals HOW MANY astronauts are currently on the station, and below it a numbered list of their NAMES. There are more people aboard than a single small capsule crew right now -- print the REAL current headcount and the REAL names of the astronauts currently aboard the ISS (not a generic 'crew of 3'). One big legible headcount number and a legible name list, no clutter.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a space-agency visitor-centre lobby crew board showing who is aboard the ISS right now? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "iss_crew_count": 9,
+    "iss_crew_surnames": [
+      "Kononenko",
+      "Chub",
+      "Dyson",
+      "Dominick",
+      "Barratt",
+      "Epps",
+      "Grebenkin",
+      "Wilmore",
+      "Williams"
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "crew_count",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big headcount number printed near the top of this crew board, above the numbered list of people -- draw ONE box on that one large number only, from its first digit to its last; it is the only number printed in big type, so do not box the small line numbers of the numbered list, do not box any person's name, and do not box the header words of the board.",
+          "expected_n": 1,
+          "out": "a_box"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit board. One big number is printed in it. Write down just that number, digits only, and nothing else.",
+          "boxes": "a_box",
+          "pad": 0.25,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare_band": "a",
+          "to": "reference.iss_crew_count",
+          "core": 0.5,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "crew_roster",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "printed name of one person on a numbered line of this crew board's list",
+          "sweep": true,
+          "out": "a_box",
+          "context": "the numbered list of people's names printed on the crew board"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit board, showing one line of a list of people. One person's name is printed in it. Copy just that person's family name -- the last name. If more than one person's name is visible in this cut-out, take the one nearest the middle of it. Write nothing else.",
+          "boxes": "a_box",
+          "pad": 0.15,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare_set": "a",
+          "to": "reference.iss_crew_surnames",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_extra": {
+    "restamp_flow": [
+      {
+        "fetch": "http://api.open-notify.org/astros.json",
+        "out": "astros"
+      },
+      {
+        "get": "$.number",
+        "value": "astros",
+        "out": "total_now"
+      }
+    ]
+  },
+  "grounding": "live"
+}

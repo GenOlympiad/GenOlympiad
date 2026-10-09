@@ -1,0 +1,147 @@
+{
+  "id": "earthwork_zero_line",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The grid plan of one site platform, ruled into twenty-metre squares, as an earthworks contractor's setting-out office issues it for measurement, carrying the boundary between the ground that has to be dug out and the ground that has to be built up.\n\nThe survey is pinned, figure for figure. The grid lines running across the site are lettered A, B and C from the south, the grid lines running up the site are numbered 1 to 4 from the west, and each of the twelve crossings is named by that pair. At every crossing the setting-out engineer has written the construction depth, which is the design level less the existing ground level in metres, so a positive figure is ground to be dug out and a negative figure is ground to be built up:\nA1 +0.9   A2 +0.4   A3 -0.3   A4 -1.1\nB1 +0.5   B2 +0.4   B3 -0.6   B4 -1.4\nC1 -0.2   C2 -0.5   C3 -1.0   C4 -1.8\nThe six squares of the grid carry numbers. Square 1 is the one bounded by grid lines A and B and by grid lines 1 and 2, squares 2 and 3 follow it eastwards along the same row, and squares 4, 5 and 6 run the same way along the row between grid lines B and C.\n\nWhat the office needs back is that plan with every crossing carrying its own name and its own figure, with each of the six squares carrying its number, and with one continuous boundary ruled right across the site between the dug-out ground and the built-up ground, the dug-out side hatched and the built-up side kept plain.\n\nWhere that boundary runs, you work out for yourself -- I am deliberately telling you neither which squares it goes through nor how far along any grid line it cuts. Keep the working off the plan: no proportions written along the grid lines, no volume table, and no note of how a crossing was arrived at.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a site plan ruled into a grid of squares with figures written at the grid crossings? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cut_points": "a1, a2, b1, b2",
+    "line_squares": "2, 4, 5",
+    "clean_no_working": "yes",
+    "flag_hatched": "hatched",
+    "flag_yes": "yes",
+    "q_point_ref": "This cut-out shows one crossing point with a grid reference written beside it. Copy that reference exactly as written. If more than one crossing point is visible in this cut-out, read the one nearest the middle of it. Write only the reference and nothing else.",
+    "q_point_side": "In this cut-out the boundary line may pass close to the crossing point. Which side is the crossing point itself standing on: the hatched side or the plain side? Answer with one word: hatched or plain.",
+    "q_square_num": "Copy the number printed inside the square in this cut-out. Write only the number.",
+    "q_square_line": "Does the boundary line run through the square in this cut-out? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_positive_crossing_lands_on_the_dug_out_side",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a grid crossing on the site plan with its name and its figure beside it",
+          "sweep": true,
+          "out": "pt_box"
+        },
+        {
+          "fail_if": ["pt_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_point_ref",
+          "boxes": "pt_box",
+          "pad": 0.3,
+          "out": "pt_ref"
+        },
+        {
+          "fail_if": ["pt_ref.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_point_side",
+          "boxes": "pt_box",
+          "pad": 0.3,
+          "out": "pt_side"
+        },
+        {
+          "fail_if": ["pt_side.unreadable"]
+        },
+        {
+          "run": "flagged_labels",
+          "args": ["pt_ref", "pt_side", "reference.flag_hatched"],
+          "out": "cut"
+        },
+        {
+          "compare_set": "cut.seq",
+          "to": "reference.cut_points",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_boundary_visits_only_the_squares_whose_corners_disagree",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered square of the grid on the earthworks plan",
+          "sweep": true,
+          "out": "sq_box"
+        },
+        {
+          "fail_if": ["sq_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_square_num",
+          "boxes": "sq_box",
+          "pad": 0.15,
+          "out": "sq_num"
+        },
+        {
+          "fail_if": ["sq_num.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_square_line",
+          "boxes": "sq_box",
+          "pad": 0.15,
+          "out": "sq_hit"
+        },
+        {
+          "fail_if": ["sq_hit.unreadable"]
+        },
+        {
+          "run": "flagged_labels",
+          "args": ["sq_num", "sq_hit", "reference.flag_yes"],
+          "out": "sq"
+        },
+        {
+          "compare_set": "sq.seq",
+          "to": "reference.line_squares",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_stands_on_the_plan",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written proportion, a volume table, or a note of how a crossing was arrived at, on the plan",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "work_sweep"
+        },
+        {
+          "fail_if": ["work_sweep.unreadable"]
+        },
+        {
+          "compare": "work_sweep.clean",
+          "to": "reference.clean_no_working",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "id": "multi_dial_consistency",
+  "axis": "quantitative_precision",
+  "prompt": "A sharp, evenly-lit straight-on macro PHOTOGRAPH of a VINTAGE AIRCRAFT COCKPIT instrument panel: a single horizontal ROW of 3 identical round brass-bezelled analog pointer GAUGES on a riveted metal panel. Each circular gauge face has a ring of ten graduation ticks numbered 0 through 9 clockwise from the top, a central hub, and ONE slender black pointer NEEDLE from the hub. Set each needle to point exactly at its stated graduation tick: the 1st (leftmost) gauge's needle to graduation 2, the 2nd gauge's needle to graduation 5, the 3rd gauge's needle to graduation 8. Every needle must be a clean straight pointer reaching almost to its tick. A genuine photograph: real brushed-metal and glass texture, natural cockpit light, soft shadow. Do NOT print any digits, readouts, labels, or measurement text anywhere on or beside the gauges -- the reading is carried ONLY by the needle directions.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a vintage aircraft cockpit instrument panel with a horizontal row of round analog pointer gauges, each brass-bezelled dial's needle set to a specific numbered graduation. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_dials": 3,
+    "digits_grid": [
+      [2],
+      [5],
+      [8]
+    ],
+    "d2_q_feature": "This image was supposed to depict: a vintage aircraft cockpit instrument panel with a horizontal row of round analog pointer gauges, each brass-bezelled dial's needle set to a specific numbered graduation. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This image should depict: a vintage aircraft cockpit instrument panel with a horizontal row of round analog pointer gauges, each brass-bezelled dial's needle set to a specific numbered graduation. Is the object / instrument / worksheet actually shown the KIND of thing described (the right carrier for the measurement), rather than a different object or a generic placeholder? Answer with the single word yes or no only.",
+    "d2_q_single": "This image should depict: a vintage aircraft cockpit instrument panel with a horizontal row of round analog pointer gauges, each brass-bezelled dial's needle set to a specific numbered graduation, and only that. Is the measured object / construction shown cleanly on its own, WITHOUT extra distracting objects, clutter, or duplicate copies that are not part of the described scene? Answer yes if only the intended subject is present, no if there is distracting clutter or extra objects. Answer with the single word yes or no only.",
+    "d2_q_precise": "Does this image look like a PRECISE, deliberately constructed measurement or technical drawing -- crisp straight lines, sharp marks, cleanly drawn scale divisions, the look of something laid out with instruments -- as opposed to a rough, wobbly, freehand or sketchy rendering where the geometry is clearly approximate? Answer yes if it looks precisely / deliberately constructed, no if it looks rough or freehand. Answer with the single word yes or no only.",
+    "d2_q_units": "This image should depict: a vintage aircraft cockpit instrument panel with a horizontal row of round analog pointer gauges, each brass-bezelled dial's needle set to a specific numbered graduation. Does it show a graduated measuring scale -- a numbered ruler, dial, vernier, gauge, or marked graduations with visible tick marks or numbers -- that a reading could be taken from, rather than the scale being missing or blank? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "dial_row_reading",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "round analog pointer gauge",
+          "context": "the instrument panel carrying the horizontal row of round gauges",
+          "expected_n": "reference.n_dials",
+          "out": "gb"
+        },
+        {
+          "fail_if": ["gb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of one round gauge. Around the edge of its face is a ring of ten tick marks, and one needle points out from the hub in the middle. Number the ticks like this: the tick at the very TOP of the face is 0, and the numbers go up CLOCKWISE from there -- 1, 2, 3 and so on run first down the RIGHT-HAND side of the face, then across the bottom, then up the LEFT-HAND side, ending at 9 just before the top again. Which one of those numbered ticks is the needle pointing at? Answer with a single digit from 0 to 9 and nothing else.",
+          "boxes": "gb",
+          "out": "cd"
+        },
+        {
+          "fail_if": ["cd.unreadable"]
+        },
+        {
+          "run": "read_dial_digits",
+          "args": ["gb", "cd", "reference"],
+          "out": "dg"
+        },
+        {
+          "compare_grid": "dg.grid",
+          "to": "reference.digits_grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "gate": true,
+      "not_scored": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "gate": true,
+      "not_scored": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_single_subject",
+      "weight": 0.6,
+      "gate": true,
+      "not_scored": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_single",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "gate": true,
+      "not_scored": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_units_ref",
+      "weight": 0.6,
+      "gate": true,
+      "not_scored": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_units",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

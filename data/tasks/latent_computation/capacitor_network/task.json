@@ -1,0 +1,207 @@
+{
+  "id": "capacitor_network",
+  "axis": "latent_computation",
+  "prompt": "A photorealistic straight-on electronics maker-bench photo: three capacitors are wired in a MIXED network -- capacitor C1 is IN SERIES with a PARALLEL pair made of C2 and C3 (that is, C2 and C3 are wired in parallel with each other, and that pair is then in series with C1) -- and a bench CAPACITANCE / LCR meter set to microfarads is clipped across the whole network, its LCD reading the TOTAL capacitance. Each capacitor has its value printed on its body: C1 = 4.7 uF, C2 = 10 uF, C3 = 22 uF. Work the two rules in order: capacitors in PARALLEL ADD (so the C2 C3 pair equals C2 plus C3), then that pair is in SERIES with C1, where series capacitance is found from one over the total equals one over C1 plus one over the parallel pair. Compute that total and show it on the meter's LCD in microfarads, as a clear number (two decimal places). Remember series and parallel capacitors combine by OPPOSITE rules; do NOT just add the three values. Crisp bench lighting, the three printed capacitor values and the meter's numeric readout all sharp and legible, no other numbers anywhere.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show mixed series-parallel capacitor network (C1 in series with C2 parallel C3) on an electronics maker bench measured by a bench LCR / capacitance meter, straight-on? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "C1": 4.7,
+    "C2": 10.0,
+    "C3": 22.0,
+    "total": 4.0981,
+    "display": 4.1,
+    "decoy_sum": 36.7,
+    "q_val": "This is a bench LCR / capacitance meter measuring three capacitors wired together. Read the single capacitance value shown on the meter's LCD, in microfarads. Answer with the number only (as digits, no unit).",
+    "q_c1": "Three capacitors are on the board, each with its capacitance printed on its body in microfarads (uF). Read the printed uF value of the capacitor labelled C1. Answer with the number only.",
+    "q_form": "Does this image show a meter with a numeric display together with a group of capacitors (a capacitance measurement)? A diagram, illustration or photo all count. Answer yes or no.",
+    "n_caps": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fm"
+        },
+        {
+          "fail_if": ["fm.unreadable"]
+        },
+        {
+          "compare": "fm",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "meter_total",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read_number": "reference.q_val",
+          "out": "mv"
+        },
+        {
+          "fail_if": ["mv.unreadable"]
+        },
+        {
+          "compare_band": "mv",
+          "to": "reference.display",
+          "core": 0.15,
+          "margin": 1.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "c1_printed",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read_number": "reference.q_c1",
+          "out": "c1v"
+        },
+        {
+          "fail_if": ["c1v.unreadable"]
+        },
+        {
+          "compare_band": "c1v",
+          "to": "reference.C1",
+          "core": 0.2,
+          "margin": 2.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_c1",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the capacitance value printed on the body of capacitor C1 (in microfarads). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.C1",
+          "core_abs": 0.499,
+          "margin_abs": 0.1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_c2",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the capacitance value printed on the body of capacitor C2 (in microfarads). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.C2",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_c3",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the capacitance value printed on the body of capacitor C3 (in microfarads). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.C3",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_caps",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "How many separate capacitors (components each with a printed uF value) are wired in the network? Whole number only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.n_caps",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_decoy_sum",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does the meter's LCD readout show the value 36.7 (the simple sum of the three capacitor values)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

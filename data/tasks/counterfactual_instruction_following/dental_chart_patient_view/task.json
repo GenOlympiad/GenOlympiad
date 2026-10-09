@@ -1,0 +1,84 @@
+{
+  "id": "dental_chart_patient_view",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The practice has to get the treatment plan away to the insurer this evening, so the chairside screen is photographed as the nurse left it, with the convention card taped beside the display.\n\nThe chairside screen shows this practice's tooth chart: two rows of tooth positions, upper and lower, split down the middle line into a left block and a right block, with a quadrant figure printed beside each block. One tooth on the chart has been marked for treatment. The convention card taped to the screen bezel states the two rules this new system works to: the chart is drawn as the patient sees it, so the patient's own right side is shown on the right of the screen; and the quadrant figures run from one at the top left of the screen, clockwise. The referral note on the desk asks for root treatment on the patient's lower right first molar.\n\nWhich block on the chart carries the mark is what the note does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a chairside screen carrying a tooth chart with a convention card taped beside the display? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "right_hand_side"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the quadrant figure printed beside the block that carries the marked tooth. Write the number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Say which side of the screen the marked tooth sits on. Answer with one of: the marked tooth sits on the right-hand side of the screen; the marked tooth sits on the left-hand side of the screen; the marked tooth sits on the middle line itself.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

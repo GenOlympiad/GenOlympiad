@@ -1,0 +1,112 @@
+{
+  "id": "the_bars_carry_the_figure_in_their_width_not_their_height",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A page proof for tomorrow's transport page, pulled on the subeditor's desk at a regional daily and photographed square on under the desk lamp. Halfway down the column sits one of the paper's house-style bar charts: four upright bars side by side on a single baseline, with the pinned style slip that governs it lying beside the proof. The house rule this chart is set to is this: a bar's figure is carried by how far the bar reaches across the column, while every bar is cut to the depth of one line of body text whatever figure it carries. Under the bars, one to a bar, set exactly these four labels and figures: BUS 12, TRAM 27, RAIL 33, CAR 48. Body text runs above and below the chart, with the section headline at the head of the column. Make it read as a genuine inked proof on newsprint, register marks and a subeditor's pencil in shot.",
+  "difficulty": "pA",
+  "easy_question": "Does this picture show a printed page carrying a bar chart, with upright bars standing side by side and a label and a number printed under the bars? Answer yes or no only.",
+  "reference": {
+    "part1": "all_level",
+    "part2": "the_widest"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the four bars in the chart. Compare how far each one stands up from the baseline. Answer with one of: they all stand up the same amount; they stand up by different amounts; three stand up the same amount and one does not; no bars are drawn on the chart.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "One of the four figures printed under the bars is 48. Look at the bar standing directly above the figure 48. Compared with the other three bars, how far does it reach across? Answer with one of: the widest, the narrowest, in between, all four bars are the same width.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "run": "expected_width_rank",
+          "args": ["reference.premises"],
+          "out": "want_part2"
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "want_part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "const": {
+        "program": "map_code"
+      },
+      "out": "map_code"
+    },
+    {
+      "const": {
+        "width_carries_the_figure": "the figure a bar carries is shown by how far it reaches across the measure, not by its depth",
+        "every_bar_one_line_deep": "every bar is cut to the depth of one line of body text, all four standing on one baseline",
+        "printed_figures": "12, 27, 33, 48 printed one under each bar; 48 is the largest of the four",
+        "one_baseline": "the four bars stand side by side on a single baseline"
+      },
+      "out": "premises"
+    },
+    {
+      "const": {
+        "program": "derive_code"
+      },
+      "out": "derive_code"
+    }
+  ]
+}

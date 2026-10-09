@@ -1,0 +1,183 @@
+{
+  "id": "dr_plot_current_vector",
+  "axis": "long_range_consistency",
+  "prompt": "Out on the bridge wing the second mate has finished the forenoon watch, and the chart has to show the watch's work before the master comes up to look at it.\n\nThe picture is one corner of the working chart, drawn with north to the top of the sheet, ruled all over in squares of one nautical mile, with the passage leg drawn on it as a single straight track line. The chart is what a mate would hand over: pencil work on printed paper, nothing tidied away.\n\nWhat the watch has to work from, all of it given:\n\n  - the leg runs 045 true out of waypoint WP12, and the whole watch is on that one leg;\n  - the ship makes good 6.0 knots through the water on that course;\n  - the watch is worked hourly from 0800 to 1300, so there are six hours in all;\n  - the tidal atlas gives one stream over the whole of this leg for the whole of this watch: it sets 315 true and runs at 2.0 knots, and it does not change;\n  - the chart's squares are one nautical mile on a side.\n\nEvery hour carries two marks and one line. The reckoned position for that hour is a small cross, the position observed at that same hour is a small circle, and a short straight line joins the cross to the circle. The hour itself is lettered beside its own pair in four figures, 0800 through to 1300, so that the pairs cannot be confused with one another.\n\nWhere each observed position falls is the watch's work and I am deliberately not telling you: neither the direction of any of those six short lines nor how far it reaches. Apart from the six four-figure times, nothing else is written on the chart: no note of the stream, no arrow labelled with a bearing, no figures in knots or in miles. Keep the six pairs well apart along the track and draw each cross, circle and joining line large enough to be made out one from another.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a marine chart with a straight track line drawn across it and small pencil marks along that line? A chart, a chartlet or a photograph of one all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "hours": ["0800", "0900", "1000", "1100", "1200", "1300"],
+    "stream_set": 315,
+    "drift_miles": 2.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_hours_line_runs_the_way_the_stream_sets_and_none_of_them_wanders",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the hourly plots pencilled along the track line on the chart",
+          "out": "dr_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["dr_r.unreadable"]
+        },
+        {
+          "read_crop": "What four-figure time is lettered beside the plot in this cut-out? Answer with those figures only.",
+          "boxes": "dr_r",
+          "pad": 0.5,
+          "out": "dr_tm",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["dr_tm.unreadable"]
+        },
+        {
+          "read_crop": "Taking the top of the picture as up, which way does the short straight line in this cut-out run, going from the small cross to the small circle? Answer with one of these eight words: up, up and right, right, down and right, down, down and left, left, up and left.",
+          "boxes": "dr_r",
+          "pad": 0.8,
+          "out": "dr_dn",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["dr_dn.unreadable"]
+        },
+        {
+          "run": "check_drift_bearings",
+          "args": ["dr_tm", "dr_dn", "reference.hours", "reference.stream_set"],
+          "out": "dr_s"
+        },
+        {
+          "compare_compass": "dr_s.obs",
+          "to": "dr_s.exp",
+          "core": 22.5,
+          "margin": 67.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_hours_line_reaches_the_distance_one_hour_of_that_stream_carries_her",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the hourly plots pencilled along the track line on the chart",
+          "out": "sp_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sp_r.unreadable"]
+        },
+        {
+          "read_crop": "What four-figure time is lettered beside the plot in this cut-out? Answer with those figures only.",
+          "boxes": "sp_r",
+          "pad": 0.5,
+          "out": "sp_tm",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sp_tm.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how many of the chart's ruled squares does the short straight line between the small cross and the small circle span? Answer with a whole number.",
+          "boxes": "sp_r",
+          "pad": 0.8,
+          "out": "sp_ln",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sp_ln.unreadable"]
+        },
+        {
+          "run": "check_drift_spans",
+          "args": ["sp_tm", "sp_ln", "reference.hours", "reference.drift_miles"],
+          "out": "sp_s"
+        },
+        {
+          "compare_tolerance": "sp_s.obs",
+          "to": "sp_s.exp",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_six_pairs_carry_the_six_hours_of_the_watch",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the hourly plots pencilled along the track line on the chart",
+          "out": "hr_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["hr_r.unreadable"]
+        },
+        {
+          "read_crop": "What four-figure time is lettered beside the plot in this cut-out? Answer with those figures only.",
+          "boxes": "hr_r",
+          "pad": 0.5,
+          "out": "hr_tm",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["hr_tm.unreadable"]
+        },
+        {
+          "run": "read_hour_labels",
+          "args": ["hr_tm"],
+          "out": "hr_s"
+        },
+        {
+          "compare_set": "hr_s.obs",
+          "to": "reference.hours",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_note_was_written_on_the_chart_outside_the_hourly_times",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written note added on the chart outside the four-figure hourly times",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "wn_r"
+        },
+        {
+          "fail_if": ["wn_r.unreadable"]
+        },
+        {
+          "compare": "wn_r.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

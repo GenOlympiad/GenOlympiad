@@ -1,0 +1,84 @@
+{
+  "id": "telltale_intact_but_crack_grew",
+  "axis": "physical_consistency",
+  "prompt": "The opinion cannot be signed until this visit is photographed close up, so the surveyor holds the comparator beside the crack and takes one frame.\n\nA diagonal crack runs across an old brick wall. A thin glass strip is cemented to the brickwork on both sides of it, bridging the crack, and the date it was fitted is written along the glass with the width the crack measured that day, one point two millimetres. A printed plastic comparator card is held flat against the wall beside it, carrying a column of slots of graded width, each with its width printed alongside. The file note the surveyor is working from says two things and no more: the wall has gone on moving since the day the strip was cemented on, and glass cemented at both ends cannot follow brickwork that moves under it.\n\nWhat the strip looks like now, and which slot on the card the crack matches, is the whole of the visit and the note does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a cracked brick wall with a thin strip fixed across the crack and a printed card held against the wall beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "strip_snapped",
+    "part2": "wider_than_written"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the glass strip cemented across the crack. Answer with one of: the strip is snapped right through; the strip runs whole and unbroken from one end to the other.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the width printed beside the slot on the comparator card that the crack matches, then read the width written along the glass strip. Answer with one of: the crack now matches a wider slot than the width written on the strip; the crack now matches the same width as the one written on the strip; the crack now matches a narrower slot than the width written on the strip.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

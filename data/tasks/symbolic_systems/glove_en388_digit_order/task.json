@@ -1,0 +1,84 @@
+{
+  "id": "glove_en388_digit_order",
+  "axis": "symbolic_systems",
+  "prompt": "The batch cannot go to the buyer until the marking on the glove has been checked against the type-test report, so the sample is laid out under the bench lamp.\n\nA cut-resistant glove lies back uppermost on the sample table, the shield mark and its row of figures on the back of the hand. The type-test report is spread out flat beside it and lists its results in the laboratory's own running order: tear 44 newtons, puncture 118 newtons, abrasion 6200 cycles, blade cut index 3.4. The marking rule sets the places under the shield in a different order, abrasion, blade cut, tear, puncture. The banding tables are alongside: abrasion steps at 100, 500, 2000 and 8000 cycles; blade cut at 1.2, 2.5, 5.0 and 10.0; tear at 10, 25, 50 and 75 newtons; puncture at 20, 60, 100 and 150 newtons, each step passed lifting the mark by a place.\n\nWhat the row of figures under the shield has to read is what the report does not print.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a protective glove lying back uppermost on a sample table with a shield mark on the back of the hand and a printed test report spread out beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "first_place_three",
+    "part2": "third_place_two"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the row of figures stamped under the shield mark on the back of the glove and read the figure standing in the first place. Answer with one of: the first place holds 3; the first place holds 2; the first place holds 4.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the same row of figures under the shield mark and read the figure standing in the third place, counting from the left. Answer with one of: the third place holds 2; the third place holds 3; the third place holds 4.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "id": "studentid_mod11_register",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed university ENROLMENT register titled 'HARBOUR POLYTECHNIC' (Matriculation List -- ID Verification). It lists 42 students numbered 1..42, each with a STUDENT ID printed as 'HP-DDDDDD-C': a two-letter prefix, then six body digits, then a single CHECK character. CRITICAL rule: the check character is a mod-11 check over the six body digits with positional weights 7,6,5,4,3,2 -- multiply the six digits by 7,6,5,4,3,2 respectively, sum them, take the sum modulo 11, and the check is (11 minus that remainder) modulo 11, printed as the digit 0-9, or as the letter X when that value is 10. Every printed ID must carry the correct check character. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a university enrolment register listing students and their student ID codes. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 42,
+    "q_body0": "On row 8 of the register, read the STUDENT ID. What are the six BODY digits (the six digits between the two-letter prefix and the final check character)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the six digits.",
+    "q_chk0": "On row 8 of the register, read the STUDENT ID. What is the final CHECK character (the single character after the last dash)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just that one character (a digit or the letter X).",
+    "q_body1": "On row 32 of the register, read the STUDENT ID. What are the six BODY digits? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the six digits.",
+    "q_chk1": "On row 32 of the register, read the STUDENT ID. What is the final CHECK character (after the last dash)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just that one character (a digit or the letter X).",
+    "q_count": "Count how many student rows are listed in this register. Whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "studentid_mod11_register_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_body0",
+          "out": "body0"
+        },
+        {
+          "fail_if": ["body0.unreadable"]
+        },
+        {
+          "ask": "reference.q_chk0",
+          "out": "chk0"
+        },
+        {
+          "fail_if": ["chk0.unreadable"]
+        },
+        {
+          "ask": "reference.q_body1",
+          "out": "body1"
+        },
+        {
+          "fail_if": ["body1.unreadable"]
+        },
+        {
+          "ask": "reference.q_chk1",
+          "out": "chk1"
+        },
+        {
+          "fail_if": ["chk1.unreadable"]
+        },
+        {
+          "run": "check_digits_match",
+          "args": ["body0", "chk0", "body1", "chk1"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one student line printed in the register table, below the bold heading line",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one complete printed data line of the table, not the bold heading line and not blank paper? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 2.9,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

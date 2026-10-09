@@ -1,0 +1,84 @@
+{
+  "id": "a_repeated_letter_flies_a_substitute",
+  "axis": "symbolic_systems",
+  "prompt": "A harbour signal station's hoist sheet for the forenoon watch. The call sign that has to be flown from the mast head is M O M O, one flag to each letter, read from the head of the hoist downwards. The station keeps only one flag of each letter in its locker, so its standing orders say that where a letter comes round again in the same hoist a repeater is bent on in its place, and which repeater it is depends on how far down the hoist the letter it stands for was first flown. The mast stands on the quay against open sky and the whole hoist, head to foot, has to be in the frame. Show the mast as the signalman leaves it once the hoist is closed up.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a dockside signal mast against open sky with one vertical hoist of code flags, the whole hoist in frame head to foot? Answer yes or no.",
+  "reference": {
+    "part1_count": 2,
+    "part2_shape": "pennant"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1_count",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "How many of the flags on this mast are oblong in shape with straight edges all round? Answer with a number.",
+          "out": "a_part1_count"
+        },
+        {
+          "fail_if": ["a_part1_count.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1_count"],
+          "out": "s_part1_count"
+        },
+        {
+          "fail_if": ["s_part1_count.refused"]
+        },
+        {
+          "compare": "s_part1_count.state",
+          "to": "reference.part1_count",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2_shape",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Say in a few plain words what shape the flag at the foot of the hoist is.",
+          "out": "a_part2_shape"
+        },
+        {
+          "fail_if": ["a_part2_shape.unreadable"]
+        },
+        {
+          "run": "match_listed_state",
+          "args": ["a_part2_shape", "T_PART2"],
+          "out": "s_part2_shape"
+        },
+        {
+          "fail_if": ["s_part2_shape.refused"]
+        },
+        {
+          "compare": "s_part2_shape.state",
+          "to": "reference.part2_shape",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

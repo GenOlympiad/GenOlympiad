@@ -1,0 +1,85 @@
+{
+  "id": "flag_aspect_ratio",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A clean product photo of a single DESK FLAG of Switzerland on a small polished pole and base, cloth hanging flat and fully spread so its shape is clear. Use the country's OFFICIAL flag PROPORTIONS: the Switzerland flag is a perfect SQUARE (1:1) -- draw the cloth at that width-to-height shape, not the usual 3:2 landscape rectangle. Colours and emblem correct for Switzerland. Do NOT default to a 3:2 rectangle; the cloth's shape must match the official proportion. No text or measurements printed on the image.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a desk flag product photo of a single national flag on a small pole? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cls": "square",
+    "q_w": "This is a photo of a single desk flag (a rectangular cloth flag on a small pole). Ignore the pole and base. Looking only at the rectangular flag CLOTH, estimate its WIDTH (the horizontal side, from the pole edge to the free edge). Answer with just a number in arbitrary units.",
+    "q_h": "This is a photo of a single desk flag. Ignore the pole and base. Looking only at the rectangular flag CLOTH, estimate its HEIGHT (the vertical side, top to bottom). Answer with just a number in the SAME arbitrary units you would use for its width."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "flag_aspect",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_w",
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "ask": "reference.q_h",
+          "out": "rh"
+        },
+        {
+          "fail_if": ["rh.unreadable"]
+        },
+        {
+          "run": "aspect_class",
+          "args": ["rw", "rh", "reference.cls"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "flag_aspect_confirm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_w",
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "ask": "reference.q_h",
+          "out": "rh"
+        },
+        {
+          "fail_if": ["rh.unreadable"]
+        },
+        {
+          "run": "aspect_class",
+          "args": ["rw", "rh", "reference.cls"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "source": "Flag proportions: the flag of Switzerland is 1:1 (square) and the flag of Qatar is 11:28.",
+  "grounding": "static"
+}

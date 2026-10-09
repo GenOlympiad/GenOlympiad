@@ -1,0 +1,234 @@
+{
+  "id": "space_euler_all_even",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Draw a clean flat-vector schematic of a campus fibre-optic network on a white sheet, where each dot is a cabinet and each line is a duct run between two cabinets.\n\nRules you must follow exactly:\n- Draw exactly 12 dots. Every dot is a SOLID FILLED circle, clearly fatter than the lines (about five times the line thickness).\n- Join dots only with straight lines. EVERY dot must have an EVEN number of lines meeting it -- 2, 4 or 6 lines, never 1, 3 or 5.\n- At least 4 of the dots must be busy junctions with 4 or more lines meeting them.\n- Scatter the dots IRREGULARLY. Do NOT arrange them symmetrically: no mirror symmetry, no rosette / mandala / star pattern, no ring of evenly spaced dots, no regular grid.\n- Keep it readable: a line must never pass close to a dot it does not end at, two lines meeting at the same dot must leave it in clearly different directions (a wide angle apart), and no line may loop back to the dot it started from.\n- Draw it on a PLAIN, evenly coloured background -- no wood grain, no photographic texture, no gradient or shading behind the drawing -- and keep the lines and the dots in one strong colour that clearly contrasts with that background.\n- Nothing else in the picture: no text, no numbers, no labels, no arrows, no legend, no compass rose, no border decoration.\n\nCount the lines at each dot as you draw, and adjust the drawing until EVERY single dot really does have an even number of lines meeting it.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a NETWORK DRAWING: several solid round dots joined to each other by lines (the requested subject was: a flat-vector fibre-optic network schematic: solid dots joined by straight duct lines). Ignoring artistic quality and styling, does the image actually show such a dots-and-lines network? Answer NO only if it shows something else entirely -- a blank panel, printed text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "n_nodes": 12,
+    "sym_max": 0.35,
+    "vlm_leaves": true,
+    "enforce_notext": true,
+    "q_notext": "Is there any printed word or number anywhere in this picture? Answer yes or no only.",
+    "target_odd": 0,
+    "min_deg4": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.8,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "odd_vertex_count",
+      "weight": 6.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "solid round dot that lines run to -- a filled disc clearly fatter than the lines, with straight lines ending at it. Box each dot separately, one box per dot, and count a rectangle only if one whole solid dot is inside it; do not box a place where two lines merely CROSS with no fattened disc, do not box a bare line end or a bend, and do not box a stretch of plain line or background.",
+          "retries": 4,
+          "out": "nd",
+          "sweep": true
+        },
+        {
+          "fail_if": ["nd.unreadable"]
+        },
+        {
+          "read_crop": "This close-up is centred on one solid round dot in a drawing where dots are joined by straight lines. Write down every straight line that touches that centre dot, each with a few plain words saying which way it leaves the dot. Write each straight line once. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no solid round dot at the centre of this close-up, write the single word NONE. If there is a centre dot but no straight line touches it, write the single word ZERO.",
+          "boxes": "nd",
+          "pad": 1.5,
+          "out": "dg"
+        },
+        {
+          "fail_if": ["dg.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["dg", "empty_as='none'"],
+          "out": "dg__std"
+        },
+        {
+          "fail_if": ["dg__std.refused"]
+        },
+        {
+          "run": "node_degrees",
+          "args": ["nd", "dg__std"],
+          "out": "net"
+        },
+        {
+          "fail_if": ["net.degenerate"]
+        },
+        {
+          "compare_band": "net.n_odd",
+          "to": "reference.target_odd",
+          "core_abs": 0.5,
+          "margin_abs": 1.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "junction_richness",
+      "weight": 0.7,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "solid round dot that lines run to -- a filled disc clearly fatter than the lines, with straight lines ending at it. Box each dot separately, one box per dot, and count a rectangle only if one whole solid dot is inside it; do not box a place where two lines merely CROSS with no fattened disc, do not box a bare line end or a bend, and do not box a stretch of plain line or background.",
+          "retries": 4,
+          "out": "nd",
+          "sweep": true
+        },
+        {
+          "fail_if": ["nd.unreadable"]
+        },
+        {
+          "read_crop": "This close-up is centred on one solid round dot in a drawing where dots are joined by straight lines. Write down every straight line that touches that centre dot, each with a few plain words saying which way it leaves the dot. Write each straight line once. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no solid round dot at the centre of this close-up, write the single word NONE. If there is a centre dot but no straight line touches it, write the single word ZERO.",
+          "boxes": "nd",
+          "pad": 1.5,
+          "out": "dg"
+        },
+        {
+          "fail_if": ["dg.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["dg", "empty_as='none'"],
+          "out": "dg__std"
+        },
+        {
+          "fail_if": ["dg__std.refused"]
+        },
+        {
+          "run": "node_degrees",
+          "args": ["nd", "dg__std"],
+          "out": "net"
+        },
+        {
+          "fail_if": ["net.degenerate"]
+        },
+        {
+          "compare_band": "net.n_deg4plus",
+          "to": "reference.min_deg4",
+          "core_abs": 0.0,
+          "margin_abs": 2.0,
+          "clamp_floor": 0.0,
+          "out": "raw"
+        },
+        {
+          "run": "full_or_raw_score",
+          "args": ["net.n_deg4plus", "reference.min_deg4", "raw"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "layout_irregular",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Look at where the dots sit on the page. Are the dots laid out in a regular or symmetric pattern -- evenly spaced around a circle, a star or flower shape, a neat grid, or the left half mirroring the right half? Answer yes if the layout is regular or symmetric, and no if the dots are scattered irregularly. Answer yes or no only.",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "a",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "node_count",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "solid round dot that lines run to -- a filled disc clearly fatter than the lines, with straight lines ending at it. Box each dot separately, one box per dot, and count a rectangle only if one whole solid dot is inside it; do not box a place where two lines merely CROSS with no fattened disc, do not box a bare line end or a bend, and do not box a stretch of plain line or background.",
+          "retries": 4,
+          "out": "nd",
+          "sweep": true
+        },
+        {
+          "fail_if": ["nd.unreadable"]
+        },
+        {
+          "read_crop": "This close-up is centred on one solid round dot in a drawing where dots are joined by straight lines. Write down every straight line that touches that centre dot, each with a few plain words saying which way it leaves the dot. Write each straight line once. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no solid round dot at the centre of this close-up, write the single word NONE. If there is a centre dot but no straight line touches it, write the single word ZERO.",
+          "boxes": "nd",
+          "pad": 1.5,
+          "out": "dg"
+        },
+        {
+          "fail_if": ["dg.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["dg", "empty_as='none'"],
+          "out": "dg__std"
+        },
+        {
+          "fail_if": ["dg__std.refused"]
+        },
+        {
+          "run": "node_degrees",
+          "args": ["nd", "dg__std"],
+          "out": "net"
+        },
+        {
+          "fail_if": ["net.degenerate"]
+        },
+        {
+          "compare_band": "net.n_markers",
+          "to": "reference.n_nodes",
+          "core_abs": 0.499,
+          "margin_abs": 2.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

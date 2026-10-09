@@ -1,0 +1,84 @@
+{
+  "id": "the_flitch_cups_away_from_its_own_rings",
+  "axis": "physical_consistency",
+  "prompt": "The furniture buyer is coming to look over the parcel, so the grader photographs the rack with all five boards stood the same way and the record card hooked in the same frame.\n\nFive boards cut from one log stand on end on the grading rack with their sawn ends towards the camera. The ends are fresh and clean, so the arcs of the growth rings run plainly across each one. Every board face carries its grade number painted large: 37, 41, 45, 52 and 58, left to right. The boards were cut at different distances out from the middle of the log, so no two of them have their ring arcs sitting the same way. The drying record card hooked to the rail gives the kiln run and a moisture content of 8 per cent, and says the parcel came out of the kiln this morning.\n\nHow each board has come out of the kiln is what the record card does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show five sawn boards stood on end on a rack with their end grain towards the camera and a record card beside them? Answer yes or no only.",
+  "reference": {
+    "part1": "boards_bow_differently",
+    "part2": "hollow_towards_the_bulge"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look along the five boards and say how they bow across their faces. Answer with one of: the boards bow towards different sides from one another; all five boards bow towards the same side; all five boards lie dead flat across their faces.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the board painted 41, at its end grain and at its face. Answer with one of: the hollow face of that board is the one its end arcs bulge towards; the hollow face of that board is the one its end arcs bulge away from; that board has no hollow face, being dead flat across.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

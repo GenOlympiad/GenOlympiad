@@ -1,0 +1,85 @@
+{
+  "id": "periapical_foreshortening",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The radiology technician has to decide whether any of these three exposures goes back for a retake, so the viewing box is photographed with the whole set up and the labels showing.\n\nThe three films are of the same upper front tooth on the same patient, shot one after another, and they hang left to right in the order they were taken. A printed label under each film gives the vertical tilt the tube head was set to for that film: 30 under the left film, 45 under the middle one, 55 under the right one. The technique chart hanging at the edge of the box gives the rule the department works to: the tube is aimed square to the line that divides the corner between tooth and film into two equal parts, and for this tooth on this patient that dividing line sits at 45.\n\nHow the tooth comes out on each of the three films is what the labels do not give.",
+  "difficulty": "s1",
+  "easy_question": "Is this a row of small dental X-ray films clipped on a lit viewing box in a dark room, with a paper label under each film? Answer yes or no only.",
+  "reference": {
+    "part1": "squashed_right_stretched_left",
+    "part2": "no_two_alike",
+    "vocab": ["30", "45", "55"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the tooth on each of the three films in turn. Answer with one of: the tooth looks squashed on the right-hand film and stretched on the left-hand one; the tooth looks squashed on the left-hand film and stretched on the right-hand one; the tooth looks the same on all three films.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the printed label under each of the three films from left to right and write the three numbers.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "neighbours_alike",
+          "args": ["a_part2", "reference.vocab"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

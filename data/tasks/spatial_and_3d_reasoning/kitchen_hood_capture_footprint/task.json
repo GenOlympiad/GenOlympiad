@@ -1,0 +1,181 @@
+{
+  "id": "kitchen_hood_capture_footprint",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Handover on the hot line is booked for Thursday and the kitchen fitter takes one frame of the finished run for the file, because the extract canopy is the item the environmental health officer looks at first.\n\nThree stainless appliances stand in a row against the back wall of the hot section, each with its equipment number stencilled on the front rail: E1 a six-burner range, E2 a griddle, E3 a fryer. The fryer is a deeper machine than the other two, so its front edge stands proud of theirs by a hand's width. Above the run is one continuous stainless canopy with baffle filters in its face. The camera is out in the floor space looking back at the run, high enough that the front edge of the canopy and the front edge of every appliance are both in view.\n\nAn extract canopy is sized from what stands under it, not from the wall it hangs off: its vertical projection has to cover the top of every appliance in the run and reach out past the working face of the deepest of them, while at the back it sits flush against the wall so that nothing escapes behind. A canopy drawn to the depth of the shallow machines leaves the deep one's working face outside the capture area, which is the failure the officer is looking for.\n\nWhere the canopy edge falls against each machine is the whole point of the frame, and I am deliberately not telling you. Nothing is drawn over the picture: no dimensions, no model numbers, no annotation on the stainless. Keep the front edge of the canopy and the front edge of all three appliances easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a row of stainless commercial kitchen appliances against a wall with an extract canopy above them? A photograph, an illustration or a printed panel all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "units": ["E1", "E2", "E3"],
+    "front_want": "in front of",
+    "back_want": "flush against the wall",
+    "ends_want": "yes",
+    "n_checks": 5,
+    "n_units": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_canopy_reaches_past_the_working_face_of_every_machine_and_shuts_off_at_the_wall",
+      "weight": 3.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one stencilled appliance in the row with the canopy above it",
+          "out": "kh_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["kh_r.unreadable"]
+        },
+        {
+          "read_crop": "What equipment number is stencilled on the front rail of the appliance in this cut-out? Answer with that number only.",
+          "boxes": "kh_r",
+          "pad": 0.2,
+          "out": "kh_k",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["kh_k.unreadable"]
+        },
+        {
+          "read_crop": "Where does the front edge of the canopy fall against the front edge of this appliance? Answer with one of: in front of, level with, behind.",
+          "boxes": "kh_r",
+          "pad": 0.2,
+          "out": "kh_f",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["kh_f.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the extract canopy hanging over the row",
+          "out": "kc_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["kc_r.unreadable"]
+        },
+        {
+          "read_crop": "Does the back edge of this canopy sit flush against the wall or stand away from it? Answer with one of: flush against the wall, standing away from the wall.",
+          "boxes": "kc_r",
+          "pad": 0.2,
+          "out": "kc_b",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["kc_b.unreadable"]
+        },
+        {
+          "read_crop": "Does this canopy reach out past both ends of the row of appliances beneath it? Answer yes or no only.",
+          "boxes": "kc_r",
+          "pad": 0.2,
+          "out": "kc_e",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["kc_e.unreadable"]
+        },
+        {
+          "run": "hood_cover_checks",
+          "args": [
+            "kh_k",
+            "kh_f",
+            "kc_b",
+            "kc_e",
+            "reference.units",
+            "reference.front_want",
+            "reference.back_want",
+            "reference.ends_want"
+          ],
+          "out": "bs"
+        },
+        {
+          "compare_band": "bs.n",
+          "to": "reference.n_checks",
+          "core_abs": 0.499,
+          "margin_abs": 2.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_run_carries_its_three_stencilled_appliances",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one stencilled appliance in the row with the canopy above it",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole appliance with its stencilled equipment number and the canopy above it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.2,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_dimension_model_number_or_annotation_was_added_over_the_stainless",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a dimension, a model number or an annotation added over the stainless",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "id": "bench_ww_not_wv_label",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of the make-up bench at a testing laboratory: the reagent bottle with its hand-written label standing beside the graduated cylinder the solvent has been measured into, both square to the camera. The label and the cylinder must be readable in the one picture.\n\nThe rule on this bench is that every percentage strength is a mass fraction -- so many grams of solute in so many grams of finished solution -- and never a volume fraction. Today's batch is 400 g of a 20 per cent solution, made up with a solvent of density 0.80 g/mL.\n\nThe label carries three fields, one to a line, headed SOLUTE, SOLVENT and VOLUME MEASURED, and each field takes its quantity with the unit written after the figure. The cylinder standing beside the bottle holds 500 mL, is graduated and figured at 100, 200, 300, 400 and 500, and the solvent in it stands at the graduation for the volume the label says was measured out.\n\nThe batch goes out under this label, so the label and the glassware have to say one thing. Work out for yourself what each field takes and which graduation the liquid stands at -- I am deliberately not telling you any of the figures and I am not telling you which unit belongs where. A strength made up by volume on a bench that works by mass throws away the whole run of tests.\n\nEvery heading, figure, unit and graduation must be large and sharp. Nothing may appear on the label or the cylinder beyond the three fields and the graduation figures: no working, no notes, no arrows.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a bottle carrying a written label with headed lines on it, standing beside a tall graduated measuring cylinder with liquid in it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "units": "solute:grams solvent:grams volumemeasured:millilitres",
+    "figures": "solute:80 solvent:320 volumemeasured:400",
+    "level": "100:no 200:no 300:no 400:yes 500:no"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "two_fields_hold_a_mass_and_only_the_third_holds_a_volume",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a headed field written on the reagent label",
+          "sweep": true,
+          "out": "fld_box"
+        },
+        {
+          "fail_if": ["fld_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the heading printed at the start of this field. Write the heading only.",
+          "boxes": "fld_box",
+          "pad": 0.15,
+          "out": "head_txt"
+        },
+        {
+          "fail_if": ["head_txt.unreadable"]
+        },
+        {
+          "read_crop": "Is the unit written after the figure in this field grams or millilitres? Answer with one word: grams or millilitres.",
+          "boxes": "fld_box",
+          "pad": 0.15,
+          "out": "unit_txt"
+        },
+        {
+          "fail_if": ["unit_txt.unreadable"]
+        },
+        {
+          "run": "labelled_pairs",
+          "args": ["head_txt", "unit_txt"],
+          "out": "units"
+        },
+        {
+          "compare": "units.canon",
+          "to": "reference.units",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_meniscus_stands_at_the_graduation_the_label_names",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a figured graduation printed on the measuring cylinder",
+          "sweep": true,
+          "out": "grad_box"
+        },
+        {
+          "fail_if": ["grad_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure printed at this graduation. Write the number only.",
+          "boxes": "grad_box",
+          "pad": 0.2,
+          "out": "gnum_txt"
+        },
+        {
+          "fail_if": ["gnum_txt.unreadable"]
+        },
+        {
+          "read_crop": "Is the surface of the liquid level with this graduation? Answer yes or no only.",
+          "boxes": "grad_box",
+          "pad": 0.2,
+          "out": "lvl_txt"
+        },
+        {
+          "fail_if": ["lvl_txt.unreadable"]
+        },
+        {
+          "run": "labelled_pairs",
+          "args": ["gnum_txt", "lvl_txt"],
+          "out": "level"
+        },
+        {
+          "compare": "level.canon",
+          "to": "reference.level",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_masses_close_against_the_batch",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a headed field written on the reagent label",
+          "sweep": true,
+          "out": "val_box"
+        },
+        {
+          "fail_if": ["val_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the heading printed at the start of this field. Write the heading only.",
+          "boxes": "val_box",
+          "pad": 0.15,
+          "out": "vhead_txt"
+        },
+        {
+          "fail_if": ["vhead_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written in this field. Write the figure only.",
+          "boxes": "val_box",
+          "pad": 0.15,
+          "out": "vval_txt"
+        },
+        {
+          "fail_if": ["vval_txt.unreadable"]
+        },
+        {
+          "run": "pair_fields_with_digits",
+          "args": ["vhead_txt", "vval_txt"],
+          "out": "figs"
+        },
+        {
+          "compare": "figs.canon",
+          "to": "reference.figures",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_added_to_the_bench",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, a note or an arrow added beyond the label fields and the graduations",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "sprinkler_bulb_colour_orientation",
+  "axis": "symbolic_systems",
+  "prompt": "The ceiling void cannot be closed until the heads have been checked against the room schedule, so the run is photographed from the ladder before the tiles go back.\n\nA branch pipe runs above the open ceiling line through three rooms whose wall plates read COLD STORE, CORRIDOR and KITCHEN. One head serves each room. In the cold store and the corridor the drop is taken off the underside of the branch; in the kitchen it comes off the top. The room schedule taped to the pipe gives the highest ambient each room reaches, cold store 5 degrees, corridor 25 degrees and kitchen 55 degrees, and sets the rule that a head must be rated at the first step standing at least 30 degrees above its own room's highest ambient. The bulb chart hangs beside it, and every yoke carries its rating stamped next to the bulb.\n\nWhich bulb goes into which room, and how each head has to sit, is what the schedule does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a sprinkler branch pipe above an open ceiling running through three labelled rooms with one head dropped into each room? Answer yes or no only.",
+  "reference": {
+    "part1": "green_bulb",
+    "part2": "upright_above_the_pipe"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the head serving the room whose wall plate reads KITCHEN and say what colour the liquid in its glass bulb is. Answer with one of: the bulb is green; the bulb is red; the bulb is orange.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the same head serving the KITCHEN room and say how it sits on the branch pipe. Answer with one of: it stands above the pipe with its splash plate on top; it hangs below the pipe with its splash plate underneath; it stands out sideways from the pipe.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

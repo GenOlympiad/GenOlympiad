@@ -1,0 +1,112 @@
+{
+  "id": "inscribed_central_angle",
+  "axis": "quantitative_precision",
+  "prompt": "A clean a clock-face geometry figure: a BLUE angle at the centre spanning two rim points A and B, and a RED angle at a third rim point subtending the same A and B. By the inscribed-angle theorem, the blue CENTRAL angle at the centre must be exactly TWICE the red INSCRIBED angle that subtends the same arc A-B. Draw the inscribed (red) angle at exactly half the central (blue) angle. Do NOT make the inscribed angle too large or too small -- the central must be double the inscribed. Plain background, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a clock-face geometry figure: a BLUE angle at the centre spanning two rim points A and B, and a RED angle at a third rim point subtending the same A and B. Ignoring artistic quality, does the image show a circle with a blue two-ray angle at the centre and a red two-ray angle at a point on the rim? Answer NO only if those are missing or it is unrelated. yes or no.",
+  "reference": {
+    "a_lo": [100, 90, 60],
+    "a_hi": [130, 255, 255],
+    "b_lo": [160, 90, 80],
+    "b_hi": [10, 255, 255],
+    "vertex_a": [0.5, 0.5],
+    "vertex_b": [0.2395, 0.7185],
+    "ratio": 2.0,
+    "tol": 0.16,
+    "q_notext": "Ignore the single letters used to label points. Is there any NUMBER, angle value, degree reading or explanatory caption printed anywhere in this picture? Answer yes or no only.",
+    "enforce_notext": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "angle_ratio_2to1",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "point",
+          "target": "point where the two BLUE lines meet each other -- the single spot at the centre of the circle where both blue lines begin and their two ends touch; put the point exactly there, not part-way along either blue line and not where a blue line reaches the circle.",
+          "out": "cp"
+        },
+        {
+          "read": "boxes",
+          "target": "one straight BLUE line -- the whole blue line from one end to the other, boxed so that BOTH of its ends are inside the rectangle: from the spot where the two blue lines meet out to that line's far end on the circle; there are exactly two such blue lines, so box each one on its own and never put both in one rectangle; do not box a red line, the circle's own outline, or a point letter.",
+          "expected_n": 2,
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.unreadable"]
+        },
+        {
+          "read": "point",
+          "target": "point where the two RED lines meet each other -- the single spot on the circle's rim where both red lines begin and their two ends touch; put the point exactly there, not part-way along either red line and not at either place where a red line reaches the far side of the circle.",
+          "out": "ip"
+        },
+        {
+          "read": "boxes",
+          "target": "one straight RED line -- the whole red line from one end to the other, boxed so that BOTH of its ends are inside the rectangle: from the spot where the two red lines meet out to that line's far end on the circle; there are exactly two such red lines, so box each one on its own and never put both in one rectangle; do not box a blue line, the circle's own outline, or a point letter.",
+          "expected_n": 2,
+          "out": "ib"
+        },
+        {
+          "fail_if": ["ib.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "angle_ratio_score",
+          "args": ["cp", "cb", "ip", "ib", "src", "reference"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.degenerate"]
+        },
+        {
+          "compare_band": "rd.frac",
+          "to": 1.0,
+          "core": 0.15,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

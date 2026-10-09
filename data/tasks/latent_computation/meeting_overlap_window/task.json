@@ -1,0 +1,257 @@
+{
+  "id": "meeting_overlap_window",
+  "axis": "latent_computation",
+  "prompt": "A clean remote-team SCHEDULING BOARD infographic, straight-on, styled like a project dashboard. Five horizontal rows, one per city, each labelled and showing that city's own working hours as a filled blue bar on a 24-hour row: Lisbon (UTC+0) works 09:00-16:00 local; Berlin (UTC+1) works 10:00-18:00 local; Istanbul (UTC+3) works 11:00-19:00 local; Dubai (UTC+4) works 10:00-17:00 local; Almaty (UTC+6) works 09:00-17:00 local. Below the five rows, a single green summary panel states the COMMON MEETING WINDOW when ALL FIVE cities are simultaneously within their working hours, expressed in Istanbul local time as 'HH:00 - HH:00' plus 'duration N hours'. Compute that window as the intersection of all five cities' working intervals on one shared timeline (each city has a DIFFERENT working span, so track every one), then convert the result into Istanbul local time. Note: this is an interval-overlap calculation across five different intervals, not a clock-face reading. Show the five bars and the one summary panel only; no other text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show remote-team scheduling dashboard computing the five-way common working-hours overlap window across time zones? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "duration_h": 2,
+    "host": "Istanbul",
+    "host_start": 12,
+    "host_end": 14,
+    "n_rows": 5,
+    "bar_a_city": "Almaty",
+    "bar_a_start": 9,
+    "bar_a_end": 17,
+    "bar_b_city": "Lisbon",
+    "bar_b_start": 9,
+    "bar_b_end": 16,
+    "q_dur": "This scheduling board has a green summary panel stating a COMMON MEETING WINDOW with the phrase 'duration N hours'. Read ONLY that duration number (how many hours) and answer with just the integer, nothing else.",
+    "q_start": "This scheduling board's green summary panel shows the common meeting window as 'HH:00 - HH:00'. Read the START hour (the first HH before the dash) and answer with just that integer hour in 24-hour form, nothing else.",
+    "q_bar_a_start": "This scheduling board draws one horizontal blue working-hours bar per city on a shared 24-hour timeline. Look ONLY at the Almaty row. Read the hour where that city's BLUE BAR begins on its LEFT edge (the clock hour on the 24-hour axis). Report ONLY the hour number actually drawn as that bar edge; do NOT do any sums or guess it from the city name or its time zone. Answer with just the integer hour in 24-hour form, nothing else.",
+    "q_bar_a_end": "This scheduling board draws one horizontal blue working-hours bar per city on a shared 24-hour timeline. Look ONLY at the Almaty row. Read the hour where that city's BLUE BAR ends on its RIGHT edge (the clock hour on the 24-hour axis). Report ONLY the hour number actually drawn as that bar edge; do NOT do any sums or guess it from the city name or its time zone. Answer with just the integer hour in 24-hour form, nothing else.",
+    "q_bar_b_start": "This scheduling board draws one horizontal blue working-hours bar per city on a shared 24-hour timeline. Look ONLY at the Lisbon row. Read the hour where that city's BLUE BAR begins on its LEFT edge (the clock hour on the 24-hour axis). Report ONLY the hour number actually drawn as that bar edge; do NOT do any sums or guess it from the city name or its time zone. Answer with just the integer hour in 24-hour form, nothing else.",
+    "q_bar_b_end": "This scheduling board draws one horizontal blue working-hours bar per city on a shared 24-hour timeline. Look ONLY at the Lisbon row. Read the hour where that city's BLUE BAR ends on its RIGHT edge (the clock hour on the 24-hour axis). Report ONLY the hour number actually drawn as that bar edge; do NOT do any sums or guess it from the city name or its time zone. Answer with just the integer hour in 24-hour form, nothing else.",
+    "q_form": "Look at this image. Is it a scheduling board with several horizontal city working-hour bars and a single green summary panel naming a COMMON MEETING WINDOW with a duration in hours? Answer ONLY 'yes' or 'no'."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "duration",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_dur",
+          "out": "val"
+        },
+        {
+          "fail_if": ["val.unreadable"]
+        },
+        {
+          "compare_tolerance": "val",
+          "to": "reference.duration_h",
+          "tol": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "start_hour",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_start",
+          "out": "val"
+        },
+        {
+          "fail_if": ["val.unreadable"]
+        },
+        {
+          "compare_tolerance": "val",
+          "to": "reference.host_start",
+          "tol": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bars_process",
+      "weight": 2.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "reference.q_bar_a_start",
+          "out": "a0"
+        },
+        {
+          "fail_if": ["a0.unreadable"]
+        },
+        {
+          "read_number": "reference.q_bar_a_end",
+          "out": "a1"
+        },
+        {
+          "fail_if": ["a1.unreadable"]
+        },
+        {
+          "read_number": "reference.q_bar_b_start",
+          "out": "b0"
+        },
+        {
+          "fail_if": ["b0.unreadable"]
+        },
+        {
+          "read_number": "reference.q_bar_b_end",
+          "out": "b1"
+        },
+        {
+          "fail_if": ["b1.unreadable"]
+        },
+        {
+          "run": "bar_ends_match",
+          "args": [
+            "a0",
+            "a1",
+            "b0",
+            "b1",
+            "reference.bar_a_start",
+            "reference.bar_a_end",
+            "reference.bar_b_start",
+            "reference.bar_b_end"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_bar_a_start",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the scheduling board, read the START hour of the Almaty working-hours bar (its local start time, whole hour). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.bar_a_start",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_bar_a_end",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the scheduling board, read the END hour of the Almaty working-hours bar (its local end time, whole hour). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.bar_a_end",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_bar_b_start",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the scheduling board, read the START hour of the Lisbon working-hours bar (its local start time, whole hour). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.bar_b_start",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_n_city_rows",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one horizontal city row above the summary panel, showing a city name and its working-hours bar",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole horizontal row with a city name and a filled coloured bar, rather than bare background or only part of a row? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

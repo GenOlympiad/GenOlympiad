@@ -1,0 +1,109 @@
+{
+  "id": "splitflap_midflip_column",
+  "axis": "symbolic_systems",
+  "prompt": "Create a clean, realistic airport departures split-flap board (dark panel). Draw each character in its own split-flap cell: every cell is a dark tile split across the middle by a horizontal hinge line into a TOP half and a BOTTOM half, with a large light character on it. In a settled cell the top and bottom halves show the SAME character. Exactly ONE cell on the whole board is caught MID-FLIP: its top half shows the OLD character and its bottom half shows the NEW character, so the two halves DISAGREE, with a flap caught leaning across the hinge. The board is: row 'GATE  A12' displays the characters P A R I S (positions 1..5 from the left), and ONLY its position-3 cell is caught MID-FLIP -- that one cell's top half still shows 'N' while its bottom half already shows 'R', and every other cell in this row is settled; row 'GATE  B07' displays the characters T O K Y O (positions 1..5 from the left) and every cell is fully SETTLED (top and bottom halves show the same character). Keep every settled cell showing matching top/bottom characters, and make the single mid-flip cell clearly show two DIFFERENT characters top vs bottom, in its correct column and row. Crisp, clearly readable.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a SPLIT-FLAP (Solari) display board: rows of character cells, each cell split across the middle by a horizontal hinge line into a top half and a bottom half. Ignoring artistic quality, does the image actually DEPICT that kind of split-flap board with horizontally-split character cells? Answer NO only if it shows just prose, a plain unsplit sign, a blank panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "flip_col": 3,
+    "queried_row_index": 0,
+    "n_rows": 2,
+    "row_pos_word": "top",
+    "row_label": "GATE  A12",
+    "q_col": "This is a split-flap board: each character sits on a tile that is divided across the middle by a horizontal line, so every tile has a TOP half and a BOTTOM half. Look ONLY at the row of character tiles printed beside the label 'GATE  A12'. Go along that row from LEFT to RIGHT and look at each tile in turn. For each tile answer one thing: does its top half show the SAME character as its bottom half, or a DIFFERENT character? Answer with one word per tile, in left-to-right order, separated by single spaces -- write 'same' if that tile's two halves show the same character, or 'different' if the two halves show different characters. Write nothing else.",
+    "q_row": "This is the same split-flap board. Every character sits on a tile that is divided across the middle by a horizontal line into a TOP half and a BOTTOM half. The board has 2 rows of character tiles, and each row has its own printed row label. Write one line for each of those 2 rows, going from the TOP row down to the BOTTOM row. On each line write that row's printed label, then a colon, then one word: 'yes' if some tile in that row shows a different character on its top half than on its bottom half, or 'no' if every tile in that row shows the same character on both halves. Write nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "midflip_position",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one character tile in the row of tiles printed beside the label {gt.row_label} -- box each tile of that row separately, top half to bottom half; not the row label",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_co"
+        },
+        {
+          "fail_if": ["box_co.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one split-flap tile, divided across its middle by a horizontal hinge line into a top half and a bottom half. Do the two halves show the same character or two different characters? Answer with exactly one word: same or different.",
+          "boxes": "box_co",
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "crop_co"
+        },
+        {
+          "fail_if": ["crop_co.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_co", "\" \""],
+          "out": "txt_co"
+        },
+        {
+          "read": "boxes",
+          "target": "one whole row of character tiles on the board, together with the row label printed beside it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_ro"
+        },
+        {
+          "fail_if": ["box_ro.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of split-flap tiles with its printed label at the start of the row. Write the printed label exactly as it appears, then a colon. Then take the tiles of that row one at a time, reading left to right, and for each tile write one word from this list: same (both halves carry the one character) or different (the two halves carry two characters). Separate one item from the next with a semicolon, and add nothing else.",
+          "boxes": "box_ro",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_ro"
+        },
+        {
+          "fail_if": ["crop_ro.unreadable"]
+        },
+        {
+          "run": "any_item_satisfies",
+          "args": [
+            "crop_ro",
+            "[[['different'],'T'],[['same'],'F']]",
+            "'yes'",
+            "'no'",
+            "'unlisted'"
+          ],
+          "out": "crop_ro__mapped"
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_ro__mapped", "\"\\n\""],
+          "out": "txt_ro"
+        },
+        {
+          "run": "midflip_column_score",
+          "args": ["txt_co.text", "txt_ro.text", "reference"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

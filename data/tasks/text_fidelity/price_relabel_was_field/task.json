@@ -1,0 +1,216 @@
+{
+  "id": "price_relabel_was_field",
+  "axis": "text_fidelity",
+  "prompt": "A close photograph of one shelf rail in a supermarket, with three ticket holders clipped to it side by side, each one over the goods it prices. Today was a price change day and the assistant has just been round with the new tickets.\n\nThese are the three lines and the price each one carries from today:\n  BARLEY FLAKES 500g -- 1.85\n  OAT MILK 1L -- 1.29\n  DARK RYE LOAF -- 2.45\n\nAnd these are the prices those three lines carried until today:\n  BARLEY FLAKES 500g -- 2.20\n  OAT MILK 1L -- 1.55\n  DARK RYE LOAF -- 1.99\n\nThe way this chain changes its tickets is a thing every assistant knows and no notice on the shelf explains. Where a price has come down, the new ticket goes straight over the old one, the new ticket has to say what the line used to cost, and enough of the old ticket must still be showing for a customer to check it. Where a price has gone up, nothing may be stuck over anything: that ticket is replaced outright and carries no former price of any kind.\n\nWhich lines went which way you can see for yourself from the two lists -- I am deliberately not telling you, and how far each new ticket covers the old one, and which strip of the old one is left showing, are for you to arrange the way a hand actually does it.\n\nAll three holders have to be legible in the one frame, and the print on the tickets has to be large against the height of the holder. Nothing else is printed on any ticket: no percentage, no word such as SALE or OFFER, and no barcode.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a shelf rail with small printed price tickets held on it side by side? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no tickets at all. Answer yes or no only.",
+  "reference": {
+    "was_map": "barley flakes=2.20|dark rye loaf=none|oat milk=1.55",
+    "old_map": "barley flakes=2.20|dark rye loaf=none|oat milk=1.55",
+    "new_map": "barley flakes=1.85|dark rye loaf=2.45|oat milk=1.29",
+    "clean_no_flashes": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_former_price_on_each_new_ticket_is_the_price_it_covered",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ticket holder on the shelf rail with the ticket it is holding",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "th"
+        },
+        {
+          "fail_if": ["th.unreadable"]
+        },
+        {
+          "read_crop": "Copy the product name printed on the front ticket in this cut-out. Write the name only, without the size and without any price.",
+          "boxes": "th",
+          "pad": 0.15,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "thk"
+        },
+        {
+          "read_crop": "Copy the price printed after the word WAS on the front ticket in this cut-out. Write the figure only. If the ticket carries no such price, answer none.",
+          "boxes": "th",
+          "pad": 0.15,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "thw"
+        },
+        {
+          "run": "map_product_to_price",
+          "args": ["thk", "thw"],
+          "out": "wm"
+        },
+        {
+          "fail_if": ["wm.refused"]
+        },
+        {
+          "compare": "wm.seq",
+          "to": "reference.was_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_covered_ticket_still_shows_the_price_it_carried",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ticket holder on the shelf rail with the ticket it is holding",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "th"
+        },
+        {
+          "fail_if": ["th.unreadable"]
+        },
+        {
+          "read_crop": "Copy the product name printed on the front ticket in this cut-out. Write the name only, without the size and without any price.",
+          "boxes": "th",
+          "pad": 0.15,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "thk"
+        },
+        {
+          "read_crop": "Copy the price printed on the strip of the older ticket showing underneath the front one in this cut-out. Write the figure only. If no older ticket is showing, answer none.",
+          "boxes": "th",
+          "pad": 0.15,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "tho"
+        },
+        {
+          "run": "map_product_to_price",
+          "args": ["thk", "tho"],
+          "out": "om"
+        },
+        {
+          "fail_if": ["om.refused"]
+        },
+        {
+          "compare": "om.seq",
+          "to": "reference.old_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_ticket_carries_today_s_price",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ticket holder on the shelf rail with the ticket it is holding",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "th"
+        },
+        {
+          "fail_if": ["th.unreadable"]
+        },
+        {
+          "read_crop": "Copy the product name printed on the front ticket in this cut-out. Write the name only, without the size and without any price.",
+          "boxes": "th",
+          "pad": 0.15,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "thk"
+        },
+        {
+          "read_crop": "Copy the main price printed on the front ticket in this cut-out. Write the figure only.",
+          "boxes": "th",
+          "pad": 0.15,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "thn"
+        },
+        {
+          "run": "map_product_to_price",
+          "args": ["thk", "thn"],
+          "out": "nm"
+        },
+        {
+          "fail_if": ["nm.refused"]
+        },
+        {
+          "compare": "nm.seq",
+          "to": "reference.new_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_percentages_or_offer_wording_on_the_tickets",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a percentage figure, a barcode, or wording such as SALE or OFFER on a ticket",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "xg"
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a percentage figure, a barcode, or wording such as SALE or OFFER on a ticket? Answer yes or no. Answer no if the cut-out shows a product name, a plain price figure with or without a word in front of it, the strip of an older ticket showing underneath.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "run": "sweep_holds_nothing_banned",
+          "args": ["xg", "xgw", "xgy"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_no_flashes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

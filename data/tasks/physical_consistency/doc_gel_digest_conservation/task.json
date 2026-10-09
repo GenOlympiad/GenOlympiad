@@ -1,0 +1,462 @@
+{
+  "id": "doc_gel_digest_conservation",
+  "axis": "physical_consistency",
+  "prompt": "A photograph on the QC report page that a gene-synthesis company sends out with every plasmid order: the restriction-digest verification gel, shot on the UV transilluminator the way the lab archives it, with the gel edges and the loading wells still in frame.\n\nThe order being verified is pQC-54, a CIRCULAR plasmid 5400 bp long. Its map, reproduced beside the gel, carries three EcoRV sites, at map positions 300 bp, 1500 bp and 3100 bp, and the map is drawn as the closed circle that the plasmid is.\n\nThe gel has two lanes. The left lane is a 1 kb DNA ladder whose rungs carry the supplier's own size marks, in base pairs, from the top down: 10000, 8000, 6000, 5000, 4000, 3000, 2000, 1500, 1000, 500. The right lane holds the EcoRV digest of pQC-54, and house style puts the size in base pairs beside each band of that lane, in the same units as the ladder.\n\nWork the digest out from the map yourself -- I am deliberately not telling you how many bands come off it, how long they are, or which of them travels furthest. Do not print the site list again, any arithmetic, any fragment table, or any caption that gives the answer away: the only figures anywhere on the page are the ladder's own size marks and the size beside each band of the digest lane.\n\nThe two lanes, the ladder marks and every size figure beside the digest bands must be legible in the one photograph, and the bands must stand apart from one another.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an electrophoresis gel with a ladder lane beside a sample lane, on a plasmid QC report page? A photograph, an illustration or a diagram all count as yes. Answer NO only if the image instead shows a blank sheet that just prints an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "plasmid_bp": 5400,
+    "n_fragments": 3,
+    "fragment_bp": [2600, 1600, 1200],
+    "n_ladder_rungs": 10
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "fragment_size_set",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of bands in the right-hand lane of the gel together with the size figures printed beside them",
+          "expected_n": 1,
+          "out": "anc_a_box",
+          "context": "the gel in its tray"
+        },
+        {
+          "fail_if": ["anc_a_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is the right-hand lane of a gel. Write down every separate band that can be seen in it, working from the top of the lane down, each with a few plain words saying how far down the lane it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If no band can be seen here, write the single word NONE.",
+          "boxes": "anc_a_box",
+          "pad": 0.02,
+          "out": "n_a_box"
+        },
+        {
+          "fail_if": ["n_a_box.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["n_a_box", "empty_as='0'"],
+          "out": "n_a_box__std"
+        },
+        {
+          "fail_if": ["n_a_box__std.refused"]
+        },
+        {
+          "run": "plan_grid_from_read_count",
+          "args": ["image", "anc_a_box", "n_a_box__std", "cols=1"],
+          "out": "pl_a_box"
+        },
+        {
+          "fail_if": ["pl_a_box.no_plan"]
+        },
+        {
+          "read_crop": "This cut-out shows one band of a gel lane with a size figure printed beside it. If more than one band is visible in this cut-out, read the figure beside the band nearest the middle of it. Copy that figure and answer with just that number.",
+          "boxes": "pl_a_box.cells",
+          "out": "a_rd",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["a_rd.unreadable"]
+        },
+        {
+          "run": "sizes_of",
+          "args": ["a_rd"],
+          "out": "sz"
+        },
+        {
+          "compare_set": "sz.sizes",
+          "to": "reference.fragment_bp",
+          "out": "frac"
+        },
+        {
+          "run": "paint_cells_by_fraction",
+          "args": ["pl_a_box", "frac"],
+          "out": "pa_a_box"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_a_box.hit",
+          "ref_anchors": "pa_a_box.ref_anchors",
+          "found_anchors": "pa_a_box.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_a_box_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_a_box_hit.path",
+          "rects": "pa_a_box.miss",
+          "ref_anchors": "pa_a_box.ref_anchors",
+          "found_anchors": "pa_a_box.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_a_box_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_a_box_miss.path",
+          "rects": "pa_a_box.edge",
+          "ref_anchors": "pa_a_box.ref_anchors",
+          "found_anchors": "pa_a_box.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_a_box_edge"
+        }
+      ]
+    },
+    {
+      "name": "fragment_band_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of bands in the right-hand lane of the gel together with the size figures printed beside them",
+          "expected_n": 1,
+          "out": "anc_box_read",
+          "context": "the gel in its tray"
+        },
+        {
+          "fail_if": ["anc_box_read.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is the right-hand lane of a gel. Write down every separate band that can be seen in it, working from the top of the lane down, each with a few plain words saying how far down the lane it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If no band can be seen here, write the single word NONE.",
+          "boxes": "anc_box_read",
+          "pad": 0.02,
+          "out": "n_box_read"
+        },
+        {
+          "fail_if": ["n_box_read.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["n_box_read", "empty_as='0'"],
+          "out": "n_box_read__std"
+        },
+        {
+          "fail_if": ["n_box_read__std.refused"]
+        },
+        {
+          "run": "plan_grid_from_read_count",
+          "args": ["image", "anc_box_read", "n_box_read__std", "cols=1"],
+          "out": "pl_box_read"
+        },
+        {
+          "fail_if": ["pl_box_read.no_plan"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole band of the digest lane, rather than bare gel, a ladder rung or only part of a band? Answer yes or no only.",
+          "boxes": "pl_box_read.cells",
+          "out": "crop_read",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_fragments",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        },
+        {
+          "run": "paint_cells_by_fraction",
+          "args": ["pl_box_read", "frac"],
+          "out": "pa_box_read"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_box_read.hit",
+          "ref_anchors": "pa_box_read.ref_anchors",
+          "found_anchors": "pa_box_read.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_box_read_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_read_hit.path",
+          "rects": "pa_box_read.miss",
+          "ref_anchors": "pa_box_read.ref_anchors",
+          "found_anchors": "pa_box_read.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_box_read_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_read_miss.path",
+          "rects": "pa_box_read.edge",
+          "ref_anchors": "pa_box_read.ref_anchors",
+          "found_anchors": "pa_box_read.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_box_read_edge"
+        }
+      ]
+    },
+    {
+      "name": "size_position_tieout",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one rung of the ladder in the left-hand lane, with its printed size mark",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "l_box"
+        },
+        {
+          "fail_if": ["l_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one rung of a DNA ladder with a size mark printed beside it. Copy that mark. Answer with just that number.",
+          "boxes": "l_box",
+          "out": "l_rd"
+        },
+        {
+          "fail_if": ["l_rd.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the block of bands in the right-hand lane of the gel together with the size figures printed beside them",
+          "expected_n": 1,
+          "out": "anc_b_box",
+          "context": "the gel in its tray"
+        },
+        {
+          "fail_if": ["anc_b_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is the right-hand lane of a gel. Write down every separate band that can be seen in it, working from the top of the lane down, each with a few plain words saying how far down the lane it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If no band can be seen here, write the single word NONE.",
+          "boxes": "anc_b_box",
+          "pad": 0.02,
+          "out": "n_b_box"
+        },
+        {
+          "fail_if": ["n_b_box.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["n_b_box", "empty_as='0'"],
+          "out": "n_b_box__std"
+        },
+        {
+          "fail_if": ["n_b_box__std.refused"]
+        },
+        {
+          "run": "plan_grid_from_read_count",
+          "args": ["image", "anc_b_box", "n_b_box__std", "cols=1"],
+          "out": "pl_b_box"
+        },
+        {
+          "fail_if": ["pl_b_box.no_plan"]
+        },
+        {
+          "read_crop": "This cut-out shows one band of a gel lane with a size figure printed beside it. If more than one band is visible in this cut-out, read the figure beside the band nearest the middle of it. Copy that figure and answer with just that number.",
+          "boxes": "pl_b_box.cells",
+          "out": "b_rd",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["b_rd.unreadable"]
+        },
+        {
+          "run": "sample_bands_fit_ladder",
+          "args": ["l_box", "l_rd", "pl_b_box.cells", "b_rd"],
+          "out": "tie"
+        },
+        {
+          "compare_band": "tie.frac",
+          "to": 1.0,
+          "core_abs": 0.001,
+          "margin_abs": 1.0,
+          "out": "frac"
+        },
+        {
+          "run": "paint_cells_by_fraction",
+          "args": ["pl_b_box", "frac"],
+          "out": "pa_b_box"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_b_box.hit",
+          "ref_anchors": "pa_b_box.ref_anchors",
+          "found_anchors": "pa_b_box.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_b_box_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_b_box_hit.path",
+          "rects": "pa_b_box.miss",
+          "ref_anchors": "pa_b_box.ref_anchors",
+          "found_anchors": "pa_b_box.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_b_box_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_b_box_miss.path",
+          "rects": "pa_b_box.edge",
+          "ref_anchors": "pa_b_box.ref_anchors",
+          "found_anchors": "pa_b_box.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_b_box_edge"
+        }
+      ]
+    },
+    {
+      "name": "d2_total_length_conservation",
+      "weight": 0.8,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one band in the right-hand digest lane, with the size figure printed beside it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "c_box"
+        },
+        {
+          "fail_if": ["c_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one band of a gel lane with a size figure printed beside it. If more than one band is visible in this cut-out, read the figure beside the band nearest the middle of it. Copy that figure and answer with just that number.",
+          "boxes": "c_box",
+          "out": "c_rd"
+        },
+        {
+          "fail_if": ["c_rd.unreadable"]
+        },
+        {
+          "run": "sizes_of",
+          "args": ["c_rd"],
+          "out": "tot"
+        },
+        {
+          "compare_band": "tot.total",
+          "to": "reference.plasmid_bp",
+          "core_abs": 108.0,
+          "margin_abs": 162.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_ladder_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one rung of the ladder in the left-hand lane, with its printed size mark",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole rung of the ladder lane, rather than bare gel or only part of a rung? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_ladder_rungs",
+          "core_abs": 1.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_working",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "worked-out arithmetic, a written formula, or a table of fragment sizes on the report page",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_bands_separable",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a place in the digest lane where two bands run together so they cannot be told apart",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

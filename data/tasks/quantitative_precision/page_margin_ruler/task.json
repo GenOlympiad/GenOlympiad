@@ -1,0 +1,135 @@
+{
+  "id": "page_margin_ruler",
+  "axis": "quantitative_precision",
+  "prompt": "A page-layout proof: a single upright A4 page (210 mm wide, 297 mm tall) shown on a plain grey backdrop, with a millimetre RULER along the top edge and down the left edge of the page (numbered every 50 mm). On the page is one rectangular block of body text (grey lines of placeholder text). The four page margins — the white space between the edge of the sheet and the text block — must be set to these EXACT, deliberately UNEQUAL values: TOP margin 19 mm, BOTTOM margin 31 mm, LEFT margin 34 mm, RIGHT margin 16 mm. So the text block is pushed to the right (the left binding margin 34 mm is much wider than the right margin 16 mm) and sits higher than centre (top 19 mm is smaller than bottom 31 mm). Print a small key in the top-left of the page reading 'Page margins (mm): TOP = 19  BOTTOM = 31  LEFT = 34  RIGHT = 16'. The ACTUAL white space on each side of the text block must match its printed label exactly when measured against the ruler. Do NOT centre the text block; the margins are unequal. Clean print, black text on white page, thin ruler ticks.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a page-layout proof: an A4 page with edge rulers and a block of body text set inside four margins. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "page_w_mm": 210.0,
+    "page_h_mm": 297.0,
+    "margin": {
+      "top": 19.0,
+      "bottom": 31.0,
+      "left": 34.0,
+      "right": 16.0
+    },
+    "mm_tol": 4.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "margins_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the white sheet of paper itself -- the page, from its top edge to its bottom edge and from its left edge to its right edge (not the grey backdrop around it, and not any ruler strip that lies outside the paper)",
+          "expected_n": 1,
+          "out": "sh"
+        },
+        {
+          "fail_if": ["sh.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the block of body text on the page -- the smallest upright rectangle that contains every line of body text, its edges being the top of the first text line, the bottom of the last text line, the left-hand start of the lines and the right-hand end of the longest line (do NOT include the ruler ticks, the ruler numbers, or the small printed margin key caption)",
+          "expected_n": 1,
+          "out": "tb"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "run": "measure_margins",
+          "args": [
+            "sh",
+            "tb",
+            "reference.margin",
+            "reference.page_w_mm",
+            "reference.page_h_mm",
+            "reference.mm_tol"
+          ],
+          "out": "j"
+        },
+        {
+          "fail_if": ["j.no_read"]
+        },
+        {
+          "compare_tolerance": "j.joint",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_sides_ok",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the white sheet of paper itself -- the page, from its top edge to its bottom edge and from its left edge to its right edge (not the grey backdrop around it, and not any ruler strip that lies outside the paper)",
+          "expected_n": 1,
+          "out": "sh2"
+        },
+        {
+          "fail_if": ["sh2.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the block of body text on the page -- the smallest upright rectangle that contains every line of body text, its edges being the top of the first text line, the bottom of the last text line, the left-hand start of the lines and the right-hand end of the longest line (do NOT include the ruler ticks, the ruler numbers, or the small printed margin key caption)",
+          "expected_n": 1,
+          "out": "tb2"
+        },
+        {
+          "fail_if": ["tb2.unreadable"]
+        },
+        {
+          "run": "measure_margins",
+          "args": [
+            "sh2",
+            "tb2",
+            "reference.margin",
+            "reference.page_w_mm",
+            "reference.page_h_mm",
+            "reference.mm_tol"
+          ],
+          "out": "j2"
+        },
+        {
+          "fail_if": ["j2.no_read"]
+        },
+        {
+          "run": "margin_share",
+          "args": ["j2"],
+          "out": "ff"
+        },
+        {
+          "compare_tolerance": "ff.f",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

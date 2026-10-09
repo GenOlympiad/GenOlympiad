@@ -1,0 +1,97 @@
+{
+  "id": "jianpu_staff_match",
+  "axis": "symbolic_systems",
+  "prompt": "Render a clean, straight-on printed MUSIC-THEORY worksheet titled 'TWO-SYSTEM MELODY CHECK'. Show the SAME short melody written in TWO notation systems, stacked, so they line up column by column.\n\nTOP LINE -- JIANPU (numbered notation) in the key of C major, where digit 1=C(do), 2=D, 3=E, 4=F, 5=G, 6=A, 7=B; a dot ABOVE a digit raises it one octave, a dot BELOW lowers it one octave; with no dot the pitch is in the octave starting at middle C. Print exactly these 6 numbers left to right, evenly spaced: 3, 7, 2 (dot ABOVE), 5, 1, 6. Under each number print its column index (1..6) in small red type.\n\nBOTTOM LINE -- a five-line TREBLE STAFF with a treble clef at the left. For EACH column, draw one notehead at the staff line or space of the SAME pitch that the jianpu digit above it names (same key of C major; apply the octave dots). The two systems must AGREE note for note: the notehead in column k must sit at exactly the pitch the jianpu number in column k encodes -- so higher digits (and dots-above) go higher on the staff, lower ones go lower. Do NOT assume a default octave -- apply each digit's octave dots. Space the noteheads evenly so each lines up under its jianpu digit. Make the staff, clef and noteheads large and legible; all pitches are naturals, no sharps or flats.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a music-theory worksheet with TWO stacked lines: a line of jianpu numbers (numbered notation) on top and a five-line treble STAFF with noteheads below. Ignoring artistic quality, does the image actually DEPICT that -- a row of numbers above a musical staff with noteheads? A clean diagram counts as yes. Answer NO only if it shows just plain text, a blank card, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "degrees": [3, 7, 2, 5, 1, 6],
+    "octdots": [0, 0, 1, 0, 0, 0],
+    "pitches": ["E4", "B4", "D5", "G4", "C4", "A4"],
+    "query_pairs": [
+      [1, 3],
+      [3, 5],
+      [4, 6]
+    ],
+    "query_pairs0": [
+      [0, 2],
+      [2, 4],
+      [3, 5]
+    ],
+    "targets": ["higher", "lower", "higher"],
+    "n_q": 3,
+    "n_cols": 6,
+    "q_pairs": {
+      "0_2": "Look ONLY at the five-line TREBLE STAFF (the bottom line of music) in this image. The noteheads are in columns numbered 1 to 6 left to right (the small red numbers mark the columns). Look at how high on the staff the notehead in COLUMN 3 sits, and how high the notehead in COLUMN 1 sits. Is the column 3 notehead HIGHER on the staff, LOWER, or the SAME height as the column 1 notehead? Read only where the noteheads sit; do not read the jianpu numbers. Answer exactly 'higher', 'lower', or 'same'.",
+      "2_4": "Look ONLY at the five-line TREBLE STAFF (the bottom line of music) in this image. The noteheads are in columns numbered 1 to 6 left to right (the small red numbers mark the columns). Look at how high on the staff the notehead in COLUMN 5 sits, and how high the notehead in COLUMN 3 sits. Is the column 5 notehead HIGHER on the staff, LOWER, or the SAME height as the column 3 notehead? Read only where the noteheads sit; do not read the jianpu numbers. Answer exactly 'higher', 'lower', or 'same'.",
+      "3_5": "Look ONLY at the five-line TREBLE STAFF (the bottom line of music) in this image. The noteheads are in columns numbered 1 to 6 left to right (the small red numbers mark the columns). Look at how high on the staff the notehead in COLUMN 6 sits, and how high the notehead in COLUMN 4 sits. Is the column 6 notehead HIGHER on the staff, LOWER, or the SAME height as the column 4 notehead? Read only where the noteheads sit; do not read the jianpu numbers. Answer exactly 'higher', 'lower', or 'same'."
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "contour_agreement",
+      "weight": 4.0,
+      "score": "cm.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one notehead on the five-line music staff",
+          "context": "the five-line music staff (the five long horizontal lines with the clef at the left and all the note ovals sitting on them)",
+          "out": "nh",
+          "sweep": true
+        },
+        {
+          "fail_if": ["nh.unreadable"]
+        },
+        {
+          "run": "staff_contour_score",
+          "args": ["nh", "reference.query_pairs0", "reference.targets", "reference.n_cols"],
+          "out": "cm"
+        }
+      ]
+    },
+    {
+      "name": "d1_col1_jianpu_digit",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "In the TOP line of jianpu numbers in this image, what single digit (1-7) is printed in the FIRST (leftmost) column? Answer with just the digit.",
+          "out": "d1"
+        },
+        {
+          "fail_if": ["d1.unreadable"]
+        },
+        {
+          "const": "reference.degrees.0",
+          "out": "deg0"
+        },
+        {
+          "run": "first_digit_score",
+          "args": ["d1", "deg0"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

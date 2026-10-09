@@ -1,0 +1,88 @@
+{
+  "id": "index_page_refs",
+  "axis": "long_range_consistency",
+  "prompt": "Render a clean, straight-on image of a back-of-book INDEX page (heading 'INDEX', then one line per item). Some items are ordinary entries: the term on the left, a dotted leader, and its page numbers on the right in ascending order. Some items are redirect lines of the form '<Term>, see <OtherTerm>' with no page numbers. The items are:\n    Chords -- pages 9, 31\n    Modes -- pages 14\n    Scales -- pages 6, 27\n    Voicings -- pages 21, 44\n    Arpeggios -- a redirect line reading 'Arpeggios, see Chords'\n\nLay the whole list out in a single column sorted ALPHABETICALLY by the item's own term (entries and redirect lines interleaved in one alphabetical sequence). Print each entry's page numbers exactly as given, smallest first. Print only the index page.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a back-of-book alphabetical index page with page-number entries and 'see' redirect lines that point at real entries? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 5,
+    "n_sees": 1,
+    "terms_sorted": ["Arpeggios", "Chords", "Modes", "Scales", "Voicings"],
+    "entry_terms": ["Chords", "Modes", "Scales", "Voicings"],
+    "see_targets": ["Chords"],
+    "first_term": "Arpeggios",
+    "q_terms": "This is a book index page. Reading top to bottom, list the first word of each line (the term each line starts with), in order. Output ONLY those words separated by single spaces, and nothing else.",
+    "q_see": "This index page contains redirect lines of the form '<Term>, see <OtherTerm>'. For each such line reading top to bottom, name the term AFTER the word 'see'. Output ONLY those terms separated by single spaces, and nothing else.",
+    "q_resolve": "On this index page, does EVERY redirect line '<Term>, see <OtherTerm>' point at a term that also appears as its own line in this index? Answer yes or no only.",
+    "q_alpha": "On this index page, are the lines arranged in alphabetical order by the term each line starts with, from top to bottom? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "index_joint",
+      "weight": 3.0,
+      "score": "vc.frac",
+      "steps": [
+        {
+          "read_sequence": "reference.q_terms",
+          "n": "reference.n",
+          "out": "tseq"
+        },
+        {
+          "fail_if": ["tseq.unreadable"]
+        },
+        {
+          "ask": "reference.q_see",
+          "out": "sv"
+        },
+        {
+          "fail_if": ["sv.unreadable"]
+        },
+        {
+          "run": "check_index_order",
+          "args": ["tseq", "sv", "reference"],
+          "out": "vc"
+        },
+        {
+          "fail_if": ["vc.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "d1_first_term",
+      "weight": 0.6,
+      "steps": [
+        {
+          "ask": "On this index page, read the term that the FIRST (top) line starts with. Output only that word and nothing else.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.first_term",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

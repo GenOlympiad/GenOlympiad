@@ -1,0 +1,170 @@
+{
+  "id": "bay_plan_position_code",
+  "axis": "symbolic_systems",
+  "prompt": "An extract from the bay plan a ship's planner marks up before loading, the sheet the lashing gang works from.\n\nThe extract covers bay 03 and nothing else, drawn looking forward, so port is on the left of the sheet and starboard on the right. It is a grid of cells, five rows across and four tiers up, with each column of cells carrying its row number underneath it and each course of cells carrying its tier number beside it. The conventions on this trade are the ordinary ones: rows run outward from the centreline with 00 on the centreline itself, even numbers to starboard and odd numbers to port; deck tiers begin at 82 for the lowest tier on deck and go up in twos; and a box's position code is the two figures of the bay, then the two figures of the row, then the two figures of the tier, run together as six figures.\n\nToday's stow list is three twenty foot boxes:\nHLXU 1234567 -- one row to starboard of the centreline, second tier up on deck\nMSCU 7654321 -- two rows to port of the centreline, lowest tier on deck\nTGHU 2468101 -- on the centreline, top tier on deck\n\nThe gang works from this extract, so the cell each box occupies is shaded and carries that box's six figure code inside it, and every other cell of the grid is left empty. Which cell that is, and what the six figures come to, is the planner's work -- I am deliberately not telling you any row number, any tier number or any code. No working, no arrow and no note goes on the extract, and the codes and the margin numbers are large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a grid of cells with numbers along its edges and a few cells shaded in with figures inside them? A ship plan, a printed sheet or a diagram all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "codes": "030284,030382,030088",
+    "n_boxes": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_three_codes_are_the_ones_the_conventions_construct",
+      "weight": 2.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a shaded cell of the bay plan grid with figures inside it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "cd_r"
+        },
+        {
+          "fail_if": ["cd_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figures printed in this cut-out. Write digits only.",
+          "boxes": "cd_r",
+          "pad": 0.3,
+          "out": "cd_q"
+        },
+        {
+          "fail_if": ["cd_q.unreadable"]
+        },
+        {
+          "run": "plan_codes_match",
+          "args": ["cd_q", "reference.codes"],
+          "out": "cd_s"
+        },
+        {
+          "compare": "cd_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_code_agrees_with_the_row_number_under_its_own_column",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a shaded cell of the bay plan grid with figures inside it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "rw_r"
+        },
+        {
+          "fail_if": ["rw_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figures printed in this cut-out. Write digits only.",
+          "boxes": "rw_r",
+          "pad": 0.3,
+          "out": "rw_q"
+        },
+        {
+          "fail_if": ["rw_q.unreadable"]
+        },
+        {
+          "read_crop": "Copy the row number printed underneath the column of cells that this shaded cell stands in. Write digits only.",
+          "boxes": "rw_r",
+          "pad": 1.6,
+          "out": "rl_q"
+        },
+        {
+          "fail_if": ["rl_q.unreadable"]
+        },
+        {
+          "run": "codes_match_row_labels",
+          "args": ["rw_q", "rl_q"],
+          "out": "rw_s"
+        },
+        {
+          "compare": "rw_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "three_cells_of_the_grid_carry_a_box",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a shaded cell of the bay plan grid with figures inside it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole shaded cell, rather than part of one or more than one? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_boxes",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_was_added_to_the_extract",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, an arrow or a note added to the bay plan extract",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

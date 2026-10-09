@@ -1,0 +1,86 @@
+{
+  "id": "geodesic_struts_carry_three_lengths",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The hire company sends a dome frame out with a crew who have never raised one, so the yard photographs a half raised frame at the campsite to go on the front of the build sheet.\n\nThe tubes come in three paint shades and the parts list on the clipboard gives only the shades and their counts: red 30, blue 40, yellow 50. Every tube is swaged flat at both ends and bolted into a pressed steel hub; the frame is up as far as the crown, the last tubes still lying in the grass. The build sheet says that a tube may only go where its own shade belongs, that no hub may be left a bolt short, and that the crown hub is bolted first and the frame worked down from it. The shot is taken from a step ladder so most hubs stand clear against the sky.\n\nWhich shade each tube on the frame has to be is what the parts list does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a part built dome frame of bolted metal tubes standing on grass, with a clipboard of paperwork lying on the ground beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "5",
+    "part2": "spokes_and_ring_differ"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "tube bolted into the hub at the crown of the dome frame",
+          "out": "r_part1",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part1.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the tubes that run out from the crown hub of the frame, and at the ring of tubes that joins their far ends into a closed shape round the crown. Answer with one of: the spokes and the ring are all painted the same colour; the spokes are one colour and the ring is a different colour; the ring itself changes colour as it goes round.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

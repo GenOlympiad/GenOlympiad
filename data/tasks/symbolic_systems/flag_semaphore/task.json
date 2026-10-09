@@ -1,0 +1,249 @@
+{
+  "id": "flag_semaphore",
+  "axis": "symbolic_systems",
+  "prompt": "A clear, evenly-lit wide photograph of 4 railway trackside safety marshals standing side by side at a level crossing during a drill, EACH holding one small square signal flag in each hand and posing in FLAG SEMAPHORE to spell a word. Reading the people LEFT to RIGHT, the 4 signallers spell the word \"PLKV\": person 1 signals 'P', person 2 'L', person 3 'K', person 4 'V'. Each signaller holds their two arms straight at the correct semaphore angles for their letter, a red flag in the RIGHT hand and a yellow flag in the LEFT hand. Full bodies visible, plain background, no text or letters written anywhere in the image.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show four railway level-crossing safety marshals posing in two-flag semaphore to spell a word, wide evenly-lit photo? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "word": "PLKV",
+    "n": 4,
+    "letters": [
+      ["P"],
+      ["L"],
+      ["K"],
+      ["V"]
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "letters",
+      "weight": 3.0,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "one single signaller: ONE person standing and holding a small square signal flag in each hand, boxed together with the two flags that person is holding -- the box runs from the top of that one person's head down to their feet and out just far enough to take in the far edge of each of their two flags. Draw one separate box for each such person; a box holding two people, or covering the whole picture, is not one signaller",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows ONE person holding a small square signal flag in each hand, with both arms held out straight. One flag is RED, the other is YELLOW. Treat THIS CUT-OUT ITSELF as a clock face: 12 means towards the TOP edge of this cut-out, 3 means towards its RIGHT edge, 6 means towards its BOTTOM edge, and 9 means towards its LEFT edge. Starting at the person's shoulder and following their straight arm out to the RED flag, in which of those directions does that arm run? Answer with exactly one of these eight labels and nothing else: 12, 1:30, 3, 4:30, 6, 7:30, 9, 10:30.",
+          "boxes": "bl",
+          "pad": 0.05,
+          "out": "red"
+        },
+        {
+          "fail_if": ["red.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows ONE person holding a small square signal flag in each hand, with both arms held out straight. One flag is RED, the other is YELLOW. Treat THIS CUT-OUT ITSELF as a clock face: 12 means towards the TOP edge of this cut-out, 3 means towards its RIGHT edge, 6 means towards its BOTTOM edge, and 9 means towards its LEFT edge. Starting at the person's shoulder and following their straight arm out to the YELLOW flag, in which of those directions does that arm run? Answer with exactly one of these eight labels and nothing else: 12, 1:30, 3, 4:30, 6, 7:30, 9, 10:30.",
+          "boxes": "bl",
+          "pad": 0.05,
+          "out": "yel"
+        },
+        {
+          "fail_if": ["yel.unreadable"]
+        },
+        {
+          "run": "read_semaphore_letters",
+          "args": ["bl", "red", "yel", "reference"],
+          "out": "law"
+        }
+      ]
+    },
+    {
+      "name": "n_figures",
+      "weight": 1.0,
+      "score": "cnt.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one single signaller: ONE person standing and holding a small square signal flag in each hand, boxed together with the two flags that person is holding -- the box runs from the top of that one person's head down to their feet and out just far enough to take in the far edge of each of their two flags. Draw one separate box for each such person; a box holding two people, or covering the whole picture, is not one signaller",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "run": "count_figures",
+          "args": ["bl", "reference"],
+          "out": "cnt"
+        }
+      ]
+    },
+    {
+      "name": "d3_fig_0",
+      "weight": 0.45,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one single signaller: ONE person standing and holding a small square signal flag in each hand, boxed together with the two flags that person is holding -- the box runs from the top of that one person's head down to their feet and out just far enough to take in the far edge of each of their two flags. Draw one separate box for each such person; a box holding two people, or covering the whole picture, is not one signaller",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows ONE person holding a small square signal flag in each hand, with both arms held out straight. One flag is RED, the other is YELLOW. Treat THIS CUT-OUT ITSELF as a clock face: 12 means towards the TOP edge of this cut-out, 3 means towards its RIGHT edge, 6 means towards its BOTTOM edge, and 9 means towards its LEFT edge. Starting at the person's shoulder and following their straight arm out to the RED flag, in which of those directions does that arm run? Answer with exactly one of these eight labels and nothing else: 12, 1:30, 3, 4:30, 6, 7:30, 9, 10:30.",
+          "boxes": "bl",
+          "pad": 0.05,
+          "out": "red"
+        },
+        {
+          "fail_if": ["red.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows ONE person holding a small square signal flag in each hand, with both arms held out straight. One flag is RED, the other is YELLOW. Treat THIS CUT-OUT ITSELF as a clock face: 12 means towards the TOP edge of this cut-out, 3 means towards its RIGHT edge, 6 means towards its BOTTOM edge, and 9 means towards its LEFT edge. Starting at the person's shoulder and following their straight arm out to the YELLOW flag, in which of those directions does that arm run? Answer with exactly one of these eight labels and nothing else: 12, 1:30, 3, 4:30, 6, 7:30, 9, 10:30.",
+          "boxes": "bl",
+          "pad": 0.05,
+          "out": "yel"
+        },
+        {
+          "fail_if": ["yel.unreadable"]
+        },
+        {
+          "run": "read_semaphore_letters",
+          "args": ["bl", "red", "yel", "reference", "0"],
+          "out": "law"
+        }
+      ]
+    },
+    {
+      "name": "d3_fig_1",
+      "weight": 0.45,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one single signaller: ONE person standing and holding a small square signal flag in each hand, boxed together with the two flags that person is holding -- the box runs from the top of that one person's head down to their feet and out just far enough to take in the far edge of each of their two flags. Draw one separate box for each such person; a box holding two people, or covering the whole picture, is not one signaller",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows ONE person holding a small square signal flag in each hand, with both arms held out straight. One flag is RED, the other is YELLOW. Treat THIS CUT-OUT ITSELF as a clock face: 12 means towards the TOP edge of this cut-out, 3 means towards its RIGHT edge, 6 means towards its BOTTOM edge, and 9 means towards its LEFT edge. Starting at the person's shoulder and following their straight arm out to the RED flag, in which of those directions does that arm run? Answer with exactly one of these eight labels and nothing else: 12, 1:30, 3, 4:30, 6, 7:30, 9, 10:30.",
+          "boxes": "bl",
+          "pad": 0.05,
+          "out": "red"
+        },
+        {
+          "fail_if": ["red.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows ONE person holding a small square signal flag in each hand, with both arms held out straight. One flag is RED, the other is YELLOW. Treat THIS CUT-OUT ITSELF as a clock face: 12 means towards the TOP edge of this cut-out, 3 means towards its RIGHT edge, 6 means towards its BOTTOM edge, and 9 means towards its LEFT edge. Starting at the person's shoulder and following their straight arm out to the YELLOW flag, in which of those directions does that arm run? Answer with exactly one of these eight labels and nothing else: 12, 1:30, 3, 4:30, 6, 7:30, 9, 10:30.",
+          "boxes": "bl",
+          "pad": 0.05,
+          "out": "yel"
+        },
+        {
+          "fail_if": ["yel.unreadable"]
+        },
+        {
+          "run": "read_semaphore_letters",
+          "args": ["bl", "red", "yel", "reference", "1"],
+          "out": "law"
+        }
+      ]
+    },
+    {
+      "name": "d3_fig_2",
+      "weight": 0.45,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one single signaller: ONE person standing and holding a small square signal flag in each hand, boxed together with the two flags that person is holding -- the box runs from the top of that one person's head down to their feet and out just far enough to take in the far edge of each of their two flags. Draw one separate box for each such person; a box holding two people, or covering the whole picture, is not one signaller",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows ONE person holding a small square signal flag in each hand, with both arms held out straight. One flag is RED, the other is YELLOW. Treat THIS CUT-OUT ITSELF as a clock face: 12 means towards the TOP edge of this cut-out, 3 means towards its RIGHT edge, 6 means towards its BOTTOM edge, and 9 means towards its LEFT edge. Starting at the person's shoulder and following their straight arm out to the RED flag, in which of those directions does that arm run? Answer with exactly one of these eight labels and nothing else: 12, 1:30, 3, 4:30, 6, 7:30, 9, 10:30.",
+          "boxes": "bl",
+          "pad": 0.05,
+          "out": "red"
+        },
+        {
+          "fail_if": ["red.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows ONE person holding a small square signal flag in each hand, with both arms held out straight. One flag is RED, the other is YELLOW. Treat THIS CUT-OUT ITSELF as a clock face: 12 means towards the TOP edge of this cut-out, 3 means towards its RIGHT edge, 6 means towards its BOTTOM edge, and 9 means towards its LEFT edge. Starting at the person's shoulder and following their straight arm out to the YELLOW flag, in which of those directions does that arm run? Answer with exactly one of these eight labels and nothing else: 12, 1:30, 3, 4:30, 6, 7:30, 9, 10:30.",
+          "boxes": "bl",
+          "pad": 0.05,
+          "out": "yel"
+        },
+        {
+          "fail_if": ["yel.unreadable"]
+        },
+        {
+          "run": "read_semaphore_letters",
+          "args": ["bl", "red", "yel", "reference", "2"],
+          "out": "law"
+        }
+      ]
+    },
+    {
+      "name": "d3_fig_3",
+      "weight": 0.45,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one single signaller: ONE person standing and holding a small square signal flag in each hand, boxed together with the two flags that person is holding -- the box runs from the top of that one person's head down to their feet and out just far enough to take in the far edge of each of their two flags. Draw one separate box for each such person; a box holding two people, or covering the whole picture, is not one signaller",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows ONE person holding a small square signal flag in each hand, with both arms held out straight. One flag is RED, the other is YELLOW. Treat THIS CUT-OUT ITSELF as a clock face: 12 means towards the TOP edge of this cut-out, 3 means towards its RIGHT edge, 6 means towards its BOTTOM edge, and 9 means towards its LEFT edge. Starting at the person's shoulder and following their straight arm out to the RED flag, in which of those directions does that arm run? Answer with exactly one of these eight labels and nothing else: 12, 1:30, 3, 4:30, 6, 7:30, 9, 10:30.",
+          "boxes": "bl",
+          "pad": 0.05,
+          "out": "red"
+        },
+        {
+          "fail_if": ["red.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows ONE person holding a small square signal flag in each hand, with both arms held out straight. One flag is RED, the other is YELLOW. Treat THIS CUT-OUT ITSELF as a clock face: 12 means towards the TOP edge of this cut-out, 3 means towards its RIGHT edge, 6 means towards its BOTTOM edge, and 9 means towards its LEFT edge. Starting at the person's shoulder and following their straight arm out to the YELLOW flag, in which of those directions does that arm run? Answer with exactly one of these eight labels and nothing else: 12, 1:30, 3, 4:30, 6, 7:30, 9, 10:30.",
+          "boxes": "bl",
+          "pad": 0.05,
+          "out": "yel"
+        },
+        {
+          "fail_if": ["yel.unreadable"]
+        },
+        {
+          "run": "read_semaphore_letters",
+          "args": ["bl", "red", "yel", "reference", "3"],
+          "out": "law"
+        }
+      ]
+    }
+  ]
+}

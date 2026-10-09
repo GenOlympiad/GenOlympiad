@@ -1,0 +1,152 @@
+{
+  "id": "datecode_decode_reencode",
+  "axis": "symbolic_systems",
+  "prompt": "The last can of the run has come off the filler and stands on the check bench at a cannery, with the shipping case for that pallet beside it and the run's check card lying between them, all three square to the camera.\n\nThe ink-jet code on the can lid reads, character for character:\n2461\n\nAt this plant a code of that shape is the day of the year in three figures followed by the last figure of the year, and everything on the floor today was filled this year, 2031. The product carries a shelf life of 400 days from the day it was filled.\n\nThe check card has two lines. The upper one is headed FILLED and carries the day the can was filled; the lower one is headed EXPIRES and carries the last day the product may be sold. Both are written as a day, then the month name in full, then the year. The shipping case beside them carries its own ink-jet code on the end panel, in the same four figure shape as the can, standing for that expiry day.\n\nWork the days out for yourself -- I am deliberately not telling you what either code stands for, and I am not telling you where the shelf life falls in the calendar. No arithmetic may be worked out anywhere on the check card.\n\nThe code on the can, both lines of the check card and the code on the case must all be readable in the one photograph.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a can and a cardboard case with short codes printed on them and a small printed card lying between them? A realistic photo, an illustration, a mockup or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "case_code": "2812",
+    "expires": "7 OCTOBER 2032",
+    "filled": "3 SEPTEMBER 2031"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_case_carries_the_expiry_day_written_back_in_the_plants_own_code",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the ink-jet code on the end panel of the shipping case",
+          "sweep": true,
+          "out": "case_box"
+        },
+        {
+          "fail_if": ["case_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the code printed in this cut-out. Write the digits only.",
+          "boxes": "case_box",
+          "pad": 0.35,
+          "out": "case_rd"
+        },
+        {
+          "fail_if": ["case_rd.unreadable"]
+        },
+        {
+          "compare": "case_rd.answers.0",
+          "to": "reference.case_code",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_expires_line_lands_where_four_hundred_days_actually_reach",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the line of the check card headed EXPIRES",
+          "sweep": true,
+          "out": "exp_box"
+        },
+        {
+          "fail_if": ["exp_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date written in this line, leaving out the heading. Write nothing else.",
+          "boxes": "exp_box",
+          "pad": 0.25,
+          "out": "exp_rd"
+        },
+        {
+          "fail_if": ["exp_rd.unreadable"]
+        },
+        {
+          "run": "clean_date_line",
+          "args": ["exp_rd"],
+          "out": "exp_txt"
+        },
+        {
+          "compare": "exp_txt.txt",
+          "to": "reference.expires",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_filled_line_is_the_can_code_resolved_into_a_calendar_day",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the line of the check card headed FILLED",
+          "sweep": true,
+          "out": "fil_box"
+        },
+        {
+          "fail_if": ["fil_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date written in this line, leaving out the heading. Write nothing else.",
+          "boxes": "fil_box",
+          "pad": 0.25,
+          "out": "fil_rd"
+        },
+        {
+          "fail_if": ["fil_rd.unreadable"]
+        },
+        {
+          "run": "clean_date_line",
+          "args": ["fil_rd"],
+          "out": "fil_txt"
+        },
+        {
+          "compare": "fil_txt.txt",
+          "to": "reference.filled",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_is_added_to_the_check_card",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of arithmetic worked out on the check card",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

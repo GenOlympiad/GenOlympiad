@@ -1,0 +1,84 @@
+{
+  "id": "tattoo_needle_code_grouping",
+  "axis": "symbolic_systems",
+  "prompt": "The artist logs the cartridge against the client's sitting before the seal is broken, so the bench is shot from above with the point end turned to the lamp.\n\nA sealed needle cartridge lies on the sterile mat with its point end towards the camera, close enough that the needle points and the way they are set out can both be made out. The box it came from stands behind it with the model code stamped across the face in large type. The day's docket, weighted flat beside the mat, gives the sitting as fine outline work only, and sets out the shop's code rule: the opening figures give the tube bore, the middle figure gives how many points are fitted, and the closing letters name the grouping in the trade's own short form.\n\nWhich grouping that use calls for, and so what the box has to say and what the points have to be doing, is what the docket does not spell out.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a sealed tattoo needle cartridge lying point-end towards the camera on a sterile mat with its box standing behind it? Answer yes or no only.",
+  "reference": {
+    "part1": "gathered_in_a_ring",
+    "part2": "closes_rl"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look straight down the point end of the cartridge at the needle points themselves and say how they are set out. Answer with one of: the points are gathered into a closed ring; the points stand in one straight row; the points stand in two rows one behind the other.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the model code stamped across the face of the box and say which letters it closes with. Answer with one of: the code closes RL; the code closes RS; the code closes M1.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

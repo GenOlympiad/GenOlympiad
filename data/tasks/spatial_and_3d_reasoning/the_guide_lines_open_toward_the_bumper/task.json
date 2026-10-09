@@ -1,0 +1,84 @@
+{
+  "id": "the_guide_lines_open_toward_the_bumper",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The calibration bay files one photograph per car before the report is signed, so the car is left standing and the cabin screen is shot over the rear seat back.\n\nA hatchback stands with its tail over a calibration mat whose printed squares are each 400 mm across and can be counted in the frame. The reversing camera is fitted on the tail centre line, 950 mm above the floor, and is set with a downward tilt of 18 degrees. A printed calibration card by the screen carries those three figures. The cabin screen shows the reversing view. Over that view the unit lays a pair of guide lines standing for a constant width painted on the ground behind the car, and three cross bars standing for ground marks set at equal spacing back from the bumper, each with its own distance wording.\n\nWhich end of the guide line pair opens out, and which of the two bar gaps is the larger, is what the card does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a cabin screen carrying a reversing view with overlaid guide lines, in a bay where the car stands on a squared calibration mat? Answer yes or no only.",
+  "reference": {
+    "part1": "further_apart_at_the_bumper_end",
+    "part2": "wider_gap_nearer_the_bumper"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the pair of guide lines the unit has laid over the reversing view. Answer with one of: the guide lines are further apart at the bumper end; the guide lines are further apart at the far end; the guide lines keep the same gap from end to end.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the three cross bars laid over the reversing view and at the two gaps between them. Answer with one of: the wider gap is the one nearer the bumper; the wider gap is the one further from the bumper; the two gaps are the same size.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

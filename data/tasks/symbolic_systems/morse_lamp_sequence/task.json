@@ -1,0 +1,164 @@
+{
+  "id": "morse_lamp_sequence",
+  "axis": "symbolic_systems",
+  "prompt": "A clean, straight-on technical TIMING DIAGRAM of a signalling lamp flashing the word \"QUARTZ\" in International Morse code, drawn as a single horizontal row of exactly 61 equal square TIME-SLOT frames, left to right. Each frame is the lamp state during one time unit: a BRIGHT glowing amber square if the lamp is ON that unit, or a BLACK square if the lamp is OFF. Use the standard Morse timing: a DOT is the lamp ON for 1 frame, a DASH is the lamp ON for 3 consecutive frames, the gap between the dots and dashes WITHIN a letter is 1 OFF frame, and the gap BETWEEN letters is 3 OFF frames. There is no gap before the first letter or after the last. Fill every frame with the correct ON/OFF state for flashing QUARTZ. Thin grey frame borders, all frames the same size on one straight row, nothing else — no text, no dots, no dashes, no labels.",
+  "difficulty": "h2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a lamp TIMING DIAGRAM — a single row of equal square frames, each a bright (ON) or black (OFF) square? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "word": "QUARTZ",
+    "frames": [
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1
+    ],
+    "n": 61,
+    "aspect_min": 36.6,
+    "q_frames": "This is a lamp timing diagram: a single horizontal row of exactly 61 equal square frames, each either a BRIGHT/glowing square (lamp ON) or a BLACK square (lamp OFF). Reading LEFT to RIGHT, output 61 digits separated by single spaces: 1 if that frame is bright/ON, 0 if it is black/OFF. Output ONLY the digits. If unreadable answer 'unreadable'."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "frame_sequence",
+      "weight": 4.0,
+      "score": "h.frac",
+      "steps": [
+        {
+          "ask": "Are the small square lamp frames in this picture drawn in ONE single horizontal row, side by side? Answer yes or no only.",
+          "out": "one_row"
+        },
+        {
+          "fail_if": ["one_row.unreadable"]
+        },
+        {
+          "ask": "Write down every row of small square lamp frames drawn in this picture, working from the top down, each with a few plain words saying where on the picture it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no such row here, write the single word NONE.",
+          "out": "rows_txt"
+        },
+        {
+          "fail_if": ["rows_txt.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rows_txt", "empty_as='0'"],
+          "out": "rows_txt__std"
+        },
+        {
+          "fail_if": ["rows_txt__std.refused"]
+        },
+        {
+          "read": "boxes",
+          "target": "the block of square lamp time-slot frames",
+          "expected_n": 1,
+          "out": "sb"
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "split_strip_into_frames",
+          "args": [
+            "sb",
+            "reference.n",
+            "one_row",
+            "rows_txt__std.text",
+            "src",
+            "reference.aspect_min"
+          ],
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "read_crop": "This crop shows ONE square time-slot frame of a signalling-lamp strip. Is that square BRIGHT (a glowing amber/yellow lamp that is ON) or BLACK (the lamp is OFF)? Answer with exactly one word: bright or black.",
+          "boxes": "fb",
+          "out": "cr"
+        },
+        {
+          "run": "score_lamp_frames",
+          "args": ["cr", "reference.frames", "fb"],
+          "out": "h"
+        },
+        {
+          "fail_if": ["h.unreadable"]
+        }
+      ]
+    }
+  ]
+}

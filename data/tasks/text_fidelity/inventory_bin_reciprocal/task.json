@@ -1,0 +1,271 @@
+{
+  "id": "inventory_bin_reciprocal",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed WAREHOUSE STOCK SHEET titled 'COMPONENT STORE -- BIN INDEX' with TWO panels. LEFT panel 'ITEM INDEX': 42 item codes, each printed with its home bin, as 'CODE  ->  bin Bn'. RIGHT panel 'BIN MANIFEST': each bin listed with the item codes stored in it. CRITICAL reciprocity: the two panels must agree BOTH ways -- if the item index says an item is in a bin, that bin's manifest must list that exact item code, and every code in a bin's manifest must be an item whose index entry names that bin. In particular item 'CP-215' is in 'bin B8', so bin B8's manifest must include 'CP-215'. Print both panels so every item-to-bin assignment appears identically in the bin manifest. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a warehouse stock sheet with an ITEM index (item -> home bin) and a BIN manifest (bin -> items stored in it). Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 42,
+    "sample_item": "CP-215",
+    "sbin": "B8",
+    "q_itembin": "In the LEFT 'ITEM INDEX' panel, find the row for item code 'CP-215'. Which bin is it assigned to (read the 'bin Bn' printed after the arrow)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the bin label.",
+    "q_inbin": "In the RIGHT 'BIN MANIFEST' panel, find the line whose bin label is B8. Copy out EVERY item code printed on that one line, in the order they are printed, separated by commas. Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round anything, and do not add any code that is not printed on that line. Answer with the list of item codes and nothing else. If there is no line labelled B8 at all, answer the single word NONE."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "inventory_bin_reciprocal_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the list of item rows in the item-index panel on the left -- the block covering every row that prints one item code with the bin it belongs to, taken together as one shape; not the panel's heading, not the column headings above the rows, and not the bin-manifest panel on the right",
+          "expected_n": 1,
+          "out": "anca"
+        },
+        {
+          "fail_if": ["anca.unreadable"]
+        },
+        {
+          "run": "plan_item_rows",
+          "args": ["image", "anca", "reference.n"],
+          "out": "pla"
+        },
+        {
+          "fail_if": ["pla.no_plan"]
+        },
+        {
+          "read_crop": "This is one row cut out of a printed item list. What item code is printed on this row? Answer with just that code, copied exactly as it is printed, and nothing else.",
+          "boxes": "pla.cells",
+          "pad": 0.0,
+          "out": "rd_item"
+        },
+        {
+          "run": "find_row",
+          "args": ["pla", "rd_item", "reference.sample_item"],
+          "out": "rowa"
+        },
+        {
+          "fail_if": ["rowa.no_plan"]
+        },
+        {
+          "read_crop": "This is one row cut out of a printed item list. Which bin label is printed on this row after the arrow? Answer with just that bin label, copied exactly as it is printed, and nothing else.",
+          "boxes": "rowa.cells",
+          "pad": 0.0,
+          "out": "rd_hb"
+        },
+        {
+          "run": "row_text",
+          "args": ["rd_hb", "rowa"],
+          "out": "itembin"
+        },
+        {
+          "read": "boxes",
+          "target": "the list of bin lines in the bin-manifest panel on the right -- the block covering every line that prints one bin label with the item codes stored in it, taken together as one shape; not the panel's heading, not the column headings above the lines, and not the item-index panel on the left",
+          "expected_n": 1,
+          "out": "ancb"
+        },
+        {
+          "fail_if": ["ancb.unreadable"]
+        },
+        {
+          "read_crop": "This is a printed bin manifest cut out of a bigger picture. Each line starts with one bin label. Write down every line printed in this list, copying the bin label it starts with. Separate one item from the next with a semicolon; write no running total and nothing else. If no line is printed here, write the single word NONE.",
+          "boxes": "ancb",
+          "pad": 0.02,
+          "out": "nline"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["nline", "empty_as='0'"],
+          "out": "nline__std"
+        },
+        {
+          "fail_if": ["nline__std.refused"]
+        },
+        {
+          "run": "plan_bin_rows",
+          "args": ["image", "ancb", "nline__std"],
+          "out": "plb"
+        },
+        {
+          "fail_if": ["plb.no_plan"]
+        },
+        {
+          "read_crop": "This is one line cut out of a printed bin manifest. What bin label is printed at the start of this line? Answer with just that label, copied exactly as it is printed, and nothing else.",
+          "boxes": "plb.cells",
+          "pad": 0.0,
+          "out": "rd_bin"
+        },
+        {
+          "run": "find_row",
+          "args": ["plb", "rd_bin", "reference.sbin"],
+          "out": "rowb"
+        },
+        {
+          "fail_if": ["rowb.no_plan"]
+        },
+        {
+          "read_crop": "This is one line cut out of a printed bin manifest. Copy out every item code printed on this line, in the order they appear, separated by commas. Answer with just those codes and nothing else. If this line prints no item code at all, answer the single word NONE.",
+          "boxes": "rowb.cells",
+          "pad": 0.0,
+          "out": "rd_codes"
+        },
+        {
+          "run": "row_text",
+          "args": ["rd_codes", "rowb"],
+          "out": "inbin"
+        },
+        {
+          "run": "item_listed_in_its_bin",
+          "args": ["itembin.v", "inbin.v", "reference.sbin", "reference.sample_item"],
+          "out": "lw"
+        },
+        {
+          "const": "lw.frac",
+          "out": "frac"
+        },
+        {
+          "run": "paint_both_rows",
+          "args": ["rowa", "rowb", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the list of item rows in the item-index panel on the left -- the block covering every row that prints one item code with the bin it belongs to, taken together as one shape; not the panel's heading, not the column headings above the rows, and not the bin-manifest panel on the right",
+          "expected_n": 1,
+          "out": "anca"
+        },
+        {
+          "fail_if": ["anca.unreadable"]
+        },
+        {
+          "run": "plan_item_rows",
+          "args": ["image", "anca", "reference.n"],
+          "out": "pla"
+        },
+        {
+          "fail_if": ["pla.no_plan"]
+        },
+        {
+          "read_crop": "This is one row cut out of a printed item list. What item code is printed on this row? Answer with just that code, copied exactly as it is printed, and nothing else.",
+          "boxes": "pla.cells",
+          "pad": 0.0,
+          "out": "rd_item"
+        },
+        {
+          "run": "find_row",
+          "args": ["pla", "rd_item", "reference.sample_item"],
+          "out": "rowa"
+        },
+        {
+          "fail_if": ["rowa.no_plan"]
+        },
+        {
+          "read_crop": "This is one row cut out of a printed item list. Which bin label is printed on this row after the arrow? Answer with just that bin label, copied exactly as it is printed, and nothing else.",
+          "boxes": "rowa.cells",
+          "pad": 0.0,
+          "out": "rd_hb"
+        },
+        {
+          "run": "row_text",
+          "args": ["rd_hb", "rowa"],
+          "out": "itembin"
+        },
+        {
+          "run": "home_bin_read",
+          "args": ["itembin.v", "reference.sbin"],
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["rowa", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ]
+}

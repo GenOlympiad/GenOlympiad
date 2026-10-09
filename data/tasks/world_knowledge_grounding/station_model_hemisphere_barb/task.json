@@ -1,0 +1,206 @@
+{
+  "id": "station_model_hemisphere_barb",
+  "axis": "world_knowledge_grounding",
+  "prompt": "One plate from the exercise book a national weather service prints for its forecaster trainees, the page on plotting a synoptic hour.\n\nThe plate is drawn north up and has a small compass rose in one corner. Three station plots stand well apart on it, each with its place name lettered close beside its own circle, and the observation table for that hour is reproduced word for word down the side of the plate:\n  HELSINKI   wind from 045   25 knots   cloud 8 oktas\n  NAIROBI    wind from 180   15 knots   cloud 4 oktas\n  CAPE TOWN  wind from 315   30 knots   cloud 2 oktas\n\nEach station is plotted the way the World Meteorological Organization has it done: the amount of cloud is the fraction of the station circle that is inked in, a single straight shaft runs out of the circle to carry the wind, and the barb strokes that stand for the speed sit at the outer end of that shaft. Trainees swap plates and mark each other's against the real convention, and a plate a duty forecaster would read backwards is returned as a fail.\n\nWhich way each shaft runs, and which side of its own shaft the barb strokes hang on, is the trainee's work -- I am deliberately not telling you either. Apart from the compass rose and the reproduced observation table, nothing else goes on the plate: no arrows, no figures in degrees, no direction words, no notes in the margin. Keep the three plots well apart, each one small against the gap to its neighbours, and large enough that the barb strokes and the inked part of every circle are easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed plate carrying a few small circles, each with a straight line running out of it? A teaching plate, an illustration or a diagram all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "stations": ["HELSINKI", "NAIROBI", "CAPE TOWN"],
+    "hemisphere": ["north", "either", "south"],
+    "wind_from": [45, 180, 315],
+    "cloud_oktas": [8, 4, 2],
+    "cloud_state": "match"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_barb_strokes_hang_on_the_side_each_stations_hemisphere_gives",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the station circles printed on the plate",
+          "out": "bb_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bb_r.unreadable"]
+        },
+        {
+          "read_crop": "What place name is lettered beside the circle in this cut-out? Answer with that name only.",
+          "boxes": "bb_r",
+          "pad": 0.5,
+          "out": "bb_nm",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["bb_nm.unreadable"]
+        },
+        {
+          "read_crop": "North is the top of the picture. Which way does the straight line run away from the small circle in this cut-out? Answer with one of these eight words: north, northeast, east, southeast, south, southwest, west, northwest.",
+          "boxes": "bb_r",
+          "pad": 1.0,
+          "out": "bb_sh",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["bb_sh.unreadable"]
+        },
+        {
+          "read_crop": "North is the top of the picture. The short strokes sit at the far end of the straight line. Which way do those short strokes stick out from that line? Answer with one of these eight words: north, northeast, east, southeast, south, southwest, west, northwest.",
+          "boxes": "bb_r",
+          "pad": 1.0,
+          "out": "bb_fe",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["bb_fe.unreadable"]
+        },
+        {
+          "run": "barb_side_error",
+          "args": ["bb_nm", "bb_sh", "bb_fe", "reference.stations", "reference.hemisphere"],
+          "out": "bb_s"
+        },
+        {
+          "compare_compass": "bb_s.obs",
+          "to": "bb_s.exp",
+          "core": 22.5,
+          "margin": 67.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_shaft_runs_out_toward_the_wind_the_table_gives",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the station circles printed on the plate",
+          "out": "sf_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sf_r.unreadable"]
+        },
+        {
+          "read_crop": "What place name is lettered beside the circle in this cut-out? Answer with that name only.",
+          "boxes": "sf_r",
+          "pad": 0.5,
+          "out": "sf_nm",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sf_nm.unreadable"]
+        },
+        {
+          "read_crop": "North is the top of the picture. Which way does the straight line run away from the small circle in this cut-out? Answer with one of these eight words: north, northeast, east, southeast, south, southwest, west, northwest.",
+          "boxes": "sf_r",
+          "pad": 1.0,
+          "out": "sf_sh",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sf_sh.unreadable"]
+        },
+        {
+          "run": "shaft_bearing_error",
+          "args": ["sf_nm", "sf_sh", "reference.stations", "reference.wind_from"],
+          "out": "sf_s"
+        },
+        {
+          "compare_compass": "sf_s.obs",
+          "to": "sf_s.exp",
+          "core": 22.5,
+          "margin": 67.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_circle_is_inked_to_the_cloud_amount_the_table_gives",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the station circles printed on the plate",
+          "out": "cl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["cl_r.unreadable"]
+        },
+        {
+          "read_crop": "What place name is lettered beside the circle in this cut-out? Answer with that name only.",
+          "boxes": "cl_r",
+          "pad": 0.5,
+          "out": "cl_nm",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cl_nm.unreadable"]
+        },
+        {
+          "read_crop": "How much of the small circle in this cut-out is inked in? Answer with one of these five phrases: none of it, a quarter, a half, three quarters, all of it.",
+          "boxes": "cl_r",
+          "pad": 0.3,
+          "out": "cl_fl",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cl_fl.unreadable"]
+        },
+        {
+          "run": "cloud_fill_matches",
+          "args": ["cl_nm", "cl_fl", "reference.stations", "reference.cloud_oktas"],
+          "out": "cl_s"
+        },
+        {
+          "compare": "cl_s.state",
+          "to": "reference.cloud_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_arrow_or_degree_figure_was_added_beside_a_station",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow or a figure in degrees added beside a station circle",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

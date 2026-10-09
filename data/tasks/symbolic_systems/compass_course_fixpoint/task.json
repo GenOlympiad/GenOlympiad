@@ -1,0 +1,201 @@
+{
+  "id": "compass_course_fixpoint",
+  "axis": "symbolic_systems",
+  "prompt": "The corner of the chart table on a coaster's bridge, photographed at the change of watch.\n\nLying open on the board is the ship's deviation card, made out by the compass adjuster. It has\ntwo columns, and this is the whole of it:\n\nCOMPASS HEADING   DEVIATION\n045               8W\n060               4W\n075               1E\n090               6E\n\nPrinted across the foot of the card is the adjuster's instruction: ENTER THIS CARD WITH THE\nCOMPASS HEADING. TAKE THE NEAREST HEADING LISTED.\n\nThe chart is open beside it and the compass rose in this sheet's corner is printed VARIATION 7W.\n\nThe deck log is open on the table. The line for the next leg has three boxes on it, headed\nCOURSE TRUE, COURSE MAGNETIC and COURSE COMPASS. The first of them already reads 044. The other\ntwo are empty.\n\nWorking the other two boxes out is what the officer of the watch is paid for, so it is yours: I\nam not telling you what belongs in COURSE MAGNETIC, and I am not telling you what belongs in\nCOURSE COMPASS.\n\nAll four rows of the deviation card, the variation printed on the rose, and all three boxes of\nthe log line must be legible in the one frame. No other course is written anywhere on the table.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed table and an open book or log lying on a table top? A photograph, a scan or a drawing ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no table or book at all. Answer yes or no only.",
+  "reference": {
+    "compass": "055",
+    "magnetic": "051",
+    "row_060": "4|w",
+    "page_is_clean": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_compass_course_is_the_heading_that_closes",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the box headed COURSE COMPASS on the open log page",
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.unreadable"]
+        },
+        {
+          "read_crop": "Is a course figure written inside this cut-out? Answer yes or no.",
+          "boxes": "cb",
+          "pad": 0.08,
+          "out": "cp"
+        },
+        {
+          "read_crop": "Copy the three figure course written in this cut-out. Write the figures only.",
+          "boxes": "cb",
+          "pad": 0.08,
+          "out": "cv"
+        },
+        {
+          "run": "onefield",
+          "args": ["seen(cp, cv)"],
+          "out": "cm"
+        },
+        {
+          "fail_if": ["cm.refused"]
+        },
+        {
+          "compare": "cm.val",
+          "to": "reference.compass",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_magnetic_course_carries_the_variation_only",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the box headed COURSE MAGNETIC on the open log page",
+          "out": "mb"
+        },
+        {
+          "fail_if": ["mb.unreadable"]
+        },
+        {
+          "read_crop": "Is a course figure written inside this cut-out? Answer yes or no.",
+          "boxes": "mb",
+          "pad": 0.08,
+          "out": "mp"
+        },
+        {
+          "read_crop": "Copy the three figure course written in this cut-out. Write the figures only.",
+          "boxes": "mb",
+          "pad": 0.08,
+          "out": "mv"
+        },
+        {
+          "run": "onefield",
+          "args": ["seen(mp, mv)"],
+          "out": "mm"
+        },
+        {
+          "fail_if": ["mm.refused"]
+        },
+        {
+          "compare": "mm.val",
+          "to": "reference.magnetic",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_row_the_course_falls_on_reads_as_the_adjuster_made_it_out",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of the deviation card whose heading column reads 060",
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "read_crop": "Is a deviation figure printed on this row? Answer yes or no.",
+          "boxes": "rb",
+          "pad": 0.1,
+          "out": "rp"
+        },
+        {
+          "read_crop": "Copy the deviation figure printed on this row, without the letter after it. Write the figure only.",
+          "boxes": "rb",
+          "pad": 0.1,
+          "out": "rv"
+        },
+        {
+          "read_crop": "Copy the letter printed after the deviation figure on this row. Answer with one of: e, w.",
+          "boxes": "rb",
+          "pad": 0.1,
+          "out": "rl"
+        },
+        {
+          "run": "picks",
+          "args": ["seen(rp, rv)", "rl"],
+          "out": "rm"
+        },
+        {
+          "fail_if": ["rm.refused"]
+        },
+        {
+          "compare": "rm.seq",
+          "to": "reference.row_060",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_course_to_steer_is_written_outside_the_log",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a course to steer written on the chart or on the deviation card",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is this a course to steer written outside the log book? Answer yes or no. Answer no if the cut-out shows the heading column of the deviation card, a deviation figure, the variation on the compass rose, the log line itself, or the printed true course.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "run": "sweep_holds_nothing_banned",
+          "args": ["xg", "xgw", "xgy"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.page_is_clean",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

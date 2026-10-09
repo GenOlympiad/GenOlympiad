@@ -1,0 +1,215 @@
+{
+  "id": "chained_balance_tilt",
+  "axis": "latent_computation",
+  "prompt": "A physics-classroom demonstration rig hangs THREE separate balance beams one above another on a stand, each beam a horizontal bar pivoted at its centre with a pan on the left end and a pan on the right end. The hung masses are, from the TOP beam to the BOTTOM beam: top beam 30 g on the left pan and 45 g on the right pan; middle beam 60 g on the left and 60 g on the right; bottom beam 80 g on the left and 25 g on the right. A beam tips DOWN on whichever side is heavier, or stays perfectly LEVEL if both sides are equal. Render all three beams showing the correct final TILT of each one (left-end-down, right-end-down, or level), with the masses drawn in their pans. Do NOT write the words 'left', 'right', or 'level' anywhere on the image.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show physics-classroom rig of three stacked centre-pivot balance beams each drawn tilted to its heavier side (or level) with the hung gram masses in the pans? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "tilt_top": "right",
+    "tilt_mid": "level",
+    "tilt_bot": "left",
+    "q_form": "Look at this image. Does it show three horizontal balance beams stacked one above another, each with a pan on the left and right? Answer ONLY 'yes' or 'no'.",
+    "q_top": "Look ONLY at the TOP balance beam in this image. Which way is it tilted? Report ONLY what is drawn: answer 'left' if its LEFT end is lower, 'right' if its RIGHT end is lower, or 'level' if the bar is horizontal. Answer with one word only.",
+    "q_mid": "Look ONLY at the MIDDLE balance beam in this image. Which way is it tilted? Report ONLY what is drawn: answer 'left' if its LEFT end is lower, 'right' if its RIGHT end is lower, or 'level' if the bar is horizontal. Answer with one word only.",
+    "q_bot": "Look ONLY at the BOTTOM balance beam in this image. Which way is it tilted? Report ONLY what is drawn: answer 'left' if its LEFT end is lower, 'right' if its RIGHT end is lower, or 'level' if the bar is horizontal. Answer with one word only.",
+    "top_left_g": 30.0,
+    "bot_left_g": 80.0,
+    "beam_count": 3.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tilt_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_top",
+          "out": "t1"
+        },
+        {
+          "ask": "reference.q_mid",
+          "out": "t2"
+        },
+        {
+          "ask": "reference.q_bot",
+          "out": "t3"
+        },
+        {
+          "run": null,
+          "expression": "j(t1,t2,t3,reference.tilt_top,reference.tilt_mid,reference.tilt_bot)",
+          "code": {
+            "inline": "j_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tilt_partial",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_top",
+          "out": "p1"
+        },
+        {
+          "ask": "reference.q_mid",
+          "out": "p2"
+        },
+        {
+          "ask": "reference.q_bot",
+          "out": "p3"
+        },
+        {
+          "run": null,
+          "expression": "frac(p1,p2,p3,reference.tilt_top,reference.tilt_mid,reference.tilt_bot)",
+          "code": {
+            "inline": "frac_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_top_left_mass",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the TOP beam, read the mass value drawn in the LEFT pan (in grams). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.top_left_g",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_bot_left_mass",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the BOTTOM beam, read the mass value drawn in the LEFT pan (in grams). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.bot_left_g",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_beam_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one horizontal balance beam hung on the stand, with a hanging pan at each end",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole horizontal balance beam with a hanging pan at each end, rather than bare background or only part of a beam? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.beam_count",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_tilt_words",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written or printed word reading left, right or level anywhere in the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

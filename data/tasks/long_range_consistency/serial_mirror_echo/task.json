@@ -1,0 +1,150 @@
+{
+  "id": "serial_mirror_echo",
+  "axis": "long_range_consistency",
+  "prompt": "A six-panel comic page in bold marker-pen style, TWO ROWS OF THREE panels. The same bus driver — navy coat, glasses — is in every panel, wearing a plain woolly hat and a plain scarf.\n\nHIS HAT, panel by panel: 1 ORANGE, 2 WHITE, 3 GREEN, 4 PURPLE, 5 BLUE, 6 RED.\n\nHIS SCARF MIRRORS THE HATS FROM THE OTHER END OF THE STRIP: the scarf in panel 1 is the colour of the hat in panel 6, the scarf in panel 2 is the colour of the hat in panel 5, the scarf in panel 3 is the colour of the hat in panel 4, and so on back the other way, so the scarf in panel 6 is the colour of the hat in panel 1. Read the scarves backwards and they spell out the hats read forwards.\n\nIn no panel do the hat and the scarf share a colour. Six different places on his route, a different pose and framing each time. No text, no captions, no lettering.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a comic strip: several separate panels, drawn side by side, with the same person appearing in each panel. Ignoring artistic quality and ignoring whether the story is right, does the image DEPICT that — a strip of separate panels with a recurring figure? A comic page, a storyboard or a picture-book strip all count as yes. Answer NO only if it is blank, a single picture with no panels, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 6,
+    "na": 6,
+    "seq_a": ["orange", "white", "green", "purple", "blue", "red"],
+    "nb": 6,
+    "seq_b": ["red", "blue", "purple", "green", "white", "orange"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single panel of the comic strip",
+          "votes": 3,
+          "out": "pnb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pnb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a comic strip. Does this cut-out show exactly ONE whole panel of that strip -- one single drawing inside its own frame, not two panels at once and not just a piece of one? Answer yes or no only.",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pnc"
+        },
+        {
+          "fail_if": ["pnc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one panel of a comic strip, with a man in it. What colour is the woolly hat he is wearing? Use only one of these words: red, green, blue, yellow, black, white.",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pnh"
+        },
+        {
+          "fail_if": ["pnh.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one panel of a comic strip, with a man in it. What colour is the scarf he is wearing? Use only one of these words: red, green, blue, yellow, black, white.",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pns"
+        },
+        {
+          "fail_if": ["pns.unreadable"]
+        },
+        {
+          "run": "strip_reads",
+          "args": ["pnb", "pnc", "pnh", "pns", "reference"],
+          "out": "sr"
+        },
+        {
+          "run": "law_holds_score",
+          "args": ["[[sr.hats], [sr.scarves]]", "[reference.seq_a, reference.seq_b]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "panel_share",
+      "weight": 0.3,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single panel of the comic strip",
+          "votes": 3,
+          "out": "pnb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pnb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a comic strip. Does this cut-out show exactly ONE whole panel of that strip -- one single drawing inside its own frame, not two panels at once and not just a piece of one? Answer yes or no only.",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pnc"
+        },
+        {
+          "fail_if": ["pnc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one panel of a comic strip, with a man in it. What colour is the woolly hat he is wearing? Use only one of these words: red, green, blue, yellow, black, white.",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pnh"
+        },
+        {
+          "fail_if": ["pnh.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one panel of a comic strip, with a man in it. What colour is the scarf he is wearing? Use only one of these words: red, green, blue, yellow, black, white.",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pns"
+        },
+        {
+          "fail_if": ["pns.unreadable"]
+        },
+        {
+          "run": "strip_reads",
+          "args": ["pnb", "pnc", "pnh", "pns", "reference"],
+          "out": "sr"
+        },
+        {
+          "run": "law_share_score",
+          "args": ["[[sr.hats], [sr.scarves]]", "[reference.seq_a, reference.seq_b]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

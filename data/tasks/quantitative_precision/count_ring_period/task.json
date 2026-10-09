@@ -1,0 +1,326 @@
+{
+  "id": "count_ring_period",
+  "axis": "quantitative_precision",
+  "prompt": "A straight-on photograph of a large white-painted wooden embroidery hoop hanging flat against a plain pale-grey wall, stretched with white linen. Round flat buttons, all identical in size, are stitched to the linen in a single closed circle that follows the inside of the hoop, spaced evenly apart.\n\nForty buttons are stitched in that circle -- no more and no fewer -- and each one is red, blue or green. Nothing else in the frame shows any of those colours: not the hoop, not the linen, not the thread, not the wall.\n\nTheir sequence obeys a five-button motif, read clockwise: red, blue, blue, green, green. The motif recurs eight times over and joins up with itself where the circle closes, so the button next along from the last is the same colour as the first.\n\nKeep the doubled pairs intact -- the two blues belong side by side, and so do the two greens. Do not smooth the circle out into a run in which no two touching buttons match. Flat, shadowless studio lighting; every button clearly separated from its neighbours. Nothing written, printed, numbered or captioned appears anywhere.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a round embroidery hoop on a wall, stretched with pale fabric, with round coloured buttons stitched in a single circle just inside the hoop. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank panel, a page of text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "enforce_notext": true,
+    "q_notext": "Apart from the scene itself, can you see any written word, printed figure or caption anywhere in this frame? Answer yes if some writing or figure is present, no if the frame carries none. Answer yes or no only.",
+    "colours": ["red", "blue", "green"],
+    "word": "RBBGG",
+    "n": 40,
+    "reps": 8,
+    "per_colour": {
+      "R": 8,
+      "B": 16,
+      "G": 16
+    },
+    "decoy_local_alternation": "RBGRBGRBGRBGRBGRBGRBGRBGRBGRBGRBGRBGRBGR",
+    "decoy_overrun_extra": 6
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ring_cardinality",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "coloured piece on the ring -- one single piece of the ring boxed on its own: count a rectangle only if one whole piece of solid colour (red, blue or green) sits in its middle with the pale carrier showing round it. Do not put two neighbouring pieces in one rectangle, and do not box bare carrier, mortar, stitching or background.",
+          "retries": 5,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "run": "order_ring_boxes",
+          "args": ["bx", "reference.colours"],
+          "out": "ord"
+        },
+        {
+          "fail_if": ["ord.degenerate"]
+        },
+        {
+          "read_crop": "ord.q",
+          "boxes": "ord",
+          "pad": 0.05,
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "ring_law",
+          "args": [
+            "cc",
+            "reference.colours",
+            "reference.word",
+            "reference.n",
+            "reference.per_colour"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "compare_band": "m.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 3,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ring_phase_law",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "coloured piece on the ring -- one single piece of the ring boxed on its own: count a rectangle only if one whole piece of solid colour (red, blue or green) sits in its middle with the pale carrier showing round it. Do not put two neighbouring pieces in one rectangle, and do not box bare carrier, mortar, stitching or background.",
+          "retries": 5,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "run": "order_ring_boxes",
+          "args": ["bx", "reference.colours"],
+          "out": "ord"
+        },
+        {
+          "fail_if": ["ord.degenerate"]
+        },
+        {
+          "read_crop": "ord.q",
+          "boxes": "ord",
+          "pad": 0.05,
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "ring_law",
+          "args": [
+            "cc",
+            "reference.colours",
+            "reference.word",
+            "reference.n",
+            "reference.per_colour"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "const": "m.phase_frac",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ring_closes",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "coloured piece on the ring -- one single piece of the ring boxed on its own: count a rectangle only if one whole piece of solid colour (red, blue or green) sits in its middle with the pale carrier showing round it. Do not put two neighbouring pieces in one rectangle, and do not box bare carrier, mortar, stitching or background.",
+          "retries": 5,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "run": "order_ring_boxes",
+          "args": ["bx", "reference.colours"],
+          "out": "ord"
+        },
+        {
+          "fail_if": ["ord.degenerate"]
+        },
+        {
+          "read_crop": "ord.q",
+          "boxes": "ord",
+          "pad": 0.05,
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "ring_law",
+          "args": [
+            "cc",
+            "reference.colours",
+            "reference.word",
+            "reference.n",
+            "reference.per_colour"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "const": "m.closes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ring_colour_budget",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "coloured piece on the ring -- one single piece of the ring boxed on its own: count a rectangle only if one whole piece of solid colour (red, blue or green) sits in its middle with the pale carrier showing round it. Do not put two neighbouring pieces in one rectangle, and do not box bare carrier, mortar, stitching or background.",
+          "retries": 5,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "run": "order_ring_boxes",
+          "args": ["bx", "reference.colours"],
+          "out": "ord"
+        },
+        {
+          "fail_if": ["ord.degenerate"]
+        },
+        {
+          "read_crop": "ord.q",
+          "boxes": "ord",
+          "pad": 0.05,
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "ring_law",
+          "args": [
+            "cc",
+            "reference.colours",
+            "reference.word",
+            "reference.n",
+            "reference.per_colour"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "const": "m.colour_frac",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_landed_on_local_alternation",
+      "weight": 0.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coloured piece on the ring -- one single piece of the ring boxed on its own: count a rectangle only if one whole piece of solid colour (red, blue or green) sits in its middle with the pale carrier showing round it. Do not put two neighbouring pieces in one rectangle, and do not box bare carrier, mortar, stitching or background.",
+          "retries": 5,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "run": "order_ring_boxes",
+          "args": ["bx", "reference.colours"],
+          "out": "ord"
+        },
+        {
+          "fail_if": ["ord.degenerate"]
+        },
+        {
+          "read_crop": "ord.q",
+          "boxes": "ord",
+          "pad": 0.05,
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "ring_law",
+          "args": [
+            "cc",
+            "reference.colours",
+            "reference.word",
+            "reference.n",
+            "reference.per_colour"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "run": "ring_spells_decoy",
+          "args": ["m.order", "reference.decoy_local_alternation"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a glazed mosaic tile set in the fountain rim",
+    "s2": "a round icing dot on the cake rim",
+    "s3": "a round button stitched to the linen"
+  },
+  "aspect_ratio": "1:1"
+}

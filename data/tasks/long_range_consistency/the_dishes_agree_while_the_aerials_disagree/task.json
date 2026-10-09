@@ -1,0 +1,84 @@
+{
+  "id": "the_dishes_agree_while_the_aerials_disagree",
+  "axis": "long_range_consistency",
+  "prompt": "Handover photograph for a communal reception job at Beckhill Court, a narrow balcony-access block on Wynford Road. The engineer's sheet covers Flats A, B, C, D, E and F, a single flat to each storey, and every balcony rail now carries its own 80 cm offset dish; each dish on that sheet has been commissioned on the same geostationary satellite at 19.2 degrees east, which from this street sits low in the sky away past the left-hand end of the terrace. The block's terrestrial aerials are up on the roof, on the chimney stack, on the centre stub and on the gable-end stub, each set on the lattice relay mast standing on the ridge behind the estate, over to the right. The installer took the picture from the pavement opposite at eye level, square to the wall with no upward tilt, keeping the whole front elevation, every balcony dish, the full roofline and the ridge mast inside a single frame in flat morning light.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph show the whole front elevation of a block of flats, taken square on from street level with no upward tilt, with a satellite dish on every balcony, the cross-bar aerials along the roofline, and the lattice mast on the hillside all inside a single frame? Answer yes or no only.",
+  "reference": {
+    "part1": "six",
+    "part2": "3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "How many of the round satellite dishes on the balconies have their open face turned toward the left-hand side of this picture?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "How many of the rooftop aerials with cross-bars have their bars pointed at the lattice mast on the hillside?",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

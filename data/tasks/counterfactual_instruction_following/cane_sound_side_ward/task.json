@@ -1,0 +1,150 @@
+{
+  "id": "cane_sound_side_ward",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A physiotherapy department wants the photograph that goes on its gait-training board, and it has asked for the moment when all three of the morning's patients are in the rehabilitation corridor at once. The camera stands at the near end of the corridor and the three are walking away from it, so the camera sees their backs; the corridor handrail runs along the wall beside them.\n\nClipped to the handrail beside each patient is that patient's bed card. A bed card carries the bed number in large figures and, under it, the words WEAK SIDE followed by one word. The three cards read, and each stands beside its own patient:\n  bed 4 -- WEAK SIDE LEFT\n  bed 7 -- WEAK SIDE RIGHT\n  bed 9 -- WEAK SIDE LEFT\n\nEach of the three is walking with one walking stick, and each stick is on the floor taking weight. The reason the department wants this photograph at all is the single thing its therapists correct in almost every new patient, and it is the opposite of what everyone assumes on the first day: a walking stick is never carried on the weak side. Which hand holds the stick in each case is deliberately not being given here -- it follows from the card clipped beside that patient, and working it out is the whole teaching point of the board.\n\nThe bed cards are to be large enough to read from where the camera stands. Nothing else in the picture may state the answer: no arrows, no captions, no side labels on the patients, and nothing written on a card except the bed number and those two words with the side.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show people walking along a corridor with small cards clipped to a rail on the wall beside them? A photograph, a hospital training image or an illustration ALL count as yes. Answer NO only if the image instead shows a blank card that just states an answer, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "stick_sides": "right|left|right",
+    "weak_sides": "left|right|left",
+    "bed_order": "4|7|9",
+    "n_patients": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_stick_is_on_the_side_the_card_does_not_name",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one patient walking away down the corridor together with the bed card on the rail beside them",
+          "out": "pat",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pat.unreadable"]
+        },
+        {
+          "read_crop": "Copy the bed number printed in large figures on the small card in this cut-out. Write the number only.",
+          "boxes": "pat",
+          "pad": 0.2,
+          "out": "bed"
+        },
+        {
+          "read_crop": "In this cut-out, is the walking stick on the left side of the person's body or on the right side, as you see it in the picture? Answer left or right only.",
+          "boxes": "pat",
+          "pad": 0.2,
+          "out": "side"
+        },
+        {
+          "run": "values_by_bed_key",
+          "args": ["bed", "side", "reference.bed_order"],
+          "out": "sj"
+        },
+        {
+          "fail_if": ["sj.refused"]
+        },
+        {
+          "compare": "sj.seq",
+          "to": "reference.stick_sides",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_cards_carry_the_weak_sides_handed_over",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one bed card clipped to the corridor handrail",
+          "out": "cardr",
+          "sweep": true
+        },
+        {
+          "fail_if": ["cardr.unreadable"]
+        },
+        {
+          "read_crop": "Copy the bed number printed in large figures on this card. Write the number only.",
+          "boxes": "cardr",
+          "pad": 0.2,
+          "out": "cbed"
+        },
+        {
+          "read_crop": "Copy the single word printed after the words WEAK SIDE on this card. Write the word only.",
+          "boxes": "cardr",
+          "pad": 0.2,
+          "out": "cwk"
+        },
+        {
+          "run": "values_by_bed_key",
+          "args": ["cbed", "cwk", "reference.bed_order"],
+          "out": "cj"
+        },
+        {
+          "fail_if": ["cj.refused"]
+        },
+        {
+          "compare": "cj.seq",
+          "to": "reference.weak_sides",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_three_patients_in_the_corridor",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one person walking away down the corridor",
+          "out": "cz",
+          "sweep": true
+        },
+        {
+          "fail_if": ["cz.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole person, rather than part of one? Answer yes or no only.",
+          "boxes": "cz",
+          "pad": 0.3,
+          "out": "czc",
+          "sort": "reading_order"
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["czc"],
+          "out": "czn"
+        },
+        {
+          "compare_band": "czn.n",
+          "to": "reference.n_patients",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

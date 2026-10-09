@@ -1,0 +1,255 @@
+{
+  "id": "mil_concession_task_restriction",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of a quality representative's desk at an aircraft final assembly plant, taken from above, with two documents lying open side by side and both readable.\n\nOn the left is the component logbook for actuator serial 22-4471, open at its concession page. The page carries, word for word: \"CONCESSION RSB-2026-041. Accepted for use as is. This component shall not be fitted for a catapult-launched sortie.\"\n\nOn the right is the fitting allocation board for the coming week. It has one row per sortie, and these four rows are on it, each with its sortie number and the sortie it is:\nJ-01  SHORE-BASED CONVERSION TRAINING\nJ-02  DECK CATAPULT LAUNCH TRIAL\nJ-03  SKI-JUMP DECK LAUNCH TRIAL\nJ-04  CATAPULT LAUNCH WORK-UP\nEvery row has two further cells, both empty at the moment, and each cell carries its own small label beside it so that a row can be read on its own: one labelled MAY FIT, which takes the word YES or the word NO, and one labelled AUTHORITY, which takes the concession reference and stays empty on any row whose MAY FIT cell ends up saying YES.\n\nThe shift supervisor issues parts against this board, so a component fitted to a sortie its concession bars is an acceptance failure and the aircraft comes apart again.\n\nFill both cells on every row in yourself from the concession wording -- I am deliberately not telling you which sorties this component may go to, and I am not telling you how many rows end up carrying the reference. Keep the reasoning off the paper: no ticks in the margin, no key, no legend, no note beyond the two documents' own wording.\n\nBoth documents, the concession wording, all four sortie rows and both of the cells that get filled in must be in the same picture, and the writing must be large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a component logbook page carrying a concession reference and a short concession paragraph, lying beside a printed allocation board whose rows each have a sortie number and two further labelled cells? A photo, an illustration or a plain printed sheet all count as yes. Answer no only if it shows something unrelated, or just a blank sheet with an answer written on it. Answer yes or no only.",
+  "reference": {
+    "verdicts": "j01=yes,j02=no,j03=yes,j04=no",
+    "citations": "j02=rsb2026041,j04=rsb2026041",
+    "concession_id": "RSB-2026-041",
+    "n_rows": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "fit_verdict_follows_the_concession_bar",
+      "weight": 0.75,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one sortie row printed on the fitting allocation board",
+          "sweep": true,
+          "out": "box_row"
+        },
+        {
+          "fail_if": ["box_row.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a printed table. Copy the sortie number printed at its LEFT-HAND end -- the end nearer the left edge of this cut-out. Ignore anything printed on a row above or below it. Write it and nothing else.",
+          "boxes": "box_row",
+          "pad": 0.3,
+          "out": "box_row_id"
+        },
+        {
+          "fail_if": ["box_row_id.unreadable"]
+        },
+        {
+          "read_crop": "Which one of these is written in the cell labelled MAY FIT on this row? Answer with one word: yes, no, or blank.",
+          "boxes": "box_row",
+          "pad": 0.3,
+          "out": "fits"
+        },
+        {
+          "fail_if": ["fits.unreadable"]
+        },
+        {
+          "run": "bind_row_values",
+          "args": ["box_row_id", "fits", "'='", "''"],
+          "out": "fit_map"
+        },
+        {
+          "compare_set": "fit_map.seq",
+          "to": "reference.verdicts",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "selective_bar_separates_ramp_from_catapult",
+      "weight": 1.75,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one sortie row printed on the fitting allocation board",
+          "sweep": true,
+          "out": "box_row3"
+        },
+        {
+          "fail_if": ["box_row3.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a printed table. Copy the sortie number printed at its LEFT-HAND end -- the end nearer the left edge of this cut-out. Ignore anything printed on a row above or below it. Write it and nothing else.",
+          "boxes": "box_row3",
+          "pad": 0.3,
+          "out": "box_row3_id"
+        },
+        {
+          "fail_if": ["box_row3_id.unreadable"]
+        },
+        {
+          "read_crop": "Which one of these is written in the cell labelled MAY FIT on this row? Answer with one word: yes, no, or blank.",
+          "boxes": "box_row3",
+          "pad": 0.3,
+          "out": "fits3"
+        },
+        {
+          "fail_if": ["fits3.unreadable"]
+        },
+        {
+          "run": "selected_rows_match",
+          "args": ["box_row3_id", "fits3", "reference.verdicts", "'j02,j03'"],
+          "out": "sel"
+        },
+        {
+          "compare": "sel.seq",
+          "to": "ok",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "authority_cited_on_exactly_the_barred_rows",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one sortie row printed on the fitting allocation board",
+          "sweep": true,
+          "out": "box_row2"
+        },
+        {
+          "fail_if": ["box_row2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a printed table. Copy the sortie number printed at its LEFT-HAND end -- the end nearer the left edge of this cut-out. Ignore anything printed on a row above or below it. Write it and nothing else.",
+          "boxes": "box_row2",
+          "pad": 0.3,
+          "out": "box_row2_id"
+        },
+        {
+          "fail_if": ["box_row2_id.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a table. Copy what is written in its cell labelled AUTHORITY. Ignore anything written on a row above or below it. Write it and nothing else, and write none when that cell is empty.",
+          "boxes": "box_row2",
+          "pad": 0.3,
+          "out": "refs"
+        },
+        {
+          "fail_if": ["refs.unreadable"]
+        },
+        {
+          "run": "bind_row_values",
+          "args": ["box_row2_id", "refs", "'='", "'none'"],
+          "out": "cite_map"
+        },
+        {
+          "compare_set": "cite_map.seq",
+          "to": "reference.citations",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "concession_reference_on_the_logbook",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the concession reference printed on the logbook page",
+          "expected_n": 1,
+          "out": "box_cid"
+        },
+        {
+          "fail_if": ["box_cid.unreadable"]
+        },
+        {
+          "read_crop": "Copy the reference printed in this cut-out. If more than one reference is printed here, copy the one nearest the middle of the cut-out. Write it and nothing else.",
+          "boxes": "box_cid",
+          "out": "cid"
+        },
+        {
+          "fail_if": ["cid.unreadable"]
+        },
+        {
+          "compare": "cid.answers.0",
+          "to": "reference.concession_id",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sortie_row_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one sortie row printed on the fitting allocation board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole sortie row of the board, rather than a column heading or only part of a row? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_key_added",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an added key, legend or margin note saying which sorties are barred",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

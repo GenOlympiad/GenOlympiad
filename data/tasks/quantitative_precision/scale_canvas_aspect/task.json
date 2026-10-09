@@ -1,0 +1,99 @@
+{
+  "id": "scale_canvas_aspect",
+  "axis": "quantitative_precision",
+  "prompt": "A clean, straight-on photograph of a SINGLE blank framed canvas hanging centred on a plain wall, seen face-on. The canvas is a long panoramic canvas 3.2 times as WIDE as it is tall. Draw the frame so that its WIDTH is EXACTLY 3.2 times its HEIGHT (a wide, letterbox-shaped rectangle) -- do not draw a comfortable near-square or ordinary rectangular frame. The rectangle must clearly have this exact wide proportion. One framed canvas only, plain wall, blank light canvas inside a plain dark frame, no picture inside, no text, no numbers, no ruler or measuring marks.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a single blank framed canvas hanging on a plain wall, drawn to a specified shape? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 1,
+    "aspect": 3.2,
+    "d2_q_shape": "Is the framed canvas in this image clearly much WIDER than it is tall (a long letterbox shape), rather than roughly square or taller than wide? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_canvas_aspect",
+      "weight": 2.5,
+      "pass_at": 0.7,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the framed canvas hanging on the wall, boxed on the OUTER edge of its frame (the whole rectangle including the frame moulding, not the blank canvas inside it, and not its shadow)",
+          "expected_n": 1,
+          "retries": 5,
+          "out": "cv"
+        },
+        {
+          "fail_if": ["cv.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "fullim"
+        },
+        {
+          "run": "canvas_aspect",
+          "args": ["cv", "fullim"],
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.degenerate"]
+        },
+        {
+          "compare_band": "a.aspect",
+          "to": "reference.aspect",
+          "core": 0.28,
+          "margin": 0.7,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "canvas_shape",
+      "weight": 0.8,
+      "gate": true,
+      "premise": true,
+      "not_scored": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_shape",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

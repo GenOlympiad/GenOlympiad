@@ -1,0 +1,164 @@
+{
+  "id": "flowchart_decision_exits",
+  "axis": "long_range_consistency",
+  "prompt": "A clean printed one-page standard operating procedure flowchart for the returns desk of a homeware store, drawn with rectangular boxes, yellow diamond decision nodes and arrows whose exits are labelled Yes or No. The flow starts at a box 'Refund claim received' leading into a first diamond 'Refund amount OVER £480?'. The Yes arrow of that diamond leads to a second diamond 'Original receipt provided?', and its No arrow leads to a third diamond 'Returned within 30 days?'. The receipt diamond's Yes arrow points to a terminal box REVIEW (senior staff sign-off) and its No arrow points to a terminal box REJECT. The 30-days diamond's Yes arrow points to a terminal box REFUND (cash refund) and its No arrow points to a terminal box CREDIT (store credit); these are the only four terminal boxes. To the right, print a TODAY'S CLAIMS log table with columns CLAIM, AMOUNT, RECEIPT, DAYS, DECISION listing exactly these four claims: C1 £612, receipt yes, 12 days; C2 £745, receipt no, 8 days; C3 £129, receipt yes, 44 days; C4 £480, receipt no, 21 days. For each claim, follow the flowchart from the start box and print in its DECISION cell the single word (REVIEW, REJECT, REFUND or CREDIT) of the terminal box that the claim actually reaches. Print exactly one of those four words per DECISION cell and no other text in that column. White background, no title other than the two headings, no legend.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a returns-desk approval flowchart with decision diamonds plus a claims log table? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "dec": {
+      "C1": "REVIEW",
+      "C2": "REJECT",
+      "C3": "CREDIT",
+      "C4": "REFUND"
+    },
+    "q_c1": "In the TODAY'S CLAIMS table, what single word is printed in the DECISION column for claim C1? Read ONLY what is PRINTED in that cell -- do NOT apply the flowchart rules yourself; if the printed word differs from what the rules would give, report the printed word. Answer with exactly one word: REVIEW, REJECT, REFUND or CREDIT.",
+    "q_c2": "In the TODAY'S CLAIMS table, what single word is printed in the DECISION column for claim C2? Read ONLY what is PRINTED in that cell -- do NOT apply the flowchart rules yourself; if the printed word differs from what the rules would give, report the printed word. Answer with exactly one word: REVIEW, REJECT, REFUND or CREDIT.",
+    "q_c3": "In the TODAY'S CLAIMS table, what single word is printed in the DECISION column for claim C3? Read ONLY what is PRINTED in that cell -- do NOT apply the flowchart rules yourself; if the printed word differs from what the rules would give, report the printed word. Answer with exactly one word: REVIEW, REJECT, REFUND or CREDIT.",
+    "q_c4": "In the TODAY'S CLAIMS table, what single word is printed in the DECISION column for claim C4? Read ONLY what is PRINTED in that cell -- do NOT apply the flowchart rules yourself; if the printed word differs from what the rules would give, report the printed word. Answer with exactly one word: REVIEW, REJECT, REFUND or CREDIT.",
+    "q_w1": "In the flowchart, follow the arrow labelled Yes leaving the diamond that mentions £480. Does that arrow lead to the diamond about the RECEIPT or to the diamond about the DAYS? Read only what is drawn. Answer with exactly one word: RECEIPT or DAYS.",
+    "q_w2": "In the flowchart, follow the arrow labelled No leaving the diamond that asks about the original RECEIPT. Which terminal outcome box does that arrow point to? Read only what is drawn. Answer with exactly one word: REVIEW, REJECT, REFUND or CREDIT.",
+    "q_w3": "In the flowchart, follow the arrow labelled Yes leaving the diamond that asks about the 30 days. Which terminal outcome box does that arrow point to? Read only what is drawn. Answer with exactly one word: REVIEW, REJECT, REFUND or CREDIT.",
+    "q_terms": "How many terminal outcome boxes (end boxes with no arrows leaving them) does the flowchart contain? Respond with a single digit and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "routing_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_c1",
+          "out": "c1"
+        },
+        {
+          "ask": "reference.q_c2",
+          "out": "c2"
+        },
+        {
+          "ask": "reference.q_c3",
+          "out": "c3"
+        },
+        {
+          "ask": "reference.q_c4",
+          "out": "c4"
+        },
+        {
+          "fail_if": ["c1.unreadable", "c2.unreadable", "c3.unreadable", "c4.unreadable"]
+        },
+        {
+          "compare": "c1",
+          "to": "reference.dec.C1",
+          "out": "f1"
+        },
+        {
+          "compare": "c2",
+          "to": "reference.dec.C2",
+          "out": "f2"
+        },
+        {
+          "compare": "c3",
+          "to": "reference.dec.C3",
+          "out": "f3"
+        },
+        {
+          "compare": "c4",
+          "to": "reference.dec.C4",
+          "out": "f4"
+        },
+        {
+          "all": ["f1", "f2", "f3", "f4"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_wire_d2no",
+      "weight": 0.4,
+      "steps": [
+        {
+          "ask": "reference.q_w2",
+          "out": "w2"
+        },
+        {
+          "fail_if": ["w2.unreadable"]
+        },
+        {
+          "compare": "w2",
+          "to": "REJECT",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_wire_d1yes",
+      "weight": 0.4,
+      "steps": [
+        {
+          "ask": "reference.q_w1",
+          "out": "w1"
+        },
+        {
+          "fail_if": ["w1.unreadable"]
+        },
+        {
+          "compare": "w1",
+          "to": "RECEIPT",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_terminal_count",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one end box of the flowchart that arrows point into and that no arrow leaves",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nt"
+        },
+        {
+          "fail_if": ["box_nt.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole flowchart box with an arrow arriving at it and no arrow leading away from it, rather than a yellow diamond, a cell of the log table, or only part of a box? Answer yes or no only.",
+          "boxes": "box_nt",
+          "out": "crop_nt"
+        },
+        {
+          "fail_if": ["crop_nt.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nt"],
+          "out": "cnt_nt"
+        },
+        {
+          "compare_tolerance": "cnt_nt.n",
+          "to": 4,
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

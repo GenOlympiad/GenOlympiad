@@ -1,0 +1,166 @@
+{
+  "id": "audit_interval_sampling",
+  "axis": "long_range_consistency",
+  "prompt": "A photograph looking down at an auditor's desk in the file room of an accounting firm, late in the fieldwork week. Two things share the desk and both must be readable. On the right lies the systematic-sampling working paper for the cash-payment vouchers of client HAVELOCK JOINERY LTD. Its header quotes the engagement's sampling plan word for word: population = payment vouchers numbered 4201 through 7400, one voucher per number, none missing; sample size = 8 vouchers; selection = systematic, every k-th voucher, where k is the population count divided by the sample size; random start = voucher 4319, drawn from the random-number table. Below the header the paper carries the sample table: eight numbered lines, line 1 through line 8, each line carrying the one voucher number that line selects, in ascending order. On the left, the eight paper vouchers the junior has pulled from the binders lie fanned out so that none of them covers another, each voucher plainly bearing its own voucher number at its head -- the pulled vouchers are exactly the sampled ones, one voucher per line of the table.\n\nWork the selection out yourself: I am deliberately not telling you the sampling interval k or any voucher number after the random start -- the table's remaining seven numbers and the numbers on the pulled vouchers all follow from the plan. Nothing on the desk may carry the interval as a worked calculation, a crossed-out draft, or any note beyond the working paper's own header and table and the vouchers' own headings, and the table must hold exactly eight lines.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed working paper lying on a desk beside several loose paper vouchers? A realistic photo, an illustration or a plain mockup ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "sample_seq": "4319|4719|5119|5519|5919|6319|6719|7119",
+    "n_sample": 8
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sample_table_is_the_progression",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one line of the eight-line sample table on the working paper",
+          "sweep": true,
+          "out": "tlines"
+        },
+        {
+          "fail_if": ["tlines.unreadable"]
+        },
+        {
+          "read_crop": "Copy the voucher number printed on this line of the table. Write the number only.",
+          "boxes": "tlines",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "tnum"
+        },
+        {
+          "fail_if": ["tnum.unreadable"]
+        },
+        {
+          "run": "sampled_numbers",
+          "args": ["tnum"],
+          "out": "pat"
+        },
+        {
+          "compare": "pat.seq",
+          "to": "reference.sample_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pulled_vouchers_carry_the_sampled_set",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one loose paper voucher fanned out on the left side of the desk",
+          "sweep": true,
+          "out": "vboxes"
+        },
+        {
+          "fail_if": ["vboxes.unreadable"]
+        },
+        {
+          "read_crop": "Copy the voucher number printed at the head of this voucher. Write the number only.",
+          "boxes": "vboxes",
+          "pad": 0.3,
+          "out": "vnum"
+        },
+        {
+          "fail_if": ["vnum.unreadable"]
+        },
+        {
+          "run": "pulled_voucher_hits",
+          "args": ["vnum"],
+          "out": "pv"
+        },
+        {
+          "compare_band": "pv.n",
+          "to": "reference.n_sample",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "eight_vouchers_pulled",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one loose paper voucher fanned out on the left side of the desk",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "vv"
+        },
+        {
+          "fail_if": ["vv.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole loose paper voucher, rather than the working paper or only part of one? Answer yes or no only.",
+          "boxes": "vv",
+          "pad": 0.3,
+          "out": "vc"
+        },
+        {
+          "fail_if": ["vc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["vc"],
+          "out": "vn"
+        },
+        {
+          "compare_band": "vn.n",
+          "to": "reference.n_sample",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_worked_interval",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a handwritten calculation, a crossed-out draft or an added note on the working paper",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

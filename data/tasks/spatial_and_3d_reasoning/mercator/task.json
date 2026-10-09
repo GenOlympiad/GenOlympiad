@@ -1,0 +1,332 @@
+{
+  "id": "mercator",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A polar route planning chart taped to a flight-operations desk, photographed from directly above and filling the frame: pale blue-grey paper, thick dark navy ruling, matt finish. Nothing on it except the ruling described here -- no coastlines, no waypoints, no route, no north arrow, no scale, no border, no meridians, no vertical lines whatever.\n\nRule sixteen dark navy horizontal lines across the sheet from edge to edge. They are the parallels of a Mercator chart running from the equator all the way to 75 degrees north every 5 degrees: 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70 and 75.\n\nThe equator is the bottom line and 75 degrees north the top one. Their spacing is far from even: a Mercator chart's north-south stretch grows without limit towards the pole, so each band up the sheet must be taller than the one below it, and the topmost band ends up several times the height of the bottom one. Calculate every band's height and rule the lines accordingly.\n\nSet each parallel's figure in small navy type just inside the RIGHT-hand edge, on the same level as its line. Put no other marking on the sheet.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a sheet of pale blue-grey chart paper ruled with a set of straight dark horizontal lines running right across it, with a small figure printed beside each line. Ignoring drawing quality and styling, does the picture actually show that? Answer NO only if it shows something else entirely -- a blank sheet, a page of text, a photograph of an aircraft or a desk, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "q_labels": "This planning chart has a small figure printed alongside each of its ruled lines. Starting at the UPPERMOST ruled line and working down to the lowest, write out every one of those figures in the order they appear, separated by commas. Write the figures and nothing else: no words, no units, no working.",
+    "symmetric": false,
+    "lat_lo": 0.0,
+    "lat_hi": 75.0,
+    "lat_step": 5.0,
+    "n_lines": 16,
+    "labels_top_down": [
+      75.0,
+      70.0,
+      65.0,
+      60.0,
+      55.0,
+      50.0,
+      45.0,
+      40.0,
+      35.0,
+      30.0,
+      25.0,
+      20.0,
+      15.0,
+      10.0,
+      5.0,
+      0.0
+    ],
+    "gap_seq_top_down": [
+      0.292174,
+      0.228961,
+      0.189496,
+      0.162723,
+      0.143551,
+      0.12931,
+      0.118464,
+      0.110073,
+      0.10353,
+      0.098431,
+      0.094497,
+      0.091536,
+      0.089416,
+      0.088048,
+      0.087377
+    ],
+    "committed_ratio": 3.3438,
+    "core_rel": 0.05,
+    "margin_rel": 0.05
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "graticule_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "read_mercator",
+          "args": [
+            "image",
+            "reference.n_lines",
+            "reference.gap_seq_top_down",
+            "reference.core_rel",
+            "reference.margin_rel",
+            "reference.symmetric"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "full_credit",
+          "args": ["m.n_rules"],
+          "code": {
+            "inline": "f_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "parallel_count",
+      "weight": 2.0,
+      "steps": [
+        {
+          "run": "read_mercator",
+          "args": [
+            "image",
+            "reference.n_lines",
+            "reference.gap_seq_top_down",
+            "reference.core_rel",
+            "reference.margin_rel",
+            "reference.symmetric"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_count"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "band_by_band_spacing",
+      "weight": 10.0,
+      "steps": [
+        {
+          "run": "read_mercator",
+          "args": [
+            "image",
+            "reference.n_lines",
+            "reference.gap_seq_top_down",
+            "reference.core_rel",
+            "reference.margin_rel",
+            "reference.symmetric"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_bands"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "spacing_profile_direction",
+      "weight": 2.0,
+      "steps": [
+        {
+          "run": "read_mercator",
+          "args": [
+            "image",
+            "reference.n_lines",
+            "reference.gap_seq_top_down",
+            "reference.core_rel",
+            "reference.margin_rel",
+            "reference.symmetric"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_profile"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "polar_over_equatorial_magnitude",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "read_mercator",
+          "args": [
+            "image",
+            "reference.n_lines",
+            "reference.gap_seq_top_down",
+            "reference.core_rel",
+            "reference.margin_rel",
+            "reference.symmetric"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_ratio"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "symmetry_about_the_equator",
+      "weight": 2.0,
+      "only_if": "reference.symmetric",
+      "steps": [
+        {
+          "run": "read_mercator",
+          "args": [
+            "image",
+            "reference.n_lines",
+            "reference.gap_seq_top_down",
+            "reference.core_rel",
+            "reference.margin_rel",
+            "reference.symmetric"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_symmetry"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "latitude_labels",
+      "weight": 2.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one small black figure printed just inside the right-hand edge of the chart, level with its own ruled line",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_lab"
+        },
+        {
+          "fail_if": ["box_lab.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one small figure printed beside a ruled line on a chart. Copy that figure exactly as it is printed, digits only, with no words, no degree sign and no units. If more than one figure is printed in this cut-out, copy the one nearest the middle of it. Write nothing else.",
+          "boxes": "box_lab",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_lab"
+        },
+        {
+          "fail_if": ["crop_lab.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_lab", "\", \""],
+          "out": "txt_lab"
+        },
+        {
+          "run": "score_latitude_labels",
+          "args": ["txt_lab.text", "reference.labels_top_down"],
+          "out": "lc"
+        },
+        {
+          "run": "to_float",
+          "args": ["lc.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_parallels_span_the_sheet",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "read_mercator",
+          "args": [
+            "image",
+            "reference.n_lines",
+            "reference.gap_seq_top_down",
+            "reference.core_rel",
+            "reference.margin_rel",
+            "reference.symmetric"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_full_width"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_mercator_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "mercator_overlay",
+          "args": [
+            "image",
+            "reference.n_lines",
+            "reference.gap_seq_top_down",
+            "reference.core_rel",
+            "reference.margin_rel",
+            "reference.symmetric"
+          ],
+          "out": "ov"
+        },
+        {
+          "fail_if": ["ov.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["ov.frac_bands"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "2:3"
+}

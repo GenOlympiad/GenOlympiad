@@ -1,0 +1,116 @@
+{
+  "id": "energy_label_class_arrow",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photorealistic EU ENERGY LABEL sticker, portrait orientation, on a white background. The label has, down its centre, a vertical stack of SEVEN coloured horizontal bars forming the efficiency scale: from TOP to BOTTOM the bars are DARK GREEN (class A), GREEN (B), LIGHT GREEN (C), YELLOW (D), AMBER/ORANGE (E), ORANGE (F), RED (G) -- a green-to-red gradient, each bar printed with its class letter A,B,C,D,E,F,G in order. To the RIGHT of the scale is a large BLACK arrow-shaped marker showing this product's class. This appliance (a washing machine) is rated class B, so the black class arrow must sit at the SECOND bar from the top -- exactly beside the GREEN 'B' bar. Do NOT put the arrow at the top (A) bar or any other band. Small 'ENERG' header at the top. Photoreal sticker, printed letters, no other text.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict an EU energy-efficiency label: a vertical green-to-red A..G colour scale with a black class-arrow marker. Ignoring artistic quality, does the image actually DEPICT that -- a coloured A-to-G efficiency scale with a class pointer? Answer NO only if it shows a blank panel, plain text, or no coloured scale. Answer yes or no only.",
+  "reference": {
+    "stated_class": "B",
+    "bars_box": [0.2, 0.22, 0.62, 0.9],
+    "arrow_box": [0.64, 0.22, 0.88, 0.9],
+    "n_bands": 7
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "energy_arrow_class",
+      "weight": 4.0,
+      "score": "lo.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "one of the coloured horizontal bars that make up the vertical efficiency scale (box every coloured bar of that stack, one tight box each) -- count a rectangle only if it holds exactly ONE bar with its own printed capital class letter inside it, from that bar's left edge to its right edge and its top edge to its bottom; do not put two bars in one rectangle and do not box the black arrow marker beside the stack.",
+          "out": "bars"
+        },
+        {
+          "fail_if": ["bars.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the solid BLACK arrow-shaped class marker -- the black pointer drawn beside the stack of coloured bars",
+          "expected_n": 1,
+          "out": "arw"
+        },
+        {
+          "fail_if": ["arw.unreadable"]
+        },
+        {
+          "run": "band_at_arrow",
+          "args": ["bars", "arw"],
+          "out": "sel"
+        },
+        {
+          "fail_if": ["sel.no_read"]
+        },
+        {
+          "read_crop": "This is one coloured bar cut out of an energy-efficiency label. What single capital letter is printed on this bar? Answer with just that one letter. If no letter is printed on it, answer NONE.",
+          "boxes": "sel",
+          "out": "abl"
+        },
+        {
+          "fail_if": ["abl.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one coloured horizontal bar of the vertical efficiency scale on this energy label",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_rr"
+        },
+        {
+          "fail_if": ["box_rr.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one coloured bar from the scale of an energy label. Write the single capital letter printed on this bar and nothing else. If no letter is printed on it, write a dash.",
+          "boxes": "box_rr",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_rr"
+        },
+        {
+          "fail_if": ["crop_rr.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_rr", "\",\""],
+          "out": "txt_rr"
+        },
+        {
+          "read_crop": "This picture shows an energy-efficiency label with a vertical stack of coloured bars. What colour is the BOTTOM bar of that stack -- the very last one? Answer with a single colour word and nothing else.",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "check_energy_label",
+          "args": ["abl", "txt_rr", "cr", "reference"],
+          "out": "lo"
+        },
+        {
+          "fail_if": ["lo.no_read"]
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "2:3"
+}

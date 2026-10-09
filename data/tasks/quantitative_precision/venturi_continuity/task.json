@@ -1,0 +1,97 @@
+{
+  "id": "venturi_continuity",
+  "axis": "quantitative_precision",
+  "prompt": "A clean a plan view of a river channel with GREEN banks that narrow and widen, with a BLUE flow-speed arrow drawn at 3 cross-sections. By continuity the flow speed is inversely proportional to the channel width -- where the channel is NARROW the flow is FAST -- so (width x speed) is the SAME at every section. Draw a BLUE horizontal flow-speed arrow at each section, LONGER where the pipe is narrow and SHORTER where it is wide, so that width times arrow-length is constant. Do NOT draw all the speed arrows the same length. Plain background, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a plan view of a river channel with GREEN banks that narrow and widen, with a BLUE flow-speed arrow drawn at 3 cross-sections. Ignoring artistic quality, does the image show a green-walled channel that narrows, with blue horizontal arrows at several sections? Answer NO only if those are missing or it is unrelated. Answer yes or no.",
+  "reference": {
+    "width_lo": [40, 70, 50],
+    "width_hi": [85, 255, 255],
+    "arrow_lo": [100, 90, 60],
+    "arrow_hi": [130, 255, 255],
+    "sections": [0.26, 0.5, 0.76],
+    "min_items": 2,
+    "size_min": 0.15,
+    "tol": 0.14,
+    "min_frac": 0.0003,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "continuity",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "blue flow arrow",
+          "out": "arr"
+        },
+        {
+          "fail_if": ["arr.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "vertical slice of the open channel at a blue arrow -- exactly one slice per blue arrow and none anywhere else. Each box is tall and thin, standing at that arrow's position and spanning the clear channel from the face of the upper green wall down to the face of the lower green wall, so that arrow lies inside it. Do not draw a slice where no arrow sits, and do not include the green wall material.",
+          "out": "gap"
+        },
+        {
+          "fail_if": ["gap.unreadable"]
+        },
+        {
+          "run": "continuity_score",
+          "args": ["arr", "gap", "reference"],
+          "out": "cn"
+        },
+        {
+          "fail_if": ["cn.degenerate"]
+        },
+        {
+          "compare_band": "cn.frac",
+          "to": 1.0,
+          "core": 0.15,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

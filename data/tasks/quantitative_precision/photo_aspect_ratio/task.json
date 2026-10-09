@@ -1,0 +1,240 @@
+{
+  "id": "photo_aspect_ratio",
+  "axis": "quantitative_precision",
+  "prompt": "A clean, front-on photograph of a gallery wall with FOUR empty picture frames hung in a single horizontal row, evenly spaced. Each frame has a DIFFERENT shape, and a small printed card under each frame states its aspect ratio. From LEFT to RIGHT the frames and their labels are: first a 4:3 frame (width to height exactly 4 to 3, a mild landscape), then a 16:9 frame (a wide landscape, width to height 16 to 9), then a 1:1 frame (a perfect square), then a 3:2 frame (width to height 3 to 2). Each frame's actual width-to-height proportions must EXACTLY match its own printed ratio label — the square truly square, the 16:9 truly wide, and so on. A genuine photograph of a wall: real frames with visible borders, a plain wall, even lighting, the four ratio labels legible. No pictures inside the frames, no other objects, no extra text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a gallery wall hanging four picture frames in a row, each labelled with a different aspect ratio (4:3, 16:9, 1:1, 3:2), every frame's shape matching its label? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 4,
+    "targets": [1.3333, 1.7778, 1.0, 1.5],
+    "joincode": {
+      "program": "joincode"
+    },
+    "diagcode": {
+      "program": "diagcode"
+    },
+    "tol": 0.11,
+    "d2_q_feature": "This image was supposed to depict: a wall with four picture frames of different shapes, each with a ratio label. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This image should depict: a gallery wall of empty picture frames. Is what is shown actually the KIND of thing described (framed rectangles on a wall), rather than a different object or a generic placeholder? Answer with the single word yes or no only.",
+    "d2_q_count": "This image should depict: exactly FOUR picture frames in a row. Does it actually show four separate rectangular frames (not three, not five, not a single frame), as its main subject? Answer with the single word yes or no only.",
+    "d2_q_precise": "Look at the rectangular frames in this picture. Are their edges crisp and straight, and are the shapes clean rectangles, rather than wobbly, bowed or drawn freehand? Answer yes if the frames are clean and straight-edged, no if they look wobbly or hand-drawn. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "frames_joint_ratio",
+      "weight": 3.5,
+      "steps": [
+        {
+          "crop_full": true,
+          "out": "im"
+        },
+        {
+          "read": "boxes",
+          "target": "one empty picture FRAME hanging on the gallery wall. Box EVERY frame in the row separately. Each box must be the frame's OUTER rectangle: from the OUTER edge of its border/moulding on the left to the OUTER edge on the right, and from the OUTER TOP edge to the OUTER BOTTOM edge -- the whole frame including its border, not just the lighter opening inside it. The small printed ratio card BELOW each frame is not part of the frame and must stay outside the box.",
+          "expected_n": "reference.n",
+          "out": "fr"
+        },
+        {
+          "fail_if": ["fr.unreadable"]
+        },
+        {
+          "run": "frame_aspect_ratios",
+          "args": ["fr", "im", "reference['n']"],
+          "out": "rr"
+        },
+        {
+          "fail_if": ["rr.no_read"]
+        },
+        {
+          "run": "worst_ratio_error",
+          "args": ["rr['ratios']", "reference['targets']"],
+          "code": "joincode",
+          "out": "jerr"
+        },
+        {
+          "compare_band": "jerr",
+          "to": 0.0,
+          "core": 0.07,
+          "margin": 0.12,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "frames_fraction_correct_diag",
+      "weight": 1.0,
+      "steps": [
+        {
+          "crop_full": true,
+          "out": "im"
+        },
+        {
+          "read": "boxes",
+          "target": "one empty picture FRAME hanging on the gallery wall. Box EVERY frame in the row separately. Each box must be the frame's OUTER rectangle: from the OUTER edge of its border/moulding on the left to the OUTER edge on the right, and from the OUTER TOP edge to the OUTER BOTTOM edge -- the whole frame including its border, not just the lighter opening inside it. The small printed ratio card BELOW each frame is not part of the frame and must stay outside the box.",
+          "expected_n": "reference.n",
+          "out": "fr"
+        },
+        {
+          "fail_if": ["fr.unreadable"]
+        },
+        {
+          "run": "frame_aspect_ratios",
+          "args": ["fr", "im", "reference['n']"],
+          "out": "rr"
+        },
+        {
+          "fail_if": ["rr.no_read"]
+        },
+        {
+          "run": "share_within_tolerance",
+          "args": ["rr['ratios']", "reference['targets']", "reference['tol']"],
+          "code": "diagcode",
+          "out": "nok"
+        },
+        {
+          "compare_band": "nok",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_count_present",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_count",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

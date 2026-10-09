@@ -1,0 +1,84 @@
+{
+  "id": "blade_leading_edge_erosion",
+  "axis": "physical_consistency",
+  "prompt": "The blade came down this morning and the repair team must book its erosion before the scaffold goes up, so it is laid out in the yard and photographed for the works order.\n\nThe blade rests face up on padded trestles under a flat grey sky, with both of its edges standing clear along the whole piece. Wide bands of white paint are numbered along it, counting up from the thick root. The maintenance board propped against the trestle at the root gives the machine as unit 14, the rotor as 124 metres across, the blade as the second of the set, and an arrow for the way the rotor turns seen from in front of the tower. Part of the surface has lost its gloss and gone rough and matt to the hand; the rest is still smooth and shiny.\n\nWhich part of the blade that rough matt stretch has eaten into is what the works order does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show one very long turbine blade lying on trestles out of doors, with painted numbered bands along it and a board propped at one end? Answer yes or no only.",
+  "reference": {
+    "part1": "narrow_end",
+    "part2": "rounded_edge"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "The blade carries numbered bands of paint running from its thick root to its narrow far end. One band's surface is rougher and duller than the others. Answer with one of: it is at the root end of the blade; it is in the middle of the blade; it is at the narrow end of the blade.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "This blade has one thick rounded edge and one thin sharp edge. A rough matt band runs along its surface. Answer with one of: the rough band lies along the thick rounded edge; the rough band lies along the thin sharp edge; the rough band lies down the middle of the face, away from both edges.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

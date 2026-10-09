@@ -1,0 +1,219 @@
+{
+  "id": "traffic_signal_cycle",
+  "axis": "latent_computation",
+  "prompt": "A clear straight-on photo of a laboratory wall holding three separate vertical status-light stacks in a row, evenly spaced and all clearly visible. Each stack is a dark housing holding three round indicator lamps stacked vertically: RED on top, YELLOW in the middle, GREEN at the bottom. On each stack EXACTLY ONE lamp is lit and glowing brightly while the other two are dark. The three fume-hood safety controllers run these cyclic timing programs: Hood V: 60-second cycle = GREEN from 0 to 19 seconds, YELLOW from 19 to 24 seconds, RED from 24 to 60 seconds; this hood's cycle is OFFSET so that it starts 6 seconds later than time zero. Hood W: 48-second cycle = GREEN from 0 to 29 seconds, YELLOW from 29 to 33 seconds, RED from 33 to 48 seconds; this hood's cycle is OFFSET so that it starts 36 seconds later than time zero. Hood X: 60-second cycle = GREEN from 0 to 28 seconds, YELLOW from 28 to 33 seconds, RED from 33 to 60 seconds; this hood's cycle is OFFSET so that it starts 21 seconds later than time zero. Show every stack's state at exactly t = 20 seconds after time zero: light the single correct lamp on each stack for that instant and leave the other two dark. Render the stacks left to right in the order V, W, X. Do NOT print the time, any numbers, arrows, or state words anywhere in the image; only the lit lamps convey the answer.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show laboratory fume-hood status-light wall panel: three R/Y/G indicator stacks at a query instant? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "states": ["G", "Y", "R"],
+    "joint": "G|Y|R",
+    "n_heads": 3,
+    "t": 20,
+    "t0_states": ["R", "G", "R"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "joint_state_exact",
+      "weight": 3.0,
+      "score": "s.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "vertical status-light stack (the dark housing holding three round indicator lamps)",
+          "expected_n": "reference.n_heads",
+          "retries": 5,
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "order_stacks",
+          "args": ["st"],
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of ONE indicator-light housing holding round lamps arranged one above the other. Look ONLY at the lamp NEAREST THE TOP of the housing. Is that one lamp lit up -- glowing, giving off light, usually with a pale bright centre -- or is it dark and switched off (a dull deep-coloured disc with no glow)? Answer about that ONE lamp with exactly one word: lit or dark.",
+          "boxes": "sb",
+          "out": "top"
+        },
+        {
+          "read_crop": "This is a close-up of ONE indicator-light housing holding round lamps arranged one above the other. Look ONLY at the lamp in the MIDDLE of the housing (the one with a lamp above it and a lamp below it). Is that one lamp lit up -- glowing, giving off light, usually with a pale bright centre -- or is it dark and switched off (a dull deep-coloured disc with no glow)? Answer about that ONE lamp with exactly one word: lit or dark.",
+          "boxes": "sb",
+          "out": "mid"
+        },
+        {
+          "read_crop": "This is a close-up of ONE indicator-light housing holding round lamps arranged one above the other. Look ONLY at the lamp NEAREST THE BOTTOM of the housing. Is that one lamp lit up -- glowing, giving off light, usually with a pale bright centre -- or is it dark and switched off (a dull deep-coloured disc with no glow)? Answer about that ONE lamp with exactly one word: lit or dark.",
+          "boxes": "sb",
+          "out": "bot"
+        },
+        {
+          "fail_if": ["top.unreadable", "mid.unreadable", "bot.unreadable"]
+        },
+        {
+          "run": "all_stacks_match",
+          "args": ["sb", "top", "mid", "bot", "reference.states"],
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "per_lamp_partial",
+      "weight": 1.0,
+      "score": "s.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "vertical status-light stack (the dark housing holding three round indicator lamps)",
+          "expected_n": "reference.n_heads",
+          "retries": 5,
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "order_stacks",
+          "args": ["st"],
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of ONE indicator-light housing holding round lamps arranged one above the other. Look ONLY at the lamp NEAREST THE TOP of the housing. Is that one lamp lit up -- glowing, giving off light, usually with a pale bright centre -- or is it dark and switched off (a dull deep-coloured disc with no glow)? Answer about that ONE lamp with exactly one word: lit or dark.",
+          "boxes": "sb",
+          "out": "top"
+        },
+        {
+          "read_crop": "This is a close-up of ONE indicator-light housing holding round lamps arranged one above the other. Look ONLY at the lamp in the MIDDLE of the housing (the one with a lamp above it and a lamp below it). Is that one lamp lit up -- glowing, giving off light, usually with a pale bright centre -- or is it dark and switched off (a dull deep-coloured disc with no glow)? Answer about that ONE lamp with exactly one word: lit or dark.",
+          "boxes": "sb",
+          "out": "mid"
+        },
+        {
+          "read_crop": "This is a close-up of ONE indicator-light housing holding round lamps arranged one above the other. Look ONLY at the lamp NEAREST THE BOTTOM of the housing. Is that one lamp lit up -- glowing, giving off light, usually with a pale bright centre -- or is it dark and switched off (a dull deep-coloured disc with no glow)? Answer about that ONE lamp with exactly one word: lit or dark.",
+          "boxes": "sb",
+          "out": "bot"
+        },
+        {
+          "fail_if": ["top.unreadable", "mid.unreadable", "bot.unreadable"]
+        },
+        {
+          "run": "share_stacks_match",
+          "args": ["sb", "top", "mid", "bot", "reference.states"],
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_stack_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one vertical status-light stack on the wall, a dark housing holding round lamps",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole vertical light stack with its lamps rather than bare wall or only a single lamp? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_heads",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_one_lit_each",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "On each of the three stacks, is exactly ONE lamp lit and glowing while the other two are dark? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_text",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a printed number, word, letter or arrow anywhere in the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

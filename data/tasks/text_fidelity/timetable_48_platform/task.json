@@ -1,0 +1,119 @@
+{
+  "id": "timetable_48_platform",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed railway DEPARTURE board for 'GREENFIELD CENTRAL' listing 48 services in time order, with columns DEPART, DESTINATION, JOURNEY, ARRIVE and PLAT (platform). For each service you are given its DEPART time, DESTINATION, JOURNEY time in minutes and PLATFORM:\n    06:06  Carleton     40 min  platform 2\n    06:12  Ellwood      35 min  platform 6\n    06:18  Ashby        18 min  platform 3\n    06:24  Fairhaven    25 min  platform 1\n    06:28  Belford      35 min  platform 4\n    06:31  Denholm      45 min  platform 5\n    06:38  Holbeck      40 min  platform 3\n    06:48  Belford      18 min  platform 2\n    06:51  Ashby        25 min  platform 1\n    06:56  Ashby        40 min  platform 6\n    07:05  Ashby        45 min  platform 4\n    07:10  Belford      45 min  platform 2\n    07:18  Ashby        45 min  platform 1\n    07:24  Ashby        45 min  platform 3\n    07:27  Holbeck      25 min  platform 5\n    07:38  Ellwood      45 min  platform 6\n    07:52  Holbeck      18 min  platform 4\n    07:57  Belford      25 min  platform 2\n    08:00  Garton       22 min  platform 5\n    08:05  Belford      45 min  platform 1\n    08:11  Garton       30 min  platform 3\n    08:16  Holbeck      50 min  platform 4\n    08:24  Denholm      35 min  platform 2\n    08:28  Fairhaven    35 min  platform 6\n    08:34  Belford      35 min  platform 5\n    08:43  Denholm      25 min  platform 3\n    08:52  Carleton     30 min  platform 1\n    09:01  Belford      30 min  platform 2\n    09:05  Fairhaven    25 min  platform 6\n    09:08  Belford      30 min  platform 4\n    09:14  Garton       30 min  platform 5\n    09:19  Ashby        35 min  platform 3\n    09:24  Carleton     25 min  platform 1\n    09:32  Belford      45 min  platform 6\n    09:35  Garton       40 min  platform 2\n    09:40  Ellwood      35 min  platform 4\n    09:46  Ellwood      30 min  platform 5\n    09:52  Holbeck      35 min  platform 1\n    09:56  Holbeck      22 min  platform 3\n    10:17  Carleton     50 min  platform 2\n    10:23  Denholm      35 min  platform 3\n    10:29  Ashby        50 min  platform 6\n    10:32  Holbeck      30 min  platform 4\n    10:37  Garton       40 min  platform 1\n    10:40  Garton       30 min  platform 5\n    11:00  Garton       18 min  platform 3\n    11:04  Ellwood      30 min  platform 4\n    11:09  Garton       30 min  platform 2\nFill in each ARRIVE time = DEPART time plus the JOURNEY minutes (24-hour clock, carry into the next hour when minutes exceed 59). Print all 48 rows. CRITICAL: every ARRIVE must equal DEPART plus JOURNEY; and the platform assignments are conflict-free (no two services on the same platform are at the station at the same time) -- keep the platform numbers exactly as given. Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a printed station DEPARTURE board with a number of services, each showing a depart time, journey minutes, arrive time and a platform number. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_rows": 48,
+    "read_index_1based": 20,
+    "read_dest": "Belford",
+    "read_depart": "08:05",
+    "read_dur": 45,
+    "read_arrive": "08:50",
+    "read_plat": 1,
+    "conflict_free": true,
+    "q_count": "How many SERVICE rows does this departure board have (not counting the header row)? Whole number only.",
+    "q_dep": "On the departure board, find the service to 'Belford' that departs at 08:05. Read the time printed in its DEPART column, as HH:MM. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it.",
+    "q_dur": "On the same service to 'Belford' departing 08:05, read the number of minutes printed in its JOURNEY column. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Digits only.",
+    "q_arr": "On the same service to 'Belford' departing 08:05, read the time printed in its ARRIVE column, as HH:MM. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "endtime_platform_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_dep",
+          "out": "dep"
+        },
+        {
+          "fail_if": ["dep.unreadable"]
+        },
+        {
+          "read_number": "reference.q_dur",
+          "out": "dur"
+        },
+        {
+          "fail_if": ["dur.unreadable"]
+        },
+        {
+          "ask": "reference.q_arr",
+          "out": "arr"
+        },
+        {
+          "fail_if": ["arr.unreadable"]
+        },
+        {
+          "run": "check_journey_times",
+          "args": [
+            "dep",
+            "dur",
+            "arr",
+            "reference.read_depart",
+            "reference.read_dur",
+            "reference.read_arrive"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one service row of the departure board, below the column headings, giving one train's times, destination and platform",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole service row of the board, with its departure time, destination and platform all on the same line, rather than the row of column headings, blank board, or two rows at once? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n_rows",
+          "core_abs": 1.5,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

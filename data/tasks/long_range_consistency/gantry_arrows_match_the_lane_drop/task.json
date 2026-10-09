@@ -1,0 +1,86 @@
+{
+  "id": "gantry_arrows_match_the_lane_drop",
+  "axis": "long_range_consistency",
+  "prompt": "The sign contractor's work has to be checked against the road as built before the file is closed, so a photograph is taken from the cab of the survey van in the running lane.\n\nThe road ahead is straight and open. A gantry stands over the carriageway a short way ahead, its board carrying a row of lane arrows and the destinations they lead to. Beyond the gantry the lane lines taper in and one of the lanes is taken out, the taper marked out with hatching on the surface. The works record on the clipboard on the dash gives the lanes under the gantry as the nearside lane, two middle lanes and the offside lane, gives the taper as starting two hundred metres beyond the gantry, and says the nearside lane is the one taken out there. The board is made to the authority's sign manual.\n\nWhat is painted on the board is not in the record.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a view along a motorway from inside a vehicle, with a sign gantry standing over the road ahead and lane lines running towards it? Answer yes or no only.",
+  "reference": {
+    "part1": "bends_into_its_neighbour",
+    "part2": "4"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the row of arrows painted on the gantry board, and at the one standing furthest over to the nearside. Answer with one of: that arrow bends across into the arrow beside it; that arrow runs straight up like the others in the row; there is no arrow at all over the nearside lane.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "lane arrow painted on the gantry sign board",
+          "out": "r_part2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part2.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

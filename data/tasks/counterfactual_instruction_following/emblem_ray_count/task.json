@@ -1,0 +1,88 @@
+{
+  "id": "emblem_ray_count",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A clean, symmetrical circular NATIONAL EMBLEM for a fictional country, centred on a plain deep-navy field, drawn as a flat vector heraldic badge. At the very centre is a single golden SUNBURST STAR: a round hub with straight pointed rays radiating outward from it like the spokes of a wheel, evenly spaced all the way around the full circle. Draw the sunburst with EXACTLY 6 rays -- count them: 6 separate golden rays, each a distinct pointed spoke, spread evenly around the hub with a clear gap between neighbouring rays so that all 6 can be counted one by one. Surround the sunburst with a thin plain golden ring near the edge of the emblem. One emblem, centred, flat colours, front-on. Do NOT write the number of rays or any number, letters or text anywhere on the emblem; just draw the sunburst with the correct number of rays.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a fictional circular national emblem whose central sunburst star has an exact declared number of rays? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_rays": 6,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed NUMBER, digit or numeral written on it (for example a caption stating a count or a measurement)? Answer yes if you can see any printed number, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ray_count",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "pointed golden ray sticking out of the round hub of the sunburst star",
+          "votes": 3,
+          "out": "rayb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rayb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a round national emblem with a golden sunburst star at its centre. Does this cut-out show exactly ONE whole pointed golden ray sticking out of the star's round middle -- one single ray on its own, not two rays side by side, not just the tip or a piece of one ray, not the plain thin ring near the edge of the emblem, and not just empty background? Answer yes or no only.",
+          "boxes": "rayb",
+          "pad": 0.1,
+          "out": "rayc"
+        },
+        {
+          "fail_if": ["rayc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_rays",
+          "args": ["rayb", "rayc"],
+          "out": "rcount"
+        },
+        {
+          "run": "count_matches_reference",
+          "args": ["rcount.n", "reference.n_rays"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

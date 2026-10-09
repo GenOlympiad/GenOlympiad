@@ -1,0 +1,387 @@
+{
+  "id": "go_capture",
+  "axis": "symbolic_systems",
+  "prompt": "A flatbed scan of a tournament game record sheet: slightly off-white paper, grey printed rules, a 13x13 Go lattice occupying almost the whole sheet. Its thirteen files carry the letters A B C D E F G H J K L M N from left to right, and its thirteen ranks are numbered 1 along the bottom to 13 along the top, set in small grey type in the margin. Stones are drawn as flat discs, black ones solid, white ones outlined, each one centred on a crossing.\n\nThe recorded sequence, Black first, alternating throughout, is:\n\nBlack G7, White F7, Black F6, White H7, Black H6, White G6, Black B13, White G8, Black G5, White A13, Black G7, White L4, Black A12, White L5, Black M9.\n\nOne rule governs what survives: the moment a stone or a joined chain of one colour has no empty crossing left beside it, it is taken and leaves the board, and the crossing it stood on is bare again and may be played on later. Work the record through move by move and draw only the position that stands after the fifteenth move. No move numbers, no arrows, no commentary, no prisoner tally.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a scanned sheet carrying one square lattice of ruled lines, round solid and round outlined pieces resting on crossings of it, and small printed letters and numbers in the margin beside the lattice. Ignoring artistic quality and styling, does the picture actually show that? Answer NO only if it shows something else entirely -- a blank page, a page of prose, a different game, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "n": 13,
+    "moves": [
+      "B G7",
+      "W F7",
+      "B F6",
+      "W H7",
+      "B H6",
+      "W G6",
+      "B B13",
+      "W G8",
+      "B G5",
+      "W A13",
+      "B G7",
+      "W L4",
+      "B A12",
+      "W L5",
+      "B M9"
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "board_readable",
+      "weight": 1.0,
+      "gate": true,
+      "score": "br.frac",
+      "steps": [
+        {
+          "ask": "Look at the board in this picture. Are thin straight ruled lines drawn across it, crossing each other to make a grid that reaches from one side of the board to the other? Answer no if the board is plain with no ruled lines drawn on it. Answer yes or no only.",
+          "out": "rl"
+        },
+        {
+          "read": "boxes",
+          "target": "the outermost ruled lines of the playing grid -- draw the box exactly along the top, bottom, left and right border lines of the ruled lattice, so that every line crossing of the grid lies on or inside the box and the printed margin labels lie outside it",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "crossing_boxes",
+          "args": ["lat", "rl", "reference.n"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is cut from a board game and is centred on ONE playing point. A black stone is a dark round counter. A white stone is a pale round counter with a thin outline, and it covers up the lines underneath it, so a point with a white stone on it looks like a plain pale disc WITH A THIN OUTLINE ROUND IT. A point with no stone on it shows the two ruled lines crossing, or bare paper. Which of the three is in the middle of this crop? Answer with one word: black, white or empty. Answer empty whenever there is no counter there -- bare paper with no outlined disc on it is empty, not white. A small printed dot or cross marking a reference spot on the board is NOT a counter: a counter is a big round piece, many times wider than such a dot, that hides the lines underneath it, so a crossing carrying only a small printed dot is empty. Ignore anything only partly visible at the edges of the crop.",
+          "boxes": "cb.boxes",
+          "pad": 0.15,
+          "out": "cx"
+        },
+        {
+          "run": "readable",
+          "args": ["cx", "reference.moves", "reference.n"],
+          "out": "br"
+        }
+      ]
+    },
+    {
+      "name": "captured_points_bare",
+      "weight": 6.0,
+      "score": "m0.capture_frac",
+      "steps": [
+        {
+          "ask": "Look at the board in this picture. Name what is drawn on its face, using one word from this list: lattice (thin straight ruled lines run across the board and cross each other to make a grid reaching from one side of the board to the other) or plain (no ruled lines are drawn on the board). Write that one word and nothing else.",
+          "out": "rl"
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["rl", "[[['lattice'],'yes'],[['plain'],'no']]"],
+          "out": "rl__mapped"
+        },
+        {
+          "read": "boxes",
+          "target": "the outermost ruled lines of the playing grid -- draw the box exactly along the top, bottom, left and right border lines of the ruled lattice, so that every line crossing of the grid lies on or inside the box and the printed margin labels lie outside it",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "crossing_boxes",
+          "args": ["lat", "rl__mapped.text", "reference.n"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is cut from a board game and is centred on ONE playing point. A black stone is a dark round counter. A white stone is a pale round counter with a thin outline, and it covers up the lines underneath it, so a point with a white stone on it looks like a plain pale disc WITH A THIN OUTLINE ROUND IT. A point with no stone on it shows the two ruled lines crossing, or bare paper. Which of the three is in the middle of this crop? Answer with one word: black, white or empty. Answer empty whenever there is no counter there -- bare paper with no outlined disc on it is empty, not white. A small printed dot or cross marking a reference spot on the board is NOT a counter: a counter is a big round piece that hides the lines underneath it, while a reference dot is a small printed mark that hides nothing. Ignore anything only partly visible at the edges of the crop.",
+          "boxes": "cb.boxes",
+          "pad": 0.15,
+          "out": "cx"
+        },
+        {
+          "run": "go_measure",
+          "args": ["cx", "reference.moves", "reference.n"],
+          "out": "m0"
+        }
+      ]
+    },
+    {
+      "name": "position_exact",
+      "weight": 4.0,
+      "score": "m1.exact_frac",
+      "steps": [
+        {
+          "ask": "Look at the board in this picture. Name what is drawn on its face, using one word from this list: lattice (thin straight ruled lines run across the board and cross each other to make a grid reaching from one side of the board to the other) or plain (no ruled lines are drawn on the board). Write that one word and nothing else.",
+          "out": "rl"
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["rl", "[[['lattice'],'yes'],[['plain'],'no']]"],
+          "out": "rl__mapped"
+        },
+        {
+          "read": "boxes",
+          "target": "the outermost ruled lines of the playing grid -- draw the box exactly along the top, bottom, left and right border lines of the ruled lattice, so that every line crossing of the grid lies on or inside the box and the printed margin labels lie outside it",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "crossing_boxes",
+          "args": ["lat", "rl__mapped.text", "reference.n"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is cut from a board game and is centred on ONE playing point. A black stone is a dark round counter. A white stone is a pale round counter with a thin outline, and it covers up the lines underneath it, so a point with a white stone on it looks like a plain pale disc WITH A THIN OUTLINE ROUND IT. A point with no stone on it shows the two ruled lines crossing, or bare paper. Which of the three is in the middle of this crop? Answer with one word: black, white or empty. Answer empty whenever there is no counter there -- bare paper with no outlined disc on it is empty, not white. A small printed dot or cross marking a reference spot on the board is NOT a counter: a counter is a big round piece that hides the lines underneath it, while a reference dot is a small printed mark that hides nothing. Ignore anything only partly visible at the edges of the crop.",
+          "boxes": "cb.boxes",
+          "pad": 0.15,
+          "out": "cx"
+        },
+        {
+          "run": "go_measure",
+          "args": ["cx", "reference.moves", "reference.n"],
+          "out": "m1"
+        }
+      ]
+    },
+    {
+      "name": "position_overlap",
+      "weight": 3.0,
+      "score": "m2.overlap_frac",
+      "steps": [
+        {
+          "ask": "Look at the board in this picture. Name what is drawn on its face, using one word from this list: lattice (thin straight ruled lines run across the board and cross each other to make a grid reaching from one side of the board to the other) or plain (no ruled lines are drawn on the board). Write that one word and nothing else.",
+          "out": "rl"
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["rl", "[[['lattice'],'yes'],[['plain'],'no']]"],
+          "out": "rl__mapped"
+        },
+        {
+          "read": "boxes",
+          "target": "the outermost ruled lines of the playing grid -- draw the box exactly along the top, bottom, left and right border lines of the ruled lattice, so that every line crossing of the grid lies on or inside the box and the printed margin labels lie outside it",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "crossing_boxes",
+          "args": ["lat", "rl__mapped.text", "reference.n"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is cut from a board game and is centred on ONE playing point. A black stone is a dark round counter. A white stone is a pale round counter with a thin outline, and it covers up the lines underneath it, so a point with a white stone on it looks like a plain pale disc WITH A THIN OUTLINE ROUND IT. A point with no stone on it shows the two ruled lines crossing, or bare paper. Which of the three is in the middle of this crop? Answer with one word: black, white or empty. Answer empty whenever there is no counter there -- bare paper with no outlined disc on it is empty, not white. A small printed dot or cross marking a reference spot on the board is NOT a counter: a counter is a big round piece that hides the lines underneath it, while a reference dot is a small printed mark that hides nothing. Ignore anything only partly visible at the edges of the crop.",
+          "boxes": "cb.boxes",
+          "pad": 0.15,
+          "out": "cx"
+        },
+        {
+          "run": "go_measure",
+          "args": ["cx", "reference.moves", "reference.n"],
+          "out": "m2"
+        }
+      ]
+    },
+    {
+      "name": "stone_tallies",
+      "weight": 1.5,
+      "score": "m3.count_frac",
+      "steps": [
+        {
+          "ask": "Look at the board in this picture. Name what is drawn on its face, using one word from this list: lattice (thin straight ruled lines run across the board and cross each other to make a grid reaching from one side of the board to the other) or plain (no ruled lines are drawn on the board). Write that one word and nothing else.",
+          "out": "rl"
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["rl", "[[['lattice'],'yes'],[['plain'],'no']]"],
+          "out": "rl__mapped"
+        },
+        {
+          "read": "boxes",
+          "target": "the outermost ruled lines of the playing grid -- draw the box exactly along the top, bottom, left and right border lines of the ruled lattice, so that every line crossing of the grid lies on or inside the box and the printed margin labels lie outside it",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "crossing_boxes",
+          "args": ["lat", "rl__mapped.text", "reference.n"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is cut from a board game and is centred on ONE playing point. A black stone is a dark round counter. A white stone is a pale round counter with a thin outline, and it covers up the lines underneath it, so a point with a white stone on it looks like a plain pale disc WITH A THIN OUTLINE ROUND IT. A point with no stone on it shows the two ruled lines crossing, or bare paper. Which of the three is in the middle of this crop? Answer with one word: black, white or empty. Answer empty whenever there is no counter there -- bare paper with no outlined disc on it is empty, not white. A small printed dot or cross marking a reference spot on the board is NOT a counter: a counter is a big round piece that hides the lines underneath it, while a reference dot is a small printed mark that hides nothing. Ignore anything only partly visible at the edges of the crop.",
+          "boxes": "cb.boxes",
+          "pad": 0.15,
+          "out": "cx"
+        },
+        {
+          "run": "go_measure",
+          "args": ["cx", "reference.moves", "reference.n"],
+          "out": "m3"
+        }
+      ]
+    },
+    {
+      "name": "d1_board_overlay",
+      "weight": 0.0,
+      "score": "m4.exact_frac",
+      "steps": [
+        {
+          "ask": "Look at the board in this picture. Are thin straight ruled lines drawn across it, crossing each other to make a grid that reaches from one side of the board to the other? Answer no if the board is plain with no ruled lines drawn on it. Answer yes or no only.",
+          "out": "rl"
+        },
+        {
+          "read": "boxes",
+          "target": "the outermost ruled lines of the playing grid -- draw the box exactly along the top, bottom, left and right border lines of the ruled lattice, so that every line crossing of the grid lies on or inside the box and the printed margin labels lie outside it",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "crossing_boxes",
+          "args": ["lat", "rl", "reference.n"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is cut from a board game and is centred on ONE playing point. A black stone is a dark round counter. A white stone is a pale round counter with a thin outline, and it covers up the lines underneath it, so a point with a white stone on it looks like a plain pale disc WITH A THIN OUTLINE ROUND IT. A point with no stone on it shows the two ruled lines crossing, or bare paper. Which of the three is in the middle of this crop? Answer with one word: black, white or empty. Answer empty whenever there is no counter there -- bare paper with no outlined disc on it is empty, not white. A small printed dot or cross marking a reference spot on the board is NOT a counter: a counter is a big round piece, many times wider than such a dot, that hides the lines underneath it, so a crossing carrying only a small printed dot is empty. Ignore anything only partly visible at the edges of the crop.",
+          "boxes": "cb.boxes",
+          "pad": 0.15,
+          "out": "cx"
+        },
+        {
+          "run": "go_measure",
+          "args": ["cx", "reference.moves", "reference.n"],
+          "out": "m4"
+        }
+      ]
+    },
+    {
+      "name": "d2_board_convention",
+      "weight": 0.0,
+      "score": "cv.frac",
+      "steps": [
+        {
+          "ask": "Look at the board in this picture. Are thin straight ruled lines drawn across it, crossing each other to make a grid that reaches from one side of the board to the other? Answer no if the board is plain with no ruled lines drawn on it. Answer yes or no only.",
+          "out": "rl"
+        },
+        {
+          "read": "boxes",
+          "target": "the outermost ruled lines of the playing grid -- draw the box exactly along the top, bottom, left and right border lines of the ruled lattice, so that every line crossing of the grid lies on or inside the box and the printed margin labels lie outside it",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "crossing_boxes",
+          "args": ["lat", "rl", "reference.n"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is cut from a board game and is centred on ONE playing point. A black stone is a dark round counter. A white stone is a pale round counter with a thin outline, and it covers up the lines underneath it, so a point with a white stone on it looks like a plain pale disc WITH A THIN OUTLINE ROUND IT. A point with no stone on it shows the two ruled lines crossing, or bare paper. Which of the three is in the middle of this crop? Answer with one word: black, white or empty. Answer empty whenever there is no counter there -- bare paper with no outlined disc on it is empty, not white. A small printed dot or cross marking a reference spot on the board is NOT a counter: a counter is a big round piece, many times wider than such a dot, that hides the lines underneath it, so a crossing carrying only a small printed dot is empty. Ignore anything only partly visible at the edges of the crop.",
+          "boxes": "cb.boxes",
+          "pad": 0.15,
+          "out": "cx"
+        },
+        {
+          "ask": "Small letters are printed in the margin along one edge of the board in this picture, one letter for each column. Reading them in order, is the letter I missing from that run of letters (that is, does the run go straight from H to J without an I)? Answer yes if there is no letter I among them, no if a letter I is printed there. Answer yes or no only.",
+          "out": "lt"
+        },
+        {
+          "run": "convention_form",
+          "args": ["cx", "lt", "reference.moves", "reference.n"],
+          "out": "cv"
+        }
+      ]
+    },
+    {
+      "name": "d3_moves_transcribed_ignoring_capture",
+      "weight": 0.0,
+      "score": "m5.transcribe_frac",
+      "steps": [
+        {
+          "ask": "Look at the board in this picture. Are thin straight ruled lines drawn across it, crossing each other to make a grid that reaches from one side of the board to the other? Answer no if the board is plain with no ruled lines drawn on it. Answer yes or no only.",
+          "out": "rl"
+        },
+        {
+          "read": "boxes",
+          "target": "the outermost ruled lines of the playing grid -- draw the box exactly along the top, bottom, left and right border lines of the ruled lattice, so that every line crossing of the grid lies on or inside the box and the printed margin labels lie outside it",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "crossing_boxes",
+          "args": ["lat", "rl", "reference.n"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is cut from a board game and is centred on ONE playing point. A black stone is a dark round counter. A white stone is a pale round counter with a thin outline, and it covers up the lines underneath it, so a point with a white stone on it looks like a plain pale disc WITH A THIN OUTLINE ROUND IT. A point with no stone on it shows the two ruled lines crossing, or bare paper. Which of the three is in the middle of this crop? Answer with one word: black, white or empty. Answer empty whenever there is no counter there -- bare paper with no outlined disc on it is empty, not white. A small printed dot or cross marking a reference spot on the board is NOT a counter: a counter is a big round piece, many times wider than such a dot, that hides the lines underneath it, so a crossing carrying only a small printed dot is empty. Ignore anything only partly visible at the edges of the crop.",
+          "boxes": "cb.boxes",
+          "pad": 0.15,
+          "out": "cx"
+        },
+        {
+          "run": "go_measure",
+          "args": ["cx", "reference.moves", "reference.n"],
+          "out": "m5"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

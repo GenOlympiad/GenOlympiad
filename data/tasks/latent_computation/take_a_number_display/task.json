@@ -1,0 +1,146 @@
+{
+  "id": "take_a_number_display",
+  "axis": "latent_computation",
+  "prompt": "A photorealistic overhead 'NOW SERVING' queue-display board mounted above the prescription counter of a busy pharmacy, photographed straight-on. Big yellow header 'NOW SERVING', subtitle 'Riverside Pharmacy - Prescription Counter'. Below it a dark board with five rows, one per service window, each row showing the WINDOW label on the left (W1, W2, W3, W4, W5, top to bottom in that order) and a bright LED NOW SERVING ticket number on the right. Simulate the queue and print the FINAL number each window is now serving. RULES: there is a single ticket dispenser; waiting customers hold tickets in increasing order beginning at ticket 118 (so the line is 118, 119, 120, and so on). When a window 'calls next' it normally serves the lowest-numbered ticket still waiting. TWO EXCEPTIONS: (a) ticket 121 is a PRIORITY (prescription-ready) ticket and must be served on the very FIRST 'calls next' event of the whole log, jumping ahead of the normal line; (b) tickets 120 and 123 are NO-SHOWS: when one of them would be the next ticket to serve, that ticket is skipped (the customer is absent) and the SAME 'calls next' serves the following waiting ticket instead. Now replay this CALL LOG in order: (1) W3 calls next, (2) W1 calls next, (3) W3 calls next, (4) W5 calls next, (5) W2 calls next, (6) W1 calls next, (7) W4 calls next. After replaying the whole log, print each window's FINAL served ticket number on its row. Neat monospaced/LED board, whole numbers only, exactly five window rows, no other numbers anywhere.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a pharmacy 'NOW SERVING' queue-display board: a header reading NOW SERVING and five rows, one per service window, each showing a window label and its current ticket number? A realistic photo, an illustration, a schematic or a clean diagram of the requested board ALL count as yes. Answer NO only if the image instead shows just a blank panel that prints an answer with none of the requested board depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      [125],
+      [124],
+      [119],
+      [126],
+      [122]
+    ],
+    "board": [125, 124, 119, 126, 122],
+    "start": 118,
+    "named_win": "W1",
+    "named_val": 125,
+    "board_min": 119,
+    "n_win": 5,
+    "q_named": "On the NOW SERVING board, read the ticket number printed on the W1 row (the row whose window label is 'W1'). Read ONLY the digits actually printed there; do NOT recompute or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+    "q_start": "The pharmacy queue starts at ticket 118. On the NOW SERVING board, read the SMALLEST ticket number printed on any window row (the lowest number shown on the board). Read only the printed digits. Answer with digits only.",
+    "q_wins": "How many service-window rows does the NOW SERVING board show (rows that each have a window label made of the letter W and a number, plus a ticket number)? Give a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "program_output_exact",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_grid": "the NOW SERVING ticket numbers, reading the five window rows from top to bottom in order (W1 row first, then W2, W3, W4, W5) -- one ticket number per row",
+          "rows": 5,
+          "cols": 1,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "compare_grid": "cells.values",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "named_window_exact",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_named",
+          "out": "n"
+        },
+        {
+          "fail_if": ["n.unreadable"]
+        },
+        {
+          "compare_band": "n",
+          "to": "reference.named_val",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "min_ticket",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "reference.q_start",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "compare_band": "m",
+          "to": "reference.board_min",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "win_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one board row showing a window label made of the letter W and a number, plus a lit ticket number",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_r"
+        },
+        {
+          "fail_if": ["box_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole board row with a window label at its left and a lit ticket number at its right, rather than bare board or only part of a row? Answer yes or no only.",
+          "boxes": "box_r",
+          "out": "crop_r"
+        },
+        {
+          "fail_if": ["crop_r.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_r"],
+          "out": "cnt_r"
+        },
+        {
+          "compare_band": "cnt_r.n",
+          "to": "reference.n_win",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

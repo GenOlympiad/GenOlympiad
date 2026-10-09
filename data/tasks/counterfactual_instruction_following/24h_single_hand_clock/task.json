@@ -1,0 +1,129 @@
+{
+  "id": "24h_single_hand_clock",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean, front-on picture of a brass railway 24-hour station clock that is a 24-HOUR clock dial. Instead of the usual 12 numbers, this dial has TWENTY-FOUR hour numbers evenly spaced around the full circle: put 0 at the very TOP, then going CLOCKWISE around the rim print 1, 2, 3, ... all the way up to 23, so each hour step is a small 15-degree slice and the number 12 ends up at the very BOTTOM. There is just ONE pointer hand coming from the centre (no separate minute hand). Set that single hand to point exactly at the hour 6: the hand must aim directly at the printed number 6 on this 24-hour dial. Draw all twenty-four numbers 0 to 23 in their evenly-spaced places, a small centre hub, and the one pointer hand clearly aimed at 6. Label it '0-23' if you like. No brand name and no other writing on the face.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a round clock face marked as a 24-hour dial with the hour numbers 0 up to 23 spaced around the rim and a single pointer hand from the centre. Never mind how well it is drawn. Does the picture show a round clock/dial face with numerals around the rim and a pointer? A photo, illustration, schematic or clean diagram all count as yes. Answer NO only if it shows a blank card, a plain panel printing an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "hour": 6,
+    "q_numeral": "Look at this round clock dial. A single straight pointer hand comes out from the centre. Read the printed numbers around the rim, and answer which ONE printed number the pointer hand points most directly toward. Report only the number the hand actually points at as drawn; do not assume any standard clock. Answer with just that one whole number and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "hand_numeral",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the round clock face itself -- the circular dial that carries the printed hour numbers around its rim, counting the whole dial as one shape; not the pointer on its own, and not the case, bulkhead or wall around it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read": "ray",
+          "target": [
+            "very tip of the single pointer hand on this clock face",
+            "small centre hub in the middle of the clock face that the pointer comes out of"
+          ],
+          "out": "hd"
+        },
+        {
+          "fail_if": ["hd.unreadable"]
+        },
+        {
+          "run": "plan_hour_sectors",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "find_pointer_sector",
+          "args": ["pl", "hd"],
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.no_plan"]
+        },
+        {
+          "read_crop": "This is a small piece cut from the rim of a round clock face. Is a number printed inside this piece? If exactly one number is printed here, answer with just that number. If more than one number is printed here, answer with the one closest to the middle of this piece. If no number is printed here, answer the single word none.",
+          "boxes": "sp.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "read_hour_number",
+          "args": ["rd"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "compare_band": "res.v",
+          "to": "reference.hour",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        },
+        {
+          "run": "mark_hour_sectors",
+          "args": ["pl", "sp.idx", "reference.hour", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ]
+}

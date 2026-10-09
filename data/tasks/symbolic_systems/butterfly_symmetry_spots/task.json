@@ -1,0 +1,91 @@
+{
+  "id": "butterfly_symmetry_spots",
+  "axis": "symbolic_systems",
+  "prompt": "A photorealistic straight-on macro photograph of an iridescent blue Morpho butterfly with its wings fully spread on a plain pale neutral background, soft studio light, shallow depth of field. The two wings must be BILATERALLY MIRROR-SYMMETRIC (the left wing is the exact mirror of the right about the body axis). Across the MIDDLE BAND of each wing draw dark ringed EYESPOTS (near-black circles each with a thin pale ring). There must be EXACTLY 4 eyespots in the band of the LEFT wing AND EXACTLY 4 eyespots in the band of the RIGHT wing -- the same count on both wings, mirrored in position. Not 3, not 5 -- exactly 4 on each side, 8 in total, and the left set must mirror the right set. Keep every eyespot separate and fully visible. No text, no numerals.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a blue Morpho BUTTERFLY with spread wings carrying dark ringed spots. Ignoring artistic quality, does the image actually DEPICT that requested subject -- a butterfly with two spread wings? A photo, macro or illustration all count as yes. Answer NO only if it instead shows a blank panel, plain text, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 4,
+    "left_box": [0.1, 0.3, 0.44, 0.66],
+    "right_box": [0.56, 0.3, 0.9, 0.66]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "symmetric_band_count",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "dark ringed eyespot on the butterfly's wing",
+          "out": "sp",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one dark ringed eyespot -- a near-black round spot with a thin pale ring around it? Answer yes or no only.",
+          "boxes": "sp",
+          "out": "cs"
+        },
+        {
+          "fail_if": ["cs.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the butterfly's body between the two wings",
+          "expected_n": 1,
+          "out": "bod"
+        },
+        {
+          "fail_if": ["bod.unreadable"]
+        },
+        {
+          "run": "split_wings",
+          "args": ["sp", "cs", "bod"],
+          "out": "sw"
+        },
+        {
+          "fail_if": ["sw.degenerate"]
+        },
+        {
+          "compare_tolerance": "sw.nl",
+          "to": "reference.n",
+          "tol": 0,
+          "out": "fl"
+        },
+        {
+          "compare_tolerance": "sw.nr",
+          "to": "reference.n",
+          "tol": 0,
+          "out": "fr"
+        },
+        {
+          "all": ["fl", "fr"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a dark ringed eyespot on the butterfly wing"
+}

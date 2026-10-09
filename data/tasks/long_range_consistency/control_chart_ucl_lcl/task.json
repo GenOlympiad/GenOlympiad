@@ -1,0 +1,191 @@
+{
+  "id": "control_chart_ucl_lcl",
+  "axis": "long_range_consistency",
+  "prompt": "A quality-control chart from a coffee bagging line, plotting net fill weight in grams for 12 numbered samples joined by a thin line. The first 8 samples are the baseline: 251.6, 249.8, 250.9, 248.7, 251.2, 249.3, 250.4, 249.9. Samples 9 to 12 are new production checks: 250.8, 252.9, 249.1, 247.2. Draw three horizontal dashed control lines computed from the 8 baseline values only: the centre line CL at their mean, the upper control limit UCL at mean plus three standard deviations, and the lower control limit LCL at mean minus three standard deviations, using the population standard deviation (divide the squared deviations by 8). Round CL, UCL and LCL to one decimal (round halves up) and print each as a label at the right end of its line, in the form 'UCL = ...', 'CL = ...', 'LCL = ...'. Plot every sample as a solid dot: any sample that falls ABOVE the UCL or BELOW the LCL must be drawn as a RED dot, all other samples as black dots. Number the x-axis 1 to 12. Print no numbers other than the axis labels, the sample scale and the three line labels. White background, no legend.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a statistical process-control chart with dashed control-limit lines and plotted sample points? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cl": 250.2,
+    "ucl": 253.0,
+    "lcl": 247.5,
+    "red_idx": 12,
+    "red_count": 1,
+    "q_ucl": "What number is printed in the label at the right end of the UPPER dashed control line (the label beginning 'UCL')? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_lcl": "What number is printed in the label at the right end of the LOWER dashed control line (the label beginning 'LCL')? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_cl": "What number is printed in the label at the right end of the MIDDLE dashed line (the label beginning 'CL')? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_red_count": "Write down every plotted sample dot on this control chart that is coloured RED, each with a few plain words saying where on the chart it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If no dot is red, write the single word NONE.",
+    "q_red_idx": "Give the x-axis sample number at which a RED dot is plotted. If more than one dot is red, give the LEFTMOST red one; if none, answer 0. Respond with the number only, as digits, and nothing else.",
+    "q_npts": "How many plotted sample dots (of any colour) does the chart contain in total? Respond with the number only, as digits, and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "limits_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_ucl",
+          "out": "u"
+        },
+        {
+          "read_number": "reference.q_lcl",
+          "out": "l"
+        },
+        {
+          "ask": "reference.q_red_count",
+          "out": "rc"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rc", "empty_as='0'"],
+          "out": "rc__std"
+        },
+        {
+          "fail_if": ["rc__std.refused"]
+        },
+        {
+          "read_number": "reference.q_red_idx",
+          "out": "ri"
+        },
+        {
+          "fail_if": ["u.unreadable", "l.unreadable", "rc.unreadable", "ri.unreadable"]
+        },
+        {
+          "compare_tolerance": "u",
+          "to": "reference.ucl",
+          "tol": 0.15,
+          "out": "f_u"
+        },
+        {
+          "compare_tolerance": "l",
+          "to": "reference.lcl",
+          "tol": 0.15,
+          "out": "f_l"
+        },
+        {
+          "compare_tolerance": "rc__std.n",
+          "to": "reference.red_count",
+          "tol": 0.5,
+          "out": "f_rc"
+        },
+        {
+          "compare_tolerance": "ri",
+          "to": "reference.red_idx",
+          "tol": 0.5,
+          "out": "f_ri"
+        },
+        {
+          "all": ["f_u", "f_l", "f_rc", "f_ri"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_total_points",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one plotted sample dot on the chart, of any colour",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_np_"
+        },
+        {
+          "fail_if": ["box_np_.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole round plotted dot rather than only the thin joining line, a dashed limit line, or bare chart? Answer yes or no only.",
+          "boxes": "box_np_",
+          "out": "crop_np_"
+        },
+        {
+          "fail_if": ["crop_np_.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_np_"],
+          "out": "cnt_np_"
+        },
+        {
+          "compare_tolerance": "cnt_np_.n",
+          "to": 12,
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_centre_line",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read_number": "reference.q_cl",
+          "out": "c"
+        },
+        {
+          "fail_if": ["c.unreadable"]
+        },
+        {
+          "compare_tolerance": "c",
+          "to": "reference.cl",
+          "tol": 0.15,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_red_count",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one plotted sample dot on the chart coloured red",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_rc2"
+        },
+        {
+          "fail_if": ["box_rc2.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show a round plotted dot that is coloured red rather than black or bare chart background? Answer yes or no only.",
+          "boxes": "box_rc2",
+          "out": "crop_rc2"
+        },
+        {
+          "fail_if": ["crop_rc2.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_rc2"],
+          "out": "cnt_rc2"
+        },
+        {
+          "compare_tolerance": "cnt_rc2.n",
+          "to": "reference.red_count",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

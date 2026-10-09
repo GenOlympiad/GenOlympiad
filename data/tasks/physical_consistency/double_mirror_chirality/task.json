@@ -1,0 +1,105 @@
+{
+  "id": "double_mirror_chirality",
+  "axis": "physical_consistency",
+  "prompt": "Render a clean, straight-on photographic view looking down a long fitting-room passage formed by TWO large PARALLEL mirrors facing each other on the left and right walls. Standing on the floor at the near end is a small white rectangular plate with the single bold black capital letter 'P' printed on it, facing the camera.\n\nBecause the two mirrors face each other, the plate is reflected back and forth, so behind the real plate you see a receding line of its reflected copies shrinking into the distance. Show the real plate plus its first 4 reflected copies (so 5 plates in total, each smaller and further away than the last).\n\nApply the physical law of mirror reflection to the printed letter: the reflection of a letter is reversed left-to-right, so each successive reflection flips the letter's handedness. The real plate reads the letter 'P' the normal way round; its first reflection shows the letter mirror-reversed; the next reflection shows it the normal way again; and so on, alternating with depth. Keep the plate bright white and the letter solid black on every copy. Print no other text.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a photographic view down a hallway between two facing mirrors, with a white letter-plate and a receding line of its reflected copies? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 5,
+    "K": 5,
+    "letter": "P",
+    "chir_seq": ["normal", "mirrored", "normal", "mirrored", "normal"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chirality_chain",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "white plate with a black letter on it, standing on the floor in the line of plates that recedes away from the camera down the middle of the corridor",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a white plate with one solid black SHAPE printed on it. Part of that shape is a long straight vertical bar. The rest of the shape (a rounded loop and/or angled strokes) is attached to one side of that bar. As you look at this cut-out, is the rest of the shape attached on the LEFT side of that vertical bar or on the RIGHT side of it? If more than one such shape is visible, judge the one nearest the middle of this cut-out. Answer with exactly one word: left or right.",
+          "boxes": "bl",
+          "pad": 0.02,
+          "out": "ch"
+        },
+        {
+          "fail_if": ["ch.unreadable"]
+        },
+        {
+          "run": "centre_line_for_chain",
+          "args": ["bl", "ch"],
+          "out": "sel"
+        },
+        {
+          "run": "mirror_chain",
+          "args": ["sel.b", "sel.a", "reference"],
+          "out": "law"
+        },
+        {
+          "all": ["law.f_alt", "law.f_depth"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "flip_fraction",
+      "weight": 1.2,
+      "score": "law.flip_frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "white plate with a black letter on it, standing on the floor in the line of plates that recedes away from the camera down the middle of the corridor",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a white plate with one solid black SHAPE printed on it. Part of that shape is a long straight vertical bar. The rest of the shape (a rounded loop and/or angled strokes) is attached to one side of that bar. As you look at this cut-out, is the rest of the shape attached on the LEFT side of that vertical bar or on the RIGHT side of it? If more than one such shape is visible, judge the one nearest the middle of this cut-out. Answer with exactly one word: left or right.",
+          "boxes": "bl",
+          "pad": 0.02,
+          "out": "ch"
+        },
+        {
+          "fail_if": ["ch.unreadable"]
+        },
+        {
+          "run": "centre_line_for_flip",
+          "args": ["bl", "ch"],
+          "out": "sel"
+        },
+        {
+          "run": "mirror_chain",
+          "args": ["sel.b", "sel.a", "reference"],
+          "out": "law"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "pipe_id_band_code_along_run",
+  "axis": "long_range_consistency",
+  "prompt": "The safety walk on this plant falls due on Friday, so the marking gang lays the three shots of one run onto a single sheet for the file before the inspector arrives.\n\nThe run starts at a pump whose nameplate is stamped CONDENSATE RETURN and ends at a dryer in the finishing shop. Between them the pipe is banded in three places: at the pump, at the wall penetration, and at the shop end. A code sheet clipped to the page gives the works marking rule. Every band carries a ground colour, a narrower ring of a second colour, an arrow, and the name of the fluid in letters; the rule sets a green ground with a black ring against condensate return, a green ground with a blue ring against cooling water, and a plain blue ground against compressed air. All three shots are lit cold white.\n\nWhat each band takes, and which way each arrow heads, is what the file does not say.",
+  "difficulty": "s1",
+  "easy_question": "Is this one page made up of three photographs of the same pipe banded at different places along its run? Answer yes or no only.",
+  "reference": {
+    "part1": "one_name_throughout",
+    "part2": "all_away_from_pump"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the letters on each of the three bands along this run. Answer with one of: all three bands carry the same fluid name; the bands carry a mixture of fluid names; the band at the pump is the only one carrying a fluid name.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the arrow painted on each of the three bands along this run. Answer with one of: every arrow heads away from the pump end; every arrow heads back to the pump end; the arrows head different ways along the run.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

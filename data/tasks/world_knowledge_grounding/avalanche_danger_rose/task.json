@@ -1,0 +1,199 @@
+{
+  "id": "avalanche_danger_rose",
+  "axis": "world_knowledge_grounding",
+  "prompt": "Every morning through the winter the avalanche warning service publishes one bulletin sheet for this range, and this is today's, lying on the duty forecaster's desk and photographed square on.\n\nThe sheet is pre-printed and its furniture does not move: a circular danger rose in the middle of the page, divided into 8 wedge-shaped sectors with the compass letters N, NE, E, SE, S, SW, W and NW printed round the rim, and cut across by 3 concentric rings; down the left-hand side the 3 rings are named, the outermost standing for the ground below the tree line, the middle one for the ground from the tree line up to 2400 m, and the innermost for the ground above 2400 m.\n\nThis is what the last two days have produced and it is what the sheet has to say: 48 hours of strong north-westerly wind have stripped new snow off the slopes it blew against and piled it on the slopes lying in the shelter of that same wind; the tree line here is at 1900 m; today's danger is level 3, considerable, on the loaded slopes -- the sheltered aspect itself and the one aspect either side of it -- and only on ground above the tree line; everywhere else on the range is level 1.\n\nWhich part of the rose ends up under tone is the part you have to work out -- I am deliberately not telling you, and there is no second rose anywhere on the sheet to copy. The level 3 ground wants to be a solid even tone against the plain paper of the rest, heavy enough to see which sector and which ring it lies in. Other than the 8 compass letters, the 3 ring names and the sheet's heading, no arrow, word or figure belongs on the face of the rose.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed sheet with a circular diagram on it divided into wedges and rings with compass letters round the rim? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no diagram on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "lee_bearing": 135,
+    "n_sectors": 3,
+    "n_rings": 2,
+    "n_letters": 8
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_toned_fan_sits_on_the_aspects_the_wind_has_loaded",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the circular danger rose printed in the middle of the bulletin sheet",
+          "sweep": true,
+          "out": "rose_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["rose_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, work round the 8 wedge-shaped sectors of the diagram and write down every sector that carries any tone at all, each with a few plain words saying which way it points. Separate one item from the next with a semicolon; write no running total and nothing else. If no sector carries any tone, write the single word NONE.",
+          "boxes": "rose_box",
+          "pad": 0.9,
+          "out": "cnt_rd"
+        },
+        {
+          "fail_if": ["cnt_rd.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["cnt_rd", "empty_as='0'"],
+          "out": "cnt_rd__std"
+        },
+        {
+          "fail_if": ["cnt_rd__std.refused"]
+        },
+        {
+          "read_crop": "In this cut-out, which compass letters are printed at the rim in the middle of the toned part of the diagram? Answer with the letters exactly as they are printed, or none if no part of it is toned.",
+          "boxes": "rose_box",
+          "pad": 0.9,
+          "out": "asp_rd"
+        },
+        {
+          "fail_if": ["asp_rd.unreadable"]
+        },
+        {
+          "run": "lee_aspect_gap",
+          "args": ["cnt_rd__std", "asp_rd", "reference.n_sectors", "reference.lee_bearing"],
+          "out": "leev"
+        },
+        {
+          "compare_compass": "leev.gap",
+          "to": 0,
+          "core": 25.0,
+          "margin": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_tone_stops_at_the_tree_line_ring",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the circular danger rose printed in the middle of the bulletin sheet",
+          "sweep": true,
+          "out": "rng_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["rng_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, work outwards through the diagram's 3 rings and write down every ring that carries any tone at all, each with a few plain words saying how far out from the centre it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If no ring carries any tone, write the single word NONE.",
+          "boxes": "rng_box",
+          "pad": 0.9,
+          "out": "rng_rd"
+        },
+        {
+          "fail_if": ["rng_rd.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rng_rd", "empty_as='0'"],
+          "out": "rng_rd__std"
+        },
+        {
+          "fail_if": ["rng_rd__std.refused"]
+        },
+        {
+          "read_crop": "In this cut-out, is the outermost ring of the diagram left with no tone anywhere round it? Answer yes or no only.",
+          "boxes": "rng_box",
+          "pad": 0.9,
+          "out": "out_rd"
+        },
+        {
+          "fail_if": ["out_rd.unreadable"]
+        },
+        {
+          "run": "band_stops_inside",
+          "args": ["rng_rd__std", "out_rd", "reference.n_rings"],
+          "out": "bandv"
+        },
+        {
+          "compare": "bandv.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_rose_carries_a_compass_letter_at_each_of_its_eight_sectors",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a compass letter printed round the rim of the circular danger rose",
+          "sweep": true,
+          "out": "cen_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a letter printed on the rim of the diagram? Answer yes or no only.",
+          "boxes": "cen_box",
+          "pad": 0.9,
+          "out": "cen_rd"
+        },
+        {
+          "fail_if": ["cen_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_rd"],
+          "out": "cenn"
+        },
+        {
+          "compare_band": "cenn.n",
+          "to": "reference.n_letters",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_arrow_word_or_figure_is_added_to_the_face_of_the_rose",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, word or figure on the face of the rose other than the compass letters and the ring names",
+          "sweep": true,
+          "out": "sweep_s",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

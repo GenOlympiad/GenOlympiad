@@ -1,0 +1,105 @@
+{
+  "id": "spiral_stair_winding",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A clean top-down PLAN-VIEW architectural drawing (black lines on white paper) of a SPIRAL staircase seen from directly ABOVE, looking straight down the central column. The staircase has 8 wedge-shaped TREADS radiating from the round central column, each tread clearly NUMBERED 1, 2, 3, ... printed at its outer end. Arrange the numbered treads so that as you WALK DOWN the stairs (following the tread numbers 1, 2, 3, ... in increasing order) you turn CLOCKWISE around the central column. So reading the tread numbers in increasing order goes CLOCKWISE around the centre. Draw a clean labelled plan: the central column, the 8 numbered radial treads, and the outer wall circle. No text other than the tread numbers, no arrows, no shading.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a top-down plan drawing of a spiral staircase with numbered radial treads around a central column? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 8,
+    "sense": "clockwise",
+    "winding_target": "clockwise",
+    "q_winding": "This is a top-down plan of a spiral staircase with numbered treads around a central column. Following the tread NUMBERS 1, 2, 3, ... in increasing order, do they go CLOCKWISE or COUNTER-CLOCKWISE around the centre? Answer with exactly one word: clockwise or counterclockwise.",
+    "q_cw_order": "This top-down plan has numbered radial spokes (treads) around a central hub. Starting at the spoke labelled 1 and going CLOCKWISE around the hub, list the numbers on the spokes IN THE ORDER you pass them, all the way around. Answer as space-separated numbers only, and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tread_winding_direction",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_winding",
+          "out": "w"
+        },
+        {
+          "ask": "reference.q_cw_order",
+          "out": "cw"
+        },
+        {
+          "fail_if": ["w.unreadable", "cw.unreadable"]
+        },
+        {
+          "run": "winding_score",
+          "args": ["w", "reference"],
+          "out": "wd"
+        },
+        {
+          "run": "steps_in_order_score",
+          "args": ["cw", "reference"],
+          "out": "mn"
+        },
+        {
+          "fail_if": ["mn.no_read"]
+        },
+        {
+          "all": ["wd.frac", "mn.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_tread_count",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered wedge-shaped tread radiating from the central column",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_rd"
+        },
+        {
+          "fail_if": ["box_rd.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole wedge-shaped stair step carrying a printed number rather than blank paper or only part of a step? Answer yes or no only.",
+          "boxes": "box_rd",
+          "out": "crop_rd"
+        },
+        {
+          "fail_if": ["crop_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_rd"],
+          "out": "cnt_rd"
+        },
+        {
+          "compare_band": "cnt_rd.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 1.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

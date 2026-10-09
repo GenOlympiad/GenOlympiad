@@ -1,0 +1,158 @@
+{
+  "id": "crc4_remainder",
+  "axis": "latent_computation",
+  "prompt": "A photorealistic straight-on close-up of a stamped industrial equipment NAMEPLATE (brushed metal). It prints a data word and its CRC-4 check bits. The message bits are 11010011 and the CRC-4 generator polynomial is 10011. Stamp two lines: 'MSG: 11010011' and, below it, a boxed line 'CRC-4:' followed by the 4-bit CRC remainder. Compute the CRC by binary polynomial division modulo 2: append four zero bits to the message, then repeatedly XOR the generator 10011 into the running bits wherever the leading bit is 1 (no carries, no borrows -- bitwise XOR only), and take the final 4 remaining bits as the CRC. Stamp exactly those four CRC bits (0s and 1s) in the box. Do NOT copy the last four message bits. Crisp stamped digits, no other numbers or codes on the plate.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show stamped industrial equipment nameplate printing a binary message and its computed CRC-4 remainder bits? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "msg": "11010011",
+    "gen": "10011",
+    "crc": "1001",
+    "crc_list": [1, 0, 0, 1],
+    "tail_decoy": [0, 0, 1, 1],
+    "q_val": "This industrial nameplate prints a 4-bit CRC check value as four 0/1 digits in a box labelled 'CRC-4:'. Read those four bits from LEFT to RIGHT exactly as printed. Read ONLY the printed 0s and 1s; do NOT recompute the CRC. Answer with the four bits separated by single spaces and nothing else, like this: 0 1 1 0. Do not run them together and do not use commas.",
+    "q_form": "Does this image show a plate or card that prints a binary code (a string of 0s and 1s) together with a CRC-4 check value? A metal nameplate, a printed label or a plain card all count. Answer yes or no.",
+    "crc_len": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fm"
+        },
+        {
+          "fail_if": ["fm.unreadable"]
+        },
+        {
+          "compare": "fm",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "crc_bits",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read_sequence": "reference.q_val",
+          "n": 4,
+          "out": "sq"
+        },
+        {
+          "fail_if": ["sq.unreadable"]
+        },
+        {
+          "run": "seq_exact",
+          "args": ["sq", "[1, 0, 0, 1]"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_msg",
+      "weight": 0.75,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the bit string printed on the 'MSG:' line. Report just the sequence of 0s and 1s exactly as printed.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.msg",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_crc_bit_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "stamped digit standing in the boxed CRC field of the metal nameplate",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole stamped digit rather than bare background or only part of a digit? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.crc_len",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_two_lines",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "stamped number, code or line of text on the nameplate other than the MSG line and the boxed CRC line",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

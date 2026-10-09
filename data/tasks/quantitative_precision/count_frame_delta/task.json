@@ -1,0 +1,185 @@
+{
+  "id": "count_frame_delta",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic three-panel comic strip read left to right, each panel showing the same glass jar on a table. The jar GAINS exactly 3 more marbles in each successive panel: the first (left) panel has EXACTLY 8 marbles, the second (middle) panel has exactly 11 marbles, and the third (right) panel has exactly 14 marbles (8 then 11 then 14, adding 3 each step). In the first two panels the marbles are GREY; in the third (final) panel all the marbles are bright RED. The marbles are loose, well separated and countable in every jar. The final panel must show EXACTLY 14 red marbles -- not 13, not 15. Draw clear panel borders. No text, no numerals.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a three-panel comic strip of a jar filling with marbles, where each panel has a fixed number MORE marbles than the panel before it; count the marbles in the last panel? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 14,
+    "start": 8,
+    "k": 3,
+    "frame2": 11,
+    "q": "This is a three-panel comic read left to right. How many marbles are in the LAST (rightmost, third) panel's jar? Count the marbles in only that final panel. Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This picture should show these countable objects: a three-panel comic strip of a jar filling with marbles, where each panel has a fixed number MORE marbles than the panel before it; count the marbles in the last panel. Look at the individual objects being counted. Is each one a marble in the jar, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them visible as its own separate individual (allowing for the intended overlaps/stacking the scene describes), rather than merged into one indistinct blob? Answer yes if each intended object can be told apart, no if they merge into an uncountable mass. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "RED marble inside the jar",
+          "out": "bx",
+          "context": "the THIRD (rightmost) panel of the three-panel comic strip -- the last panel, the one whose jar holds the red marbles"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Look at the middle of this picture. Can you see something RED there? Answer no if the thing you can see is grey, silver or colourless, or if there is nothing here but background. Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_distinct_boxes",
+          "args": ["cr", "bx"],
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "premise_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show a three-panel comic strip in which a jar has progressively more marbles from the first panel to the last? Answer yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one small round object inside the jar in the right-hand panel of the three-panel strip -- one box per object, round that single round object's whole outline. Two objects touching in the jar are still two, so box each on its own; do not box the jar, its lid or its shadow, do not box the objects in the other two panels, and do not put two objects in one box.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_g"
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole marble lying in the jar, rather than some other object, a shapeless blob, or only part of a marble? Answer yes or no only.",
+          "boxes": "box_g",
+          "out": "crop_g"
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a clump inside a jar where several marbles merge together so the separate marbles cannot be told apart",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g"
+        },
+        {
+          "fail_if": ["sweep_g.unreadable"]
+        },
+        {
+          "compare": "sweep_g.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a marble in the jar"
+}

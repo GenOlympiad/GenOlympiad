@@ -1,0 +1,167 @@
+{
+  "id": "air_washout_valve_extrema",
+  "axis": "long_range_consistency",
+  "prompt": "Sign-off is due on the rising main before the trench gang moves on, and the design office has to put one long section in front of the checking engineer.\n\nThe section runs 800 metres from the pumping station to the service reservoir. The survey gives the existing ground along it at every hundred metres, and these figures are the whole of the survey:\n\n  chainage      0    100    200    300    400    500    600    700    800\n  ground     40.0   48.0   39.0   46.0   52.0   44.0   36.0   49.0   45.0\n\nThe main is laid at one constant cover below that ground the whole way, so the pipe follows the ground and nothing about its depth is in question. A row of chainage figures runs along the foot of the sheet with the ground level lettered beside each one, and the key in the bottom corner shows the two chamber symbols this office uses, one marked AIR and one marked WASHOUT.\n\nThe rule the checking engineer applies comes out of the trade and not out of the survey. Air collects at a high point of a buried main and has to be let out there, and grit and water collect at a low point and have to be let out there. A length that is only on its way up or on its way down needs neither, and neither end of the main gets a chamber.\n\nWhere the chambers finish up is the whole reason this sheet goes to the checker, and I am not saying. Every chainage figure and every ground level stays legible along the foot of the sheet. No gradient figure is lettered anywhere along the pipe.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a long section of a buried pipeline, with a ground line above and a row of chainage figures along the foot? A drawing, a printed sheet or a scan of one all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "station_plan": {
+      "0": ["none", "through"],
+      "100": ["air", "falls"],
+      "200": ["washout", "rises"],
+      "300": ["none", "through"],
+      "400": ["air", "falls"],
+      "500": ["none", "through"],
+      "600": ["washout", "rises"],
+      "700": ["air", "falls"],
+      "800": ["none", "through"]
+    },
+    "chainages": ["0", "100", "200", "300", "400", "500", "600", "700", "800"],
+    "ground_levels": [40.0, 48.0, 39.0, 46.0, 52.0, 44.0, 36.0, 49.0, 45.0]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_station_carries_the_chamber_that_goes_with_the_way_the_ground_turns_there",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a chainage figure printed in the row along the foot of the sheet",
+          "out": "vl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["vl_r.unreadable"]
+        },
+        {
+          "read_crop": "What chainage figure is printed in this cut-out? Answer with that number only.",
+          "boxes": "vl_r",
+          "pad": 0.25,
+          "out": "vl_c",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["vl_c.unreadable"]
+        },
+        {
+          "read_crop": "Directly above the chainage figure in this cut-out, is a chamber symbol standing on the pipe? If one is, answer with the word printed beside that symbol in the key. If none is, answer 'none'.",
+          "boxes": "vl_r",
+          "pad": 1.6,
+          "out": "vl_v",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["vl_v.unreadable"]
+        },
+        {
+          "read_crop": "Directly above the chainage figure in this cut-out, does the ground line fall away to both sides, rise away to both sides, or simply carry on through? Answer 'falls', 'rises' or 'through'.",
+          "boxes": "vl_r",
+          "pad": 1.6,
+          "out": "vl_s",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["vl_s.unreadable"]
+        },
+        {
+          "run": "check_valve_chainages",
+          "args": ["vl_c", "vl_v", "vl_s", "reference.station_plan"],
+          "out": "vl_x"
+        },
+        {
+          "compare_category": "vl_x.miss",
+          "to": 0,
+          "max_steps": 3,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_ground_levels_lettered_along_the_foot_rise_and_fall_as_the_survey_does",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a chainage figure printed in the row along the foot of the sheet",
+          "out": "gl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["gl_r.unreadable"]
+        },
+        {
+          "read_crop": "What chainage figure is printed in this cut-out? Answer with that number only.",
+          "boxes": "gl_r",
+          "pad": 0.25,
+          "out": "gl_c",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["gl_c.unreadable"]
+        },
+        {
+          "read_crop": "What ground level figure is lettered beside the chainage in this cut-out? Answer with that number only.",
+          "boxes": "gl_r",
+          "pad": 0.35,
+          "out": "gl_l",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["gl_l.unreadable"]
+        },
+        {
+          "run": "read_ground_levels",
+          "args": ["gl_c", "gl_l", "reference.chainages"],
+          "out": "gl_x"
+        },
+        {
+          "match_trend": "gl_x.seq",
+          "to": "reference.ground_levels",
+          "min_delta": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_gradient_figure_was_lettered_along_the_pipe",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a gradient figure lettered along the pipe",
+          "out": "gr_r",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["gr_r.unreadable"]
+        },
+        {
+          "compare": "gr_r.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

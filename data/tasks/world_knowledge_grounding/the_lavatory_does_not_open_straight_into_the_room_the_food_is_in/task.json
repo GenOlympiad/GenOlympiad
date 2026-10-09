@@ -1,0 +1,84 @@
+{
+  "id": "the_lavatory_does_not_open_straight_into_the_room_the_food_is_in",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A Fore Street bistro is refitting its back kitchen; the sheet goes to the food safety officer. Outside walls stay; partitions are the designer's. The food preparation room fills the back of the premises, the staff lavatory is boxed into the corner behind it, and the wall it shares with the food room is its only wall onto the rest of the premises. A corridor to the yard door runs along the food room's far side. The officer's checklist is printed down the margin, against which the layout is read: a staff lavatory shall not open directly into any room where food is handled; a food handling room shall have a wash-hand basin for hands only, separate from the sink for food or equipment, and no other sanitary fitting; and a wash-hand basin shall serve the lavatory, sited outside it and not in a food room. Wanted is the record photograph of the finished part plan on the drawing board, square-on from above, whole sheet in frame.",
+  "difficulty": "pA",
+  "easy_question": "Does this picture show a floor plan drawing of a small commercial kitchen with a food preparation room, a staff lavatory and a corridor all drawn on the one sheet? Answer yes or no.",
+  "reference": {
+    "part1": "lobby",
+    "part2": "2"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Say in a few plain words what the lavatory door opens into.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "How many separate basins and sinks are drawn in the food preparation room?",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

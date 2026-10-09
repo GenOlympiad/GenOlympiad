@@ -1,0 +1,190 @@
+{
+  "id": "empty_answer_set",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of a row of eight vaccine cartons on a pharmacy cold-cabinet shelf, each with a printed temperature card, shot square on. The printed cards read, left to right: 6.2 C, 7.6 C, 5.4 C, 8 C, 6.8 C, 7.1 C, 5.9 C, 6.5 C. Now the rule: a red QUARANTINE band is put on every vaccine carton whose card reads HIGHER THAN 8 C. A vaccine carton whose card reads exactly 8 C is not higher than 8 C and does not qualify. Mark only where the rule genuinely applies -- there may be several, there may be one, and there may be none at all; do not mark a vaccine carton just so that something is marked, and in particular do not simply mark the warmest one in the row. A vaccine carton that does not qualify is completely plain apart from its card. All 8 cards must be printed clearly and legibly. I am deliberately not listing the answer anywhere in this request; work it out from the figures printed in the picture.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a row of several identical containers or objects standing side by side, each with a small printed card showing a number. Ignoring artistic quality, and ignoring whether the details are right or wrong, does the image DEPICT that? Answer NO only if the picture is unrelated to that description or contains no such arrangement at all. Answer yes or no only.",
+  "reference": {
+    "q_verbatim": "Transcribe EVERY line of printed, painted, chalked or written text you can see anywhere in this picture — including text on boards, signs, slates, placards, plates, cards, labels and stickers. Copy each line exactly as it appears, character by character. Do NOT correct spelling or arithmetic and do not leave any line out. Separate the lines with spaces.",
+    "q_region_text": "This picture is one part cut out of a wider photograph. Copy out every line of printed or written text you can see in it -- on cards, labels, tags, tickets and signs. If a line is cut off by the edge of this part, copy the characters you can actually see and do not guess the rest. Copy each line exactly as it appears, character by character; do not correct the spelling, do not correct any figure and do not leave a line out. Put a single space between one line and the next, and write nothing else.",
+    "exp_lines": ["6.2 C", "7.6 C", "5.4 C", "8 C", "6.8 C", "7.1 C", "5.9 C", "6.5 C"],
+    "count_noun": "a vaccine carton in the row",
+    "na": 8,
+    "expa": [
+      "6.2 BARE",
+      "7.6 BARE",
+      "5.4 BARE",
+      "8 BARE",
+      "6.8 BARE",
+      "7.1 BARE",
+      "5.9 BARE",
+      "6.5 BARE"
+    ],
+    "q_item_confirm": "This is a close-up cut out of a bigger picture of a row of vaccine cartons. Does this cut-out show exactly ONE whole vaccine carton together with its own printed temperature card -- one single vaccine carton, not two of them side by side and not just a piece of one? Answer yes or no only.",
+    "q_item_num": "This is a close-up cut out of a bigger picture. It shows one vaccine carton with its printed temperature card. If more than one carton is visible in this cut-out, read the card on the carton nearest the middle of it. What number is printed on that card? Answer with that number and nothing else. If no number can be read on it, answer NONE.",
+    "q_item_mark": "This is a close-up cut out of a bigger picture. It shows one vaccine carton. If more than one carton is visible in this cut-out, judge the one nearest the middle of it. Is a red QUARANTINE band on that carton? Answer with one word only: BAND if the carton carries a red quarantine band, or CLEAR if it does not."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 8.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "{gt.count_noun}",
+          "votes": 3,
+          "out": "jrb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["jrb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_confirm",
+          "boxes": "jrb",
+          "pad": 0.05,
+          "out": "jrc"
+        },
+        {
+          "fail_if": ["jrc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_num",
+          "boxes": "jrb",
+          "pad": 0.05,
+          "out": "jrn"
+        },
+        {
+          "fail_if": ["jrn.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_mark",
+          "boxes": "jrb",
+          "pad": 0.05,
+          "out": "jrm"
+        },
+        {
+          "fail_if": ["jrm.unreadable"]
+        },
+        {
+          "run": "read_cartons",
+          "args": ["jrb", "jrc", "jrn", "jrm", "reference"],
+          "out": "jr2"
+        },
+        {
+          "run": "panel_slots_verdict",
+          "args": ["[compose_reads(\"nw\", jr2.nums, jr2.marks)]", "[reference.expa]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "binding_agreement",
+      "weight": 1.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "{gt.count_noun}",
+          "votes": 3,
+          "out": "jrb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["jrb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_confirm",
+          "boxes": "jrb",
+          "pad": 0.05,
+          "out": "jrc"
+        },
+        {
+          "fail_if": ["jrc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_num",
+          "boxes": "jrb",
+          "pad": 0.05,
+          "out": "jrn"
+        },
+        {
+          "fail_if": ["jrn.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_mark",
+          "boxes": "jrb",
+          "pad": 0.05,
+          "out": "jrm"
+        },
+        {
+          "fail_if": ["jrm.unreadable"]
+        },
+        {
+          "run": "read_cartons",
+          "args": ["jrb", "jrc", "jrn", "jrm", "reference"],
+          "out": "jr2"
+        },
+        {
+          "run": "panel_slots_verdict",
+          "args": ["[compose_reads(\"nw\", jr2.nums, jr2.marks)]", "[reference.expa]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "data_present",
+      "weight": 2.0,
+      "pass_at": 0.8,
+      "steps": [
+        {
+          "run": "vertical_strip_boxes",
+          "args": ["reference.na"],
+          "out": "bx"
+        },
+        {
+          "read_crop": "reference.q_region_text",
+          "boxes": "bx",
+          "pad": 0.06,
+          "out": "rt"
+        },
+        {
+          "fail_if": ["rt.unreadable"]
+        },
+        {
+          "run": "line_coverage",
+          "args": ["join_answers(rt.answers)", "reference.exp_lines"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a marked container in the row",
+  "aspect_ratio": "3:2"
+}

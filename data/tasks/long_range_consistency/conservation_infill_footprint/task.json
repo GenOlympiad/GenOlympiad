@@ -1,0 +1,231 @@
+{
+  "id": "conservation_infill_footprint",
+  "axis": "long_range_consistency",
+  "prompt": "Between the two record photographs stands the jar they were both taken of, and the three together are the page that goes into the object file when the treatment is signed off.\n\nThe jar is a coarse buff storage jar. A painted band runs right round the shoulder and a cord-impressed line runs right round the belly. Three pieces were missing when it came in: two out of the shoulder, so the painted band was interrupted in two places, and one out of the belly, which interrupted the cord line once. The photograph on the left is captioned BEFORE and was taken the day it arrived; the one on the right is captioned AFTER and was taken this morning. Both are laid flat on the bench with the jar standing between them, and the treatment record card and a scalpel lie at the edge of the frame.\n\nTwo conventions govern a fill of this kind. A fill is made recognisable, so it is left a shade paler than the body and set very slightly below the original surface, never proud of it and never lapping over sound original. And decoration is never carried across a fill: whatever the band or the cord line was doing, it stops at the edge of the loss and starts again on the far side, so the interruptions that were there when it arrived are still there when it leaves.\n\nWhat the jar looks like now is the whole point of the page and I am deliberately not telling you. Nothing is drawn on either photograph: no rings, no arrows, no captions besides the two already named. Keep the shoulder and the belly of all three easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two record photographs of a pottery jar lying on a bench with the jar itself standing between them? A photograph, an illustration or a printed panel all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "captions": ["BEFORE", "AFTER"],
+    "band_breaks": [2, 2],
+    "cord_breaks": [1, 1],
+    "level_want": "below",
+    "carry_want": "no",
+    "n_fills": 3,
+    "n_checks": 7,
+    "n_units": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_interruptions_survive_the_treatment_and_the_fills_read_as_fills",
+      "weight": 3.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the two captioned record photographs lying on the bench",
+          "out": "rp_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rp_r.unreadable"]
+        },
+        {
+          "read_crop": "What single word is printed under the photograph in this cut-out? Answer with that word only.",
+          "boxes": "rp_r",
+          "pad": 0.2,
+          "out": "rp_k",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rp_k.unreadable"]
+        },
+        {
+          "read_crop": "Write down every separate interruption in the painted band running round the shoulder of the jar in this cut-out, each with a few plain words saying where along the band it falls. Separate one item from the next with a semicolon; write no running total and nothing else. If the band runs unbroken here, write the single word NONE.",
+          "boxes": "rp_r",
+          "pad": 0.2,
+          "out": "rp_b",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rp_b.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rp_b", "empty_as='0'"],
+          "out": "rp_b__std"
+        },
+        {
+          "fail_if": ["rp_b__std.refused"]
+        },
+        {
+          "read_crop": "Write down every separate interruption in the cord line running round the belly of the jar in this cut-out, each with a few plain words saying where along the line it falls. Separate one item from the next with a semicolon; write no running total and nothing else. If the cord line runs unbroken here, write the single word NONE.",
+          "boxes": "rp_r",
+          "pad": 0.2,
+          "out": "rp_c",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rp_c.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["rp_c", "empty_as='0'"],
+          "out": "rp_c__std"
+        },
+        {
+          "fail_if": ["rp_c__std.refused"]
+        },
+        {
+          "read": "boxes",
+          "target": "the jar standing between the two photographs",
+          "out": "recheck_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["recheck_r.unreadable"]
+        },
+        {
+          "read_crop": "Does the paler filled material on this jar sit below the surrounding surface, level with it, or proud of it? Answer with one of: below, level, proud.",
+          "boxes": "recheck_r",
+          "pad": 0.2,
+          "out": "recheck_l",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["recheck_l.unreadable"]
+        },
+        {
+          "read_crop": "Does the painted band run on across the paler filled material on this jar? Answer yes or no only.",
+          "boxes": "recheck_r",
+          "pad": 0.2,
+          "out": "recheck_c",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["recheck_c.unreadable"]
+        },
+        {
+          "read_crop": "Write down every separate patch of paler filled material on this jar, each with a few plain words saying where on the jar it lies. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no such patch here, write the single word NONE.",
+          "boxes": "recheck_r",
+          "pad": 0.2,
+          "out": "recheck_n",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["recheck_n.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["recheck_n", "empty_as='0'"],
+          "out": "recheck_n__std"
+        },
+        {
+          "fail_if": ["recheck_n__std.refused"]
+        },
+        {
+          "run": "score_infill_record",
+          "args": [
+            "rp_k",
+            "rp_b__std",
+            "rp_c__std",
+            "recheck_l",
+            "recheck_c",
+            "recheck_n__std",
+            "reference.captions",
+            "reference.band_breaks",
+            "reference.cord_breaks",
+            "reference.level_want",
+            "reference.carry_want",
+            "reference.n_fills"
+          ],
+          "out": "bs"
+        },
+        {
+          "compare_band": "bs.n",
+          "to": "reference.n_checks",
+          "core_abs": 0.499,
+          "margin_abs": 2.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_page_carries_its_two_captioned_record_photographs",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the two captioned record photographs lying on the bench",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole record photograph of the jar with its printed caption, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.2,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_ring_arrow_or_extra_caption_was_drawn_on_either_photograph",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a ring, an arrow or an extra caption drawn on one of the record photographs",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

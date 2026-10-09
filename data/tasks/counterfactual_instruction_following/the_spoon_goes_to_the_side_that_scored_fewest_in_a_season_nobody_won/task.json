@@ -1,0 +1,154 @@
+{
+  "id": "the_spoon_goes_to_the_side_that_scored_fewest_in_a_season_nobody_won",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "It is presentation night at a Sunday league club and the three sides that made up this season's mini-league are out on the grass together for the club photograph, taken from the touchline while it is still light.\n\nA painted RESULTS BOARD stands behind them, headed SEASON RESULTS, carrying exactly these three lines one under another in big lettering:\n  WHARF 1 - 1 KILNS\n  KILNS 0 - 0 DRAYMEN\n  DRAYMEN 2 - 2 WHARF\n\nEvery player's top carries his own club's name across the chest in big lettering, one club name to a top and nothing else on it. A win is worth three points and a draw one. Where clubs finish level on points, this league separates them on GOALS SCORED across the season, the most first.\n\nThe club has one tradition and the photograph has to carry it. The captain of the side that finishes BOTTOM of that table holds the wooden spoon up above his head and grins at the camera. The goalkeeper of the side that finishes TOP sits by himself on the bench with his head in both hands. Which side is bottom and which is top are for you to work out -- I am deliberately telling you neither, and I am telling you nothing about who wears what.\n\nNo table, no points, no goal totals and no word such as TOP or BOTTOM may go anywhere in the photograph. The only lettering in it is the board's heading, the three result lines above, and the club names across the tops.\n\nThe board, the captain with the spoon and the goalkeeper on the bench all have to be in the one photograph, and every club name has to be readable.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a sports ground with a results board behind some players, one player holding something up above his head and one player sitting on a bench. Never mind how well it is drawn, and never mind which side is doing what. Does the image DEPICT that? Answer NO only if it is blank, has no people, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "spoon_tag": "yes",
+    "bench_tag": "yes",
+    "clean_frame": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_spoon_is_held_by_the_side_that_scored_fewest",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the player standing with a wooden spoon held up above his head",
+          "out": "spb"
+        },
+        {
+          "fail_if": ["spb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Which club name is printed across this person's top? Answer wharf, kilns or draymen.",
+          "boxes": "spb",
+          "pad": 0.15,
+          "out": "sp"
+        },
+        {
+          "run": "spoon_club",
+          "args": ["sp"],
+          "out": "spr"
+        },
+        {
+          "fail_if": ["spr.refused"]
+        },
+        {
+          "compare": "spr.tag",
+          "to": "reference.spoon_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_bench_carries_the_side_that_scored_most",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the player sitting on the bench with his head in his hands",
+          "out": "bnb"
+        },
+        {
+          "fail_if": ["bnb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Which club name is printed across this person's top? Answer wharf, kilns or draymen.",
+          "boxes": "bnb",
+          "pad": 0.15,
+          "out": "bn"
+        },
+        {
+          "run": "bench_club",
+          "args": ["bn"],
+          "out": "bnr"
+        },
+        {
+          "fail_if": ["bnr.refused"]
+        },
+        {
+          "compare": "bnr.tag",
+          "to": "reference.bench_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_table_or_standing_is_worked_out_anywhere_at_the_ground",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a points table, a standings list or a written note anywhere at the ground",
+          "out": "xg",
+          "exempt": [
+            "the board's heading",
+            "a result line on the board",
+            "a club name across a top"
+          ],
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a points table, a standings list or a written note? Answer yes or no. Answer no if the cut-out shows the board's heading, a result line on the board, or a club name across a top.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as a points table, a standings list or a written note? Answer yes or no. Answer no if it belongs there -- the board's heading, a result line on the board, or a club name across a top.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_frame",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

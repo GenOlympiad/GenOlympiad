@@ -1,0 +1,86 @@
+{
+  "id": "flatpack_side_panels_mirrored",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The cell has to release this pair to the assembly line before the run changes over, so the two panels are photographed together on the bench with the drilling docket lying between them.\n\nA matched pair of cabinet side panels lies inner face up on the drilling bench, both cut from the same board, the front edge of each banded in a darker tape than its other three edges. Each panel carries an inked works stamp near its top corner, one reading L and the other R, and each carries a single row of shelf-support holes drilled through the face. The drilling docket lying between them calls for a shelf at each of the marked heights: 320, 640, 960, 1280 and 1600 mm, and says every row is set in from the panel's own dark-banded front edge.\n\nHow the two rows stand on the bench is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a pair of cabinet side panels lying side by side on a bench, each with a works stamp and a row of holes? Answer yes or no only.",
+  "reference": {
+    "part1": "rows_from_opposite_edges",
+    "part2": "5"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the row of holes on each panel and say which edge it is set in from. Answer with one of: the two rows are set in from edges that face opposite ways on the bench; the two rows are set in from edges that face the same way on the bench; one panel carries no row of holes at all.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "drilled shelf-support holes in the row on the panel stamped L",
+          "out": "r_part2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part2.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "id": "letter_grid_point_symmetry",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed decorative panel titled 'TILE MOTIF PANEL' (Point-symmetric letter grid): an 7x7 square grid of printed CAPITAL LETTERS, one letter per cell, with a small centre dot. Draw the square grid large and centred so it fills the central area of the sheet, with straight evenly-spaced ruled rows and columns viewed perfectly straight-on. CRITICAL symmetry rule: the grid has 180-degree rotational (point) symmetry about its centre -- the letter in any cell equals the letter in the diametrically opposite cell (the cell you reach by rotating the grid half a turn). So the letter at row 2 column 3 equals the letter at row 6 column 5, and the letter at row 1 column 6 equals the letter at row 7 column 2 (rows and columns counted from 1 at the top-left). Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a square grid of printed capital letters (a decorative letter-tile panel). Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 7,
+    "a0r": 2,
+    "a0c": 3,
+    "b0r": 6,
+    "b0c": 5,
+    "a1r": 1,
+    "a1c": 1,
+    "b1r": 7,
+    "b1c": 7,
+    "q_a0": "This image shows a square grid of printed CAPITAL LETTERS, one letter per cell. Counting rows from 1 at the TOP and columns from 1 at the LEFT, what single capital LETTER is printed in the cell at row 2, column 3? Answer with just that one letter.",
+    "q_b0": "This image shows a square grid of printed CAPITAL LETTERS, one letter per cell. Counting rows from 1 at the TOP and columns from 1 at the LEFT, what single capital LETTER is printed in the cell at row 6, column 5? Answer with just that one letter.",
+    "q_a1": "This image shows a square grid of printed CAPITAL LETTERS, one letter per cell. Counting rows from 1 at the TOP and columns from 1 at the LEFT, what single capital LETTER is printed in the cell at row 1, column 1? Answer with just that one letter.",
+    "q_b1": "This image shows a square grid of printed CAPITAL LETTERS, one letter per cell. Counting rows from 1 at the TOP and columns from 1 at the LEFT, what single capital LETTER is printed in the cell at row 7, column 7? Answer with just that one letter.",
+    "q_count": "How many cells are along ONE side of this square letter grid (the grid is N by N -- give N)? Whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "letter_grid_point_symmetry_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_a0",
+          "out": "a0"
+        },
+        {
+          "fail_if": ["a0.unreadable"]
+        },
+        {
+          "ask": "reference.q_b0",
+          "out": "b0"
+        },
+        {
+          "fail_if": ["b0.unreadable"]
+        },
+        {
+          "ask": "reference.q_a1",
+          "out": "a1"
+        },
+        {
+          "fail_if": ["a1.unreadable"]
+        },
+        {
+          "ask": "reference.q_b1",
+          "out": "b1"
+        },
+        {
+          "fail_if": ["b1.unreadable"]
+        },
+        {
+          "run": "mirror_pairs_match",
+          "args": ["a0", "b0", "a1", "b1"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "printed capital letter cell in the left-hand column of the square grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole grid cell holding a single printed capital letter rather than bare background or only part of a cell? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 1.4,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

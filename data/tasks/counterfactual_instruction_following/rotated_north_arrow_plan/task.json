@@ -1,0 +1,289 @@
+{
+  "id": "rotated_north_arrow_plan",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "One sheet out of a planning submission for a small four-room flat, photographed flat on the checker's desk so the whole sheet is readable. It is the daylight-orientation check sheet: the floor plan of the flat, its title block, and nothing else.\n\nThe flat is drawn as four rooms around a central service core, and each room has exactly one wall on the outside of the building:\n - room A's outside wall runs along the TOP edge of the sheet;\n - room B's outside wall runs along the RIGHT edge of the sheet;\n - room C's outside wall runs along the BOTTOM edge of the sheet;\n - room D's outside wall runs along the LEFT edge of the sheet.\nEach room carries its own letter inside it, in big characters.\n\nA north arrow sits in the top right corner of the sheet. On this drawing its head points diagonally towards the BOTTOM RIGHT corner of the sheet, at forty-five degrees.\n\nThe drawing office rule for this sheet is in the title block and must be in the picture: 'FOR EACH ROOM, DRAW A SHORT ARROW JUST OUTSIDE THAT ROOM'S OUTSIDE WALL, AT RIGHT ANGLES TO THE WALL AND POINTING AWAY FROM THE BUILDING, AND WRITE THAT ROOM'S COMPASS BEARING BESIDE THE ARROW USING ONE OF THE EIGHT NAMES NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST.'\n\nWork each room's bearing out from the north arrow on this sheet yourself -- I am deliberately not telling you any of the four bearings, and no two of the four rooms come out with the same one. Do not print a bearing in degrees, a second compass rose, or any note about which way up the sheet is: the only text in the picture is the four room letters, the four bearing names, the title block and the rule above.\n\nThe north arrow, all four short arrows and all four bearing names must be big and legible in the same picture.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed floor plan sheet of a small flat with lettered rooms, a north arrow and a title block? A photo, an illustration or a plain diagram all count as yes. Answer no only if it shows something unrelated, or just a blank panel with an answer written on it. Answer yes or no only.",
+  "reference": {
+    "bearing_grid": [
+      ["A=southwest"],
+      ["B=northwest"],
+      ["C=northeast"],
+      ["D=southeast"]
+    ],
+    "n_rooms": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "written_bearings",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the floor plan together with the short arrows drawn just outside its walls and the words beside those arrows",
+          "expected_n": 1,
+          "out": "anc_box_ann",
+          "context": "the drawing sheet on the desk"
+        },
+        {
+          "fail_if": ["anc_box_ann.unreadable"]
+        },
+        {
+          "run": "plan_room_wedges",
+          "args": ["image", "anc_box_ann", "reference.n_rooms"],
+          "out": "pl_box_ann"
+        },
+        {
+          "fail_if": ["pl_box_ann.no_plan"]
+        },
+        {
+          "read_crop": "Copy the word written beside the arrow in this cut-out. Write one word and nothing else.",
+          "boxes": "pl_box_ann.cells",
+          "pad": 0.0,
+          "out": "words"
+        },
+        {
+          "fail_if": ["words.unreadable"]
+        },
+        {
+          "read_crop": "Which single letter is printed inside the room of the floor plan nearest the middle of this cut-out? Answer with one letter only.",
+          "boxes": "pl_box_ann.cells",
+          "pad": 0.0,
+          "out": "letters"
+        },
+        {
+          "fail_if": ["letters.unreadable"]
+        },
+        {
+          "run": "room_letter_rows",
+          "args": ["letters", "words"],
+          "out": "rows"
+        },
+        {
+          "compare_grid": "rows",
+          "to": "reference.bearing_grid",
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["pl_box_ann", "frac"],
+          "out": "pa_box_ann"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_box_ann.hit",
+          "ref_anchors": "pa_box_ann.ref_anchors",
+          "found_anchors": "pa_box_ann.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_box_ann_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_ann_hit.path",
+          "rects": "pa_box_ann.miss",
+          "ref_anchors": "pa_box_ann.ref_anchors",
+          "found_anchors": "pa_box_ann.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_box_ann_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_ann_miss.path",
+          "rects": "pa_box_ann.edge",
+          "ref_anchors": "pa_box_ann.ref_anchors",
+          "found_anchors": "pa_box_ann.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_box_ann_edge"
+        }
+      ]
+    },
+    {
+      "name": "arrow_geometry_bearings",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the north arrow standing in the corner of the drawing sheet",
+          "expected_n": 1,
+          "out": "box_nth"
+        },
+        {
+          "fail_if": ["box_nth.unreadable"]
+        },
+        {
+          "read_crop": "Which way does the arrow in this cut-out point? Answer with one of these: up, upper-right, right, lower-right, down, lower-left, left, upper-left.",
+          "boxes": "box_nth",
+          "pad": 0.2,
+          "out": "ndir"
+        },
+        {
+          "fail_if": ["ndir.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the floor plan together with the short arrows drawn just outside its walls and the words beside those arrows",
+          "expected_n": 1,
+          "out": "anc_box_ar",
+          "context": "the drawing sheet on the desk"
+        },
+        {
+          "fail_if": ["anc_box_ar.unreadable"]
+        },
+        {
+          "run": "plan_room_wedges",
+          "args": ["image", "anc_box_ar", "reference.n_rooms"],
+          "out": "pl_box_ar"
+        },
+        {
+          "fail_if": ["pl_box_ar.no_plan"]
+        },
+        {
+          "read_crop": "Which way does the arrow in this cut-out point? Answer with one of these: up, upper-right, right, lower-right, down, lower-left, left, upper-left.",
+          "boxes": "pl_box_ar.cells",
+          "pad": 0.0,
+          "out": "adir"
+        },
+        {
+          "fail_if": ["adir.unreadable"]
+        },
+        {
+          "read_crop": "Which single letter is printed inside the room of the floor plan nearest the middle of this cut-out? Answer with one letter only.",
+          "boxes": "pl_box_ar.cells",
+          "pad": 0.0,
+          "out": "rlet"
+        },
+        {
+          "fail_if": ["rlet.unreadable"]
+        },
+        {
+          "run": "room_bearings",
+          "args": ["ndir", "adir", "rlet"],
+          "out": "geo"
+        },
+        {
+          "compare_grid": "geo",
+          "to": "reference.bearing_grid",
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["pl_box_ar", "frac"],
+          "out": "pa_box_ar"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_box_ar.hit",
+          "ref_anchors": "pa_box_ar.ref_anchors",
+          "found_anchors": "pa_box_ar.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_box_ar_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_ar_hit.path",
+          "rects": "pa_box_ar.miss",
+          "ref_anchors": "pa_box_ar.ref_anchors",
+          "found_anchors": "pa_box_ar.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_box_ar_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_ar_miss.path",
+          "rects": "pa_box_ar.edge",
+          "ref_anchors": "pa_box_ar.ref_anchors",
+          "found_anchors": "pa_box_ar.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_box_ar_edge"
+        }
+      ]
+    },
+    {
+      "name": "d1_room_arrows_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one short arrow drawn just outside the outside wall of the floor plan",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole short arrow drawn outside the building, rather than a wall line or only part of an arrow? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rooms",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_degrees_or_second_rose",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a bearing written as a number of degrees, or a second compass rose, anywhere on the sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

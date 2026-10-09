@@ -1,0 +1,238 @@
+{
+  "id": "binary_search_step",
+  "axis": "latent_computation",
+  "prompt": "A university algorithms lecture slide projected on a screen: a single horizontal row of 15 numbered boxes showing this SORTED array, left to right (position 1 to 15):\n    4  11  17  23  29  34  41  48  55  62  70  77  83  90  96\n\nThe lecturer is running BINARY SEARCH for the target value 29. Show the state at the START of STEP 3 (the third probe). Binary search keeps a search window [lo..hi]; each step probes the MIDDLE box mid = floor((lo+hi)/2), compares its value to 29, and if 29 is larger moves lo to mid+1, else moves hi to mid-1. Step 1 probes the whole array, step 2 probes the surviving half, and step 3 probes what remains. Render all 15 boxes with their numbers, and mark THREE boxes for step 3: outline the lo (left window edge) box in GREEN, outline the hi (right window edge) box in RED, and FILL the mid (probe) box SOLID YELLOW. Exactly one green, one red, one yellow box. No other colouring, no arrows, no extra text besides the 15 numbers.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show university algorithms lecture slide projecting a 15-box sorted array with the binary-search lo/hi/mid window highlighted at the third probe? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "array": [4, 11, 17, 23, 29, 34, 41, 48, 55, 62, 70, 77, 83, 90, 96],
+    "target": 29,
+    "lo": 5,
+    "hi": 7,
+    "mid": 6,
+    "mid_value": 34,
+    "lo_value": 29,
+    "hi_value": 41,
+    "q_form": "Look at this image. Is it a single horizontal row of about 15 numbered boxes with one box filled solid yellow and two other boxes outlined (one green, one red)? Answer ONLY 'yes' or 'no'.",
+    "q_mid": "This row has 15 numbered boxes, each printed with a number. Report ONLY what is actually drawn in THIS image; do NOT run binary search yourself. Exactly one box is filled SOLID YELLOW. Read the NUMBER printed inside that yellow box. Answer with ONLY that number.",
+    "q_lo": "This row has 15 numbered boxes, each printed with a number. Report ONLY what is actually drawn in THIS image; do NOT do any sums yourself. Exactly one box is OUTLINED IN GREEN (not filled). Read the NUMBER printed inside that green-outlined box. Answer with ONLY that number.",
+    "q_hi": "This row has 15 numbered boxes, each printed with a number. Report ONLY what is actually drawn in THIS image; do NOT do any sums yourself. Exactly one box is OUTLINED IN RED (not filled). Read the NUMBER printed inside that red-outlined box. Answer with ONLY that number.",
+    "n_boxes": 15,
+    "first_value": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "mid_probe",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_mid",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "compare_tolerance": "m",
+          "to": "reference.mid_value",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lo_edge",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_lo",
+          "out": "lo"
+        },
+        {
+          "fail_if": ["lo.unreadable"]
+        },
+        {
+          "compare_tolerance": "lo",
+          "to": "reference.lo_value",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "hi_edge",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_hi",
+          "out": "hi"
+        },
+        {
+          "fail_if": ["hi.unreadable"]
+        },
+        {
+          "compare_tolerance": "hi",
+          "to": "reference.hi_value",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_boxes",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered box of the single horizontal row of boxes",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "boxes_box"
+        },
+        {
+          "fail_if": ["boxes_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole numbered box of the row, rather than bare background or only part of a box? Answer yes or no only.",
+          "boxes": "boxes_box",
+          "out": "boxes_chk"
+        },
+        {
+          "fail_if": ["boxes_chk.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["boxes_chk"],
+          "out": "cnt_boxes"
+        },
+        {
+          "compare_band": "cnt_boxes.n",
+          "to": "reference.n_boxes",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_target",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered box of the single horizontal row of boxes",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "boxes_box"
+        },
+        {
+          "fail_if": ["boxes_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one numbered box. What number is printed inside it? Answer with just that number.",
+          "boxes": "boxes_box",
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "vals"
+        },
+        {
+          "fail_if": ["vals.unreadable"]
+        },
+        {
+          "run": "first_number",
+          "args": ["vals"],
+          "out": "firstbox"
+        },
+        {
+          "compare_band": "firstbox.n",
+          "to": "reference.first_value",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_mid_box_value",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the printed NUMBER inside the box that is filled solid YELLOW (the probe box). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.mid_value",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_one_of_each",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is there exactly one GREEN-outlined box, exactly one RED-outlined box, and exactly one solid YELLOW box (three marked boxes total)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "id": "block_height_screen",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A sleek crypto-exchange lobby wall screen with a dark panel titled 'Bitcoin Network -- Current Block'. Print, in huge crisp digits after a '#', the CURRENT real Bitcoin block height right now -- the latest confirmed block number on the live blockchain (a six-to-seven digit number that increases by one roughly every ten minutes). Use the true present-day block height, not a rounded or made-up number. One big number, a small 'latest confirmed block height' caption, no other text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show crypto-exchange lobby screen printing the live current Bitcoin block height? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_height": "This is a lobby screen showing the current Bitcoin block height as a large number after a '#'. Read ONLY the block-height number printed on the screen and answer with just that integer (digits only, no commas). Do NOT guess -- report exactly the printed number."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "block_height",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big glowing number printed after the '#' sign on the dark wall screen -- ONE box holding that row of big glowing digits and nothing else, from the first digit across to the last and from the top of the digits down to their bottom. Do not take in the screen's title line, the small caption under the number, the rest of the dark panel or the wall around it; the '#' sign itself may stay just outside the box.",
+          "expected_n": 1,
+          "out": "n_area"
+        },
+        {
+          "fail_if": ["n_area.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a big screen on a wall. A row of large bright digits is printed in it, just after a '#' sign. Write down exactly those digits and nothing else -- no commas, no '#' sign, no words. Copy what is printed; do not guess.",
+          "boxes": "n_area",
+          "pad": 0.25,
+          "out": "n_cr"
+        },
+        {
+          "fail_if": ["n_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "n_cr",
+          "out": "n"
+        },
+        {
+          "compare_band": "n",
+          "to": "reference.blk.height",
+          "core": 6.0,
+          "margin": 200.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "fetch": "https://mempool.space/api/v1/mining/blocks/timestamp/1784289600",
+      "out": "raw"
+    },
+    {
+      "run": "parse_block_height",
+      "args": ["raw"],
+      "out": "blk"
+    }
+  ],
+  "grounding": "live"
+}

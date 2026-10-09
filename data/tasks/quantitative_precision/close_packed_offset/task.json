@@ -1,0 +1,95 @@
+{
+  "id": "close_packed_offset",
+  "axis": "quantitative_precision",
+  "prompt": "A clean a front view of a brick wall in RUNNING BOND, a lower course of about 7 bricks and the course above it. For close packing / running bond, each brick in the UPPER row must rest in the POCKET exactly halfway between two adjacent bricks of the lower row -- that is, the upper row is shifted sideways by exactly HALF of the brick spacing. Mark each lower-row centre with a GREEN dot and each upper-row centre with a BLUE dot. Do NOT stack the upper bricks directly above the lower ones. Plain background, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a front view of a brick wall in RUNNING BOND, a lower course of about 7 bricks and the course above it, with green dots on the lower-row centres and blue dots on the upper-row centres. Ignoring artistic quality, does the image show two rows of round units with green dots on the lower centres and blue dots on the upper centres? Answer NO only if those are missing or it is unrelated. Answer yes or no.",
+  "reference": {
+    "lower_lo": [40, 70, 50],
+    "lower_hi": [85, 255, 255],
+    "upper_lo": [100, 90, 60],
+    "upper_hi": [130, 255, 255],
+    "tol": 0.24,
+    "min_frac": 0.00015,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "phase_offset",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the green dots",
+          "out": "low",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["low.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the blue dots",
+          "out": "up"
+        },
+        {
+          "fail_if": ["up.unreadable"]
+        },
+        {
+          "run": "stagger_offset_score",
+          "args": ["low", "up", "reference"],
+          "out": "po"
+        },
+        {
+          "fail_if": ["po.degenerate"]
+        },
+        {
+          "compare_band": "po.frac",
+          "to": 1.0,
+          "core": 0.15,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

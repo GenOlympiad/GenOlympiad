@@ -1,0 +1,84 @@
+{
+  "id": "the_belt_walks_to_the_side_it_meets_first",
+  "axis": "physical_consistency",
+  "prompt": "Maintenance has a fault docket open on this run and the shift photograph goes on it, so the section is shot from the loading end looking along the belt toward the discharge, with the floor either side of the frame in the picture.\n\nA straight run of baggage belt is working, loaded, in the sorting hall. Third along, on frame tag 3, one carrying idler has been bolted up out of square: seen from where the camera stands, that roller's right-hand end has been drawn back toward the loading end and its left-hand end pushed forward toward the discharge. The other idlers are true. The frame's uprights are bare steel, and the run sheds grit and torn tag paper that nobody has swept since the shift opened. It has been running like this for two weeks.\n\nWhich side of the frame anything has gathered on is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph look along a working baggage conveyor from its loading end with the frame uprights and the floor either side in view? Answer yes or no only.",
+  "reference": {
+    "part1": "belt_rides_right",
+    "part2": "grit_band_right"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the belt at the skewed roller and say how it is running in the frame. Answer with one of: the belt edge rides against the right-hand side of the frame; the belt edge rides against the left-hand side of the frame; the belt runs down the middle with a margin on either side.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the floor on either side of the belt frame and say how the loose grit and torn paper have gathered. Answer with one of: the grit lies in a band along the right-hand side of the frame; the grit lies in a band along the left-hand side of the frame; the grit is spread evenly on both sides of the frame.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

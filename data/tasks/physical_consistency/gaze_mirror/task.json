@@ -1,0 +1,199 @@
+{
+  "id": "gaze_mirror",
+  "axis": "physical_consistency",
+  "prompt": "A realistic everyday photograph of a person seated at a bathroom vanity, taken straight on. They hold up an open folding compact mirror with a small printed label card taped inside the lid, raised in front of themselves at about eye level. The person is READING the label card taped inside the compact -- its printed front says 'ROOM KEY 209' in plain large letters. Their eyes are directed at the compact mirror as they read the card. Cool bathroom lighting, sharp focus, a genuine candid photo, not a diagram, not an illustration, no extra text or captions anywhere else in the frame.",
+  "difficulty": "s2",
+  "easy_question": "This picture was supposed to show a bathroom-vanity photo of a person holding an open folding compact mirror with a label card up at eye level while looking at it, with the note on its glass visible in the shot. Never mind how well it is drawn. Does the picture show a person and a compact mirror (or similar hand-held mirror with a note on it)? A realistic photo or an illustration of that subject counts as yes. Answer NO only if the image instead shows just a blank card or plain panel with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_text_to_cam": "Look ONLY at the printed NOTE stuck on the compact mirror's glass (not any reflection in the mirror). Is the note's own printed front text DIRECTLY readable by you (the camera) right now -- i.e. the note's printed surface itself faces the camera enough to read it, reading normally (not mirror-reversed)? Answer yes or no only.",
+    "q_exempt": "Look at the compact mirror and the note on its glass. Three unreal things could be drawn: the mirror body is see-through; the note appears on both faces of the glass at once; part of the note's text floats in the air off the note. A normal mirror reflection is none of these. Is any of the three present? Answer yes or no only.",
+    "q_engaged": "Judge only the head and eye direction actually drawn, not how people usually use a mirror. Are the person's face and eyes turned toward the compact mirror, reading the note on it right now? If their eyes are on the camera or anywhere else, answer no. Answer yes or no only.",
+    "q_gaze_target": "Look ONLY at the person eyes and head direction as actually drawn. Where is the person looking? Answer with exactly one word: object (their gaze is on the hand mirror they hold), camera (their gaze is on the viewer/camera), or elsewhere (anywhere else).",
+    "q_face_frontal_square": "Is the person's face turned squarely toward the camera, so that you are looking at the front of the face rather than at a side view? Answer yes or no only.",
+    "q_face_frontal_eyes": "Can you see both of the person's eyes in this picture? Answer yes or no only.",
+    "q_face_frontal_clear": "Is the front of the person's face left clear in this picture -- not covered by the compact mirror and not covered by a hand? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_geometric_silent_fake",
+      "weight": 3.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_text_to_cam",
+          "out": "a_text"
+        },
+        {
+          "fail_if": ["a_text.unreadable"]
+        },
+        {
+          "ask": "reference.q_engaged",
+          "out": "a_eng"
+        },
+        {
+          "fail_if": ["a_eng.unreadable"]
+        },
+        {
+          "ask": "reference.q_gaze_target",
+          "out": "a_tgt"
+        },
+        {
+          "fail_if": ["a_tgt.unreadable"]
+        },
+        {
+          "compare": "a_text",
+          "to": "yes",
+          "out": "f_text"
+        },
+        {
+          "compare": "a_eng",
+          "to": "yes",
+          "out": "f_eng"
+        },
+        {
+          "compare": "a_tgt",
+          "to": "object",
+          "out": "f_tgt"
+        },
+        {
+          "all": ["f_text", "f_eng", "f_tgt"],
+          "out": "fake_score"
+        },
+        {
+          "compare_tolerance": "fake_score",
+          "to": 0,
+          "tol": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_unreal_device_artifact",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a see-through mirror body, the note printed on both faces of the glass, or note text floating off the note",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_a_art"
+        },
+        {
+          "fail_if": ["sweep_a_art.unreadable"]
+        },
+        {
+          "compare": "sweep_a_art.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "graceful_either_branch",
+      "weight": 2.0,
+      "steps": [
+        {
+          "ask": "Look ONLY at the printed note stuck on the compact mirror's glass, and not at anything reflected in the mirror. Copy the words printed on the note's own front face, exactly as they read from where the camera stands. Write REVERSED instead if the words on that face read back to front, the way writing does in a mirror. Write AWAY instead if that face is turned away so that no printed words can be made out on it. Add nothing else.",
+          "out": "a_tx"
+        },
+        {
+          "run": "judge_read_back",
+          "args": ["a_tx", "[[['reversed'],'no'],[['away'],'no']]", "'yes'"],
+          "out": "a_tx__mapped"
+        },
+        {
+          "compare": "a_tx__mapped.text",
+          "to": "yes",
+          "out": "f_tx"
+        },
+        {
+          "ask": "reference.q_gaze_target",
+          "out": "a_gz"
+        },
+        {
+          "compare": "a_gz",
+          "to": "object",
+          "out": "f_gz"
+        },
+        {
+          "any": ["f_tx", "f_gz"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_pose_face_direction",
+      "weight": 0.0,
+      "steps": [
+        {
+          "ask": "reference.q_face_frontal_square",
+          "out": "a_ff1"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "a_ff1",
+          "out": "yn1"
+        },
+        {
+          "compare": "yn1",
+          "to": "yes",
+          "out": "f_ff1"
+        },
+        {
+          "ask": "reference.q_face_frontal_eyes",
+          "out": "a_ff2"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "a_ff2",
+          "out": "yn2"
+        },
+        {
+          "compare": "yn2",
+          "to": "yes",
+          "out": "f_ff2"
+        },
+        {
+          "ask": "reference.q_face_frontal_clear",
+          "out": "a_ff3"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "a_ff3",
+          "out": "yn3"
+        },
+        {
+          "compare": "yn3",
+          "to": "yes",
+          "out": "f_ff3"
+        },
+        {
+          "all": ["f_ff1", "f_ff2", "f_ff3"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:4"
+}

@@ -1,0 +1,216 @@
+{
+  "id": "cube_net_faces",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A sharp, photorealistic overhead PHOTOGRAPH taken on a bright craft-class worktable of a single flat, hand-cut cross-shaped paper NET of a six-sided die on a sheet of green cutting mat. Six equal square faces in a plus/cross layout: a vertical column of four squares, plus one square to the left and one to the right of the SECOND square from the top. Each square shows hand-inked black pips, one to six. Place the pip counts EXACTLY like this so the net folds into a VALID die whose opposite faces each sum to seven and use one through six exactly once: the TOP square shows 1; the LEFT square shows 3; the CENTRE square (second from the top) shows 5; the RIGHT square shows 4; the square just below the centre shows 6; the BOTTOM square shows 2. Rendered so that when folded it is a standard WESTERN (right-handed) die: the faces one, two and three run counter-clockwise around the corner they share. A genuine everyday photograph, sharp focus, natural shadows, plain green mat, no text or annotations.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show overhead craft-class photo of a hand-cut cross die-net on a green cutting mat, pips placed for a valid WESTERN (right-handed) die? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "valid_die": true,
+    "all_present": true,
+    "pairs_ok": 3,
+    "require_chirality": "western"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "valid_die_net_check",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a square paper face of the net",
+          "expected_n": 6,
+          "out": "faces"
+        },
+        {
+          "fail_if": ["faces.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of ONE square piece of white paper. Write down every black dot printed inside that one square, each with a few plain words saying where inside the square it sits. Leave out dots that belong to a neighbouring square, and ignore any number printed here. Separate one item from the next with a semicolon; write no running total and nothing else. If that square carries no dot, write the single word NONE.",
+          "boxes": "faces",
+          "pad": 0.08,
+          "out": "pips"
+        },
+        {
+          "fail_if": ["pips.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["pips", "empty_as='0'"],
+          "out": "pips__std"
+        },
+        {
+          "fail_if": ["pips__std.refused"]
+        },
+        {
+          "run": "fold_die_net",
+          "args": ["faces", "pips__std", "reference"],
+          "out": "net"
+        },
+        {
+          "fail_if": ["net.no_cross_topology", "net.not_all_six_read"]
+        },
+        {
+          "compare": "net.valid_die",
+          "to": "reference.valid_die",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "opposite_pairs_sum7",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a square paper face of the net",
+          "expected_n": 6,
+          "out": "faces"
+        },
+        {
+          "fail_if": ["faces.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of ONE square piece of white paper. Write down every black dot printed inside that one square, each with a few plain words saying where inside the square it sits. Leave out dots that belong to a neighbouring square, and ignore any number printed here. Separate one item from the next with a semicolon; write no running total and nothing else. If that square carries no dot, write the single word NONE.",
+          "boxes": "faces",
+          "pad": 0.08,
+          "out": "pips"
+        },
+        {
+          "fail_if": ["pips.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["pips", "empty_as='0'"],
+          "out": "pips__std"
+        },
+        {
+          "fail_if": ["pips__std.refused"]
+        },
+        {
+          "run": "fold_die_net",
+          "args": ["faces", "pips__std", "reference"],
+          "out": "net"
+        },
+        {
+          "fail_if": ["net.no_cross_topology", "net.not_all_six_read"]
+        },
+        {
+          "compare_band": "net.n_pairs_ok",
+          "to": "reference.pairs_ok",
+          "core": 0,
+          "margin": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "all_one_to_six_present",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a square paper face of the net",
+          "expected_n": 6,
+          "out": "faces"
+        },
+        {
+          "fail_if": ["faces.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of ONE square piece of white paper. Write down every black dot printed inside that one square, each with a few plain words saying where inside the square it sits. Leave out dots that belong to a neighbouring square, and ignore any number printed here. Separate one item from the next with a semicolon; write no running total and nothing else. If that square carries no dot, write the single word NONE.",
+          "boxes": "faces",
+          "pad": 0.08,
+          "out": "pips"
+        },
+        {
+          "fail_if": ["pips.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["pips", "empty_as='0'"],
+          "out": "pips__std"
+        },
+        {
+          "fail_if": ["pips__std.refused"]
+        },
+        {
+          "run": "fold_die_net",
+          "args": ["faces", "pips__std", "reference"],
+          "out": "net"
+        },
+        {
+          "fail_if": ["net.no_cross_topology", "net.not_all_six_read"]
+        },
+        {
+          "compare": "net.all_present",
+          "to": "reference.all_present",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "valid_die_cross_read_vlm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a square paper face of the net",
+          "expected_n": 6,
+          "out": "faces2"
+        },
+        {
+          "fail_if": ["faces2.unreadable"]
+        },
+        {
+          "read_crop": "Look at this white square. Write down every round black spot on it, each with a few plain words saying where on the square it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no spot on it, write the single word NONE.",
+          "boxes": "faces2",
+          "pad": 0.08,
+          "out": "pips2"
+        },
+        {
+          "fail_if": ["pips2.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["pips2", "empty_as='0'"],
+          "out": "pips2__std"
+        },
+        {
+          "fail_if": ["pips2__std.refused"]
+        },
+        {
+          "run": "fold_die_net",
+          "args": ["faces2", "pips2__std", "reference"],
+          "out": "net2"
+        },
+        {
+          "fail_if": ["net2.no_cross_topology", "net2.not_all_six_read"]
+        },
+        {
+          "compare": "net2.valid_yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

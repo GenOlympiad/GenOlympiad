@@ -1,0 +1,84 @@
+{
+  "id": "apron_stop_bar_belongs_to_this_aircraft",
+  "axis": "long_range_consistency",
+  "prompt": "The stand was relined this week, so the ground handler photographs the first arrival on it for the stand file before the bridge is driven on.\n\nOne pier stand on the apron carries three yellow stop bars painted across it. The stand drawing lists them in the order they are painted outward from the bridge: E90 first, then A20, then B38. A white limit line is marked down each side of the stand for the wing ends. The aircraft now at rest on the stand is a narrow-body jet with its type stencilled in black on the forward fuselage, and that stencil reads B38. The ground rules on the stand board are that a machine comes to rest with its nose wheel down on the bar bearing its own type, and that no part of a wing may pass the limit line on its side.\n\nWhere this machine has come to rest, and where its wing ends have finished up, is what the stand file does not yet hold.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show an airport stand with yellow bars painted across it and an aircraft at rest with its nose wheel down on one of those bars? Answer yes or no only.",
+  "reference": {
+    "part1": "furthest_out",
+    "part2": "both_inside"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "The stand has three yellow bars painted across it. Counting outward from the airbridge, which one is the aircraft's nose wheel standing on? Answer with one of: the first bar out from the bridge; the middle bar; the bar furthest out from the bridge.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the outer end of each wing and at the white limit line marked down that side of the stand. Answer with one of: each wing end stops before it reaches its own line; one wing end reaches out past its line; the two wing ends both reach out past their lines.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

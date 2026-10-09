@@ -1,0 +1,84 @@
+{
+  "id": "only_the_sheltered_side_of_the_glasshouse_may_stand_open",
+  "axis": "long_range_consistency",
+  "prompt": "Brookfield Nurseries at Evesham wants a morning-round record shot for the growing manager's winter file. The house is a wide-span glasshouse standing empty between crops, so the far flank reads through the glass; four large hinged vents sit along its ridge, each lifting to the opposite slope from its neighbour, a roll-up curtain hangs on each side wall with its winding gear, and a big weather vane stands on the gable peak. The site's winter venting protocol, pinned in the head house, runs: ventilation in winter is taken on the sheltered side of the ridge only, and any vent that would open towards the exposed side stays shut; the side curtain is raised on the sheltered flank only; the actuators have no half positions, so a vent or a curtain is shut or fully worked. The grower made the picture from the packhouse steps, three-quarters on, with the whole ridge, the vane and the curtain on each flank inside the frame, on a cold clear morning.",
+  "difficulty": "pA",
+  "easy_question": "Does this picture show the front of a commercial glasshouse with a row of roof vents along the ridge and a roll-up curtain on each side wall? Answer yes or no.",
+  "reference": {
+    "part1": "2",
+    "part2": "1"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "How many of the roof vents along the ridge are standing open?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "How many of the roll-up side curtains are rolled up?",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

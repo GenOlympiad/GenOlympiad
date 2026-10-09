@@ -1,0 +1,84 @@
+{
+  "id": "slump_class_after_the_haul",
+  "axis": "quantitative_precision",
+  "prompt": "The site's goods-inwards checker has to accept or turn back the load before the pump takes it, so the test is photographed at the delivery point with the ticket in the frame.\n\nThe cone has been lifted and set down beside the heap it left, on its steel base plate. A steel straightedge lies across the mouth of the upended cone, and a rule hangs from its underside down to the crown of the heap. The delivery ticket clipped to the base plate is printed with the slump measured at the plant, 180 millimetres, the loss the mix takes on the road, 15 millimetres for every 30 minutes, the time the truck left the plant, 09:10, the time it reached the gate, 10:20, and a consistence class box for the checker to fill in.\n\nWhat the rule reads, and what goes in that box, is what the ticket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a slump test at a concrete delivery point, with the cone set beside the heap, a straightedge across its mouth and a delivery ticket clipped to the base plate? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "class_box_reads_S3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the rule where it comes down to the crown of the heap and write the millimetres marked there.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "140", "150"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the consistence class box printed on the delivery ticket and say which class has been written in it. Answer with one of: the box has S3 written in it; the box has S2 written in it; the box has S4 written in it.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

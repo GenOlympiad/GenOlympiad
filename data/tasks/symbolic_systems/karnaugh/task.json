@@ -1,0 +1,326 @@
+{
+  "id": "karnaugh",
+  "axis": "symbolic_systems",
+  "prompt": "A flat scan of a page from a student's laboratory report, plain white paper, printed black rules and printed characters, filling the frame. The page shows one Karnaugh map for the five-variable function F(A, B, C, D, E), laid out as a single array eight cells wide and four cells tall, all cells equal squares inside a printed border.\n\nThe eight column headers sit outside the top edge, one above each column, and read 000, 001, 011, 010, 110, 111, 101, 100 from left to right. A column header carries the values of A, C and E in that order: first character A, second C, third E.\n\nThe four row headers sit outside the left edge, one beside each row, and read 00, 01, 11, 10 from top to bottom. A row header carries the values of B and D in that order: first character B, second D.\n\nA cell's minterm number is the five-bit binary number A B C D E, A most significant, assembled from that cell's own column header and row header.\n\nPut one character in each of the thirty-two cells: a 1 in exactly the cells whose minterm number is 17, 3, 31, 5, 24, 0 or 14, and a 0 in all the rest.\n\nThe page carries nothing further -- no title, no algebraic expression, no encircled groups, no shading, no notes in the margins.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a scanned sheet carrying one rectangular grid of equal square cells, a short string of characters printed outside the grid above each column and outside the grid beside each row, and a single character inside every cell. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank sheet, a page of prose, a photograph, or an unrelated image. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "var_order": "ABCDE",
+    "col_vars": "ACE",
+    "row_vars": "BD",
+    "n_rows": 4,
+    "n_cols": 8,
+    "col_headers": ["000", "001", "011", "010", "110", "111", "101", "100"],
+    "row_headers": ["00", "01", "11", "10"],
+    "minterms": [0, 3, 5, 14, 17, 24, 31],
+    "n_minterms": 7,
+    "cells": [
+      [1, 0, 1, 0, 0, 0, 1, 0],
+      [0, 1, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 1, 0, 1, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 1]
+    ],
+    "decoy_canonical_pairing_cells": [
+      [1, 0, 0, 0, 1, 0, 0, 0],
+      [0, 1, 0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 1, 0, 0],
+      [0, 0, 1, 0, 0, 0, 0, 0]
+    ],
+    "decoy_binary_header_cells": [
+      [1, 0, 0, 1, 0, 1, 0, 0],
+      [0, 1, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 1, 0, 0, 0],
+      [0, 0, 1, 0, 0, 0, 0, 1]
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lattice_readable",
+      "weight": 1.0,
+      "gate": true,
+      "score": "lr.frac",
+      "steps": [
+        {
+          "run": "n_squares",
+          "args": ["reference.n_rows", "reference.n_cols"],
+          "out": "nc"
+        },
+        {
+          "read": "boxes",
+          "target": "the square cells of the grid",
+          "expected_n": "nc.n",
+          "out": "gb"
+        },
+        {
+          "read": "boxes",
+          "target": "the bordered grid of cells",
+          "expected_n": 1,
+          "out": "lb"
+        },
+        {
+          "run": "grid_square_boxes",
+          "args": ["gb", "lb", "reference.n_rows", "reference.n_cols"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "run": "lattice_ok",
+          "args": ["cb"],
+          "out": "lr"
+        }
+      ]
+    },
+    {
+      "name": "ones_count",
+      "weight": 1.0,
+      "score": "oc.frac",
+      "steps": [
+        {
+          "run": "n_squares",
+          "args": ["reference.n_rows", "reference.n_cols"],
+          "out": "nc"
+        },
+        {
+          "read": "boxes",
+          "target": "the square cells of the grid",
+          "expected_n": "nc.n",
+          "out": "gb"
+        },
+        {
+          "read": "boxes",
+          "target": "the bordered grid of cells",
+          "expected_n": 1,
+          "out": "lb"
+        },
+        {
+          "run": "grid_square_boxes",
+          "args": ["gb", "lb", "reference.n_rows", "reference.n_cols"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is one cell cut out of a printed grid. Exactly one character is written in the middle of it. Which character is it? Answer with a single character: 1 if it is a one, 0 if it is a zero, or the word none if the middle of the crop is empty. Give that answer and nothing else.",
+          "boxes": "cb.boxes",
+          "pad": 0.1,
+          "out": "cr"
+        },
+        {
+          "run": "score_ones_count",
+          "args": ["cr", "reference.n_rows", "reference.n_cols", "reference.n_minterms"],
+          "out": "oc"
+        }
+      ]
+    },
+    {
+      "name": "minterm_placement",
+      "weight": 5.0,
+      "score": "mp.frac",
+      "steps": [
+        {
+          "run": "n_squares",
+          "args": ["reference.n_rows", "reference.n_cols"],
+          "out": "nc"
+        },
+        {
+          "read": "boxes",
+          "target": "the square cells of the grid",
+          "expected_n": "nc.n",
+          "out": "gb"
+        },
+        {
+          "read": "boxes",
+          "target": "the bordered grid of cells",
+          "expected_n": 1,
+          "out": "lb"
+        },
+        {
+          "run": "grid_square_boxes",
+          "args": ["gb", "lb", "reference.n_rows", "reference.n_cols"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is one cell cut out of a printed grid. Exactly one character is written in the middle of it. Which character is it? Answer with a single character: 1 if it is a one, 0 if it is a zero, or the word none if the middle of the crop is empty. Give that answer and nothing else.",
+          "boxes": "cb.boxes",
+          "pad": 0.1,
+          "out": "cr"
+        },
+        {
+          "run": "score_minterm_placement",
+          "args": ["cr", "reference.n_rows", "reference.n_cols", "reference.cells"],
+          "out": "mp"
+        }
+      ]
+    },
+    {
+      "name": "cells_exact",
+      "weight": 10.0,
+      "score": "ce.frac",
+      "steps": [
+        {
+          "run": "n_squares",
+          "args": ["reference.n_rows", "reference.n_cols"],
+          "out": "nc"
+        },
+        {
+          "read": "boxes",
+          "target": "the square cells of the grid",
+          "expected_n": "nc.n",
+          "out": "gb"
+        },
+        {
+          "read": "boxes",
+          "target": "the bordered grid of cells",
+          "expected_n": 1,
+          "out": "lb"
+        },
+        {
+          "run": "grid_square_boxes",
+          "args": ["gb", "lb", "reference.n_rows", "reference.n_cols"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is one cell cut out of a printed grid. Exactly one character is written in the middle of it. Which character is it? Answer with a single character: 1 if it is a one, 0 if it is a zero, or the word none if the middle of the crop is empty. Give that answer and nothing else.",
+          "boxes": "cb.boxes",
+          "pad": 0.1,
+          "out": "cr"
+        },
+        {
+          "run": "score_map_exact",
+          "args": ["cr", "reference.n_rows", "reference.n_cols", "reference.cells"],
+          "out": "ce"
+        }
+      ]
+    },
+    {
+      "name": "d1_kmap_overlay",
+      "weight": 0.0,
+      "score": "ov.frac",
+      "steps": [
+        {
+          "run": "n_squares",
+          "args": ["reference.n_rows", "reference.n_cols"],
+          "out": "nc"
+        },
+        {
+          "read": "boxes",
+          "target": "the square cells of the grid",
+          "expected_n": "nc.n",
+          "out": "gb"
+        },
+        {
+          "read": "boxes",
+          "target": "the bordered grid of cells",
+          "expected_n": 1,
+          "out": "lb"
+        },
+        {
+          "run": "grid_square_boxes",
+          "args": ["gb", "lb", "reference.n_rows", "reference.n_cols"],
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.no_read"]
+        },
+        {
+          "read_crop": "This crop is one cell cut out of a printed grid. Exactly one character is written in the middle of it. Which character is it? Answer with a single character: 1 if it is a one, 0 if it is a zero, or the word none if the middle of the crop is empty. Give that answer and nothing else.",
+          "boxes": "cb.boxes",
+          "pad": 0.1,
+          "out": "cr"
+        },
+        {
+          "run": "score_map_exact",
+          "args": ["cr", "reference.n_rows", "reference.n_cols", "reference.cells"],
+          "out": "ov"
+        }
+      ]
+    },
+    {
+      "name": "d2_appearance_header_order",
+      "weight": 0.0,
+      "score": "ap.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one short string of characters printed just outside the TOP edge of the grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "colhdr_box"
+        },
+        {
+          "fail_if": ["colhdr_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one short string of characters printed beside a grid. Copy that string exactly as it is printed. Write nothing else.",
+          "boxes": "colhdr_box",
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "ch"
+        },
+        {
+          "fail_if": ["ch.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one short string of characters printed just outside the LEFT edge of the grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "rowhdr_box"
+        },
+        {
+          "fail_if": ["rowhdr_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one short string of characters printed beside a grid. Copy that string exactly as it is printed. Write nothing else.",
+          "boxes": "rowhdr_box",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "rh"
+        },
+        {
+          "fail_if": ["rh.unreadable"]
+        },
+        {
+          "run": "appearance_form",
+          "args": [
+            "' '.join(ch.answers)",
+            "' '.join(rh.answers)",
+            "reference.col_headers",
+            "reference.row_headers"
+          ],
+          "out": "ap"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

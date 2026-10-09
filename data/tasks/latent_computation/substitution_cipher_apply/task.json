@@ -1,0 +1,162 @@
+{
+  "id": "substitution_cipher_apply",
+  "axis": "latent_computation",
+  "prompt": "A code-club worksheet prints a monoalphabetic SUBSTITUTION-CIPHER key as two aligned rows: the top row is the plain alphabet\n    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nand the bottom row is the cipher alphabet directly beneath it\n    Q W E R T Y U I O P A S D F G H J K L Z X C V B N M\nso each plain letter is replaced by the cipher letter in the column below it. Using this key, ENCIPHER the five-letter code word F J O R D (replace each of its letters, in order, with the cipher letter under it) and render ONLY the resulting 5-letter ciphertext as five large printed capital letters in a row on a blank card. Do NOT show the key again, the plaintext word, or any other letters.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show code-club worksheet card showing only the 5-letter ciphertext produced by applying a printed keyboard-order substitution key to a code word? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cipher": "YPGKR",
+    "cipher_list": [
+      ["Y"],
+      ["P"],
+      ["G"],
+      ["K"],
+      ["R"]
+    ],
+    "q_form": "Look at this image. Does it show exactly five large printed capital letters in a single row on a plain card? Answer ONLY 'yes' or 'no'.",
+    "c1": "Y",
+    "c5": "R",
+    "n_letters": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cipher_exact",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_sequence": "Read the five large printed capital letters shown in the row, left to right. Report ONLY the five letters, separated by single spaces, and nothing else.",
+          "n": 5,
+          "as_column": true,
+          "out": "seq"
+        },
+        {
+          "fail_if": ["seq.unreadable", "seq.empty"]
+        },
+        {
+          "run": "first_letters_upper",
+          "args": ["seq"],
+          "out": "seqU"
+        },
+        {
+          "compare_grid": "seqU",
+          "to": "reference.cipher_list",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_cipher_char1",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the FIRST (left-most) of the five large printed capital letters on the card. Answer a single capital letter A-Z.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.c1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_cipher_char5",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the FIFTH (right-most) of the five large printed capital letters on the card. Answer a single capital letter A-Z.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.c5",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_num_letters",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one large printed capital letter on the card",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed capital letter, rather than blank card or only part of a letter? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_letters",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

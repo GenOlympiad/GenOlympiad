@@ -1,0 +1,84 @@
+{
+  "id": "expansion_gaps_track_their_spans",
+  "axis": "long_range_consistency",
+  "prompt": "The maintenance inspector has to close the summer round today, so the deck is photographed from the abutment with every card in place and the frame goes into the bridge file.\n\nFour movement joints cross the carriageway. A white inspection card is tied to the parapet at each of them, and each card is written with that joint's movement in millimetres. The pier under each joint carries its pier plate: the spans are 30, 50, 60 and 80 metres, in that order from the abutment. The abutment nameplate is printed with the joint setting of 40 millimetres, the deck temperature of 6 degrees on the day the joints were set, today's deck temperature of 26 degrees, and the deck's movement coefficient of 0.00001 for each degree.\n\nWhat is written on those four cards is what the inspector's round does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a bridge deck with movement joints across the carriageway, an inspection card at each joint and a nameplate at the abutment? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "has_gaps"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the inspection card tied to the parapet at the joint on the eighty-metre span and write the millimetres written on it.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "23", "25"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the millimetre figure written on each of the four inspection cards, working along the deck from the abutment, and write those four numbers in that order separated by commas.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "consecutive_from_one",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

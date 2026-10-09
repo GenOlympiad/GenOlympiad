@@ -1,0 +1,152 @@
+{
+  "id": "compressed_air_takeoff",
+  "axis": "latent_computation",
+  "prompt": "The fitters finished piping the machine shop's new air line over the weekend, and the works engineer wants the acceptance photograph for the file before the benches go back into service.\n\nThe line runs overhead along one roof beam, from the compressor room wall at one end of the shop to the far gable. Four benches sit under it in order down the run, each wearing its painted tag on the wall above it: K1, K2, K3, K4. A refrigerated air dryer stands in the line between the K2 and K3 benches, and each bench is fed by its own drop from the overhead main. The shop pipes air to its standing rule book, the one the engineer will check the photograph against: upstream of the dryer the air still carries its water, and there every bench drop tees off the crown of the main and climbs over in a rising loop before it falls, so the water creeping along the pipe bottom cannot follow it down; past the dryer the air is dry and the shop tees straight off the flank of the main instead. The wet stretch is laid to a fall in the direction the air flows and voids its water through one short valved drip stub hung at the low point of that stretch, while the dry stretch runs dead level.\n\nThe photograph is taken from the shop floor looking up along the beam, the whole run, the dryer and all four bench drops in one frame, sharp enough for the engineer to check every connection against the rule book. Which drop gets which treatment, which way the wet stretch falls and where the drip stub hangs is nowhere written on the wall -- the dryer's position and the rule book decide all of it.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show the inside of a workshop with a pipe run mounted overhead and work benches below it. A photograph, a rendering or a scan of one all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "takeoff_key": "K1:top-loop|K2:top-loop|K3:side-straight|K4:side-straight",
+    "fall_key": "dryer",
+    "drip_key": "bottom",
+    "tags_min": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_bench_drop_wears_its_stretch_rule",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a painted bench tag on the workshop wall below the overhead pipe run",
+          "out": "tg",
+          "sweep": true
+        },
+        {
+          "fail_if": ["tg.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is centred on one painted tag on a workshop wall. Copy the tag exactly as painted. Answer with the letters and digits of the tag only.",
+          "boxes": "tg",
+          "pad": 0.25,
+          "out": "ta"
+        },
+        {
+          "fail_if": ["ta.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is centred on one tagged work bench under an overhead pipe run. Where does the branch pipe serving this bench leave the overhead main? Answer top if it leaves from the crown of the pipe, side if it leaves level from the pipe's flank, bottom if it hangs from the pipe's underside, missing if no branch serves this bench.",
+          "boxes": "tg",
+          "pad": 0.9,
+          "out": "pa"
+        },
+        {
+          "fail_if": ["pa.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is centred on one tagged work bench under an overhead pipe run. How does the branch pipe serving this bench run just after it leaves the main? Answer loop if it first climbs over in a rising loop and then falls, straight if it falls straight away from the main, missing if no branch serves this bench.",
+          "boxes": "tg",
+          "pad": 0.9,
+          "out": "sa"
+        },
+        {
+          "fail_if": ["sa.unreadable"]
+        },
+        {
+          "run": "read_drop_takeoffs",
+          "args": ["ta", "pa", "sa", "reference.takeoff_key", "reference.tags_min"],
+          "out": "dv"
+        },
+        {
+          "compare": "dv.obs",
+          "to": "dv.exp",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_wet_stretch_falls_with_the_flow",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the stretch of overhead main between the compressor room wall and the air dryer",
+          "out": "rn"
+        },
+        {
+          "fail_if": ["rn.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a stretch of overhead pipe running between a wall and a dryer unit. Which end of this stretch hangs lower? Answer wall if the wall end is lower, dryer if the dryer end is lower, level if neither end is lower.",
+          "boxes": "rn",
+          "pad": 0.2,
+          "out": "fa"
+        },
+        {
+          "fail_if": ["fa.unreadable"]
+        },
+        {
+          "run": "read_main_fall",
+          "args": ["fa", "reference.fall_key"],
+          "out": "fv"
+        },
+        {
+          "compare": "fv.obs",
+          "to": "fv.exp",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_drip_stub_hangs_from_the_underside_at_the_low_end",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the air dryer unit standing in the overhead line",
+          "out": "dr"
+        },
+        {
+          "fail_if": ["dr.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is centred on a dryer unit standing in an overhead pipe line. Look at the pipe beside it on the side the air arrives from. From where does the short valved stub nearest this unit leave that pipe? Answer bottom if it hangs from the pipe's underside, side if it leaves level from the flank, top if it stands up from the crown, missing if there is no such stub.",
+          "boxes": "dr",
+          "pad": 0.8,
+          "out": "ga"
+        },
+        {
+          "fail_if": ["ga.unreadable"]
+        },
+        {
+          "run": "read_drain_stub",
+          "args": ["ga", "reference.drip_key"],
+          "out": "gv"
+        },
+        {
+          "compare": "gv.obs",
+          "to": "gv.exp",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

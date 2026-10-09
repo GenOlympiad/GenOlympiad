@@ -1,0 +1,84 @@
+{
+  "id": "blind_hole_dashed_stops",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The tool room sends this plate down to the drill bench in the morning, so the detailer plots the front view of it and puts the sizes on before it goes.\n\nThe plate is a mould template, 40 millimetres thick, and the front view shows both of its faces as full lines running across the sheet. Three holes go into it, lettered H1, H2 and H3 along the plate, all of them put in with the same twist drill and all of them 16 millimetres across. The depth figure printed beside each hole reads 12 at H1, 40 at H2 and 25 at H3. The shop's drawing rule is printed in the title block: an edge that the eye cannot reach from the front is drawn broken, an edge it can reach is drawn full.\n\nWhere the broken lines stop, and which of the three reaches the far face, is what the sizes do not draw for you.",
+  "difficulty": "s1",
+  "easy_question": "Is this a machine-shop detail drawing of a flat plate with three holes along it and printed size figures beside them? Answer yes or no only.",
+  "reference": {
+    "part1": "one_hole_reaches",
+    "part2": "pointed_vee"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the three holes on the front view. Answer with one of: the broken lines of just one hole run down to the lower face; the broken lines of all three holes run down to the lower face; the broken lines of every hole end part way down the plate.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the bottom end of the pair of broken lines drawn for the hole lettered H1. Answer with one of: they close with a pointed vee; they close with a flat end drawn across; they simply end with nothing drawn across them.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

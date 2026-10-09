@@ -1,0 +1,164 @@
+{
+  "id": "greater_than_left_neighbour_flip",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Square on to the shelf edge of a small grocery on repricing morning: one row of jars above, and below them the rail with nine price tickets standing in it, the whole rail across the frame and every ticket readable.\n\nThe nine tickets carry these prices, in the order they stand in the rail from left to right:\n1.85, 2.40, 2.10, 2.95, 3.20, 2.75, 3.60, 3.45, 4.05\n\nThis shop marks its own repricing on the shelf and has done for years. A ticket whose price is higher than the price on the ticket immediately to its left goes back into the rail upside down, so that the evening check can be walked in one pass; every other ticket stands the right way up, and the ticket at the left-hand end of the rail always stands the right way up.\n\nWork out for yourself which way each ticket goes -- I am deliberately not telling you which of them are upside down, and I am not telling you how many. Every price has to be large and sharp, upside down or not. Nothing may stand in the rail beyond the nine tickets: no arrow, no sticker, no note.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a shelf rail with a row of price tickets standing in it? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no shelf rail in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "orientation": "upright,inverted,upright,inverted,inverted,upright,inverted,upright,inverted",
+    "prices": "1.85,2.40,2.10,2.95,3.20,2.75,3.60,3.45,4.05",
+    "n_tickets": 9
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_ticket_dearer_than_its_left_neighbour_stands_upside_down",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a price ticket standing in the shelf rail",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "tick_box"
+        },
+        {
+          "fail_if": ["tick_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one price ticket. Is the printed price the right way up, or is it upside down? Answer upright or inverted.",
+          "boxes": "tick_box",
+          "pad": 0.2,
+          "sort": "reading_order",
+          "out": "ori_rd"
+        },
+        {
+          "fail_if": ["ori_rd.unreadable"]
+        },
+        {
+          "run": "read_ticket_orientations",
+          "args": ["ori_rd"],
+          "out": "oriv"
+        },
+        {
+          "compare": "oriv.s",
+          "to": "reference.orientation",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_ticket_still_carries_the_price_it_was_given",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a price ticket standing in the shelf rail",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "tick2_box"
+        },
+        {
+          "fail_if": ["tick2_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one price ticket. Copy the money amount printed on it, whichever way up it stands. Write the figure and nothing else.",
+          "boxes": "tick2_box",
+          "pad": 0.2,
+          "sort": "reading_order",
+          "out": "pr_rd"
+        },
+        {
+          "fail_if": ["pr_rd.unreadable"]
+        },
+        {
+          "run": "read_ticket_prices",
+          "args": ["pr_rd"],
+          "out": "prv"
+        },
+        {
+          "compare": "prv.s",
+          "to": "reference.prices",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nine_tickets_stand_in_the_rail",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a price ticket standing in the shelf rail",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole price ticket, rather than a jar label or only part of a ticket? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.2,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_tickets",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_stands_in_the_rail_beyond_the_nine_tickets",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, a sticker or a written note standing in the shelf rail beside the tickets",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

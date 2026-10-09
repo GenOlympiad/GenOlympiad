@@ -1,0 +1,355 @@
+{
+  "id": "seesaw_torque",
+  "axis": "latent_computation",
+  "prompt": "A SCIENCE-FAIR physics demonstration on a lab table: a straight rigid plank balancing on a single central triangular pivot (fulcrum), shown straight on from the side, set up to teach the lever rule. The plank has evenly spaced distance marks numbered 1 to 6 outward from the pivot on BOTH sides (mark 1 is one step out, mark 2 two steps, and so on). Every cube weight block is IDENTICAL in weight. On the LEFT of the pivot, stack 5 RED cube blocks centred exactly on distance mark 2. On the RIGHT of the pivot you must place 2 BLUE cube blocks -- and you must choose WHICH distance mark to put them on so the plank BALANCES perfectly level. Use the lever rule: (number of blocks on a side) x (their distance mark) must be EQUAL on the two sides. Work out the correct right-hand mark for the 2 blue blocks, place all 2 of them centred on that mark, and draw the plank exactly LEVEL (horizontal) because it is balanced. Clean demo-table setting, the numbered marks clearly visible, no extra objects or text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show science-fair lab-table torque demonstration: a marked lever on a central pivot with red and blue cube weights to balance? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_left": 5,
+    "n_right": 2,
+    "d_left": 2,
+    "d_right": 5,
+    "target_ratio": 2.5,
+    "tilt_sign": 0,
+    "q_lever": "Does this image show a seesaw / lever: a plank balancing on a central triangular pivot, with cube weight blocks placed on the plank to the left and right of the pivot? Answer yes or no only.",
+    "marks_per_side": 6
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "balancing_position",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the triangular fulcrum block under the plank",
+          "expected_n": 1,
+          "out": "piv"
+        },
+        {
+          "fail_if": ["piv.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the stack of red cube blocks",
+          "expected_n": 1,
+          "out": "lft"
+        },
+        {
+          "fail_if": ["lft.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one blue cube block resting on the plank",
+          "sweep": true,
+          "out": "rgt"
+        },
+        {
+          "fail_if": ["rgt.unreadable"]
+        },
+        {
+          "read_crop": "Is a single blue cube block the main thing in this close-up? Answer yes or no only.",
+          "boxes": "rgt",
+          "out": "rgc"
+        },
+        {
+          "fail_if": ["rgc.unreadable"]
+        },
+        {
+          "run": "arm_length_ratio",
+          "args": ["piv", "lft", "rgt", "rgc"],
+          "out": "bp"
+        },
+        {
+          "fail_if": ["bp.degenerate"]
+        },
+        {
+          "compare_band": "bp.dist_ratio",
+          "to": "reference.target_ratio",
+          "core": 0.06,
+          "margin": 0.15,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "plank_level",
+      "weight": 0.5,
+      "score": "tv.frac",
+      "steps": [
+        {
+          "read_crop": "Look at the long plank in this picture. Note the height of its LEFT end and the height of its RIGHT end. Is the left end LOWER than, HIGHER than, or the SAME height as the right end? Answer with exactly one word: lower, higher, or same.",
+          "out": "tl"
+        },
+        {
+          "fail_if": ["tl.unreadable"]
+        },
+        {
+          "run": "tilt_direction_score",
+          "args": ["tl", "reference"],
+          "out": "tv"
+        }
+      ]
+    },
+    {
+      "name": "left_blocks",
+      "weight": 0.25,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the stack of red cube blocks: ONE box round ALL the red cubes together, from the top of the highest cube down to where the lowest cube rests on the plank, and from the leftmost red cube to the rightmost. A little plank or background inside that box does not disqualify it; do not box one cube on its own and do not box the blue cubes.",
+          "expected_n": 1,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Write down every separate cube block stacked here, each with a few plain words saying where in the stack it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no block here, write the single word NONE.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["cr", "empty_as='0'"],
+          "out": "cr__std"
+        },
+        {
+          "fail_if": ["cr__std.refused"]
+        },
+        {
+          "run": "stack_count_read",
+          "args": ["cr__std"],
+          "out": "cn"
+        },
+        {
+          "fail_if": ["cn.unread"]
+        },
+        {
+          "compare_band": "cn.n",
+          "to": "reference.n_left",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "right_blocks",
+      "weight": 0.25,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one blue cube block resting on the plank",
+          "sweep": true,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Is a single blue cube block the main thing in this close-up? Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_yes_reads",
+          "args": ["cr"],
+          "code": {
+            "inline": "n_yes_code"
+          },
+          "out": "cn"
+        },
+        {
+          "fail_if": ["cn.unread"]
+        },
+        {
+          "compare_band": "cn.n",
+          "to": "reference.n_right",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "is_seesaw",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_lever",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_left_red_blocks",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "red cube block stacked on the left of the pivot",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole red cube block rather than bare background or only part of a block? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_left",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_right_blue_blocks",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "blue cube block placed on the right of the pivot",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole blue cube block rather than bare background or only part of a block? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_right",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_left_mark",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the LEFT side, read the distance-mark number (1 to 6, counting outward from the pivot) that the red block stack is centred on. Read only that printed mark number.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.d_left",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_marks_per_side",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "numbered distance mark printed on the plank to the left of the pivot",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole numbered distance mark printed on the plank rather than bare background or only part of a mark? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.marks_per_side",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

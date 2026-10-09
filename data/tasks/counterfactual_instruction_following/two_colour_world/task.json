@@ -1,0 +1,105 @@
+{
+  "id": "two_colour_world",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean flat illustration of a display of these everyday objects, each object clearly separated as one solid block of colour. IMPORTANT COLOUR RULE: this is a TWO-COLOUR world -- you may use ONLY blue and white for the objects. EVERY single object must be painted either solid blue or solid white; no object may keep its real-world colour and no other colour (no red, yellow, orange, green, purple, etc.) may appear on any object. Paint each object as follows: the fire extinguisher must be blue; the school bus must be white; the stop sign must be blue; the sunflower must be white; the ladybird must be blue; the frog must be white; the basketball must be blue; the pineapple must be white; the chilli must be blue; the lime must be white. Include all of these objects: fire extinguisher, school bus, stop sign, sunflower, ladybird, frog, basketball, pineapple, chilli, lime. Do not label the objects and do not add any caption or text.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a flat poster / display of several everyday objects (fire extinguisher, school bus, stop sign, sunflower, ladybird, frog, basketball, pineapple, chilli, lime). Ignoring the specific colours and artistic quality, does the image actually DEPICT that requested subject -- a display of those everyday objects? A photo, illustration, flat graphic or clean diagram all count as yes. Answer NO only if it shows a blank card, a plain panel printing an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "objects": [
+      "a fire extinguisher",
+      "a school bus",
+      "a stop sign",
+      "a sunflower",
+      "a ladybird",
+      "a frog",
+      "a basketball",
+      "a pineapple",
+      "a red chilli pepper",
+      "a lime"
+    ],
+    "questions": [
+      "This is a small cropped picture of one object (a fire extinguisher). What is the main colour of the fire extinguisher as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word.",
+      "This is a small cropped picture of one object (a school bus). What is the main colour of the school bus as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word.",
+      "This is a small cropped picture of one object (a stop sign). What is the main colour of the stop sign as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word.",
+      "This is a small cropped picture of one object (a sunflower). What is the main colour of the sunflower as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word.",
+      "This is a small cropped picture of one object (a ladybird). What is the main colour of the ladybird as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word.",
+      "This is a small cropped picture of one object (a frog). What is the main colour of the frog as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word.",
+      "This is a small cropped picture of one object (a basketball). What is the main colour of the basketball as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word.",
+      "This is a small cropped picture of one object (a pineapple). What is the main colour of the pineapple as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word.",
+      "This is a small cropped picture of one object (a chilli). What is the main colour of the chilli as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word.",
+      "This is a small cropped picture of one object (a lime). What is the main colour of the lime as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word."
+    ],
+    "expects": [
+      "blue",
+      "white",
+      "blue",
+      "white",
+      "blue",
+      "white",
+      "blue",
+      "white",
+      "blue",
+      "white"
+    ],
+    "n_objects": 10,
+    "confirm_note": "Note: in this poster every object is deliberately painted an unusual flat colour (blue or white instead of its real-life colour). Judge whether the rectangle contains that object by its SHAPE and TYPE only; an unusual colour does not make it a different object."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "two_colour_count",
+      "weight": 6.0,
+      "score": "cen.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an everyday object drawn on the poster",
+          "out": "bx",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This is a small cropped picture of ONE object taken from a poster. In this poster every object is deliberately painted an unusual flat colour instead of its real-life colour, so identify it by its SHAPE and TYPE only -- an unusual colour does not make it a different object. What object is shown here? Answer with just the object's name, two or three words at most, and nothing else.",
+          "boxes": "bx",
+          "out": "idn"
+        },
+        {
+          "fail_if": ["idn.unreadable"]
+        },
+        {
+          "read_crop": "This is a small cropped picture of one object. What is the main colour of the object as it is actually DRAWN here? Report only the single colour you literally see; do not assume its real-life colour. Answer with just one colour word.",
+          "boxes": "bx",
+          "out": "col"
+        },
+        {
+          "fail_if": ["col.unreadable"]
+        },
+        {
+          "run": "score_two_colour_objects",
+          "args": ["idn", "col", "reference.objects", "reference.expects", "reference.n_objects"],
+          "out": "cen"
+        }
+      ]
+    }
+  ]
+}

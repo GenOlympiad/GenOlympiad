@@ -1,0 +1,116 @@
+{
+  "id": "baudot_tape",
+  "axis": "symbolic_systems",
+  "prompt": "A sharp, straight-on macro photograph of a vintage five-track TELEPRINTER PAPER TAPE lying flat on a wooden telegraph-office desk, punched by a Baudot-Murray tape perforator. The buff paper strip runs left to right and carries exactly FIVE horizontal rows of data-hole positions (the five code tracks, track 1 at the top down to track 5 at the bottom), plus a smaller continuous row of round SPROCKET feed-holes between track 3 and track 4. Punch the word \"REDWOOD\" into the tape in standard ITA2 (International Telegraph Alphabet No. 2) letters code: each letter is ONE column across the five tracks, a PUNCHED hole (a clean round dark hole) where that letter's ITA2 code bit is a mark, and NO hole (blank paper) where it is a space. There are seven letter columns, left to right, one per letter of REDWOOD. You MAY print the word 'REDWOOD' as a small ink caption beneath the tape, but the holes themselves must be the ITA2 encoding. Photoreal paper and punched holes, evenly spaced columns, every hole round and fully punched through.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a vintage five-track teleprinter PAPER TAPE punched with round holes across five code tracks. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "word": "REDWOOD",
+    "n_tracks": 5,
+    "n_cols": 7,
+    "grid": [
+      [0, 1, 1, 1, 0, 0, 1],
+      [1, 0, 0, 1, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [1, 0, 1, 0, 1, 1, 1],
+      [0, 0, 0, 1, 1, 1, 0]
+    ],
+    "aspect_min": 1.0,
+    "q_cols": "This is a five-track punched paper tape. It has FIVE horizontal tracks of hole positions (track 1 at the TOP down to track 5 at the BOTTOM) and several vertical COLUMNS; ignore the small continuous row of sprocket feed-holes in the middle. For each column from LEFT to RIGHT, read the five data tracks TOP to BOTTOM and output five characters: 1 if that position is a PUNCHED hole, 0 if it is blank paper. Give one 5-character group per column, groups separated by single spaces. Read ONLY which positions are punched; do NOT decode to letters. If unreadable answer 'unreadable'."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tape_columns",
+      "weight": 4.0,
+      "score": "m.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the punched DATA AREA of the paper tape: a single rectangle whose LEFT edge is the left edge of the FIRST (leftmost) vertical column of punched data holes, whose RIGHT edge is the right edge of the LAST (rightmost) column of punched data holes, whose TOP edge is the top of the highest data track and whose BOTTOM edge is the bottom of the lowest data track. Do NOT include the blank leader or trailer paper beyond the first and last hole columns, and do not include the printed caption or the desk",
+          "expected_n": 1,
+          "context": "the buff paper tape strip lying on the desk",
+          "out": "tape"
+        },
+        {
+          "fail_if": ["tape.unreadable"]
+        },
+        {
+          "run": "slice_tape_columns",
+          "args": ["tape", "reference.n_cols"],
+          "out": "cols"
+        },
+        {
+          "read_crop": "This narrow strip is ONE column of a punched paper tape. In this column there are FIVE hole positions arranged vertically, from the top track down to the bottom track. Ignore the small round sprocket feed holes that run continuously along the middle of the tape, and ignore any printed numbers or writing. Answer with exactly five characters and nothing else: write 1 where the paper is punched through with a hole and 0 where the paper is blank, in order from the top position to the bottom position (for example 10110).",
+          "boxes": "cols",
+          "out": "cc",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "score_punched_columns",
+          "args": ["cc", "reference"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "n_columns",
+      "weight": 0.5,
+      "score": "n.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one upright column of the tape's five data tracks that carries at least one big punched hole -- one box per column, spanning the full height from the top data track down to the bottom data track and tight round that one column of hole positions. Do not box the small round sprocket feed holes on their own, the blank paper before the first or after the last hole column, or the printed caption.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole upright column of the five data tracks with at least one big punched hole in it, rather than only the small round feed holes along the middle, blank paper, or part of a column? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "run": "column_count_matches",
+          "args": ["cnt_nc.n", "reference.n_cols"],
+          "out": "n"
+        }
+      ]
+    }
+  ]
+}

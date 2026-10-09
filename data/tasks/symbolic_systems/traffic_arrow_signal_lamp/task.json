@@ -1,0 +1,91 @@
+{
+  "id": "traffic_arrow_signal_lamp",
+  "axis": "symbolic_systems",
+  "prompt": "Create a clean, realistic road-junction traffic signal head on its pole: a dark vertical housing holding THREE round lamp lenses stacked vertically -- red at the TOP, amber in the MIDDLE, green at the BOTTOM. Light exactly ONE lens and keep the other two dark/off. The LIT lens is the BOTTOM lens, and it shows a green LEFT-pointing ARROW (not a solid disc). Make it clear which single lens is lit and whether its bright marking is a solid disc or an arrow (and which way the arrow points). Keep the other two lenses dark. Crisp, clearly readable signal head.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a TRAFFIC SIGNAL HEAD: a vertical housing holding a stack of three round lamp lenses. Ignoring artistic quality, and ignoring whether the details are right or wrong, does the image DEPICT that? Answer NO only if the picture is unrelated to that description or contains no such arrangement at all. Answer yes or no only.",
+  "reference": {
+    "lit_position": "bottom",
+    "shape_answer": "arrow-left",
+    "q_lit_top": "This picture shows a traffic signal: a housing with three round lamp lenses stacked one above another. Look ONLY at the TOP lens of the three. Is that lens lit up and bright (glowing), or is it dark (switched off)? Answer with exactly one word: 'bright' or 'dark'.",
+    "q_mark_top": "This picture shows a traffic signal: a housing with three round lamp lenses stacked one above another. Look ONLY at the TOP lens of the three. What shape is drawn on that lens in a brighter colour? Answer with exactly one word: 'disc' if it is a plain filled round blob with no arrow, 'left' if it is an arrow pointing left, 'right' if it is an arrow pointing right, 'up' if it is an arrow pointing straight up, or 'none' if no brighter shape is drawn on it at all.",
+    "q_lit_mid": "This picture shows a traffic signal: a housing with three round lamp lenses stacked one above another. Look ONLY at the MIDDLE lens of the three. Is that lens lit up and bright (glowing), or is it dark (switched off)? Answer with exactly one word: 'bright' or 'dark'.",
+    "q_mark_mid": "This picture shows a traffic signal: a housing with three round lamp lenses stacked one above another. Look ONLY at the MIDDLE lens of the three. What shape is drawn on that lens in a brighter colour? Answer with exactly one word: 'disc' if it is a plain filled round blob with no arrow, 'left' if it is an arrow pointing left, 'right' if it is an arrow pointing right, 'up' if it is an arrow pointing straight up, or 'none' if no brighter shape is drawn on it at all.",
+    "q_lit_bot": "This picture shows a traffic signal: a housing with three round lamp lenses stacked one above another. Look ONLY at the BOTTOM lens of the three. Is that lens lit up and bright (glowing), or is it dark (switched off)? Answer with exactly one word: 'bright' or 'dark'.",
+    "q_mark_bot": "This picture shows a traffic signal: a housing with three round lamp lenses stacked one above another. Look ONLY at the BOTTOM lens of the three. What shape is drawn on that lens in a brighter colour? Answer with exactly one word: 'disc' if it is a plain filled round blob with no arrow, 'left' if it is an arrow pointing left, 'right' if it is an arrow pointing right, 'up' if it is an arrow pointing straight up, or 'none' if no brighter shape is drawn on it at all."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lamp_shape_pos",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "reference.q_lit_top",
+          "out": "lt"
+        },
+        {
+          "fail_if": ["lt.unreadable"]
+        },
+        {
+          "ask": "reference.q_lit_mid",
+          "out": "lm"
+        },
+        {
+          "fail_if": ["lm.unreadable"]
+        },
+        {
+          "ask": "reference.q_lit_bot",
+          "out": "lb"
+        },
+        {
+          "fail_if": ["lb.unreadable"]
+        },
+        {
+          "ask": "reference.q_mark_top",
+          "out": "mt"
+        },
+        {
+          "fail_if": ["mt.unreadable"]
+        },
+        {
+          "ask": "reference.q_mark_mid",
+          "out": "mm"
+        },
+        {
+          "fail_if": ["mm.unreadable"]
+        },
+        {
+          "ask": "reference.q_mark_bot",
+          "out": "mb"
+        },
+        {
+          "fail_if": ["mb.unreadable"]
+        },
+        {
+          "run": "score_lit_lens",
+          "args": ["lt", "lm", "lb", "mt", "mm", "mb", "reference"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "the_dip_tape_and_the_gauge_must_close_on_the_plate",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The chief officer files one photograph of the sounding at every custody transfer, so the hatch plate, the tape and the transfer note all go into the one frame.\n\nA steel dip tape has just been drawn up at a deck sounding pipe and laid out along the deck, its millimetre graduations facing up and the oil's wet stain ending cleanly at one mark. The hatch plate beside the pipe is etched with the tank's figures: total depth 8000 mm from the sounding pipe down to the tank bottom, total capacity 960 cubic metres, and the tank straight-sided throughout. A laminated table of empty space against cubic metres is weighted down on the deck. A remote gauge head standing at the pipe shows the empty space above the oil as 2000 mm. A printed transfer note lies beside it with a box headed CUBIC METRES.\n\nWhat the tape is reading, and what belongs in that box, is what the hatch plate does not say.",
+  "difficulty": "s1",
+  "easy_question": "Is this photograph taken on a ship's deck with a steel dip tape laid out beside a sounding pipe and a hatch plate alongside? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "720"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the steel dip tape laid out on the deck and give the millimetre figure printed at the top edge of the wet stain on it.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "5900", "6100"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the box headed CUBIC METRES on the printed transfer note and write the figure printed in it. Write the number only, with no unit.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

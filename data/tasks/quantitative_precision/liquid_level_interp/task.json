@@ -1,0 +1,281 @@
+{
+  "id": "liquid_level_interp",
+  "axis": "quantitative_precision",
+  "prompt": "A sharp, evenly-lit straight-on macro PHOTOGRAPH taken at eye level of a single tall clear glass GRADUATED MEASURING CYLINDER standing on a laboratory bench. The cylinder has a printed measuring scale up one side running from 0 mL at the bottom to 250 mL at the top, with numbered graduation lines every 50 mL (0, 50, 100, 150, 200, 250) and small unnumbered tick marks in between. It is filled with brightly TINTED amber reagent whose flat liquid surface (the meniscus) rests at a level BETWEEN the 100 mL and 150 mL graduation lines, part-way between the two marks -- NOT resting on either labelled line. Draw the reagent surface as a clean, level horizontal line at that in-between height so a reader must interpolate its exact mL reading off the graduations. A genuine laboratory photograph: real glass with highlights, the coloured liquid and its flat surface clearly visible, clean bench lighting, soft shadow, no digital annotations, no printed numbers other than the scale graduations, no arrows or callouts.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a graduated laboratory measuring cylinder of tinted reagent on a lab bench, its liquid meniscus resting between two printed mL graduations, read straight-on at eye level? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "target": 137.0,
+    "scale_max": 250,
+    "numeral_step": 50,
+    "core": 8.0,
+    "margin": 60.0,
+    "d2_q_feature": "This image was supposed to depict: a graduated laboratory measuring cylinder of tinted reagent on a lab bench, its liquid meniscus resting between two printed mL graduations, read straight-on at eye level. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This picture should show: a graduated laboratory measuring cylinder of tinted reagent on a lab bench, its liquid meniscus resting between two printed mL graduations, read straight-on at eye level. Is there a graduated measuring cylinder with liquid in it in the picture, rather than a different object or a plain blank stand-in? Answer with the single word yes or no only.",
+    "d2_q_single": "This picture should show: a graduated laboratory measuring cylinder of tinted reagent on a lab bench, its liquid meniscus resting between two printed mL graduations, read straight-on at eye level, and nothing else. Apart from a graduated measuring cylinder with liquid in it and the things that belong with it, is the picture free of extra eye-catching objects, clutter or duplicate copies? Answer yes if there is nothing extra, no if there is clutter or extra objects. Answer with the single word yes or no only.",
+    "d2_q_precise": "Look at the lines and the scale marks in this picture. Are the straight lines straight, and are the scale marks sharp and clearly separated from each other, rather than wobbly, smudged or run together? Answer yes if the lines and marks are clean and sharp, no if they look wobbly or hand-drawn. Answer with the single word yes or no only.",
+    "d2_q_units": "This image should depict: a graduated laboratory measuring cylinder of tinted reagent on a lab bench, its liquid meniscus resting between two printed mL graduations, read straight-on at eye level. Does the picture show a row of measuring marks you could read a number off -- tick marks or printed numbers along a ruler, a dial or a gauge -- rather than the scale being missing or blank? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_meniscus_ml",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed measuring scale running up the side of the glass cylinder -- one tall narrow box from the lowest numbered mark at the bottom of the scale to the highest numbered mark at the top, not the whole cylinder and not the bench",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read": "line",
+          "target": "the flat top surface of the coloured liquid inside the cylinder -- the level boundary where the coloured liquid ends and the empty glass above it begins, drawn as ONE straight horizontal line at that height, from the inside of the glass wall on the left across to the inside of the glass wall on the right; not the rim or mouth of the cylinder, not a printed graduation line, and not the bottom of the liquid.",
+          "out": "ln"
+        },
+        {
+          "fail_if": ["ln.unreadable"]
+        },
+        {
+          "run": "split_ruler_into_squares",
+          "args": ["image", "anc", "5", "'y'"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "read_plunger_value",
+          "args": ["pl", "ln", "0", "reference.scale_max", "'y'", "False"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "read_crop": "This is one section of the printed scale up the side of a measuring cylinder, cut out of a photo. What numbers are printed beside the marks in this section? Answer with just the numbers, separated by commas, and nothing else.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "compare_band": "res.value",
+          "to": "reference.target",
+          "core": "reference.core",
+          "margin": "reference.margin",
+          "out": "frac"
+        },
+        {
+          "run": "paint_tip_square",
+          "args": ["pl", "res", "frac >= 1.0"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.line",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [20, 90, 235],
+          "out": "ovp_line"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.0,
+      "not_scored": true,
+      "premise": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.0,
+      "not_scored": true,
+      "premise": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_single_subject",
+      "weight": 0.0,
+      "not_scored": true,
+      "premise": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_single",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.0,
+      "not_scored": true,
+      "premise": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_units_ref",
+      "weight": 0.0,
+      "not_scored": true,
+      "premise": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_units",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

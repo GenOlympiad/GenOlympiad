@@ -1,0 +1,184 @@
+{
+  "id": "maidenhead_locator_mixedradix",
+  "axis": "symbolic_systems",
+  "prompt": "The locator card a national radio society's award checker fills in while a station's grid claim is being validated, printed on the society's own card stock and filed with the claim.\n\nThe station's position, taken from the licence record: latitude 52.375 degrees north, longitude 4.875 degrees east.\n\nThe locator system, as the award rules set it out. The world is first cut into fields of 20 degrees of longitude by 10 degrees of latitude, lettered A to R in each direction beginning at 180 degrees west and at 90 degrees south, the longitude letter written first. Each field is then cut into squares of 2 degrees of longitude by 1 degree of latitude, numbered 0 to 9 in each direction from that field's own south-west corner, the longitude figure written first. Each square is then cut into subsquares of 5 minutes of longitude by 2.5 minutes of latitude, lettered a to x in each direction from that square's own south-west corner, the longitude letter written first. A locator is field, then square, then subsquare: six characters in all.\n\nThe card carries the station's locator across the head in large characters; below it a map panel holding a block of three subsquare cells by three, ruled as a grid and centred on the cell the station falls in, with every cell carrying its own six-character locator printed inside it; and a small marker at the station's own position. Cells are drawn in the proportion the system gives a subsquare, and north is up.\n\nWork the locator and the cells around it out for yourself -- I am deliberately not telling you the locator, and I am not telling you what any cell of the block is called. Nothing else goes on the card: no latitude or longitude figures, no scale bar, no working.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed card with a short line of large characters across the head and, below it, a ruled grid panel whose cells each carry a short printed code? A document mockup, a photograph of a printed card or an illustration all count as yes. Answer no only if the image instead shows a bare card stating an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "cells_seq": "jo22jk|jo22kk|jo22lk|jo22jj|jo22kj|jo22lj|jo22ji|jo22ki|jo22li",
+    "head_locator": "jo22kj",
+    "marked_cell": "jo22kj",
+    "n_grid_cells": 9,
+    "marked_cell_alt": "jo22ki"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_nine_cells_carry_the_codes_the_three_cuts_give_them",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ruled cell of the grid panel on the card",
+          "out": "cl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["cl_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the code printed inside the grid cell in this cut-out. Write those characters only.",
+          "boxes": "cl_r",
+          "pad": 0.15,
+          "out": "cl_q"
+        },
+        {
+          "fail_if": ["cl_q.unreadable"]
+        },
+        {
+          "run": "read_code_sequence",
+          "args": ["cl_q", "cl_r"],
+          "out": "cl_s"
+        },
+        {
+          "compare": "cl_s.seq",
+          "to": "reference.cells_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_marker_sits_in_the_cell_the_head_of_the_card_names",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ruled cell of the grid panel on the card",
+          "out": "mk_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mk_r.unreadable"]
+        },
+        {
+          "read_crop": "Is there a small marker drawn inside the grid cell in this cut-out? Answer yes or no only.",
+          "boxes": "mk_r",
+          "pad": 0.15,
+          "out": "mk_c"
+        },
+        {
+          "fail_if": ["mk_c.unreadable"]
+        },
+        {
+          "read_crop": "Copy the code printed inside the grid cell in this cut-out. Write those characters only.",
+          "boxes": "mk_r",
+          "pad": 0.15,
+          "out": "mk_v"
+        },
+        {
+          "fail_if": ["mk_v.unreadable"]
+        },
+        {
+          "run": "check_marked_squares",
+          "args": ["mk_c", "mk_v", "reference.marked_cell", "reference.marked_cell_alt"],
+          "out": "mk_s"
+        },
+        {
+          "compare": "mk_s.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_head_of_the_card_names_the_cell_the_position_falls_in",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the line of large characters printed across the head of the card",
+          "out": "hd_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["hd_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the characters printed in this cut-out. Write those characters only.",
+          "boxes": "hd_r",
+          "pad": 0.3,
+          "out": "hd_q"
+        },
+        {
+          "fail_if": ["hd_q.unreadable"]
+        },
+        {
+          "run": "read_code_sequence",
+          "args": ["hd_q"],
+          "out": "hd_s"
+        },
+        {
+          "compare": "hd_s.seq",
+          "to": "reference.head_locator",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nine_cells_in_the_grid_panel",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ruled cell of the grid panel on the card",
+          "out": "cs_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["cs_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show one whole ruled cell of the grid panel with a printed code inside it, rather than the head of the card or the panel border? Answer yes or no only.",
+          "boxes": "cs_r",
+          "pad": 0.3,
+          "out": "cs_q"
+        },
+        {
+          "fail_if": ["cs_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cs_q"],
+          "out": "cs_n"
+        },
+        {
+          "compare_band": "cs_n.n",
+          "to": "reference.n_grid_cells",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

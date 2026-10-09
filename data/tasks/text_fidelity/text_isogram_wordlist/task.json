@@ -1,0 +1,100 @@
+{
+  "id": "text_isogram_wordlist",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on photo of a printed word register on pale green ledger paper, titled 'ISOGRAM REGISTER - SHEET B', sub-heading 'Eight letters or longer', set in a typewriter face. Print EXACTLY 20 numbered lines (1. to 20.), ONE single word per line.\n\nCRITICAL WORD LAW: every listed word must be an ISOGRAM of AT LEAST EIGHT letters -- a real English word in which no letter is repeated anywhere in the word. All 20 words must be different from each other. Choose the words yourself.\n\nOne word per numbered line, nothing else on the sheet.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a printed sheet listing numbered single words. Ignoring artistic quality and ignoring whether the wording is correct, does the image DEPICT that -- a printed page carrying a numbered list of text lines? A photo, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_lines": 20,
+    "min_len": 8
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_crop": "Copy out all the printed text on this page, exactly as it appears. Put each printed line on its own line of your answer, and keep that line's leading number (for example '3.') at the start of it. Copy every word letter for letter, even if a word looks misspelled, made-up or wrong -- do not correct it, complete it, translate it or improve it. Add nothing of your own and leave nothing out.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Transcribe this page word for word. Write one line of your answer for each line of printed text, beginning with that line's printed number. Spell every word exactly as it stands on the page, including any word that looks like nonsense or a mistake; never repair it. No commentary, no summary, no extra lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "read_crop": "Read the printed page out line by line and copy each line exactly as printed. When a line starts with a number that is PRINTED on the page, keep that printed number at the front of it; when a line carries no printed number -- a heading, for instance -- copy it with no number in front. Never number the lines of your answer yourself and never add a number the page does not print. Spell every word exactly as printed. Print what is on the paper, not what you think it should say. Output nothing else.",
+          "votes": 1,
+          "out": "t3"
+        },
+        {
+          "run": "score_isograms",
+          "args": ["_passes(t1, t2, t3)", "reference.n_lines", "reference.min_len"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read_crop": "Copy out all the printed text on this page, exactly as it appears. Put each printed line on its own line of your answer, and keep that line's leading number (for example '3.') at the start of it. Copy every word letter for letter, even if a word looks misspelled, made-up or wrong -- do not correct it, complete it, translate it or improve it. Add nothing of your own and leave nothing out.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Transcribe this page word for word. Write one line of your answer for each line of printed text, beginning with that line's printed number. Spell every word exactly as it stands on the page, including any word that looks like nonsense or a mistake; never repair it. No commentary, no summary, no extra lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "read_crop": "Read the printed page out line by line and copy each line exactly as printed. When a line starts with a number that is PRINTED on the page, keep that printed number at the front of it; when a line carries no printed number -- a heading, for instance -- copy it with no number in front. Never number the lines of your answer yourself and never add a number the page does not print. Spell every word exactly as printed. Print what is on the paper, not what you think it should say. Output nothing else.",
+          "votes": 1,
+          "out": "t3"
+        },
+        {
+          "run": "score_isograms",
+          "args": ["_passes(t1, t2, t3)", "reference.n_lines", "reference.min_len"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

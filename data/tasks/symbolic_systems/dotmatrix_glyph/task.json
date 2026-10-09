@@ -1,0 +1,187 @@
+{
+  "id": "dotmatrix_glyph",
+  "axis": "symbolic_systems",
+  "prompt": "A straight-on photograph of a flexible LED-fabric banner strung above a market coffee stall, spelling the roastery's name in mint-green light. The banner is one dark woven panel carrying a single rectangular grid of identical small square light cells. Every cell position is visible: a cell is either glowing mint green or sitting dark, and there is nothing else on the banner.\n\nBuild the display exactly to this specification and work out for yourself how wide the banner has to come out:\n- The grid is exactly 7 cells tall, and every character is drawn exactly 7 cells tall and exactly 5 cells wide.\n- Leave exactly 2 dark columns of cells between two neighbouring characters.\n- Leave exactly 4 dark columns of cells before the first character and exactly 4 dark columns of cells after the last one.\n- The banner is exactly that many columns wide -- not one column more, not one column less.\n- The banner shows the name Z O F F O, in that order, left to right.\n\nLight each character from the pattern below. Each character is given as its 7 rows, top row first; within a row the five entries are its five columns, left to right; # means that cell is lit and . means that cell is dark.\nZ:  #####  ....#  ...#.  ..#..  .#...  #....  #####\nO:  .###.  #...#  #...#  #...#  #...#  #...#  .###.\nF:  #####  #....  #....  ####.  #....  #....  #....\n\nPhotograph the banner square-on with the grid of cells filling the frame inside a narrow plain dark surround. No tilt, no perspective, no folds or sag across the panel. The # and . notation above is only how the pattern is written down here -- it must not appear anywhere in the picture. No lettering, no numbers, no logos, no bunting, no coloured trim cells.\n",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a dark flexible panel carrying one rectangular grid of identical small square light cells, each cell either glowing or dark. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank panel, a page of printed text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "rows": 7,
+    "cols": 41,
+    "matrix": [
+      "....#####...###...#####..#####...###.....",
+      "........#..#...#..#......#......#...#....",
+      ".......#...#...#..#......#......#...#....",
+      "......#....#...#..####...####...#...#....",
+      ".....#.....#...#..#......#......#...#....",
+      "....#......#...#..#......#......#...#....",
+      "....#####...###...#......#.......###....."
+    ],
+    "word": "ZOFFO",
+    "gap": 2,
+    "margin": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lattice_dimensions",
+      "weight": 2.0,
+      "steps": [
+        {
+          "run": "dotmatrix_dims",
+          "args": ["image", "reference.rows", "reference.cols"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "paint_lamp_grid",
+          "args": ["m", "reference.rows", "reference.cols", "reference.matrix"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "glyph_raster_cells",
+      "weight": 6.0,
+      "steps": [
+        {
+          "run": "dotmatrix_raster",
+          "args": ["image", "reference.rows", "reference.cols", "reference.matrix"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "paint_lamp_grid",
+          "args": ["m", "reference.rows", "reference.cols", "reference.matrix"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_cell_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "dotmatrix_overlay",
+          "args": ["image", "reference.rows", "reference.cols", "reference.matrix", "'cells'"],
+          "out": "ov"
+        },
+        {
+          "run": "to_float",
+          "args": ["ov.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

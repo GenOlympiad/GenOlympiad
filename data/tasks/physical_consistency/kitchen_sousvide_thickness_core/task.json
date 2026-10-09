@@ -1,0 +1,294 @@
+{
+  "id": "kitchen_sousvide_thickness_core",
+  "axis": "physical_consistency",
+  "prompt": "The pass of a central kitchen, photographed from above at the end of a sous-vide run, for the day's cook-chill batch record. Three pieces of the same beef cut went into the one water bath in the same minute and came out in the same minute. They differ only in how thick they are: 18 mm, 30 mm and 55 mm at their thickest point. The bath held 58 C throughout, and the hold was timed off the 30 mm piece.\n\nThe three pieces now lie on the pass, each sliced right through at its thickest point with the cut face towards the camera, and each beside its own bag card carrying its thickness in millimetres. Behind them lies the core-probe readout strip: one line per piece, every line carrying that piece's thickness in millimetres and the core temperature its needle found, to one decimal place. The docket at the edge of the pass carries the standard this section works to: CORE 54 C.\n\nThe chef signs this photograph off as the batch record, so what the readout strip says and what the three cut faces look like have to be the one same batch. Work out for yourself what each needle found and what each cut face therefore looks like -- I am deliberately not telling you a single one of those readings, and I am not telling you which pieces made the standard.\n\nNothing else appears in writing anywhere in the picture: no times, no rule about thickness, no working. The only text is the three bag cards, the three lines of the readout strip and the docket's CORE 54 C.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show three sliced pieces of meat lying on a kitchen pass with small cards beside them and a strip of typed temperature lines behind them? A realistic photo, an illustration or a diagram ALL count as yes. Answer NO only if the image instead shows a bare worktop with none of that, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "thick": [18, 30, 55],
+    "target_core": 54.0,
+    "expect_side": [
+      ["at", "at", "below"]
+    ],
+    "expect_face": [
+      ["even", "even", "middle"]
+    ],
+    "temp_order": ["18", "30", "55"],
+    "n_slabs": 3,
+    "code_probe": {
+      "program": "code_probe"
+    },
+    "code_tieout": {
+      "program": "code_tieout"
+    },
+    "code_faces": {
+      "program": "code_faces"
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "core_meets_the_standard",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed line on the core-probe readout strip",
+          "sweep": true,
+          "out": "strip_box"
+        },
+        {
+          "fail_if": ["strip_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of the readout strip. Copy every character printed on it exactly. Write nothing else.",
+          "boxes": "strip_box",
+          "out": "lines"
+        },
+        {
+          "fail_if": ["lines.unreadable"]
+        },
+        {
+          "run": "core_temps_by_thickness",
+          "args": ["lines", "reference.thick", "reference.target_core"],
+          "code": "code_probe",
+          "out": "pb"
+        },
+        {
+          "compare_grid": "pb.side",
+          "to": "reference.expect_side",
+          "ignore": "at",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "core_order_by_thickness",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed line on the core-probe readout strip",
+          "sweep": true,
+          "out": "strip_box"
+        },
+        {
+          "fail_if": ["strip_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of the readout strip. Copy every character printed on it exactly. Write nothing else.",
+          "boxes": "strip_box",
+          "out": "lines"
+        },
+        {
+          "fail_if": ["lines.unreadable"]
+        },
+        {
+          "run": "core_temps_by_thickness",
+          "args": ["lines", "reference.thick", "reference.target_core"],
+          "code": "code_probe",
+          "out": "pb"
+        },
+        {
+          "match_order": "pb.rank",
+          "to": "reference.temp_order",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cut_face_doneness",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one sliced piece of meat lying cut-face-up on the pass",
+          "sweep": true,
+          "out": "slab_box"
+        },
+        {
+          "fail_if": ["slab_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one sliced piece with its bag card. Copy the number of millimetres printed on that card -- the figure written next to mm. Ignore any other number in this cut-out. If more than one card is visible, read the one nearest the middle of the cut-out. Write the number only and nothing else.",
+          "boxes": "slab_box",
+          "out": "cards"
+        },
+        {
+          "fail_if": ["cards.unreadable"]
+        },
+        {
+          "read_crop": "Look at the cut face of the meat in this cut-out. Name what its colouring looks like, using one word from this list: middle (a band across the centre of the face is a different, darker colour from the rest of the face) or even (the whole face is one colour right across). Write that one word and nothing else.",
+          "boxes": "slab_box",
+          "out": "look"
+        },
+        {
+          "fail_if": ["look.unreadable"]
+        },
+        {
+          "run": "cut_faces_by_thickness",
+          "args": ["cards", "look", "reference.thick"],
+          "code": "code_faces",
+          "out": "fc"
+        },
+        {
+          "compare_grid": "fc.rows",
+          "to": "reference.expect_face",
+          "ignore": "even",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "strip_and_faces_agree",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed line on the core-probe readout strip",
+          "sweep": true,
+          "out": "strip_box"
+        },
+        {
+          "fail_if": ["strip_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of the readout strip. Copy every character printed on it exactly. Write nothing else.",
+          "boxes": "strip_box",
+          "out": "lines"
+        },
+        {
+          "fail_if": ["lines.unreadable"]
+        },
+        {
+          "run": "core_temps_by_thickness",
+          "args": ["lines", "reference.thick", "reference.target_core"],
+          "code": "code_probe",
+          "out": "pb"
+        },
+        {
+          "read": "boxes",
+          "target": "one sliced piece of meat lying cut-face-up on the pass",
+          "sweep": true,
+          "out": "slab_box"
+        },
+        {
+          "fail_if": ["slab_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one sliced piece with its bag card. Copy the number of millimetres printed on that card -- the figure written next to mm. Ignore any other number in this cut-out. If more than one card is visible, read the one nearest the middle of the cut-out. Write the number only and nothing else.",
+          "boxes": "slab_box",
+          "out": "cards"
+        },
+        {
+          "fail_if": ["cards.unreadable"]
+        },
+        {
+          "read_crop": "Look at the cut face of the meat in this cut-out. Name what its colouring looks like, using one word from this list: middle (a band across the centre of the face is a different, darker colour from the rest of the face) or even (the whole face is one colour right across). Write that one word and nothing else.",
+          "boxes": "slab_box",
+          "out": "look"
+        },
+        {
+          "fail_if": ["look.unreadable"]
+        },
+        {
+          "run": "cut_faces_by_thickness",
+          "args": ["cards", "look", "reference.thick"],
+          "code": "code_faces",
+          "out": "fc"
+        },
+        {
+          "run": "strip_and_faces_agree",
+          "args": ["pb", "fc"],
+          "code": "code_tieout",
+          "out": "ag"
+        },
+        {
+          "compare": "ag.verdict",
+          "to": "agree",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "slab_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one sliced piece of meat lying cut-face-up on the pass",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole sliced piece of meat, rather than a bag card or bare worktop or only part of one? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_slabs",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_on_the_pass",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a note, sum or rule about cooking time added on the pass beside the pieces",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "id": "the_slip_that_took_the_weaker_word_gets_the_ring",
+  "axis": "long_range_consistency",
+  "prompt": "A photograph of a returns desk at the back of a chain shop, taken looking down at the desk top from the reviewer's chair. This is the weekly compliance review, when one person checks the decisions the counter staff made during the week.\n\nFour DECISION SLIPS lie side by side across the desk, in order, and each one carries exactly what the counter clerk put on it: a case number, the amount, the number of days since purchase, a line reading 'decided under:' followed by the name of the notice that clerk worked to, and a rubber stamp in a red box for the outcome word. The four slips carry, in this order:\n  case 1 -- 48 pounds -- 12 days -- decided under: SHOP NOTICE\n  case 2 -- 95 pounds -- 21 days -- decided under: STATUTORY NOTICE\n  case 3 -- 26 pounds -- 40 days -- decided under: SHOP NOTICE\n  case 4 -- 73 pounds -- 8 days -- decided under: SHOP NOTICE\n\nTwo notices are pinned on the wall behind the desk and both are in force. The SHOP NOTICE lists, case by case: 1 REPAIR, 2 CREDIT, 3 CREDIT, 4 REFUND. The STATUTORY NOTICE lists, case by case: 1 REPAIR, 2 REPAIR, 3 REFUND, 4 REFUND, and underneath it prints the four outcome words in order of strength, weakest first: REJECT, CREDIT, REPAIR, REFUND. It also prints the sentence that gives this desk its work: a statutory right cannot be cut down by a shop notice.\n\nThe reviewer has been through the four slips and has marked the review on the desk in ink: a ring drawn round the one slip that has to go back, and beside that same slip, in the reviewer's own handwriting, the outcome word that should have been stamped.\n\nTake that photograph. Work the review out for yourself -- I am deliberately not telling you which slip is the wrong one, and I am not telling you which word the reviewer wrote. The amounts and the day counts are on the slips because they are always on the slips; they settle nothing here.\n\nAll four slips, both notices and the reviewer's ink must be legible in the one frame. There is no marking pen, no sticky note and no correction on the desk apart from the reviewer's single ring and single handwritten word.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show several printed paper slips lying on a desk with notices on the wall behind them? A photograph, a render or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows nothing of the kind at all. Answer yes or no only.",
+  "reference": {
+    "case_numbers": [1, 2, 3, 4],
+    "ring_tag": "yes",
+    "word_tag": "yes",
+    "carry_tag": "yes",
+    "ring_case": 3,
+    "annot_word": "refund",
+    "named_case": 2,
+    "named_word": "repair",
+    "clean_page": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_one_slip_is_ringed_and_it_is_the_third_one",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of four decision slips laid out across the desk top",
+          "out": "r0"
+        },
+        {
+          "fail_if": ["r0.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out several printed slips lie in a row on a desk. Counting from the left, which slip has a ring drawn round it in ink? Answer with one word: first, second, third or fourth.",
+          "boxes": "r0",
+          "pad": 0.12,
+          "out": "r1"
+        },
+        {
+          "read_crop": "In this cut-out several printed slips lie in a row on a desk. How many of them have a ring drawn round them in ink? Answer with the number only.",
+          "boxes": "r0",
+          "pad": 0.12,
+          "out": "r2"
+        },
+        {
+          "run": "inked_slip_check",
+          "args": ["r1", "r2", "reference.ring_case"],
+          "out": "rv"
+        },
+        {
+          "fail_if": ["rv.refused"]
+        },
+        {
+          "compare": "rv.tag",
+          "to": "reference.ring_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_word_written_beside_the_ring_is_the_stronger_one",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the slip with a ring drawn round it and the ink writing beside it",
+          "out": "w0"
+        },
+        {
+          "fail_if": ["w0.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out a word has been written by hand in ink beside a printed slip. Read that handwritten word. Answer with one word.",
+          "boxes": "w0",
+          "pad": 0.12,
+          "out": "w1"
+        },
+        {
+          "read_crop": "In this cut-out a printed slip carries a word stamped inside a red box. Read the word inside the red box. Answer with one word.",
+          "boxes": "w0",
+          "pad": 0.12,
+          "out": "w2"
+        },
+        {
+          "run": "annotation_word_check",
+          "args": ["w1", "w2", "reference.annot_word"],
+          "out": "wv"
+        },
+        {
+          "fail_if": ["wv.refused"]
+        },
+        {
+          "compare": "wv.tag",
+          "to": "reference.word_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_slip_that_named_the_statutory_notice_carries_its_word",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the second decision slip from the left, with its printed lines and its red stamp box",
+          "out": "c0"
+        },
+        {
+          "fail_if": ["c0.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out a printed slip carries a case number at the top. Read that case number. Answer with the number only.",
+          "boxes": "c0",
+          "pad": 0.12,
+          "out": "c1"
+        },
+        {
+          "read_crop": "In this cut-out a printed slip carries a word stamped inside a red box. Read the word inside the red box. Answer with one word.",
+          "boxes": "c0",
+          "pad": 0.12,
+          "out": "c2"
+        },
+        {
+          "run": "named_case_stamp_check",
+          "args": ["c1", "c2", "reference.named_case", "reference.named_word"],
+          "out": "cv"
+        },
+        {
+          "fail_if": ["cv.refused"]
+        },
+        {
+          "compare": "cv.tag",
+          "to": "reference.carry_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_on_the_desk_says_which_slip_is_wrong",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a highlighter mark, a sticky note or a tick or cross drawn on a slip",
+          "out": "zg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["zg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "zg",
+          "pad": 0.15,
+          "out": "zgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a highlighter mark, a sticky note, or a tick or a cross drawn on a slip? Answer yes or no. Answer no if the cut-out shows a printed decision slip, the red stamp box, the reviewer's single ink ring, the one handwritten word, a wall notice, or the desk.",
+          "boxes": "zg",
+          "pad": 0.15,
+          "out": "zgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as a highlighter mark, a sticky note, or a tick or a cross drawn on a slip? Answer yes or no. Answer no if it belongs there -- a printed decision slip, the red stamp box, the reviewer's single ink ring, the one handwritten word, a wall notice, or the desk.",
+          "boxes": "zg",
+          "pad": 0.8,
+          "out": "zgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["zg", "zgw", "zgy", "zgz"],
+          "out": "zgc"
+        },
+        {
+          "fail_if": ["zgc.refused"]
+        },
+        {
+          "compare": "zgc.clean",
+          "to": "reference.clean_page",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

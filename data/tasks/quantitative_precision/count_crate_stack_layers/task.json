@@ -1,0 +1,181 @@
+{
+  "id": "count_crate_stack_layers",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic warehouse photograph of identical plain wooden crates stacked in a neat pyramid pile of four horizontal rows, the rows getting wider toward the bottom -- three crates in the top row, then four, then five, then six crates in the bottom row on the floor. The pile is a genuine stack -- each row rests on the row below and partly overlaps the base of the row above. Counting every crate across all four rows there are EXACTLY 18 crates in total -- not 17, not 19, exactly 18. The crates are the same size and clearly separated so each one can be told apart. No text, no numerals.",
+  "difficulty": "r1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a warehouse pyramid pile of wooden crates stacked in several horizontal rows, wider at the bottom? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 18,
+    "q": "How many wooden crates are stacked in this pile in total? The crates are stacked in several horizontal rows; count the crates across every row, top to bottom. Count them one by one. Answer with the integer number only.",
+    "q_seq": "This shows a stack of wooden crates in several separated horizontal rows, wider at the bottom. Write down every crate you can see. Begin each item with the row it is in, written as ROW1 for the top row, ROW2 for the row under that, ROW3 for the row under that and so on down the stack, then a few plain words saying where along that row it sits. Separate one item from the next with a semicolon; write no running total and nothing else.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This picture should show these countable objects: a warehouse pyramid pile of wooden crates stacked in horizontal rows. Look at the individual objects being counted. Is each one a wooden crate in the pile, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them visible as its own separate individual (allowing for the intended overlaps/stacking the scene describes), rather than merged into one indistinct blob? Answer yes if each intended object can be told apart, no if they merge into an uncountable mass. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_seq",
+          "out": "seq_raw"
+        },
+        {
+          "fail_if": ["seq_raw.unreadable"]
+        },
+        {
+          "run": "count_items_per_label",
+          "args": [
+            "seq_raw",
+            "[\"ROW1\", \"ROW2\", \"ROW3\", \"ROW4\", \"ROW5\", \"ROW6\", \"ROW7\", \"ROW8\"]"
+          ],
+          "out": "seq_raw__std"
+        },
+        {
+          "fail_if": ["seq_raw__std.refused"]
+        },
+        {
+          "run": "sum_row_counts",
+          "args": ["seq_raw__std.text"],
+          "out": "val"
+        },
+        {
+          "fail_if": ["val.no_read"]
+        },
+        {
+          "compare_band": "val.total",
+          "to": "reference.n",
+          "out": "frac",
+          "core_abs": 0.499,
+          "margin_abs": 0.0
+        }
+      ]
+    },
+    {
+      "name": "premise_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show a pile of identical crates or boxes stacked in several horizontal rows, forming a genuine multi-row stack rather than a single flat row? Answer yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_objform",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_occlusion",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

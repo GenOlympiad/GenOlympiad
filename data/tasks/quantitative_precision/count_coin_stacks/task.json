@@ -1,0 +1,219 @@
+{
+  "id": "count_coin_stacks",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic side-on photograph of a dark table on which 2 leaning stacks of gold coins stand, seen edge-on so each coin is a thin bright golden band. The stacks are of uneven heights and across ALL 2 stacks together there are EXACTLY 7 coins in total. Within each stack the coins are packed with a faint dark line between them so every individual coin band stays visible and countable. The grand total of coins over all stacks must be EXACTLY 7 -- not 6, not 8, exactly 7. No text, no numerals.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict several leaning stacks of gold coins seen edge-on on a dark table. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 7,
+    "stacks": 2,
+    "q": "Across ALL the coin stacks in this image, how many individual coins are there in total (counting the coins in every stack)? Count each coin one by one across all the stacks. Answer with the single integer total number of coins only.",
+    "enforce_notext": true,
+    "q_notext": "Markings on the coins themselves do not count. Apart from those, is there a separate printed number or caption that states a count? Answer yes or no.",
+    "d2_q_objform": "This image should show the countable objects described as: thin gold coin bands stacked in piles. Look at the individual objects being counted. Are they clearly the correct KIND of object (the right thing, of the right colour where a colour was specified) rather than some other object, blobs, or a mix that does not match the description? Answer with the single word yes or no only.",
+    "d2_q_arrange": "Are the countable objects in this image spread out in an IRREGULAR, natural, scattered arrangement (uneven gaps, clusters, no repeating pattern), as the scene describes, rather than being lined up in a tidy regular row, evenly-spaced ring or a rectangular grid/array? Answer yes if the arrangement is irregular/scattered, no if it is a neat regular row, grid or evenly-spaced pattern. Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them fully visible and clearly separate from its neighbours -- none hidden behind another, none merged or overlapping into a single blob, none cut off by the edge of the frame -- so that each one could be counted individually? Answer yes if every object is fully visible and separate, no if objects overlap, merge, are hidden or are cut off. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "a single gold coin seen edge-on as one thin bright band inside a stack -- one box per single coin band, running the full width of that stack from its left edge to its right edge and only as tall as the ONE band lying between the faint dark lines above and below it; do not box a whole stack or two bands together, and do not box the dark table or a shadow.",
+          "context": "the leaning stacks of gold coins standing on the dark table",
+          "retries": 6,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Is there a thin bright gold band (the edge of one coin) in this picture? Answer yes if a gold coin edge is present, no if the picture shows only the dark table or background. Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr",
+          "pad": 0.08
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_stacks",
+          "args": ["cr", "bx"],
+          "code": {
+            "inline": "n_yes_code"
+          },
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "stack_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show several stacks of gold coins seen from the side, each coin a thin band? Answer with the single word yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.0,
+      "premise": true,
+      "not_scored": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "stack of gold coins standing on the table",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_g"
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows a stack of coins seen edge-on. Is every coin in it visible as its own separate band, with a line between it and the coin next to it? Answer yes or no only.",
+          "boxes": "box_g",
+          "out": "crop_g"
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_arrangement",
+      "weight": 0.0,
+      "premise": true,
+      "not_scored": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_arrange",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.0,
+      "premise": true,
+      "not_scored": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a coin band that blends into the coin next to it so the two cannot be told apart, or is cut off by the photo edge",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g"
+        },
+        {
+          "fail_if": ["sweep_g.unreadable"]
+        },
+        {
+          "compare": "sweep_g.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a single gold coin seen edge-on as a thin band",
+  "count_total": "reference.n"
+}

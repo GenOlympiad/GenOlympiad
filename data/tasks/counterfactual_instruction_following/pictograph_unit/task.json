@@ -1,0 +1,164 @@
+{
+  "id": "pictograph_unit",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Render a clean, straight-on image of a simple one-row PICTOGRAPH (an icon chart) about apples, on a plain light background.\n\nUse this scale rule, and print it as a small legend near the top: ONE apple icon stands for 4 apples (draw a single apple icon, then '= 4 apples'). This means each whole icon counts as 4 apples.\n\nBelow the legend, draw a single horizontal row of icons to represent a TOTAL of 14 apples. Because one whole icon is worth 4 apples, 14 apples need 14 divided by 4 = 3.5 icons. In a real pictograph you draw the fractional part as a PARTIAL icon: so draw THREE whole apple icons followed by ONE HALF icon (a half-sized / half-drawn apple icon) to show the extra 2 apples. Draw exactly three whole icons and one clearly-half icon, evenly spaced in one row. Do NOT print the numbers 14 or 3.5 anywhere as a caption; the only number in the image is the '4' in the legend.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a one-row pictograph with a legend '1 icon = several apples' and a row of whole icons plus one half icon for the fractional remainder? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "hard_fraction": true,
+    "n_whole": 3,
+    "q_whole": "This picture shows a row of icons below a legend line at the top. Some icons may be drawn at full size and complete; others may be drawn smaller or only half-drawn. In that row of icons, how many icons are FULL-SIZE and completely drawn? Do not count any icon that is part of the legend line at the top, and do not count an icon that is smaller than the others or drawn only partly. Answer with a single whole number only.",
+    "q_half": "This picture shows a row of icons below a legend line at the top. In that row, how many icons are drawn only PARTLY -- about half the width of a full icon, or cut off half way? Do not count any icon in the legend line at the top, and do not count the full-size complete icons. Answer with a single whole number only.",
+    "enforce_notext": false
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "icon_count",
+      "weight": 4.0,
+      "score": "cnt.frac",
+      "only_if": "reference.active_base",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one apple icon standing in the single horizontal row of icons below the legend line",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_cr"
+        },
+        {
+          "fail_if": ["box_cr.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE apple icon standing on its own, rather than an empty patch of background, a thin sliver clipped from the edge of an icon, or two icons side by side? Answer yes or no only.",
+          "boxes": "box_cr",
+          "out": "crop_cr"
+        },
+        {
+          "fail_if": ["crop_cr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_cr"],
+          "out": "cnt_cr"
+        },
+        {
+          "run": "count_as_read",
+          "args": ["cnt_cr"],
+          "out": "as_cr"
+        },
+        {
+          "run": "icon_count_matches",
+          "args": ["as_cr", "reference.n_icons"],
+          "out": "cnt"
+        }
+      ]
+    },
+    {
+      "name": "fractional_icons",
+      "weight": 4.0,
+      "score": "fr.frac",
+      "only_if": "reference.hard_fraction",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one apple icon in the row below the legend that is drawn whole, its outline closed all the way round -- ONE box per whole apple, tight round that single apple. Do not box the apple icon inside the legend line, do not box the apple that is drawn only part-way, do not put two apples in one box, and do not box empty background.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_wr"
+        },
+        {
+          "fail_if": ["box_wr.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE apple icon drawn complete, its whole shape closed all the way round, rather than an apple that stops part-way across, a thin sliver of one, or an empty patch of background? Answer yes or no only.",
+          "boxes": "box_wr",
+          "out": "crop_wr"
+        },
+        {
+          "fail_if": ["crop_wr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_wr"],
+          "out": "cnt_wr"
+        },
+        {
+          "run": "count_as_read",
+          "args": ["cnt_wr"],
+          "out": "as_wr"
+        },
+        {
+          "read": "boxes",
+          "target": "one apple icon in the row below the legend that is drawn only part-way, like half an apple",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_hr"
+        },
+        {
+          "fail_if": ["box_hr.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE apple shape that is drawn only part of the way, stopping part-way across so the apple is left unfinished, rather than a complete apple or an empty patch of background? Answer yes or no only.",
+          "boxes": "box_hr",
+          "out": "crop_hr"
+        },
+        {
+          "fail_if": ["crop_hr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_hr"],
+          "out": "cnt_hr"
+        },
+        {
+          "run": "count_as_read",
+          "args": ["cnt_hr"],
+          "out": "as_hr"
+        },
+        {
+          "run": "whole_and_half_icons",
+          "args": ["as_wr", "as_hr", "reference.n_whole"],
+          "out": "fr"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,249 @@
+{
+  "id": "sundial_hourline_nonuniform",
+  "axis": "physical_consistency",
+  "prompt": "A fabrication drawing for a garden sundial's dial plate, the sheet the brass engraver works from. The plate is a horizontal dial for a garden at latitude 40 degrees North, in plan with the whole plate in view. Every hour line radiates from one point on the plate, the gnomon stands along the noon line, and the drawing dimensions the angle the gnomon's sloping edge makes with the plate.\n\nThe scope of the engraving, out of the client's order: hour lines for 07:00 to 17:00 inclusive and no others, each line engraved out to the plate's rim with its own hour beside it.\n\nAs every dial-plate drawing does, this sheet also carries the hour-line table the engraver takes his protractor angles from: one row for each of those hours, in order, every row giving the hour and that hour line's angle from the noon line in degrees to one decimal place.\n\nA brass plate cut wrong is scrap, so the table and the engraved fan have to be the dial this particular garden needs. Work out for yourself what belongs in every row of that table, and what the fan of lines therefore looks like -- I am deliberately not telling you a single one of those angles, and I am not telling you how the gaps between the lines behave.\n\nNothing else appears on the sheet: no formula, no working, no note about trigonometry. The only text in the picture is the hour numbers, the table, the gnomon's dimensioned angle and the drawing's title block.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a drawing of a dial plate with a fan of lines radiating across it and a small table of rows beside it? A realistic photo, an illustration or a diagram ALL count as yes. Answer NO only if the image instead shows a blank sheet with none of that. Answer yes or no only.",
+  "reference": {
+    "expect_ang": [
+      [7, 67.4],
+      [8, 48.1],
+      [9, 32.7],
+      [10, 20.4],
+      [11, 9.8],
+      [12, 0.0],
+      [13, 9.8],
+      [14, 20.4],
+      [15, 32.7],
+      [16, 48.1],
+      [17, 67.4]
+    ],
+    "deg_tol": 1.0,
+    "n_rows": 11,
+    "gnomon_deg": 40.0,
+    "fan_look": "widening",
+    "code_dial": {
+      "program": "code_dial"
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "hour_line_angles",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of printed rows in the hour-line table",
+          "expected_n": 1,
+          "out": "anc_row_box",
+          "context": "the drawing sheet (the dial plate, the hour-line table and the title block)"
+        },
+        {
+          "fail_if": ["anc_row_box.unreadable"]
+        },
+        {
+          "run": "plan_pinned_grid",
+          "args": ["image", "anc_row_box", "rows=reference.n_rows", "cols=1"],
+          "out": "pl_row_box"
+        },
+        {
+          "fail_if": ["pl_row_box.no_plan"]
+        },
+        {
+          "read_crop": "This cut-out is one row of the hour-line table. Copy every character printed on that row exactly. Ignore anything printed on a row above or below it. Write nothing else.",
+          "boxes": "pl_row_box.cells",
+          "out": "rows",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["rows.unreadable"]
+        },
+        {
+          "run": "check_hour_angles",
+          "args": ["rows", "reference.expect_ang", "reference.deg_tol"],
+          "code": "code_dial",
+          "out": "dl"
+        },
+        {
+          "compare_band": "dl.n_ok",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 10.5,
+          "out": "frac"
+        },
+        {
+          "run": "paint_cells_by_fraction",
+          "args": ["pl_row_box", "frac"],
+          "out": "pa_row_box"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_row_box.hit",
+          "ref_anchors": "pa_row_box.ref_anchors",
+          "found_anchors": "pa_row_box.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_row_box_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_row_box_hit.path",
+          "rects": "pa_row_box.miss",
+          "ref_anchors": "pa_row_box.ref_anchors",
+          "found_anchors": "pa_row_box.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_row_box_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_row_box_miss.path",
+          "rects": "pa_row_box.edge",
+          "ref_anchors": "pa_row_box.ref_anchors",
+          "found_anchors": "pa_row_box.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_row_box_edge"
+        }
+      ]
+    },
+    {
+      "name": "fan_opens_out",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the dial plate with its fan of engraved hour lines",
+          "expected_n": 1,
+          "out": "box_fan"
+        },
+        {
+          "fail_if": ["box_fan.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, are the gaps between neighbouring engraved hour lines all the same size, do they widen towards the ends of the fan, or do they narrow towards the ends? Answer with one word: same, widening or narrowing.",
+          "boxes": "box_fan",
+          "out": "rd_fan"
+        },
+        {
+          "fail_if": ["rd_fan.unreadable"]
+        },
+        {
+          "compare": "rd_fan.answers.0",
+          "to": "reference.fan_look",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "gnomon_stands_at_the_latitude",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the dimension giving the gnomon's angle to the plate",
+          "expected_n": 1,
+          "out": "box_gn"
+        },
+        {
+          "fail_if": ["box_gn.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out holds one dimension. Copy the number of degrees printed in it. Write the number only.",
+          "boxes": "box_gn",
+          "out": "rd_gn"
+        },
+        {
+          "fail_if": ["rd_gn.unreadable"]
+        },
+        {
+          "compare_tolerance": "rd_gn.answers.0",
+          "to": "reference.gnomon_deg",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_table_row_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed row of the hour-line table",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole row of the hour-line table, rather than the table's heading or the bare sheet or only part of one? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_working_on_the_sheet",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a formula, sum or trigonometry note added on the sheet beside the table",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "id": "insect_spreading_wing_set",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A tray of newly set specimens is waiting on the collections bench for the curator to sign it off, and the record photograph goes on file with the accession. The picture is that record shot, taken straight down over the tray so that all six specimens, all their labels and the tray's own edges are in the frame, with the spreading board and the forceps left beside it.\n\nSix insects are pinned in the tray, moths and beetles together, each one on its own pin. They are not laid out in a row: they sit at whatever angles the setter left them at, and no two lie the same way. Under each specimen the labels are stacked on the pin, the collection label first and the determination label below it.\n\nThe standard this museum sets to is the ordinary one. A specimen is spread until the TRAILING edge of its forewings -- the rear edge, the one nearer the tail -- stands square across the body, that is, at a right angle to the long axis of the animal itself, and the two sides are brought to the same angle so the specimen is symmetric about its own body. The labels are stacked at the same height on every pin in a tray, so that the drawer sits flat and nothing catches when a specimen is lifted.\n\nHow the wings of each animal end up lying is the part you have to work out -- I am deliberately not telling you, and there is no worked example anywhere in the tray. Set them large enough in the frame that the rear edge of a forewing can be told from the front edge and the long axis of the body can be seen. Apart from the labels on the pins, no word, number or arrow belongs in the tray.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show insects pinned in a shallow tray? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no insects on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_specimens": 6,
+    "n_labels": 6,
+    "n_offheight": 0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_wings_of_each_specimen_stand_square_across_that_specimens_own_body",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one pinned insect in the tray with the space around it",
+          "sweep": true,
+          "out": "bug_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["bug_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which way does the long axis of the animal's body run, from head to tail? Answer with one of: up and down, left and right, lower left to upper right, upper left to lower right, or none if no body is drawn here.",
+          "boxes": "bug_box",
+          "pad": 0.9,
+          "out": "body_rd"
+        },
+        {
+          "fail_if": ["body_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which way does the rear edge of the front pair of wings run? Answer with one of: up and down, left and right, lower left to upper right, upper left to lower right, or none if no wings are drawn here.",
+          "boxes": "bug_box",
+          "pad": 0.9,
+          "out": "wing_rd"
+        },
+        {
+          "fail_if": ["wing_rd.unreadable"]
+        },
+        {
+          "run": "worst_wing_skew",
+          "args": ["body_rd", "wing_rd", "reference.n_specimens"],
+          "out": "perpv"
+        },
+        {
+          "compare_compass": "perpv.dev",
+          "to": 0,
+          "core": 25.0,
+          "margin": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_the_labels_are_stacked_at_one_height_on_every_pin_in_the_tray",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one pinned insect in the tray with the labels below it",
+          "sweep": true,
+          "out": "lab_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["lab_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, do the labels on this pin sit at the same height above the tray floor as the labels on the pins around it, or at a different height? Answer level or different only.",
+          "boxes": "lab_box",
+          "pad": 1.4,
+          "out": "height_rd"
+        },
+        {
+          "fail_if": ["height_rd.unreadable"]
+        },
+        {
+          "run": "count_off_height",
+          "args": ["height_rd", "reference.n_specimens"],
+          "out": "heightv"
+        },
+        {
+          "compare_band": "heightv.n",
+          "to": "reference.n_offheight",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_specimen_in_the_tray_carries_its_labels_on_its_own_pin",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one pinned insect in the tray",
+          "sweep": true,
+          "out": "cnt_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cnt_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a small written label threaded on the pin below the insect? Answer yes or no only.",
+          "boxes": "cnt_box",
+          "pad": 1.2,
+          "out": "cnt_rd"
+        },
+        {
+          "fail_if": ["cnt_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cnt_rd"],
+          "out": "cntn"
+        },
+        {
+          "compare_band": "cntn.n",
+          "to": "reference.n_labels",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_extra_word_or_arrow_was_added_to_the_tray",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word or arrow in the tray beyond the labels threaded on the pins",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

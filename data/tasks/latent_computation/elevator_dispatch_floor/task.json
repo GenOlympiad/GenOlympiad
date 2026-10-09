@@ -1,0 +1,113 @@
+{
+  "id": "elevator_dispatch_floor",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on engineering cutaway diagram of a building SERVICE LIFT (elevator) shaft. The shaft is drawn as a tall vertical rectangle with the numbered floors 1 to 6 marked across it (floor 1 at the BOTTOM, floor 6 at the TOP), and a single square LIFT CAR box drawn inside the shaft at exactly one floor. At the top of the diagram is a small dark FLOOR-INDICATOR panel showing one green digit for the floor the car is currently on.\n\nRight now the car is at floor 3 and is moving DOWNWARD. The following hall calls are pending (buttons already pressed) for these floors: 1, 5, 2, 6. The lift uses the SCAN (elevator) rule and must serve EVERY call. SCAN rule: the car keeps moving in its CURRENT direction and stops at every pending call floor it reaches, in the order it passes them; when there are no more pending calls ahead in that direction, it REVERSES and then serves all the remaining pending calls in order as it travels the other way. The car serves a call by arriving at that floor. Continue until all the listed calls have been served.\n\nWork out, by running the SCAN rule, WHICH FLOOR the car finishes on after it has served all of those calls. Then render the cutaway with the LIFT CAR box drawn inside the shaft at that finishing floor (its vertical position in the shaft must match that floor number), and set the floor-indicator panel to that same floor number. Draw only ONE car box, at the finishing floor. Do NOT print the call list, the starting floor, the direction, or any arithmetic anywhere on the diagram -- only the floor numbers on the shaft and the single indicator digit.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a vertical service-lift shaft cutaway with numbered floors and a single lift-car box drawn inside the shaft at one floor, plus a floor-indicator panel? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "final_floor": 6,
+    "n_floors": 6,
+    "q_carpos": "Look at the lift-shaft cutaway. The floors are numbered along the shaft (floor 1 at the BOTTOM, higher numbers going UP). At WHICH numbered floor is the LIFT-CAR box actually DRAWN inside the shaft? Judge purely by the box's vertical position against the floor numbers next to the shaft; do NOT read the indicator panel and do NOT do any sums. Answer with just the floor number the car box is drawn at.",
+    "q_indicator": "Read the single digit shown on the dark FLOOR-INDICATOR panel at the top of the diagram. Report only the digit actually shown there; do NOT do any sums or correct it. Answer with a whole number only.",
+    "q_nfloors": "How many numbered floors are marked on the lift shaft in this cutaway? Answer with the highest floor number shown, as a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "car_position",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_carpos",
+          "out": "cp"
+        },
+        {
+          "fail_if": ["cp.unreadable"]
+        },
+        {
+          "compare_band": "cp",
+          "to": "reference.final_floor",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "indicator_digit",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read_number": "reference.q_indicator",
+          "out": "ind"
+        },
+        {
+          "fail_if": ["ind.unreadable"]
+        },
+        {
+          "compare_band": "ind",
+          "to": "reference.final_floor",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_floor_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "numbered floor level marked on the lift shaft",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nf"
+        },
+        {
+          "fail_if": ["box_nf.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole floor level of a lift shaft carrying its own printed floor number rather than bare background or only part of one? Answer yes or no only.",
+          "boxes": "box_nf",
+          "out": "crop_nf"
+        },
+        {
+          "fail_if": ["crop_nf.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nf"],
+          "out": "cnt_nf"
+        },
+        {
+          "compare_band": "cnt_nf.n",
+          "to": "reference.n_floors",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "pattern_reads_nominal_only_on_the_contraction_rule",
+  "axis": "quantitative_precision",
+  "prompt": "The patternmaker has to get the pattern past the foundry's checker before the mould is rammed, so it is photographed on the bench with both rules laid along the edge the checker asks for.\n\nThe timber pattern lies painted on the bench. A plain steel rule and a contraction rule are laid along its long edge, one above the other, with both their zero ends butted against the same end face. The contraction rule is painted a strong colour and has its rate printed large along its body. Weighted flat behind them are the part drawing, which gives the finished size of that edge as 300 millimetres, the foundry card, which gives the alloy's contraction as one per cent, and the allowance table, which gives 3 millimetres of machining stock on that face.\n\nWhat either rule reads at the far end of that edge is what the card does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a timber foundry pattern on a bench with two rules laid along one of its edges and the part drawing weighted flat behind? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "contraction_rule_reads_303"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the plain steel rule where the far end of the pattern edge falls, and write the millimetres it is marked with there.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "305", "307"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the contraction rule where that same end of the pattern edge falls, and say which mark it comes to. Answer with one of: that end comes to the mark reading 303; that end comes to the mark reading 306; that end comes to the mark reading 297.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

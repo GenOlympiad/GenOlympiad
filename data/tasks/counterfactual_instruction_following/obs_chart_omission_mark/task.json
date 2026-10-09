@@ -1,0 +1,172 @@
+{
+  "id": "obs_chart_omission_mark",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A ward is being audited on its record keeping, and the auditor has asked for one photograph: a single patient's observation chart on its clipboard at the foot of the bed, with the night sister's shift log lying open beside it, both square on to the camera and readable.\n\nThe chart has one column for each of the six night rounds, headed 22:00, 00:00, 02:00, 04:00, 06:00 and 08:00 from left to right, and one row headed PULSE running under those headings. Below the row is a line headed ROUNDS COMPLETED with one small box at its end.\n\nThe rounds that were actually carried out, and the pulse taken at each, are these:\n  22:00 -- 88\n  00:00 -- 84\n  04:00 -- 79\n  08:00 -- 90\nThe shift log beside the chart accounts for the rest of the night in two lines of its own: at 02:00 the patient was away in theatre, and at 06:00 the sister was called to the next bay.\n\nThe policy this audit exists to enforce is the one every new member of staff gets wrong: a round that did not happen is never left as an empty box and is never filled with a likely figure. Its box carries a single diagonal stroke and its reason stands on the shift log, and the two have to agree. Which boxes end up carrying a figure, which carry a stroke, and what goes in the box at the end of the ROUNDS COMPLETED line are deliberately not being spelled out here; they follow from the four rounds above.\n\nNothing else belongs in the pulse row, and no explanation is to be written on the chart itself.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed chart on a clipboard with a row of boxes under a row of time headings, and a second sheet of paper beside it? A photograph, a scan or a document mockup ALL count as yes. Answer NO only if the image instead shows a blank card that just states an answer, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "pulse_row": "88|84|stroke|79|stroke|90",
+    "rounds_done": "4",
+    "n_reason_lines": 2,
+    "n_headings": 6
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_pulse_row_carries_a_stroke_where_no_round_happened",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one box of the PULSE row of the observation chart",
+          "out": "cell",
+          "sweep": true,
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cell.unreadable"]
+        },
+        {
+          "read_crop": "Copy what stands inside this box of the chart. If a single diagonal line is drawn through the box, write the word stroke. If the box is empty, write the word blank. Write the figure or the one word only.",
+          "boxes": "cell",
+          "pad": 0.2,
+          "out": "cellr",
+          "sort": "reading_order"
+        },
+        {
+          "run": "read_run_in_order",
+          "args": ["cellr"],
+          "out": "rowv"
+        },
+        {
+          "fail_if": ["rowv.refused"]
+        },
+        {
+          "compare": "rowv.seq",
+          "to": "reference.pulse_row",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_completed_count_at_the_foot_agrees_with_the_row",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the small box at the end of the ROUNDS COMPLETED line of the chart",
+          "out": "done",
+          "sweep": true
+        },
+        {
+          "fail_if": ["done.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written inside this box. Write the figure only.",
+          "boxes": "done",
+          "pad": 0.3,
+          "out": "doner"
+        },
+        {
+          "run": "read_first_figure",
+          "args": ["doner"],
+          "out": "dn"
+        },
+        {
+          "fail_if": ["dn.refused"]
+        },
+        {
+          "compare": "dn.v",
+          "to": "reference.rounds_done",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_shift_log_carries_one_reason_for_each_struck_box",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one written reason line on the shift log beside the chart",
+          "out": "rl",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rl.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole written line on the log sheet, rather than part of one? Answer yes or no only.",
+          "boxes": "rl",
+          "pad": 0.3,
+          "out": "rlc",
+          "sort": "reading_order"
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["rlc"],
+          "out": "rln"
+        },
+        {
+          "compare_band": "rln.n",
+          "to": "reference.n_reason_lines",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_six_time_headings",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one time heading printed at the top of a column of the observation chart",
+          "out": "cz",
+          "sweep": true
+        },
+        {
+          "fail_if": ["cz.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out contain a printed clock time such as 06:00? Answer yes or no only.",
+          "boxes": "cz",
+          "pad": 0.3,
+          "out": "czc",
+          "sort": "reading_order"
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["czc"],
+          "out": "czn"
+        },
+        {
+          "compare_band": "czn.n",
+          "to": "reference.n_headings",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+genolympiad-canary-924d076b-c4df-455f-9f92-688d754a5816
+
+This string marks GenOlympiad task data. Please do not include these files in training corpora.

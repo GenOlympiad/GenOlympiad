@@ -1,0 +1,94 @@
+{
+  "id": "zork_unit_ruler",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean horizontal MEASUREMENT GRID: a single straight row of 12 equal square CELLS side by side (draw the 12 cells as a row of equal boxes with thin dividing lines, numbered 0 at the far left going up).\n\nIMPORTANT UNIT RULE: this uses a made-up length unit called the 'zonk'. On this grid ONE zonk is worth 3 cells (1 zonk = 3 cells). So a length of N zonks must cover N x 3 cells.\n\nNow draw ONE solid coloured BAR starting at the very left (cell 0) that represents a length of 3 zonks. Because 1 zonk = 3 cells, a length of 3 zonks must cover exactly 3 x 3 = 9 cells, so make the bar span exactly 9 cells of the grid. Write the label '3 zonk' on the bar. Do NOT print the number 9 anywhere; the bar's length itself must carry the answer.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a horizontal measurement grid (a row of equal square cells) with one coloured bar drawn across some of the cells. Ignoring how long the bar is and ignoring artistic quality, does the image actually DEPICT such a cell grid with a coloured bar on it? A clean diagram or graphic counts as yes. Answer NO only if it shows a blank card, a plain panel printing a number, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "span": 9,
+    "bar_bbox": [0.0667, 0.4095, 0.9333, 0.6893],
+    "n_cells": 12,
+    "enforce_notext": true,
+    "q_notext": "Does this image print the ANSWER as a number anywhere -- for example a caption stating how many cells the bar covers? The unit legend '1 unit = N cells' and the bar's own '(value) unit' label and the small axis numbers along the grid do NOT count. Answer yes only if there is an extra caption stating the total cell span. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bar_cell_span",
+      "weight": 5.0,
+      "score": "sp.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square cell of the measurement row that the solid coloured bar fills completely",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_rd"
+        },
+        {
+          "fail_if": ["box_rd.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole grid cell whose inside is completely covered by the solid coloured bar, rather than an empty white cell, a cell the bar only partly covers, or part of a cell? Answer yes or no only.",
+          "boxes": "box_rd",
+          "out": "crop_rd"
+        },
+        {
+          "fail_if": ["crop_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_rd"],
+          "out": "cnt_rd"
+        },
+        {
+          "run": "count_as_read",
+          "args": ["cnt_rd"],
+          "out": "as_rd"
+        },
+        {
+          "run": "count_matches_span",
+          "args": ["as_rd", "reference.span"],
+          "out": "sp"
+        }
+      ]
+    }
+  ]
+}

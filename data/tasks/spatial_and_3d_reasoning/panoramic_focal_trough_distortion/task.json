@@ -1,0 +1,159 @@
+{
+  "id": "panoramic_focal_trough_distortion",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A photograph of one panoramic dental film on the viewing screen of a dental imaging department's quality review, taken face on and bright enough to read.\n\nThe film is filed for a retake decision. When it was taken the patient's chin was turned a little to one side, so the right first premolar sat on the tongue side of the machine's focal trough and the left first premolar sat on the cheek side of it, while every other tooth was inside the trough. The machine is the department's usual rotating unit, and the film carries whatever a unit of that kind always leaves in the middle of a panoramic image.\n\nUnder the film the department wants the technologist's short retake note. The note has one row for each of the two premolars. A row gives which side of the mouth the tooth is on, then that tooth's crown width on this film in millimetres, then the crown width of the matching tooth on the other side, then that tooth's crown height, then the crown height of the matching tooth, every figure measured on this film.\n\nHow each of those two crowns comes out is the whole reason the review is happening, so I am not telling you, and the film has to agree with what the note says. Nothing on the sheet may name the machine's geometry or say why the crowns come out as they do.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a wide grey medical film of a row of teeth with a few lines of text under it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "width_pattern": "left narrower, right wider",
+    "height_pattern": "both crown heights match",
+    "n_ghost": 1,
+    "q_row_cert": "Does this cut-out show one row of the note under the film, rather than its heading? Answer yes or no only.",
+    "q_width_copy": "Copy the side of the mouth printed in this row and then the first two figures printed on it, this tooth's own first. Write nothing else.",
+    "q_height_copy": "This cut-out is one row of a table, for one tooth. Copy the LAST two figures printed on that row -- the two nearest the right edge of this cut-out -- writing this tooth's own figure first. Ignore anything printed on a row above or below it. Write nothing else.",
+    "q_ghost": "Does this cut-out show a vertical stripe of extra shadow running down the film? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_premolars_go_opposite_ways_across_the_film",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the retake note under the film",
+          "sweep": true,
+          "out": "wd_ring"
+        },
+        {
+          "fail_if": ["wd_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_cert",
+          "boxes": "wd_ring",
+          "pad": 0.25,
+          "out": "wd_cert"
+        },
+        {
+          "fail_if": ["wd_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_width_copy",
+          "boxes": "wd_ring",
+          "pad": 0.25,
+          "out": "wd_txt"
+        },
+        {
+          "fail_if": ["wd_txt.unreadable"]
+        },
+        {
+          "run": "width_verdict",
+          "args": ["wd_cert", "wd_txt"],
+          "out": "wd_v"
+        },
+        {
+          "compare": "wd_v.val",
+          "to": "reference.width_pattern",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "neither_crown_changes_height",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the retake note under the film",
+          "sweep": true,
+          "out": "ht_ring"
+        },
+        {
+          "fail_if": ["ht_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_cert",
+          "boxes": "ht_ring",
+          "pad": 0.25,
+          "out": "ht_cert"
+        },
+        {
+          "fail_if": ["ht_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_height_copy",
+          "boxes": "ht_ring",
+          "pad": 0.25,
+          "out": "ht_txt"
+        },
+        {
+          "fail_if": ["ht_txt.unreadable"]
+        },
+        {
+          "run": "height_verdict",
+          "args": ["ht_cert", "ht_txt"],
+          "out": "ht_v"
+        },
+        {
+          "compare": "ht_v.val",
+          "to": "reference.height_pattern",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_rotating_unit_leaves_its_stripe_down_the_middle",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a vertical stripe of extra shadow down the middle of the film",
+          "sweep": true,
+          "out": "gh_ring"
+        },
+        {
+          "fail_if": ["gh_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_ghost",
+          "boxes": "gh_ring",
+          "pad": 0.2,
+          "out": "gh_cert"
+        },
+        {
+          "fail_if": ["gh_cert.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["gh_cert"],
+          "out": "gh_n"
+        },
+        {
+          "compare_band": "gh_n.n",
+          "to": "reference.n_ghost",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

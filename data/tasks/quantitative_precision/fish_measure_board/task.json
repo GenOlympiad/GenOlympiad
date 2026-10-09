@@ -1,0 +1,269 @@
+{
+  "id": "fish_measure_board",
+  "axis": "quantitative_precision",
+  "prompt": "A sharp, well-lit realistic PHOTOGRAPH, viewed straight from directly above, taken at a pet store, of one small silver aquarium fish lying flat and perfectly aligned ALONG a white plastic fish-measuring board whose centimetre scale (0 to 30, numbered cm marks with small millimetre ticks) runs down its edge, fully visible and sharp. The fish's SNOUT (nose tip) is placed EXACTLY at the board's 0 cm mark and the tip of its TAIL FIN reaches EXACTLY the 12.9 cm mark -- so the fish measures exactly 12.9 centimetres against the board. A genuine photograph: real scales, wet sheen, plastic texture, natural indoor lighting, soft shadow, no digital annotations, no extra text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show small aquarium fish laid along a pet-store fish-measuring board with a centimetre scale, snout at 0 cm and tail reaching the target mark, photographed top-down? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "target": 12.9,
+    "d2_q_feature": "This image was supposed to depict: a small aquarium fish laid along a pet-store fish-measuring board with a centimetre scale, snout at 0 cm and tail reaching the target mark, photographed top-down. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This picture should show: a small aquarium fish laid along a pet-store fish-measuring board with a centimetre scale, snout at 0 cm and tail reaching the target mark, photographed top-down. Is there a fish lying on a measuring board with a centimetre scale in the picture, rather than a different object or a plain blank stand-in? Answer with the single word yes or no only.",
+    "d2_q_single": "This picture should show: a small aquarium fish laid along a pet-store fish-measuring board with a centimetre scale, snout at 0 cm and tail reaching the target mark, photographed top-down, and nothing else. Apart from a fish lying on a measuring board with a centimetre scale and the things that belong with it, is the picture free of extra eye-catching objects, clutter or duplicate copies? Answer yes if there is nothing extra, no if there is clutter or extra objects. Answer with the single word yes or no only.",
+    "d2_q_precise": "Look at the lines and the scale marks in this picture. Are the straight lines straight, and are the scale marks sharp and clearly separated from each other, rather than wobbly, smudged or run together? Answer yes if the lines and marks are clean and sharp, no if they look wobbly or hand-drawn. Answer with the single word yes or no only.",
+    "d2_q_units": "This image should depict: a small aquarium fish laid along a pet-store fish-measuring board with a centimetre scale, snout at 0 cm and tail reaching the target mark, photographed top-down. Does the picture show a row of measuring marks you could read a number off -- tick marks or printed numbers along a ruler, a dial or a gauge -- rather than the scale being missing or blank? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_length_cm",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the far end of the object lying along the measuring scale: the last few centimetres of the object at the end away from the 0 cm mark, together with its extreme tip",
+          "expected_n": 1,
+          "out": "far"
+        },
+        {
+          "fail_if": ["far.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the printed centimetre scale of the measuring board: the row of printed numbers with their tick marks",
+          "expected_n": 1,
+          "out": "scl"
+        },
+        {
+          "fail_if": ["scl.unreadable"]
+        },
+        {
+          "run": "fish_tail_window",
+          "args": ["far", "scl"],
+          "out": "win"
+        },
+        {
+          "fail_if": ["win.degenerate"]
+        },
+        {
+          "read_crop": "This is a close-up of the far end of an object lying on a measuring board, with the board's printed centimetre scale visible below it. At what centimetre value on that printed scale is the EXTREME OUTER TIP of the object -- for a fish, the pointed far end of the longest tail-fin lobe, NOT the notch where the two lobes meet? Answer with a plain number in centimetres, one decimal place.",
+          "boxes": "win",
+          "pad": 0.02,
+          "out": "a_tip"
+        },
+        {
+          "read_crop": "Look at the printed centimetre scale in this close-up. Following the object from left to right, at what centimetre value does the object FINISH -- the reading directly at its farthest-right extremity, including any thin fin or point that reaches out farthest? Answer with a plain number in centimetres, one decimal place.",
+          "boxes": "win",
+          "pad": 0.02,
+          "out": "a_end"
+        },
+        {
+          "fail_if": ["a_tip.unreadable", "a_end.unreadable"]
+        },
+        {
+          "run": "pick_length",
+          "args": ["a_tip", "a_end"],
+          "out": "meas"
+        },
+        {
+          "fail_if": ["meas.degenerate"]
+        },
+        {
+          "compare_band": "meas.cm",
+          "to": "reference.target",
+          "core": 0.4,
+          "margin": 1.2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "snout_at_zero",
+      "weight": 0.4,
+      "steps": [
+        {
+          "ask": "This picture looks straight down on a fish lying along a measuring board with a printed centimetre scale down its edge. Look at the fish's snout -- the tip of its nose. Read the printed centimetre number on the scale that the snout tip sits at, and write that number only. If the snout tip lies beyond either end of the printed scale, write the single word OFF. Add nothing else.",
+          "out": "a"
+        },
+        {
+          "run": "compare_printed_figure",
+          "args": ["a", "0", "'yes'", "'no'", "[[['off'],'off']]", "'no'"],
+          "out": "a__mapped"
+        },
+        {
+          "compare": "a__mapped.text",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_single_subject",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_single",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_units_ref",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_units",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "const": 0.0,
+      "out": "target_const"
+    }
+  ]
+}

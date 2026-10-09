@@ -1,0 +1,195 @@
+{
+  "id": "gear_train_rpm",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photograph of a metal MACHINE-TOOL NAMEPLATE bolted to the side of a lathe headstock in a workshop, with an engraved gear-train diagram and a small illuminated green LCD readout labelled 'OUTPUT SPINDLE'. The nameplate describes a THREE-STAGE reduction gear train. The INPUT motor shaft turns at 1750 rpm. The three meshing gear pairs, in order from input to output, have these tooth counts (driver gear -> driven gear):\n    Stage 1:  12-tooth driver  ->  45-tooth driven\n    Stage 2:  15-tooth driver  ->  40-tooth driven\n    Stage 3:  18-tooth driver  ->  54-tooth driven\nEach stage multiplies the shaft speed by (driver teeth / driven teeth). Work out the final OUTPUT SPINDLE speed in rpm by carrying the speed through all three stages in order, and show that single computed rpm value on the green LCD readout to one decimal place. Engrave the input speed and the tooth counts on the plate, but the OUTPUT rpm must be your COMPUTED result on the LCD. Sharp brushed-metal plate, the LCD digits crisp and legible; no other numbers on the LCD besides the one output rpm value.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show workshop lathe headstock machine-tool nameplate with an engraved 3-stage gear train and a green OUTPUT-SPINDLE rpm LCD? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "inp": 1750.0,
+    "stages": [
+      [12, 45],
+      [15, 40],
+      [18, 54]
+    ],
+    "out_rpm": 58.3,
+    "ratio": 0.03333333333333333,
+    "q_out": "Look at the illuminated OUTPUT SPINDLE display (the lit rpm readout). Read ONLY the digits that are actually printed/lit on that display. Transcribe exactly what is shown there -- do NOT do any sums or correct anything from the tooth counts. Answer with just that number, digits only.",
+    "q_form": "Does this image show a machine-tool nameplate or panel with a lit numeric display showing an rpm value? Answer yes or no only.",
+    "s1_driver": 12,
+    "s1_driven": 45,
+    "s3_driven": 54
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "output_rpm",
+      "weight": 3.0,
+      "steps": [
+        {
+          "crop_full": true,
+          "out": "img"
+        },
+        {
+          "read_number": "reference.q_out",
+          "image": "img",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare_band": "s",
+          "to": "reference.out_rpm",
+          "out": "frac",
+          "core": 0.6,
+          "margin": 3.0
+        }
+      ]
+    },
+    {
+      "name": "is_nameplate",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "compare": "g",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_input_rpm",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the INPUT motor shaft speed in rpm that is engraved on the nameplate. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.inp",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_stage1_driver",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the DRIVER tooth count of Stage 1 (the first gear pair) engraved on the nameplate. Report only that number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.s1_driver",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_stage1_driven",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the DRIVEN tooth count of Stage 1 (the first gear pair) engraved on the nameplate. Report only that number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.s1_driven",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_stage3_driven",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the DRIVEN tooth count of Stage 3 (the third/last gear pair) engraved on the nameplate. Report only that number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.s3_driven",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_lcd_labelled",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is there a green LCD readout labelled 'OUTPUT SPINDLE' showing a single rpm value? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

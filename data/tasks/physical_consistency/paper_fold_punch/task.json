@@ -1,0 +1,338 @@
+{
+  "id": "paper_fold_punch",
+  "axis": "physical_consistency",
+  "prompt": "A clean, sharp overhead PHOTOGRAPH of a single square sheet of white origami paper lying flat on a wooden craft-class desk, showing the paper AFTER it has been folded, punched, and then FULLY UNFOLDED again. Here is what was done to it: take the square sheet and first fold the LEFT half onto the RIGHT half, then fold the TOP half down onto the BOTTOM half (the sheet is now folded into quarters). Then, through the folded stack, punch 3 holes at 3 different spots with a hole punch, going through every layer. Finally UNFOLD the sheet completely back to a flat square and lay it down. Draw the unfolded sheet showing EVERY hole that now exists, each as a clean dark round punched hole at its correct position. The number and placement of the holes must be exactly what a real unfolded punched sheet would show. Faint fold-crease lines may be visible. Photorealistic, evenly lit, straight top-down view, no hands, no text, no labels, nothing else on the desk.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show overhead craft-desk photo of a square origami sheet folded into quarters, punched 3 times through the stack, then fully unfolded to show all the resulting holes? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_holes": 12,
+    "holes": [
+      [0.66, 0.66],
+      [0.86, 0.8],
+      [0.74, 0.92],
+      [0.66, 0.34],
+      [0.86, 0.2],
+      [0.74, 0.08],
+      [0.34, 0.66],
+      [0.14, 0.8],
+      [0.26, 0.92],
+      [0.34, 0.34],
+      [0.14, 0.2],
+      [0.26, 0.08]
+    ],
+    "sym_axes": [
+      ["x", 0.5],
+      ["y", 0.5]
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "n_holes",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the square sheet of white paper lying on the desk (the paper only, not the desk) -- ONE box round the whole sheet, its edges touching the sheet's outermost corners so all four paper edges are inside it; small triangles of desk in the box's corners, where the sheet sits at a slight angle, do not disqualify it. Do not box a punched hole, a crease, or the desk on its own.",
+          "expected_n": 1,
+          "out": "sh"
+        },
+        {
+          "fail_if": ["sh.unreadable"]
+        },
+        {
+          "run": "plan_hole_boxes",
+          "args": ["image", "sh", "reference.holes"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "circles": "pl.circles",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 255, 0],
+          "out": "ov"
+        },
+        {
+          "fail_if": ["ov.no_anchors"]
+        },
+        {
+          "read_crop": "A thin bright green ring has been drawn on this piece of paper. Is there a dark round punched hole inside the green ring? Answer yes only if a dark round hole is inside the ring. Answer no if the inside of the ring is plain paper, a fold crease, a shadow or a printed dot. Answer yes or no only.",
+          "image": "ov.path",
+          "boxes": "pl.boxes",
+          "out": "hc"
+        },
+        {
+          "fail_if": ["hc.unreadable"]
+        },
+        {
+          "ask": "Bright green rings have been drawn on the sheet of paper in this picture. Is there any dark round punched hole in the paper that is NOT inside one of the green rings? Answer yes if at least one punched hole sits outside every green ring. Answer no if every punched hole in the paper is inside a green ring. Answer yes or no only.",
+          "image": "ov.path",
+          "out": "ex"
+        },
+        {
+          "fail_if": ["ex.unreadable"]
+        },
+        {
+          "run": "count_holes",
+          "args": ["hc", "ex"],
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n_holes",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "symmetry",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the square sheet of white paper lying on the desk (the paper only, not the desk) -- ONE box round the whole sheet, its edges touching the sheet's outermost corners so all four paper edges are inside it; small triangles of desk in the box's corners, where the sheet sits at a slight angle, do not disqualify it. Do not box a punched hole, a crease, or the desk on its own.",
+          "expected_n": 1,
+          "out": "sh"
+        },
+        {
+          "fail_if": ["sh.unreadable"]
+        },
+        {
+          "run": "plan_hole_boxes",
+          "args": ["image", "sh", "reference.holes"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "circles": "pl.circles",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 255, 0],
+          "out": "ov"
+        },
+        {
+          "fail_if": ["ov.no_anchors"]
+        },
+        {
+          "read_crop": "A thin bright green ring has been drawn on this piece of paper. Is there a dark round punched hole inside the green ring? Answer yes only if a dark round hole is inside the ring. Answer no if the inside of the ring is plain paper, a fold crease, a shadow or a printed dot. Answer yes or no only.",
+          "image": "ov.path",
+          "boxes": "pl.boxes",
+          "out": "hc"
+        },
+        {
+          "fail_if": ["hc.unreadable"]
+        },
+        {
+          "run": "confirmed_hole_points",
+          "args": ["hc", "reference.holes"],
+          "out": "pp"
+        },
+        {
+          "fail_if": ["pp.no_read"]
+        },
+        {
+          "mirror_closure": "pp.points",
+          "coverage_n": "reference.n_holes",
+          "axes": "reference.sym_axes",
+          "tol": 0.06,
+          "out": "mc"
+        },
+        {
+          "fail_if": ["mc.unreadable"]
+        },
+        {
+          "const": "mc.frac",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_sym_x",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the square sheet of white paper lying on the desk (the paper only, not the desk) -- ONE box round the whole sheet, its edges touching the sheet's outermost corners so all four paper edges are inside it; small triangles of desk in the box's corners, where the sheet sits at a slight angle, do not disqualify it. Do not box a punched hole, a crease, or the desk on its own.",
+          "expected_n": 1,
+          "out": "sh"
+        },
+        {
+          "fail_if": ["sh.unreadable"]
+        },
+        {
+          "run": "plan_hole_boxes",
+          "args": ["image", "sh", "reference.holes"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "circles": "pl.circles",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 255, 0],
+          "out": "ov"
+        },
+        {
+          "fail_if": ["ov.no_anchors"]
+        },
+        {
+          "read_crop": "A thin bright green ring has been drawn on this piece of paper. Is there a dark round punched hole inside the green ring? Answer yes only if a dark round hole is inside the ring. Answer no if the inside of the ring is plain paper, a fold crease, a shadow or a printed dot. Answer yes or no only.",
+          "image": "ov.path",
+          "boxes": "pl.boxes",
+          "out": "hc"
+        },
+        {
+          "fail_if": ["hc.unreadable"]
+        },
+        {
+          "run": "confirmed_hole_points",
+          "args": ["hc", "reference.holes"],
+          "out": "pp"
+        },
+        {
+          "fail_if": ["pp.no_read"]
+        },
+        {
+          "mirror_closure": "pp.points",
+          "coverage_n": "reference.n_holes",
+          "axes": [
+            ["x", 0.5]
+          ],
+          "tol": 0.06,
+          "out": "mc"
+        },
+        {
+          "fail_if": ["mc.unreadable"]
+        },
+        {
+          "const": "mc.frac",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_sym_y",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the square sheet of white paper lying on the desk (the paper only, not the desk) -- ONE box round the whole sheet, its edges touching the sheet's outermost corners so all four paper edges are inside it; small triangles of desk in the box's corners, where the sheet sits at a slight angle, do not disqualify it. Do not box a punched hole, a crease, or the desk on its own.",
+          "expected_n": 1,
+          "out": "sh"
+        },
+        {
+          "fail_if": ["sh.unreadable"]
+        },
+        {
+          "run": "plan_hole_boxes",
+          "args": ["image", "sh", "reference.holes"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "circles": "pl.circles",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 255, 0],
+          "out": "ov"
+        },
+        {
+          "fail_if": ["ov.no_anchors"]
+        },
+        {
+          "read_crop": "A thin bright green ring has been drawn on this piece of paper. Is there a dark round punched hole inside the green ring? Answer yes only if a dark round hole is inside the ring. Answer no if the inside of the ring is plain paper, a fold crease, a shadow or a printed dot. Answer yes or no only.",
+          "image": "ov.path",
+          "boxes": "pl.boxes",
+          "out": "hc"
+        },
+        {
+          "fail_if": ["hc.unreadable"]
+        },
+        {
+          "run": "confirmed_hole_points",
+          "args": ["hc", "reference.holes"],
+          "out": "pp"
+        },
+        {
+          "fail_if": ["pp.no_read"]
+        },
+        {
+          "mirror_closure": "pp.points",
+          "coverage_n": "reference.n_holes",
+          "axes": [
+            ["y", 0.5]
+          ],
+          "tol": 0.06,
+          "out": "mc"
+        },
+        {
+          "fail_if": ["mc.unreadable"]
+        },
+        {
+          "const": "mc.frac",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a punched hole",
+  "count_negspace": true,
+  "count_total": "reference.n_holes"
+}

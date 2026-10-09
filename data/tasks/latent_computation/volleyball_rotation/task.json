@@ -1,0 +1,163 @@
+{
+  "id": "volleyball_rotation",
+  "axis": "latent_computation",
+  "prompt": "A clear straight-on top-down tactical whiteboard of a volleyball court's six-player rotation, drawn as a 2-row by 3-column grid of position zones with a jersey number written in each zone. The FRONT row (nearest the net), left to right, is zones 4, 3, 2; the BACK row, left to right, is zones 5, 6, 1. The starting line-up is: zone 1 = number 7, zone 2 = number 3, zone 3 = number 11, zone 4 = number 6, zone 5 = number 9, zone 6 = number 4. The team wins the serve back three times; on each side-out every player rotates one zone clockwise (the player in zone 2 moves to zone 1, zone 3 to zone 2, and so on, zone 1 wrapping to zone 6). Draw the court AFTER three rotations, writing each player's jersey number in the zone they now occupy. No arrows, no names, no extra text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show top-down volleyball tactical whiteboard, a 2x3 grid of court zones with a jersey number in each zone? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      [7, 4, 9],
+      [3, 11, 6]
+    ],
+    "n_zones": 6,
+    "zone1_num": 6,
+    "n_grid_rows": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rotation_grid",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_grid": "the 2-row by 3-column grid of jersey numbers actually written on the court (transcribe exactly what is drawn; do not rotate or simulate anything)",
+          "rows": 2,
+          "cols": 3,
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.illegible", "rd.no_matrix", "rd.wrong_shape"]
+        },
+        {
+          "compare_grid": "rd.values",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "zone_count",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one position zone of the court grid with a jersey number written inside it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole grid cell of a court diagram with a jersey number written inside it, rather than bare board or only part of a cell? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_zones",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "zone1_number",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the jersey number written in zone 1 (back row, rightmost zone) after the rotations. Report just the number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.zone1_num",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_arrows",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, a player name, or any other writing on the whiteboard that is not a jersey number",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "grid_rows",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "This volleyball tactical grid is drawn as rows and columns of zones. How many ROWS of zones are there? Answer with a whole number only. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.n_grid_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

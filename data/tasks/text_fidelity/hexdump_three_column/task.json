@@ -1,0 +1,131 @@
+{
+  "id": "hexdump_three_column",
+  "axis": "text_fidelity",
+  "prompt": "One page of a reverse-engineering workbook, photographed flat, showing a single screenshot of a hex viewer window open on a small file. Dark window, pale monospaced type, nothing else on the page.\n\nThe viewer shows sixty-four bytes as four rows of sixteen. Each row has three columns: an offset at the far left, then the row's sixteen bytes as pairs of hexadecimal digits, then a text column at the far right showing that row's sixteen bytes as characters.\n\nThese are the sixty-four bytes, in order, as the viewer receives them:\n47 45 4e 4f 4c 59 09 57 39 00 72 65 76 32 3b 73\n61 6d 70 6c 65 2e 70 61 79 6c 6f 61 64 3b 66 6f\n72 2e 6f 6e 65 2e 68 65 78 64 75 6d 70 2e 70 61\n6e 65 6c 3b 73 69 78 74 79 34 2e 62 79 74 65 73\n\nHow this viewer is built, which its author knows without looking it up: the file begins at position zero, the offset shown at the left of a row is the file position of that row's first byte written as eight hexadecimal digits, and the text column shows a byte as its own character when the byte lies in the ordinary printable range and as a full stop when it does not.\n\nWork the left and right columns out for yourself -- I am deliberately not telling you what any offset is and I am not telling you what the text column says. Print the middle column exactly as the bytes are given above. Nothing on the page may hand the answer over: no legend, no character table, no note about the rule, no caption. All four offsets, all four rows of byte pairs and all four text columns have to be legible in the one frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a screen of monospaced text laid out in columns, with pairs of characters running across each row? A photograph, a screenshot mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no rows of text at all. Answer yes or no only.",
+  "reference": {
+    "offset_seq": "00000000,00000010,00000020,00000030",
+    "text_map": "00000000=GENOLY.W9.rev2;s|00000010=ample.payload;fo|00000020=r.one.hexdump.pa|00000030=nel;sixty4.bytes",
+    "clean_no_legend": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_offsets_step_by_sixteen_from_zero",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one row of the viewer, from its leftmost column across to its rightmost column",
+          "sweep": true,
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "read_crop": "Copy the block of characters at the far left of this cut-out, before the pairs begin. Write those characters only.",
+          "boxes": "rw",
+          "pad": 0.06,
+          "out": "rwo"
+        },
+        {
+          "run": "offset_column",
+          "args": ["rwo"],
+          "out": "of"
+        },
+        {
+          "fail_if": ["of.refused"]
+        },
+        {
+          "compare": "of.seq",
+          "to": "reference.offset_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_rows_text_column_is_its_own_bytes",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one row of the viewer, from its leftmost column across to its rightmost column",
+          "sweep": true,
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "read_crop": "Copy the block of characters at the far left of this cut-out, before the pairs begin. Write those characters only.",
+          "boxes": "rw",
+          "pad": 0.06,
+          "out": "rwo"
+        },
+        {
+          "read_crop": "Copy the block of characters at the far right of this cut-out, after the pairs end. Write those characters only.",
+          "boxes": "rw",
+          "pad": 0.06,
+          "out": "rwt"
+        },
+        {
+          "run": "text_column_by_offset",
+          "args": ["rwo", "rwt", "reference.text_map"],
+          "out": "tx"
+        },
+        {
+          "fail_if": ["tx.refused"]
+        },
+        {
+          "compare": "tx.tag",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_character_table_or_legend_on_the_page",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a legend, a character table, a caption or a note about how the columns were worked out",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "lg"
+        },
+        {
+          "fail_if": ["lg.unreadable"]
+        },
+        {
+          "compare": "lg.clean",
+          "to": "reference.clean_no_legend",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

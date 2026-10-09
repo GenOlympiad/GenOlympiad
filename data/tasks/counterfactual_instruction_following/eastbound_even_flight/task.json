@@ -1,0 +1,181 @@
+{
+  "id": "eastbound_even_flight",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of the route chart and the sector schedule pinned side by side on the crew room board at a regional airline, shot square on. Both sheets must be readable in the one picture.\n\nThe chart is drawn north up over the sea, its meridians ruled and figured 12W, 4W, 6E and 16E from the left edge across to the right. Four ports stand on it, one to a meridian: PORTMULL on 12W, KILRANE on 4W, VELDHUIS on 6E and AMBERSTEIN on 16E. The airline flies four sectors today, and each is on the chart as one straight leg with an arrowhead at the end it finishes at and its sector letter beside it: sector A PORTMULL to VELDHUIS, sector B VELDHUIS to KILRANE, sector C KILRANE to AMBERSTEIN, sector D AMBERSTEIN to PORTMULL.\n\nThe schedule beside the chart lists those same four sectors, one to a row, each row giving the sector letter, its two ports and the flight number the sector will carry. The airline numbers its flights the way the trade does: a sector flown eastbound takes an even flight number and a sector flown westbound takes an odd one, four figures in the 2000 series.\n\nThe schedule goes to the reservations desk, so the numbers have to be ones the chart supports. Choose the four numbers yourself -- I am deliberately not telling you which sectors are flown east and which west, and I am not telling you any of the numbers. A sector whose number contradicts its own leg strands the passengers who booked it.\n\nEvery port name, meridian figure, sector letter and flight number must be large and sharp. Nothing may appear on the two sheets beyond the meridians, the ports, the four lettered legs with their arrowheads and the schedule rows: no compass rose, no working, no notes.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a chart with ruled meridians and lettered legs on it, pinned beside a table whose rows carry flight numbers? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "parity": "a:even b:odd c:even d:odd",
+    "sides": "a:right b:left c:right d:left",
+    "n_rows": 4,
+    "q_row_cert": "Does this cut-out show ONE whole row of the sector schedule, rather than the table heading or only part of a row? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_sectors_number_is_odd_or_even_as_its_ports_require",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the sector schedule",
+          "sweep": true,
+          "out": "row_box"
+        },
+        {
+          "fail_if": ["row_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the sector letter printed on this row. Write the single letter only.",
+          "boxes": "row_box",
+          "pad": 0.15,
+          "out": "let_txt"
+        },
+        {
+          "fail_if": ["let_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the flight number printed on this row. Write the number only.",
+          "boxes": "row_box",
+          "pad": 0.15,
+          "out": "flt_txt"
+        },
+        {
+          "fail_if": ["flt_txt.unreadable"]
+        },
+        {
+          "run": "read_flight_parity",
+          "args": ["let_txt", "flt_txt"],
+          "out": "sched"
+        },
+        {
+          "compare": "sched.canon",
+          "to": "reference.parity",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_leg_on_the_chart_finishes_on_the_side_its_ports_require",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lettered route leg drawn on the chart",
+          "sweep": true,
+          "out": "leg_box"
+        },
+        {
+          "fail_if": ["leg_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the sector letter printed beside this leg. Write the single letter only.",
+          "boxes": "leg_box",
+          "pad": 0.2,
+          "out": "lleg_txt"
+        },
+        {
+          "fail_if": ["lleg_txt.unreadable"]
+        },
+        {
+          "read_crop": "Does the arrowhead on this leg lie to the right of the leg's other end, or to the left of it? Answer with one word: right or left.",
+          "boxes": "leg_box",
+          "pad": 0.2,
+          "out": "side_txt"
+        },
+        {
+          "fail_if": ["side_txt.unreadable"]
+        },
+        {
+          "run": "read_leg_sides",
+          "args": ["lleg_txt", "side_txt"],
+          "out": "chart"
+        },
+        {
+          "compare": "chart.canon",
+          "to": "reference.sides",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "four_sector_rows_stand_on_the_schedule",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the sector schedule",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_added_to_the_two_sheets",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, a note or a compass rose added beyond the meridians, the ports, the legs and the rows",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

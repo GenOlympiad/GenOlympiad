@@ -1,0 +1,299 @@
+{
+  "id": "knapsack_optimal_subset",
+  "axis": "latent_computation",
+  "prompt": "A bright indoor photograph of a museum gift counter, shot square on and filling the frame. A shelving unit runs along the back with a shallow wire basket sitting on the counter in front of it. Six souvenirs are for sale; a swing ticket is tied to each one, printed with a single capital letter, a price in COINS and a rating in PTS, laid out thus: B / 17 COINS / 15 PTS; C / 6 COINS / 11 PTS; D / 5 COINS / 10 PTS; E / 3 COINS / 14 PTS; F / 8 COINS / 13 PTS; G / 9 COINS / 12 PTS. A folded stand-up card beside the till announces BUDGET 25 COINS. Into the wire basket goes whichever selection of souvenirs reaches the highest total PTS rating without their COINS prices adding up past that BUDGET; the rest remain on the shelving unit. Each souvenir is shown exactly once -- in the basket or on the shelf, not both. Space them out so no ticket is covered by anything, and keep all six tickets legible and facing forward. The selection is deliberately left unstated: work it out from the printed tickets.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a shop shelving unit and, separately, a basket, with several small goods standing in one or the other, each good carrying its own printed ticket. Ignoring artistic quality, and ignoring whether anything is in the right place, does the image actually show that? Answer NO only if it shows something else entirely -- an empty counter, a page of writing, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "letters": ["B", "C", "D", "E", "F", "G"],
+    "n_items": 6,
+    "q_tags": "Every souvenir in this picture carries a printed swing ticket showing one capital letter, a number of COINS and a number of PTS. Transcribe all 6 of them. Answer as 6 items separated by semicolons, each written exactly as LETTER=<coins> COINS <pts> PTS, in alphabetical order of the letter. Answer with those items only and no other text.",
+    "q_tags2": "Read the printed swing tickets in this picture. Each one gives a single capital letter, then a COINS figure, then a PTS figure. Working through the letters in alphabetical order, report each one as LETTER=<coins> COINS <pts> PTS. Answer with exactly 6 such items separated by semicolons and nothing else.",
+    "q_cap": "One card or notice in this picture is headed BUDGET and prints a single figure in COINS beside those words. Answer with that number only.",
+    "q_inside": "Every souvenir in this picture carries one big capital letter. List the letters of the souvenirs that are in the wire basket. Answer with the letters only, comma-separated, in alphabetical order. If there are none, answer NONE. No other text.",
+    "q_inside2": "Report the capital letter printed on every souvenir that is in the wire basket, as a comma-separated list in alphabetical order. Answer with the letters only; if there are none, answer NONE.",
+    "q_outside": "Every souvenir in this picture carries one big capital letter. List the letters of the souvenirs that are still on the shelving unit. Answer with the letters only, comma-separated, in alphabetical order. If there are none, answer NONE. No other text.",
+    "q_outside2": "Report the capital letter printed on every souvenir that is still on the shelving unit, as a comma-separated list in alphabetical order. Answer with the letters only; if there are none, answer NONE.",
+    "q_verbatim": "Transcribe EVERY line of printed, painted, stencilled or written text you can see anywhere in this picture -- including text on tags, labels, tickets, cards, signs and boards. Copy each line exactly as it appears, character by character. Do NOT correct spelling or arithmetic and do not leave any line out. Separate the lines with spaces. Answer with the transcribed lines only.",
+    "exp_tags": ["B 17 15", "C 6 11", "D 5 10", "E 3 14", "F 8 13", "G 9 12"],
+    "exp_lines": [
+      "B 17 COINS 15 PTS",
+      "C 6 COINS 11 PTS",
+      "D 5 COINS 10 PTS",
+      "E 3 COINS 14 PTS",
+      "F 8 COINS 13 PTS",
+      "G 9 COINS 12 PTS",
+      "BUDGET 25 COINS"
+    ],
+    "cap": 25,
+    "unit": "COINS",
+    "opt_set": ["D", "E", "F", "G"],
+    "opt_value": 49,
+    "shortcuts": {
+      "greedy_by_value": {
+        "set": ["B", "D", "E"],
+        "value": 39,
+        "load": 25
+      },
+      "greedy_by_ratio": {
+        "set": ["C", "D", "E", "F"],
+        "value": 48,
+        "load": 22
+      },
+      "greedy_by_light_first": {
+        "set": ["C", "D", "E", "F"],
+        "value": 48,
+        "load": 22
+      },
+      "greedy_by_heavy_first": {
+        "set": ["B", "F"],
+        "value": 28,
+        "load": 25
+      }
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 14.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read_sequence": "reference.q_tags",
+          "n": "reference.n_items",
+          "delimiter": ";",
+          "out": "tags"
+        },
+        {
+          "read_number": "reference.q_cap",
+          "out": "cap"
+        },
+        {
+          "ask": "reference.q_inside",
+          "out": "ins"
+        },
+        {
+          "ask": "reference.q_outside",
+          "out": "outs"
+        },
+        {
+          "fail_if": ["tags.unreadable", "ins.unreadable", "outs.unreadable"]
+        },
+        {
+          "run": "check_basket_choice",
+          "args": ["tags", "cap", "ins", "outs", "reference.letters"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "side_agreement",
+      "weight": 1.5,
+      "score": "res.share",
+      "steps": [
+        {
+          "read_sequence": "reference.q_tags",
+          "n": "reference.n_items",
+          "delimiter": ";",
+          "out": "tags"
+        },
+        {
+          "read_number": "reference.q_cap",
+          "out": "cap"
+        },
+        {
+          "ask": "reference.q_inside",
+          "out": "ins"
+        },
+        {
+          "ask": "reference.q_outside",
+          "out": "outs"
+        },
+        {
+          "fail_if": ["tags.unreadable", "ins.unreadable", "outs.unreadable"]
+        },
+        {
+          "run": "check_basket_choice",
+          "args": ["tags", "cap", "ins", "outs", "reference.letters"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "capacity_holds",
+      "weight": 1.5,
+      "score": "res.capacity",
+      "steps": [
+        {
+          "read_sequence": "reference.q_tags",
+          "n": "reference.n_items",
+          "delimiter": ";",
+          "out": "tags"
+        },
+        {
+          "read_number": "reference.q_cap",
+          "out": "cap"
+        },
+        {
+          "ask": "reference.q_inside",
+          "out": "ins"
+        },
+        {
+          "ask": "reference.q_outside",
+          "out": "outs"
+        },
+        {
+          "fail_if": ["tags.unreadable", "ins.unreadable", "outs.unreadable"]
+        },
+        {
+          "run": "check_basket_choice",
+          "args": ["tags", "cap", "ins", "outs", "reference.letters"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "conservation",
+      "weight": 1.5,
+      "score": "res.conservation",
+      "steps": [
+        {
+          "read_sequence": "reference.q_tags",
+          "n": "reference.n_items",
+          "delimiter": ";",
+          "out": "tags"
+        },
+        {
+          "read_number": "reference.q_cap",
+          "out": "cap"
+        },
+        {
+          "ask": "reference.q_inside",
+          "out": "ins"
+        },
+        {
+          "ask": "reference.q_outside",
+          "out": "outs"
+        },
+        {
+          "fail_if": ["tags.unreadable", "ins.unreadable", "outs.unreadable"]
+        },
+        {
+          "run": "check_basket_choice",
+          "args": ["tags", "cap", "ins", "outs", "reference.letters"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "data_present",
+      "weight": 1.0,
+      "pass_at": 0.8,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read_crop": "Copy out every line of writing you can see in this picture, one line after another, exactly as it is printed. If a line is cut off by the edge of this picture, copy the characters you can actually see and do not guess the rest. Do not correct anything, do not tidy anything up and do not leave a line out. Put a single space between one line and the next, and write nothing else. If there is no writing at all in this picture, answer 'none'.",
+          "boxes": [
+            [0, 0, 550, 550],
+            [0, 450, 550, 1000],
+            [450, 0, 1000, 550],
+            [450, 450, 1000, 1000]
+          ],
+          "pad": 0.01,
+          "out": "rr"
+        },
+        {
+          "run": "cover",
+          "args": ["rr", "reference.exp_lines"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_selection_trace",
+      "weight": 0.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one tagged item standing in the picture, together with its own printed tag",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "items_box"
+        },
+        {
+          "fail_if": ["items_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one item and its own printed tag. Copy the tag exactly as it is printed: its capital letter, then its weight figure, then its points figure. Write nothing else.",
+          "boxes": "items_box",
+          "out": "tags"
+        },
+        {
+          "fail_if": ["tags.unreadable"]
+        },
+        {
+          "read_crop": "Is the tagged item in this cut-out standing inside the open container, or standing outside it on the flat surface beside it? Answer with one word: inside or outside.",
+          "boxes": "items_box",
+          "pad": 0.6,
+          "out": "zones"
+        },
+        {
+          "fail_if": ["zones.unreadable"]
+        },
+        {
+          "run": "split_zones",
+          "args": ["tags", "zones"],
+          "out": "sides"
+        },
+        {
+          "read_number": "reference.q_cap",
+          "out": "cap"
+        },
+        {
+          "run": "check_basket_choice",
+          "args": ["tags.answers", "cap", "sides.inside", "sides.outside", "reference.letters"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

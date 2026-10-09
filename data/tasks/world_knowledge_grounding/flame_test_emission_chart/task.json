@@ -1,0 +1,183 @@
+{
+  "id": "flame_test_emission_chart",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A wall chart of the kind a school science department pins up beside the fume cupboard, the one that shows what the flame test looks like for each of a set of salts.\n\nThe chart is a row of five photographs of the same burner taken at the same exposure, one for each sample, each a close view of the flame alone against a dark background. Beneath each photograph the chart carries, in this order, the cell number, then the caption naming what was in the flame, then a small box headed STRONGEST VISIBLE LINE with an empty rule and the letters nm after it. The five captions, from the left, are: 1 SODIUM; 2 POTASSIUM SEEN THROUGH COBALT BLUE GLASS; 3 LITHIUM; 4 COPPER; 5 POTASSIUM SEEN WITH NO FILTER. Cell 5 is the comparison cell, so its box is ruled through and stays empty.\n\nPupils match what they see at the bench against this chart, so each flame has to come out the colour that sample really gives at the bench, and each of the four boxes has to carry the wavelength of that sample's strongest line in the visible band. Which colours and which wavelengths those are is the whole reason the chart exists -- I am deliberately not telling you any of them, and I am deliberately not telling you what the cobalt glass does. No colour name goes anywhere on the chart, and no note, arrow or extra caption is added: the only words on it are the five captions and the box headings as given. The cell numbers and the boxes are large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a row of photographs of a burner flame, each with a number and a caption under it? A wall chart, a teaching poster or a printed sheet all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cell_colours": "1:yellow,2:lilac,3:red,4:green,5:yellow",
+    "cell_lines": "1:580-600,2:395-415,3:660-680,4:505-525",
+    "n_cells": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_flame_comes_out_the_colour_its_sample_really_gives",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one column of the chart, a flame photograph with the caption beneath it",
+          "out": "cn_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["cn_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the large number printed under the flame photograph in this cut-out. Write digits only.",
+          "boxes": "cn_r",
+          "pad": 0.03,
+          "out": "cn_q"
+        },
+        {
+          "read_crop": "What colour is the flame in the photograph in this cut-out? Answer with one word: yellow, lilac, red, green, orange, or blue.",
+          "boxes": "cn_r",
+          "pad": 0.03,
+          "out": "cc_q"
+        },
+        {
+          "run": "check_reads_present",
+          "args": ["cn_q", "cc_q"],
+          "out": "cn_h"
+        },
+        {
+          "fail_if": ["cn_h.refused"]
+        },
+        {
+          "run": "match_flame_colours",
+          "args": ["cn_q", "cc_q", "reference.cell_colours"],
+          "out": "cc_s"
+        },
+        {
+          "compare": "cc_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_box_carries_the_strongest_visible_line_of_its_sample",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one column of the chart, a flame photograph with the caption beneath it",
+          "out": "nk_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["nk_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the large number printed under the flame photograph in this cut-out. Write digits only.",
+          "boxes": "nk_r",
+          "pad": 0.03,
+          "out": "nk_q"
+        },
+        {
+          "read_crop": "Copy the figure printed in the box headed STRONGEST VISIBLE LINE in this cut-out. Write it as a whole number of nanometres with no decimal point, or write none if that box is empty.",
+          "boxes": "nk_r",
+          "pad": 0.03,
+          "out": "nv_q"
+        },
+        {
+          "run": "check_reads_present",
+          "args": ["nk_q", "nv_q"],
+          "out": "nv_h"
+        },
+        {
+          "fail_if": ["nv_h.refused"]
+        },
+        {
+          "run": "whole_nm_values",
+          "args": ["nv_q"],
+          "out": "nv_w"
+        },
+        {
+          "run": "match_line_wavelengths",
+          "args": ["nk_q", "nv_w", "reference.cell_lines"],
+          "out": "nv_s"
+        },
+        {
+          "compare": "nv_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_chart_carries_five_numbered_sample_cells",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one column of the chart, a flame photograph with the caption beneath it",
+          "out": "box_read",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show one flame photograph with a single printed number beneath it? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.03,
+          "out": "crop_read"
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_cells",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_colour_name_was_printed_on_the_chart",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a colour name or an added note printed on the wall chart",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

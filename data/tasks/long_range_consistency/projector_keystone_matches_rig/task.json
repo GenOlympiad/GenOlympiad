@@ -1,0 +1,84 @@
+{
+  "id": "projector_keystone_matches_rig",
+  "axis": "long_range_consistency",
+  "prompt": "The integrator cannot hand the room over until the client has seen the machine as it actually hangs, so the acceptance photograph is taken with the test card up and the lights at half.\n\nA projector is slung under the ceiling at the back of the room. The docket cable-tied to the bracket gives the drop arm as 900 millimetres, puts the lens centre 1400 millimetres above the head of the screen, and sets the bracket 1200 millimetres off the room's centre line. At the far end the screen is 2400 by 1350 millimetres inside a black edging strip, with a small printed target at each of its four corners. The machine is throwing its own built-in test card, which carries a white outer frame. Nothing inside the machine has been switched on to pull that frame about.\n\nWhat the white frame does when it reaches the screen, and how the machine has to sit to put it there, is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a meeting room with a projector slung under the ceiling at one end and a lit screen inside a black edging strip at the other end? Answer yes or no only.",
+  "reference": {
+    "part1": "opens_at_the_bottom",
+    "part2": "nose_dropped"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the patch of light thrown on the screen and follow its outline all the way round. Answer with one of: it is a rectangle with its four corners square; it opens out towards the bottom of the screen; it opens out towards the top of the screen.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the projector body itself where it hangs on the ceiling bracket. Answer with one of: its lens end is dropped towards the floor; its lens end is held straight along the room; its lens end is raised towards the ceiling.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,246 @@
+{
+  "id": "darkroom_safelight_fog_boundary",
+  "axis": "physical_consistency",
+  "prompt": "A bench photograph for the monthly safelight check that goes into the darkroom log book. The lab runs the check the way the trade runs it: a sheet of unexposed paper comes out of the box, part of it is covered over, it lies on the bench under the safelight for as long as a sheet really spends out there during a session, and it goes through the developer beside a second sheet that never left the box.\n\nWhat is on the bench, already processed, washed and squeegeed flat, is those two sheets of fibre-based paper side by side, same size, same box, each with one word pencilled along its bottom edge -- TEST and CONTROL. Nothing else is on the bench, and the safelight hangs above it.\n\nThe standing figures for this check, off the log book page: the amber OC filter in the safelight was fitted in 2013 and has never been changed; a lux meter laid on the bench where the paper sits reads 0.85 lux; the paper's data sheet allows this paper to lie under safelighting for 4 minutes at up to 0.10 lux; the TEST sheet lay on the bench for those 4 minutes with a coin and a strip of opaque card lying on top of it, covering about half of it; the CONTROL sheet stayed shut in its light-tight box the whole time. Both sheets then went into the same tray of developer together for the same time.\n\nHow each sheet comes out of that tray is for you to work out -- I am deliberately not telling you what tone either sheet ends up, and I am not telling you where any tone sits on it. Do not print any verdict, any density figure, any arrow or any note about the safelight anywhere in the frame: the only writing anywhere is the two pencilled words TEST and CONTROL.\n\nBoth sheets must be fully in frame, flat, evenly lit and big enough in the frame that a difference of tone across a sheet can be seen.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two sheets of photographic paper lying side by side on a bench, each with a word pencilled along its bottom edge? A photograph, an illustration or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel with none of that, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_sheets": 2,
+    "test_tone": "two",
+    "control_tone": "even",
+    "fog_shade": "grey",
+    "coin_mark": "yes",
+    "lux_at_bench": 0.85,
+    "lux_allowed": 0.1,
+    "minutes_out": 4,
+    "test_edge": "straight"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "fog_step_across_the_mask",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the sheet of photographic paper pencilled TEST on the bench",
+          "out": "t_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["t_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one sheet of photographic paper. Is the sheet one even tone all over, or does it have two different tones meeting along an edge? Answer with one word: even or two.",
+          "boxes": "t_box",
+          "out": "t_tone"
+        },
+        {
+          "fail_if": ["t_tone.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one sheet of photographic paper. If two different tones meet on this sheet, what does the line where they meet look like? Answer with one word: straight if it runs as one straight edge, ragged if it wanders, or none if the sheet is one tone with no meeting line.",
+          "boxes": "t_box",
+          "out": "t_edge"
+        },
+        {
+          "fail_if": ["t_edge.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the sheet of photographic paper pencilled CONTROL on the bench",
+          "out": "c_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["c_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one sheet of photographic paper. Is the sheet one even tone all over, or does it have two different tones meeting along an edge? Answer with one word: even or two.",
+          "boxes": "c_box",
+          "out": "c_tone"
+        },
+        {
+          "fail_if": ["c_tone.unreadable"]
+        },
+        {
+          "run": "fog_split_check",
+          "args": [
+            "t_tone",
+            "t_edge",
+            "c_tone",
+            "reference.test_tone",
+            "reference.test_edge",
+            "reference.control_tone"
+          ],
+          "out": "sp"
+        },
+        {
+          "compare": "sp.verdict",
+          "to": "split",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "fog_is_a_veil_not_a_print",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the sheet of photographic paper pencilled TEST on the bench",
+          "out": "v_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["v_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one sheet of photographic paper. Which of these is true of it: part or all of it carries a pale grey veil of tone, it carries tone as dark as black ink, or it is white everywhere with no veil at all? Answer with one word: grey, black, or none.",
+          "boxes": "v_box",
+          "out": "v_shade"
+        },
+        {
+          "fail_if": ["v_shade.unreadable"]
+        },
+        {
+          "compare": "v_shade.answers.0",
+          "to": "reference.fog_shade",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "coin_leaves_its_own_outline",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the sheet of photographic paper pencilled TEST on the bench",
+          "out": "k_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["k_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one sheet of photographic paper. Is there a round mark about the size of a coin anywhere on it? Answer yes or no only.",
+          "boxes": "k_box",
+          "out": "k_mark"
+        },
+        {
+          "fail_if": ["k_mark.unreadable"]
+        },
+        {
+          "compare": "k_mark.answers.0",
+          "to": "reference.coin_mark",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sheet_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a sheet of photographic paper lying flat on the bench",
+          "out": "box_read",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole sheet of paper lying on the bench, rather than bare bench or only part of a sheet? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_sheets",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_printed_verdict",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written pass or fail word, a density figure, or a note about the safelight",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sheets_carry_no_picture",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a photograph or a picture developed onto one of the paper sheets",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_p"
+        },
+        {
+          "fail_if": ["sweep_p.unreadable"]
+        },
+        {
+          "compare": "sweep_p.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

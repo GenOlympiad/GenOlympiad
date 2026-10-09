@@ -1,0 +1,246 @@
+{
+  "id": "guitar_chord_diagram",
+  "axis": "symbolic_systems",
+  "prompt": "A clean black-on-white guitar-theory worksheet FIGURE of a single CHORD DIAGRAM (chord box) for the A7 chord: 6 vertical strings crossing 4-5 horizontal fret rows, with O for open strings and X for muted strings above the nut, and solid finger dots at the fretted positions, drawn in the standard way. Straight-on, no tablature numbers, no chord name spelled out on the grid, no other text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show guitar-theory worksheet exam figure of the standard open-position chord box for a named guitar chord, black-on-white straight-on? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "chord": "A7",
+    "fingering": ["X", "O", 2, "O", 2, "O"],
+    "frets": ["x", 0, 2, 0, 2, 0],
+    "top_markers": "XO.O.O",
+    "n_strings": 6,
+    "n_marks": 6
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "fingering_match",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the chord box itself -- the block of six vertical string lines crossed by the horizontal fret lines, taken together as one rectangle running from the thick line at its top down to its lowest horizontal line; not the small rings and crosses printed above the thick line and not the paper around the figure",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read_crop": "This is a chord box cut out of a guitar worksheet: six vertical lines crossed by several horizontal lines. Write down every gap between two neighbouring horizontal lines -- that is, every row of small boxes in the grid -- working from the top down, each with a few plain words saying what sits in that row. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no such gap here, write the single word NONE.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "nrow"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["nrow", "empty_as='0'"],
+          "out": "nrow__std"
+        },
+        {
+          "fail_if": ["nrow__std.refused"]
+        },
+        {
+          "run": "plan_chord_grid",
+          "args": ["image", "anc", "nrow__std", "'top'"],
+          "out": "pt"
+        },
+        {
+          "fail_if": ["pt.no_plan"]
+        },
+        {
+          "read_crop": "This is one narrow strip cut from just above a guitar chord box, over the top end of one of its vertical lines. What is printed at the top of that line? If more than one vertical line is visible in this strip, judge the one nearest the middle of it. Answer with exactly one word: ring if there is a small empty circle, cross if there is an X, or nothing if there is neither.",
+          "boxes": "pt.cells",
+          "pad": 0.0,
+          "out": "top"
+        },
+        {
+          "run": "plan_chord_grid",
+          "args": ["image", "anc", "nrow__std"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one small box cut out of a guitar chord grid. Is there a solid filled-in dot drawn inside this box? Answer yes or no only.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "dots"
+        },
+        {
+          "run": "read_chord_tokens",
+          "args": ["top", "dots", "nrow__std", "reference.fingering"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "finger_match",
+          "args": ["res.tokens", "reference.fingering"],
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint",
+          "args": ["pl", "res.oks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "n_marks",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the chord box itself -- the block of six vertical string lines crossed by the horizontal fret lines, taken together as one rectangle running from the thick line at its top down to its lowest horizontal line; not the small rings and crosses printed above the thick line and not the paper around the figure",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read_crop": "This is a chord box cut out of a guitar worksheet: six vertical lines crossed by several horizontal lines. Write down every gap between two neighbouring horizontal lines -- that is, every row of small boxes in the grid -- working from the top down, each with a few plain words saying what sits in that row. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no such gap here, write the single word NONE.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "nrow"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["nrow", "empty_as='0'"],
+          "out": "nrow__std"
+        },
+        {
+          "fail_if": ["nrow__std.refused"]
+        },
+        {
+          "run": "plan_chord_grid",
+          "args": ["image", "anc", "nrow__std", "'top'"],
+          "out": "pt"
+        },
+        {
+          "fail_if": ["pt.no_plan"]
+        },
+        {
+          "read_crop": "This is one narrow strip cut from just above a guitar chord box, over the top end of one of its vertical lines. What is printed at the top of that line? If more than one vertical line is visible in this strip, judge the one nearest the middle of it. Answer with exactly one word: ring if there is a small empty circle, cross if there is an X, or nothing if there is neither.",
+          "boxes": "pt.cells",
+          "pad": 0.0,
+          "out": "top"
+        },
+        {
+          "run": "plan_chord_grid",
+          "args": ["image", "anc", "nrow__std"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one small box cut out of a guitar chord grid. Is there a solid filled-in dot drawn inside this box? Answer yes or no only.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "dots"
+        },
+        {
+          "run": "read_chord_tokens",
+          "args": ["top", "dots", "nrow__std", "reference.fingering"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "compare_band": "res.n",
+          "to": "reference.n_marks",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint",
+          "args": ["pl", "res.oks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ]
+}

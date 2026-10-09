@@ -1,0 +1,191 @@
+{
+  "id": "bakery_proof_rate_temperature",
+  "axis": "physical_consistency",
+  "prompt": "A photograph for a bakery's own proving log, the sort the head baker takes at the end of a bulk prove so the shift can be signed off.\n\nOne batch of dough was scaled into three clear graduated proving tubs of the same size, the same weight of dough in each. All three went into the proving cabinet at the same minute and came out at the same minute, ninety minutes later. The three tubs sat on three shelves of that cabinet, and the shelves do not run at the same temperature: the card clipped to each shelf gives its own figure, 24 C on one shelf, 30 C on another and 38 C on the third. Each tub is photographed with its own shelf card in front of it, and the litre marks up the side of every tub can be read.\n\nThe bakery's shift record is settled from this one photograph, so all three tubs, their scale marks and their three cards are in the one frame and large enough to read.\n\nWhere the dough in each tub has got to after those ninety minutes, and what the top of each one is doing, is for you to work out -- I am deliberately not telling you which tub stands highest, and I am not telling you what has become of any of the three tops. Do not put any note, any tick, any cross or any arrow into the frame: the only lettering is the three shelf cards and the tubs' own scale marks.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show three clear tubs of dough standing beside three small cards? A photograph, an illustration or a diagram all count as yes. Answer NO only if the image instead shows a blank sheet that just prints an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_tubs": 3,
+    "temp_cool": 24,
+    "temp_mid": 30,
+    "temp_hot": 38,
+    "sunk_temp": 38
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rise_then_fall_with_temperature",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one clear proving tub with its shelf card in front of it",
+          "propose_boxes": "vlm",
+          "out": "box_tub",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_tub.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one tub with a card standing in front of it. Copy the number printed on that card. If more than one tub with a card is visible in this cut-out, read the card in front of the tub nearest the middle of it. Write nothing else.",
+          "boxes": "box_tub",
+          "out": "tb_temp"
+        },
+        {
+          "fail_if": ["tb_temp.unreadable"]
+        },
+        {
+          "read_crop": "Which mark on the side of this tub does the top of the dough reach? Write just that number.",
+          "boxes": "box_tub",
+          "out": "tb_level"
+        },
+        {
+          "fail_if": ["tb_level.unreadable"]
+        },
+        {
+          "run": "rise_then_fall",
+          "args": [
+            "tb_temp",
+            "tb_level",
+            "reference.temp_cool",
+            "reference.temp_mid",
+            "reference.temp_hot"
+          ],
+          "out": "cv"
+        },
+        {
+          "compare_band": "cv.frac",
+          "to": 1.0,
+          "core_abs": 0.001,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_the_hottest_tub_sinks",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one clear proving tub with its shelf card in front of it",
+          "propose_boxes": "vlm",
+          "out": "box_tub2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_tub2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one tub with a card standing in front of it. Copy the number printed on that card. If more than one tub with a card is visible in this cut-out, read the card in front of the tub nearest the middle of it. Write nothing else.",
+          "boxes": "box_tub2",
+          "out": "tb_temp2"
+        },
+        {
+          "fail_if": ["tb_temp2.unreadable"]
+        },
+        {
+          "read_crop": "Is the top of the dough in this cut-out domed up in the middle, or sunk down in the middle? Answer with one word: domed or sunk.",
+          "boxes": "box_tub2",
+          "out": "tb_top"
+        },
+        {
+          "fail_if": ["tb_top.unreadable"]
+        },
+        {
+          "run": "sunk_tops_match",
+          "args": ["tb_temp2", "tb_top", "reference.sunk_temp"],
+          "out": "cl"
+        },
+        {
+          "compare_band": "cl.frac",
+          "to": 1.0,
+          "core_abs": 0.001,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tub_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one clear proving tub of dough on a cabinet shelf",
+          "propose_boxes": "vlm",
+          "out": "box_read",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole tub of dough, rather than a shelf card or only part of a tub? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_tubs",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_notes_in_the_frame",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a note, a tick, a cross or an arrow added into the photograph",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

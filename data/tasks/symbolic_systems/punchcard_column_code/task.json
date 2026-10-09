@@ -1,0 +1,137 @@
+{
+  "id": "punchcard_column_code",
+  "axis": "symbolic_systems",
+  "prompt": "A flat high-contrast top-down SCAN of a vintage IBM 029 keypunch card, filling the frame on a plain light background. Draw a precise ruled grid of exactly 12 rows by 6 columns, thin dark lines edge to edge, nothing outside the grid. Rows top-to-bottom are the standard keypunch rows: three zone rows (12, 11, 0) then nine digit rows (1 to 9); use positions, print no row numbers. Punch the six columns to spell TRACK5 in the standard IBM 029 code (each letter = one zone-row hole plus its digit-row hole; a digit = one hole in its row). Draw each punch as a solid dark rectangle centred in its cell; leave other cells white. Nothing but grid and holes.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict vintage IBM 029 keypunch card lying on a retro machine-room desk, its 12-row column code spelling a short word, straight-on top-down scan. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "word": "TRACK5",
+    "rows": 12,
+    "cols": 6,
+    "per_col_rows": [
+      ["0", "3"],
+      ["11", "9"],
+      ["12", "1"],
+      ["12", "3"],
+      ["11", "2"],
+      ["5"]
+    ],
+    "per_col_join": ["0+3", "11+9", "12+1", "12+3", "11+2", "5"],
+    "target_seq": "0+3 11+9 12+1 12+3 11+2 5",
+    "n_cols": 6,
+    "q_col": "This is an IBM 029 keypunch card: a grid with 12 rows and several columns. The rows from top to bottom are labelled 12, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9. Each COLUMN encodes one character by the set of rows that are PUNCHED (dark holes) in that column. For each column left to right, list the row labels that are punched. Answer one column per token, rows joined by '+', columns separated by spaces. Read ONLY which cells hold a hole; do NOT decode to letters. If unreadable answer 'unreadable'.",
+    "rows_labels": ["12", "11", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    "n_holes": 11
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "column_code",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "ruled grid of punched cells -- ONE box on the whole grid, its four sides lying exactly on the four outermost ruled lines (the leftmost vertical rule, the rightmost vertical rule, the topmost horizontal rule and the bottommost horizontal rule) so that no cell is cut off; where those ruled lines run out to the picture's own edges the box must lie on the picture's edges.",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "gb"
+        },
+        {
+          "fail_if": ["gb.unreadable"]
+        },
+        {
+          "run": "card_cell_boxes",
+          "args": ["gb", "reference['rows']", "reference['cols']"],
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.no_read"]
+        },
+        {
+          "read_crop": "This crop is ONE single cell cut out of a punch-card grid, together with pieces of the thin ruled lines that border it. A PUNCHED cell has a solid dark filled mark sitting in the MIDDLE of it -- the mark may be a filled circle, oval, square or rectangle. An UNPUNCHED cell is plain white or plain light paper, with nothing in its middle; the thin ruled border lines are not a mark. Is there a solid dark filled mark in the middle of this cell? Answer yes or no only.",
+          "boxes": "lat.boxes",
+          "out": "ca"
+        },
+        {
+          "fail_if": ["ca.unreadable"]
+        },
+        {
+          "run": "punched_rows_per_column",
+          "args": ["ca", "reference.rows_labels", "reference['rows']", "reference['cols']"],
+          "out": "pc"
+        },
+        {
+          "fail_if": ["pc.no_read"]
+        },
+        {
+          "run": "columns_match",
+          "args": ["pc['seq']", "reference.rows_labels", "reference.per_col_rows"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "n_holes",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "ruled grid of punched cells -- ONE box on the whole grid, its four sides lying exactly on the four outermost ruled lines (the leftmost vertical rule, the rightmost vertical rule, the topmost horizontal rule and the bottommost horizontal rule) so that no cell is cut off; where those ruled lines run out to the picture's own edges the box must lie on the picture's edges.",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "gb"
+        },
+        {
+          "fail_if": ["gb.unreadable"]
+        },
+        {
+          "run": "card_cell_boxes",
+          "args": ["gb", "reference['rows']", "reference['cols']"],
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.no_read"]
+        },
+        {
+          "read_crop": "This crop is ONE single cell cut out of a punch-card grid, together with pieces of the thin ruled lines that border it. A PUNCHED cell has a solid dark filled mark sitting in the MIDDLE of it -- the mark may be a filled circle, oval, square or rectangle. An UNPUNCHED cell is plain white or plain light paper, with nothing in its middle; the thin ruled border lines are not a mark. Is there a solid dark filled mark in the middle of this cell? Answer yes or no only.",
+          "boxes": "lat.boxes",
+          "out": "ca"
+        },
+        {
+          "fail_if": ["ca.unreadable"]
+        },
+        {
+          "run": "punched_rows_per_column",
+          "args": ["ca", "reference.rows_labels", "reference['rows']", "reference['cols']"],
+          "out": "pc"
+        },
+        {
+          "fail_if": ["pc.no_read"]
+        },
+        {
+          "run": "hole_count_matches",
+          "args": ["pc", "reference.n_holes"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

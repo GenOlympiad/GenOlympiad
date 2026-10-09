@@ -1,0 +1,98 @@
+{
+  "id": "stencil_aperture_ratio",
+  "axis": "quantitative_precision",
+  "prompt": "The stencil has to be cleared before the first boards run, so the foil is photographed on the light box with the pad schedule in the same frame for the process file.\n\nA laser-cut stencil foil lies over the light box in the printing bay, backlit so the cut openings stand out bright. Two apertures near the middle of the foil each carry a leadered callout giving the cut size in micrometres. The pad schedule taped along the bench lists pad P1 as 300 micrometres square and pad P2 as 250 micrometres square, and the foil frame carries an etched thickness mark reading 120 micrometres. The process sheet clipped beside the bench calls for an area ratio of at least 0.66 on every aperture and gives no aperture sizes at all.\n\nWhat those two callouts have to read is what the process sheet leaves to the stencil house.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a laser-cut stencil foil lying on a lit light box with dimension callouts leadered off its apertures? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "neither_matches"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the leadered callout beside the aperture cut for pad P1 and give the cut size in micrometres.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "317", "345"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the leadered callout beside the aperture cut for pad P2 and write that number only.",
+          "out": "m_bend"
+        },
+        {
+          "fail_if": ["m_bend.unreadable"]
+        },
+        {
+          "ask": "Read the leadered callout beside the aperture cut for pad P1 and write that number only.",
+          "out": "m_straight"
+        },
+        {
+          "fail_if": ["m_straight.unreadable"]
+        },
+        {
+          "ask": "Read the size listed for pad P2 on the pad schedule taped along the bench and write that number only.",
+          "out": "m_sheet"
+        },
+        {
+          "fail_if": ["m_sheet.unreadable"]
+        },
+        {
+          "run": "meter_matching_sheet",
+          "args": ["m_bend", "m_straight", "m_sheet"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

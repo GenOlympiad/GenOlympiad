@@ -1,0 +1,158 @@
+{
+  "id": "tube_shift_parallax_slob",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A photograph of two radiographs of the same hand clipped side by side on an illuminator in a hand-surgery clinic, taken face on and bright enough to read.\n\nBoth exposures are of one patient's right hand, palm down on the detector, after a workshop accident. Between the first exposure and the second the tube was moved 15 degrees toward the thumb side of the hand and nothing else was touched. Two radio-opaque marker wires were taped on beforehand: one across the palm, hard against the detector, and one across the back of the hand, well away from it. A metal fragment is lodged just under the skin on the back of the hand.\n\nUnder the two films the clinic wants its localisation note. The note has one row per item -- DORSAL WIRE, FRAGMENT, PALM WIRE -- and a row gives the item, whether that item's shadow travelled toward the thumb or toward the little finger between the first exposure and the second, and how far it travelled in millimetres. Travel is taken against the mid-shaft of the second metacarpal, which is the landmark the two films are lined up on.\n\nWhich way each shadow goes and how the three distances compare is what the note is for, so I am not telling you, and the two films have to agree with what the note says. Nothing on the sheet may state the localisation rule or name the depth of anything.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two grey medical films of a hand side by side with a few lines of text under them? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "travel_sides": "dorsal little, fragment little, palm thumb",
+    "grouping": "the fragment travels with the dorsal wire",
+    "n_note_rows": 3,
+    "q_note_cert": "Does this cut-out show one row of the note under the films, rather than its heading? Answer yes or no only.",
+    "q_note_copy": "This cut-out is one row of a note. Copy the item name printed on that row, then a single space, then the words that say which way it travelled. Ignore anything printed on a row above or below it. Write nothing else.",
+    "q_far_copy": "This cut-out is one row of a table. Copy the item name printed on that row, then a single space, then the distance figure in millimetres printed on it. Ignore anything printed on a row above or below it. Write nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_three_shadows_do_not_all_travel_the_same_way",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the localisation note under the films",
+          "sweep": true,
+          "out": "nt_ring"
+        },
+        {
+          "fail_if": ["nt_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_note_cert",
+          "boxes": "nt_ring",
+          "pad": 0.25,
+          "out": "nt_cert"
+        },
+        {
+          "fail_if": ["nt_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_note_copy",
+          "boxes": "nt_ring",
+          "pad": 0.25,
+          "out": "nt_txt"
+        },
+        {
+          "fail_if": ["nt_txt.unreadable"]
+        },
+        {
+          "run": "item_side",
+          "args": ["nt_cert", "nt_txt"],
+          "out": "nt_v"
+        },
+        {
+          "compare_set": "nt_v.seq",
+          "to": "reference.travel_sides",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_shadows_that_share_a_depth_travel_by_the_same_amount",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the localisation note under the films",
+          "sweep": true,
+          "out": "fr_ring"
+        },
+        {
+          "fail_if": ["fr_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_note_cert",
+          "boxes": "fr_ring",
+          "pad": 0.25,
+          "out": "fr_cert"
+        },
+        {
+          "fail_if": ["fr_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_far_copy",
+          "boxes": "fr_ring",
+          "pad": 0.25,
+          "out": "fr_txt"
+        },
+        {
+          "fail_if": ["fr_txt.unreadable"]
+        },
+        {
+          "run": "travel_group",
+          "args": ["fr_cert", "fr_txt"],
+          "out": "fr_v"
+        },
+        {
+          "compare": "fr_v.val",
+          "to": "reference.grouping",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_note_carries_one_row_for_each_item_the_clinic_named",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the localisation note under the films",
+          "sweep": true,
+          "out": "nr_ring"
+        },
+        {
+          "fail_if": ["nr_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_note_cert",
+          "boxes": "nr_ring",
+          "pad": 0.3,
+          "out": "nr_cert"
+        },
+        {
+          "fail_if": ["nr_cert.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["nr_cert"],
+          "out": "nr_n"
+        },
+        {
+          "compare_band": "nr_n.n",
+          "to": "reference.n_note_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

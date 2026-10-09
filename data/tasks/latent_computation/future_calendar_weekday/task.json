@@ -1,0 +1,246 @@
+{
+  "id": "future_calendar_weekday",
+  "axis": "latent_computation",
+  "prompt": "A clean, printable KITCHEN fridge MEAL-PLANNER calendar page for July 2057, straight-on, high contrast, sharp, styled like a magnetic whiteboard planner. Lay it out as ONE month only: a seven-column grid whose column headers read, left to right, Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday (Sunday is the FIRST/left-most column, Saturday the last). Print the month title 'July 2057' at the top.\n\nFill the grid with the dates of July 2057: the numbers 1 through 31 (this month has exactly 31 days), each number placed in the day cell under the WEEKDAY COLUMN on which that date actually falls in the year 2057. Work out the real weekday of each date for July 2057 and align the numbers to the correct columns accordingly; do not just start the month in an arbitrary column. Every date number appears exactly once, in reading order (left to right, top to bottom), wrapping to the next row after Saturday.\n\nPlain, legible design: each day is a cell with its date number printed clearly in a corner. Do NOT write any weekday name inside the date cells and do NOT print any note stating which weekday the 1st (or any date) falls on — only the column HEADERS carry weekday names. No other months, no mini-calendars, no photos or illustrations.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a kitchen fridge meal-planner calendar page for a single month: a grid of day cells with weekday names printed as column headers and date numbers printed in the cells. Ignoring artistic quality, and ignoring whether the details are right or wrong, does the image DEPICT that? Answer NO only if the picture is unrelated to that description or contains no such arrangement at all. Answer yes or no only.",
+  "reference": {
+    "year": 2057,
+    "month": 7,
+    "month_name": "July",
+    "ndays": 31,
+    "leap": false,
+    "dow1": "Sunday",
+    "dow15": "Sunday",
+    "dow_last": "Tuesday",
+    "q_col1": "This is a one-month calendar with seven weekday columns; the header row names the weekdays. Find the cell holding the date number 1. Which weekday name is printed at the top of that cell's column? Answer with that one weekday name and nothing else.",
+    "q_col15": "This is a one-month calendar with seven weekday columns; the header row names the weekdays. Find the cell holding the date number 15. Which weekday name is printed at the top of that cell's column? Answer with that one weekday name and nothing else.",
+    "q_col_last": "This is a one-month calendar with seven weekday columns; the header row names the weekdays. Find the cell holding the date number 31, the last day of the month. Which weekday name is printed at the top of that cell's column? Answer with that one weekday name and nothing else.",
+    "q_form": "Look at this image. Is it a SINGLE-MONTH wall calendar page whose grid has SEVEN weekday columns with the header row reading, left to right, Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday (Sunday first, Saturday last)? Answer ONLY 'yes' or 'no'.",
+    "title_str": "July 2057",
+    "ncols": 7
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "col1",
+      "weight": 2.0,
+      "steps": [
+        {
+          "ask": "reference.q_col1",
+          "out": "ans"
+        },
+        {
+          "run": "read_weekday",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "matches_reference",
+          "args": ["read", "reference.dow1"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "col15",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_col15",
+          "out": "ans"
+        },
+        {
+          "run": "read_weekday",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "matches_reference",
+          "args": ["read", "reference.dow15"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lastday",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_col_last",
+          "out": "ans"
+        },
+        {
+          "run": "read_weekday",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "matches_reference",
+          "args": ["read", "reference.dow_last"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_month_title",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the month title printed at the top of the calendar page. Answer with exactly what that title says and nothing else.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.title_str",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_first_header",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the LEFT-MOST column header of the seven-column grid. Answer with the single weekday word printed there.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.dow1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_num_days",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed date number inside a day cell of the calendar grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed date number sitting inside a day cell, rather than blank paper or only part of a number? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.ndays",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_num_columns",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one weekday name printed as a column heading at the top of the calendar grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole weekday name printed as a heading, rather than blank paper or only part of a word? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.ncols",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

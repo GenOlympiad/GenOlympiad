@@ -1,0 +1,115 @@
+{
+  "id": "ternary_change",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean, straight-on picture of a shop counter TRAY laying out the coins needed to pay a price of 38, filling most of the frame.\n\nIMPORTANT MONEY RULE: in this country the ONLY coins that exist are worth 1, 3, 9 and 27 (each coin is three times the next smaller one — there is NO 5 or 10 coin). To pay a price you must use the FEWEST coins possible, which means you never use more than TWO of any single coin (if you had three of one, you would swap them for one of the next bigger coin).\n\nLay the coins out in FOUR labelled columns, left to right headed '27-coin', '9-coin', '3-coin', '1-coin'. In each column stack exactly the number of that coin needed to make 38 with the fewest coins. Write the coin's value on each coin. Do NOT use any 5-coin or 10-coin, and do not print the counts as a caption — the answer is the actual stacks of coins in each column.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a TRAY / counter laying out stacks of COINS in labelled columns. Ignoring the counts and ignoring artistic quality, does the image actually DEPICT coins laid out in columns (a money tray with coin stacks)? A photo, illustration or clean graphic all count as yes. Answer NO only if it is a blank panel, an unrelated object, or just prints numbers with no coins. Answer yes or no only.",
+  "reference": {
+    "want0": 1,
+    "want1": 1,
+    "want2": 0,
+    "want3": 2,
+    "want_vec": [1, 1, 0, 2],
+    "amount": 38
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ternary_coin_count",
+      "weight": 5.0,
+      "score": "cs.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "printed column heading written above one column of coins on the tray",
+          "votes": 3,
+          "out": "hb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["hb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a shop counter tray with coins laid out in labelled columns. Does this cut-out show exactly ONE whole printed column heading -- the little printed title written above a column, one heading on its own -- rather than two headings together, only a piece of one heading, a number printed on a round coin, or just bare tray? Answer yes or no only.",
+          "boxes": "hb",
+          "pad": 0.1,
+          "out": "hc"
+        },
+        {
+          "fail_if": ["hc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a shop counter tray. It shows the printed heading written above one column of coins. What number is printed in that heading? Answer with that single number and nothing else. If no number is printed there, answer 0.",
+          "boxes": "hb",
+          "pad": 0.1,
+          "out": "hv"
+        },
+        {
+          "fail_if": ["hv.unreadable"]
+        },
+        {
+          "run": "column_windows",
+          "args": ["hb", "hc", "hv"],
+          "out": "cw"
+        },
+        {
+          "fail_if": ["cw.refused"]
+        },
+        {
+          "read_crop": "This close-up shows one labelled column of a shop counter tray where coins are laid out. Write down every coin lying in this column, each with a few plain words saying where it sits; a stack of coins gets one item for each coin in the stack. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no coin here, write the single word NONE.",
+          "boxes": "cw",
+          "pad": 0.02,
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["cc", "empty_as='0'"],
+          "out": "cc__std"
+        },
+        {
+          "fail_if": ["cc__std.refused"]
+        },
+        {
+          "run": "coin_counted",
+          "args": ["cw", "cc__std"],
+          "out": "cn"
+        },
+        {
+          "fail_if": ["cn.no_read"]
+        },
+        {
+          "run": null,
+          "expression": "chk(cn.v0,cn.v1,cn.v2,cn.v3,reference.want0,reference.want1,reference.want2,reference.want3)",
+          "code": {
+            "inline": "chk_code"
+          },
+          "out": "cs"
+        },
+        {
+          "fail_if": ["cs.no_read"]
+        }
+      ]
+    }
+  ]
+}

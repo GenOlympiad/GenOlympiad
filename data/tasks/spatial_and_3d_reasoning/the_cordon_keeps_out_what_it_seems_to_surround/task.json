@@ -1,0 +1,122 @@
+{
+  "id": "the_cordon_keeps_out_what_it_seems_to_surround",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Carreg Springs is stripping the syrup filler at the back of its bottling hall, hard against the rear wall, for a bearing change, while the fillers still running stand side by side in front of it, between it and the packing aisle. The permit calls for a continuous rope line hung on waist-high stanchions, closed on itself, taking in the stripped filler with its base plate and everything stacked against it, together with a clear walking route out to the aisle past each end of the running pair, while the running fillers themselves stay outside the rope with working room for their operators. Seven steel syrup barrels stand about the floor; four of them are wedged hard against the feet of the running machines and cannot be shifted until the shift ends, and the remainder sit against the stripped filler. The supervisor's file photograph is taken from the first-floor walkway looking straight down, the whole rope line, every machine and every barrel in the frame, none of them hidden.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph look down from a raised walkway onto a filling-hall floor where a continuous rope hung on waist-high stanchions closes off a maintenance area, with the whole rope line, the machines beside it and every barrel on the floor inside the frame? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "u"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "How many barrels stand inside the roped-off area on this floor?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "Say in a few plain words what shape the roped-off area on this floor is.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "run": "derive_rope_shape",
+          "args": ["reference.premises"],
+          "out": "want_part2"
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "want_part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "const": {
+        "program": "map_code"
+      },
+      "out": "map_code"
+    },
+    {
+      "const": {
+        "layout_back_front": "stripped filler at rear wall; running fillers side by side in front, between it and the aisle",
+        "rope_closed_continuous": "one continuous closed line",
+        "stripped_inside": "stripped filler + base + everything stacked against it inside",
+        "egress_both_ends": "walking route to the aisle past each end of the running pair, inside the rope",
+        "running_outside": "running fillers outside the rope",
+        "barrels_total": "7",
+        "barrels_at_running_feet": "4",
+        "barrels_at_stripped": "the remainder (=3, never written)",
+        "camera": "elevated straight-down shot, everything in frame",
+        "stripped_filler_at_rear_wall": true,
+        "running_pair_stands_between_stripped_and_aisle": true,
+        "egress_past_each_end_inside_rope": true,
+        "running_fillers_outside_rope": true,
+        "rope_closed_on_itself": true
+      },
+      "out": "premises"
+    },
+    {
+      "const": {
+        "program": "derive_code"
+      },
+      "out": "derive_code"
+    }
+  ]
+}

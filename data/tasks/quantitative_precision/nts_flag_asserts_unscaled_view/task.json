@@ -1,0 +1,86 @@
+{
+  "id": "nts_flag_asserts_unscaled_view",
+  "axis": "quantitative_precision",
+  "prompt": "The detail sheet has to go down to the inspection room with tonight's batch, so the draughtsman has the fresh print flat on the plan chest before it is stamped and issued.\n\nOn the sheet a left-hand, a centre and a right-hand view of the same bracket sit side by side, spaced well apart. Each view carries a single dimension line with its figure written above it: the left reads 60 mm, the centre reads 45 mm, the right reads 75 mm, and the title block gives the overall run as 180 mm and the drawing ratio as one to two. Under the centre figure alone, a heavy underline marks that figure as not to scale. A printed centimetre scale bar sits in the bottom corner of the sheet.\n\nHow big each of those edges actually comes out on the paper is what the title block does not state.",
+  "difficulty": "s1",
+  "easy_question": "Is this an engineering detail sheet with part views side by side, each under a single dimension line Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Against the printed centimetre scale bar in the corner of the sheet, read the drawn length of the dimensioned edge on the left-hand view and give it in millimetres.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "27", "33"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "separate detail view of the bracket drawn on this sheet",
+          "out": "r_part2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part2.unreadable"]
+        },
+        {
+          "run": "count_boxes",
+          "args": ["r_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

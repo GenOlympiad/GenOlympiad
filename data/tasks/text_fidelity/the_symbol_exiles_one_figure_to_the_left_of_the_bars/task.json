@@ -1,0 +1,84 @@
+{
+  "id": "the_symbol_exiles_one_figure_to_the_left_of_the_bars",
+  "axis": "text_fidelity",
+  "prompt": "Prepress record shot for the job bag at Rowntree & Meek carton works, taken on the proofing bench at the start of the early shift. Lying on the lightbox glass is the barcode proof for a new carton: the customer's thirteen-figure GTIN, 5054289607400, set as a retail bar-code symbol and blown up to about four times nominal size so the platemaker can check it by eye before plates are made. The job bag says only this: set the human-readable figures as the symbol specification requires, and keep the light margins at either flank clear of ink. The artwork carries that symbol by itself — no arrowhead margin mark, no smaller second block of bars beside it, no other printed matter of any kind on the sheet. Photograph it square from directly overhead, the whole proof sheet inside the frame with its light margins included, back-lit, every printed figure sharp.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph show an enlarged bar-code proof sheet lying on a lit lightbox, shot square from directly overhead, with the whole sheet and its light margins inside the frame? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "1"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 2.0,
+      "steps": [
+        {
+          "ask": "Look at the whole picture. How many separate groups of printed figures are there around the block of bars on the proof?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "Look at the whole picture. How many printed figures are in the leftmost group of figures on the proof?",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

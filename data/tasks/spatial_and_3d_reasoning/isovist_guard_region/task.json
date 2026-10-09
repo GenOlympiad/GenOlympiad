@@ -1,0 +1,192 @@
+{
+  "id": "isovist_guard_region",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A markup drawing for a security consultant's camera-and-guarding review, to be filed with the venue operator: the floor plan of a rectangular exhibition hall, 30 metres by 20 metres, drawn in plain black line with the hall's outline and four straight freestanding partition walls shown as thick black bars. Measuring from the hall's lower-left corner, the four walls run: from (8, 4) to (8, 14); from (14, 8) to (22, 8); from (18, 12) to (18, 19); and from (24, 3) to (24, 10). All four walls are solid, full-height and opaque. A single red dot marks the proposed guard post at (5, 16).\n\nThe consultant's markup duty: shade in translucent yellow exactly the floor the guard can see when standing at the red dot. Which parts of the hall the walls hide from that spot is for you to work out -- I am deliberately not telling you the shape of the visible area, and the venue's insurers reject any review sheet whose shading claims floor the guard cannot actually see. No arrows, no dimensions, no lettering and no legend on the sheet: only the hall outline, the four wall bars, the red dot and the yellow shading.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a floor plan with some wall bars, a red dot and a shaded area on it? A clean CAD drawing, a sketch or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with nothing of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "leak_split_expected": "leak:0|of:4",
+    "touch_expected": "yes",
+    "edge_expected": "straight",
+    "n_walls": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_wall_is_seen_through",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one thick black partition wall bar inside the hall outline",
+          "sweep": true,
+          "out": "wl"
+        },
+        {
+          "fail_if": ["wl.unreadable"]
+        },
+        {
+          "read_crop": "Look at the thick black wall bar in this cut-out. Does the yellow shading touch BOTH long sides of this wall bar? Answer yes or no only.",
+          "boxes": "wl",
+          "pad": 0.5,
+          "out": "lk"
+        },
+        {
+          "fail_if": ["lk.unreadable"]
+        },
+        {
+          "run": "count_leaking_walls",
+          "args": ["lk"],
+          "out": "lt"
+        },
+        {
+          "compare": "lt.split",
+          "to": "reference.leak_split_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shading_reaches_the_guard_dot",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the red guard-post dot on the plan",
+          "sweep": true,
+          "out": "gd"
+        },
+        {
+          "fail_if": ["gd.unreadable"]
+        },
+        {
+          "read_crop": "Does the yellow shaded area touch the red dot in this cut-out? Answer yes or no only.",
+          "boxes": "gd",
+          "pad": 0.9,
+          "out": "tc"
+        },
+        {
+          "fail_if": ["tc.unreadable"]
+        },
+        {
+          "compare": "tc.answers.0",
+          "to": "reference.touch_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "region_boundary_is_straight_edged",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the yellow shaded area on the plan",
+          "sweep": true,
+          "out": "yr"
+        },
+        {
+          "fail_if": ["yr.unreadable"]
+        },
+        {
+          "read_crop": "Is the outline of the yellow area made of straight edges with corners, or is it one smooth rounded blob? Answer with one word: straight or rounded.",
+          "boxes": "yr",
+          "pad": 0.3,
+          "out": "eg"
+        },
+        {
+          "fail_if": ["eg.unreadable"]
+        },
+        {
+          "run": "first_word",
+          "args": ["eg"],
+          "out": "ew"
+        },
+        {
+          "compare": "ew.tok",
+          "to": "reference.edge_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "walls_certificate",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one thick black partition wall bar inside the hall outline",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "area_w"
+        },
+        {
+          "fail_if": ["area_w.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE straight thick wall bar inside the hall, rather than the hall's outer outline or empty floor? Answer yes or no only.",
+          "boxes": "area_w",
+          "pad": 0.3,
+          "out": "cert"
+        },
+        {
+          "fail_if": ["cert.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cert"],
+          "out": "n_w"
+        },
+        {
+          "compare_band": "n_w.n",
+          "to": "reference.n_walls",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_extra_lettering",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, a dimension line, lettering or a legend drawn on the sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

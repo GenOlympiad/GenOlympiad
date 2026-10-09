@@ -1,0 +1,206 @@
+{
+  "id": "cabinet_half_depth",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Render a technical white-line-on-blue blueprint drawing of one square precast concrete planter box with a plain rim, standing alone.\n\nDraw it in CABINET OBLIQUE projection:\n- The FRONT face is drawn in its TRUE SHAPE, square on to the viewer: every edge of the front face is exactly horizontal or exactly vertical, and nothing on the front face is sloped, rotated or foreshortened.\n- The object is a CUBE in real life: its width, its height and its depth are all exactly equal.\n- Every DEPTH edge -- each edge running back from the front face -- is a straight line at exactly 45 degrees, going up towards the right, and they are all exactly parallel.\n- CABINET oblique HALVES the depth. Each 45-degree depth edge must therefore be drawn exactly HALF as long as an edge of the square front face: measure it against the front face and make it half -- not the full length (that would be cavalier oblique) and not a short stub.\nPlain line drawing on an even background, no shading. No text, no numbers, no labels, no dimensions.\n",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a line drawing of a square box-shaped planter seen from the front and slightly to one side. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank panel, printed text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption anywhere on it (as opposed to being purely a drawing with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.8,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "front_face_true_shape",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "oblique_metrics",
+          "args": ["image"],
+          "out": "ob"
+        },
+        {
+          "fail_if": ["ob.no_read"]
+        },
+        {
+          "run": "front_face_check",
+          "args": ["ob.n_h", "ob.n_v", "ob.front_squareness"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "depth_drawn_at_half_scale",
+      "weight": 4.0,
+      "steps": [
+        {
+          "run": "oblique_metrics",
+          "args": ["image"],
+          "out": "ob"
+        },
+        {
+          "fail_if": ["ob.no_read"]
+        },
+        {
+          "compare_band": "ob.depth_ratio",
+          "to": 0.5,
+          "core_abs": 0.05,
+          "margin_abs": 0.1,
+          "out": "frac"
+        },
+        {
+          "run": "oblique_overlay_marked",
+          "args": ["image"],
+          "out": "dmk"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "dmk.ref_anchors",
+          "found_anchors": "dmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [30, 120, 235],
+          "label": "the width of the front face, as measured",
+          "out": "dv1",
+          "polylines": "dmk.mk_front.polylines"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "dmk.ref_anchors",
+          "found_anchors": "dmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [230, 40, 40],
+          "label": "the depth line the drawing actually has",
+          "out": "dv2",
+          "polylines": "dmk.mk_depth.polylines"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "dmk.ref_anchors",
+          "found_anchors": "dmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 175, 0],
+          "label": "how long a half-depth line has to be",
+          "out": "dv3",
+          "polylines": "dmk.mk_want.polylines"
+        }
+      ]
+    },
+    {
+      "name": "depth_axis_at_45",
+      "weight": 1.2,
+      "steps": [
+        {
+          "run": "oblique_metrics",
+          "args": ["image"],
+          "out": "ob"
+        },
+        {
+          "fail_if": ["ob.no_read"]
+        },
+        {
+          "compare_band": "ob.depth_ang",
+          "to": 45.0,
+          "core_abs": 4.0,
+          "margin_abs": 10.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_depth_overlay",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "run": "oblique_overlay_marked",
+          "args": ["image"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "image": "ov.path",
+          "polylines": "ov.mk_front.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [30, 120, 235],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "polylines": "ov.mk_depth.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "polylines": "ov.mk_want.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "ask": "Three straight coloured bars have been drawn in the bottom-left corner of this picture: a blue one, a red one and a green one. Is the RED bar clearly SHORTER than half the length of the BLUE bar? Answer yes or no only.",
+          "image": "ovm3.path",
+          "out": "q"
+        },
+        {
+          "fail_if": ["q.unreadable"]
+        },
+        {
+          "compare": "q",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

@@ -1,0 +1,84 @@
+{
+  "id": "the_platform_doors_meet_the_car_doors",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The platform is photographed during night testing so the stopping accuracy sheet can be signed off by the commissioning engineer.\n\nEach platform-edge door leaf has its door letter painted on the frame, and the run of leaves along this platform is lettered A1, A2, A3, A4, A5 and A6 from the head of the train back. Under every leaf a graduated accuracy strip is painted on the platform floor, marked out in seven cells numbered from the platform end, with the fourth cell lying under the centre of that leaf's opening. The formation notice taped to the column gives this formation the door segment running from A1 to A6, and the train has pulled up with its stopping mark standing a good second cell beyond the floor mark. The train is standing with its doors open along the platform.\n\nWhich cell any car door centre has come to rest over is what the accuracy sheet does not give.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a stopped metro train alongside a run of lettered platform-edge doors with a graduated strip painted on the floor under each of them? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "6"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the cell of the graduated strip painted on the floor that the centre of the car door facing leaf A4 has come to rest over, and write that figure only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "5.5", "6.5"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Count the car doors standing fully open along the side of the train. Write the number only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "id": "archaeo_section_superposition",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The developer's archaeologists have three days left on site, and trench 7 has to be recorded before the ground goes. The picture is the field record for that trench as it lies on the drawing board: the east-facing section inked on gridded film, and beside it the context register sheet the same team keeps.\n\nWhat came out of the trench, from the top down, with the thickness the site book gives each one:\n101  topsoil, 0.30 m\n102  demolition rubble, 0.35 m\n103  rammed earth floor, 0.40 m\nand below 103, undisturbed natural clay.\n\nOne later feature goes into all of that. A pit was dug from the top of the rubble -- after 102 had formed and before 101 began to gather -- and the site book has it as 0.60 m deep from the surface it was dug from. The pit itself is context 104 and the material that came to fill it afterwards is context 105.\n\nThe register sheet has one row per context, five rows in all. Each row carries the context number, a line for the deposit description, and one box headed IS THIS CONTEXT CUT BY THE PIT.\n\nThe recording standard for this unit is reproduced at the head of the register: a cut is inked as an edge, every deposit line that reaches that edge is taken up to it and stops there, and the material filling a cut is inked lying over the cut and not under it.\n\nWhich deposit lines end at the pit and which run right across it, and what goes into each of the five boxes, is the part you have to work out -- I am deliberately not telling you. Keep the section at a size where one context number can be told apart from the next. Beyond the five context numbers and the ground surface line, no phase number, date, arrow or caption belongs on the face of the section.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a drawing of bands of soil one above another with numbers written on them, together with a separate sheet of ruled rows beside it? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no drawing on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cut_by_pit": "101=is not cut by|102=is cut by|103=is cut by|104=is not cut by|105=is not cut by",
+    "boundary_fate": "carries on|stops|carries on",
+    "n_contexts": 5,
+    "n_boundaries": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_register_names_the_deposits_the_pit_actually_reaches",
+      "weight": 3.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered row of the register sheet beside the drawing",
+          "sweep": true,
+          "out": "reg_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["reg_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a register. Which context number is printed at the START of that row -- the number nearest the left edge of this cut-out? Ignore anything printed on a row above or below it. Answer with the number exactly as it is printed, and nothing else.",
+          "boxes": "reg_box",
+          "pad": 0.5,
+          "out": "rkey_rd"
+        },
+        {
+          "fail_if": ["rkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what has been entered in the last box of the row? Answer with one of: it is cut by the pit, it is not cut by the pit, or the box is blank.",
+          "boxes": "reg_box",
+          "pad": 0.5,
+          "out": "cut_rd"
+        },
+        {
+          "fail_if": ["cut_rd.unreadable"]
+        },
+        {
+          "run": "count_register_matches",
+          "args": ["rkey_rd", "cut_rd", "reference.cut_by_pit"],
+          "out": "regv"
+        },
+        {
+          "compare_band": "regv.n",
+          "to": "reference.n_contexts",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_deposit_line_stops_at_the_pit_edge_or_runs_past_it_as_the_depth_requires",
+      "weight": 2.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the inked drawing of the soil bands on the gridded film",
+          "sweep": true,
+          "out": "sec_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["sec_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, follow the line between the band numbered 101 and the band numbered 102 towards the hollow cut into the soil. Does it stop where it meets the hollow? Answer with one of: it stops at the edge of the hollow, it carries on across, or there is no hollow here.",
+          "boxes": "sec_box",
+          "pad": 0.2,
+          "out": "b1_rd"
+        },
+        {
+          "fail_if": ["b1_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, follow the line between the band numbered 102 and the band numbered 103 towards the hollow cut into the soil. Does it stop where it meets the hollow? Answer with one of: it stops at the edge of the hollow, it carries on across, or there is no hollow here.",
+          "boxes": "sec_box",
+          "pad": 0.2,
+          "out": "b2_rd"
+        },
+        {
+          "fail_if": ["b2_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, follow the lowest drawn line, the one under the band numbered 103, towards the hollow cut into the soil. Does it stop where it meets the hollow? Answer with one of: it stops at the edge of the hollow, it carries on across, or there is no hollow here.",
+          "boxes": "sec_box",
+          "pad": 0.2,
+          "out": "b3_rd"
+        },
+        {
+          "fail_if": ["b3_rd.unreadable"]
+        },
+        {
+          "run": "count_edge_matches",
+          "args": ["b1_rd", "b2_rd", "b3_rd", "reference.boundary_fate"],
+          "out": "edgev"
+        },
+        {
+          "compare_band": "edgev.n",
+          "to": "reference.n_boundaries",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_register_row_carries_its_deposit_description",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered row of the register sheet beside the drawing",
+          "sweep": true,
+          "out": "des_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["des_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, are there words describing the deposit written in the row as well as its number? Answer yes or no only.",
+          "boxes": "des_box",
+          "pad": 0.5,
+          "out": "des_rd"
+        },
+        {
+          "fail_if": ["des_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["des_rd"],
+          "out": "desn"
+        },
+        {
+          "compare_band": "desn.n",
+          "to": "reference.n_contexts",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_phase_number_or_caption_is_added_to_the_face_of_the_section",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a caption or arrow on the soil drawing beyond the context numbers and the ground surface line",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_a"
+        },
+        {
+          "fail_if": ["sweep_a.unreadable"]
+        },
+        {
+          "compare": "sweep_a.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

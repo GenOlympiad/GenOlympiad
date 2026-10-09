@@ -1,0 +1,96 @@
+{
+  "id": "draft_load_monotone",
+  "axis": "physical_consistency",
+  "prompt": "A photorealistic straight-on side view of a dark stone harbour basin, photographed straight on from water level. Floating in a row on the water are five identical white foam pontoon blocks of exactly the same size and shape, spaced well apart. Small black iron weights are stacked on top of them: the first float from the left carries three black iron weights, the second float from the left carries five black iron weights, the third float from the left carries one black iron weight, the fourth float from the left carries four black iron weights, the fifth float from the left carries two black iron weights.\n\nObey real flotation physics exactly: the more weight a float carries, the DEEPER it sinks into the water, so LESS of its white body shows above the waterline. A float carrying more weights must therefore stand LOWER out of the water than every float carrying fewer weights, and the float carrying the fewest weights must show the most white above the water. Do NOT draw the floats all riding at the same level, and do not simply make them step down from left to right -- the height each one shows above the water is decided only by how many weights sit on it.\n\nAll the floats are the same identical white blocks and the water is dark and perfectly still, so the waterline is one straight horizontal line across the picture. Sharp focus, plain dark background, no text, no numerals.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show several identical white floats riding on dark water with black weights stacked on top of them? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 5,
+    "loads": [3, 5, 1, 4, 2],
+    "q_order": "Look at the row of white floats on the water, from left to right. Which one of them shows the LEAST white above the waterline (sits deepest in the water)? Answer with its position from the left as a whole number only (1 for the left-most).",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "draft_order",
+      "weight": 3.0,
+      "score": "r.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "white float",
+          "expected_n": "reference.n",
+          "out": "fl"
+        },
+        {
+          "fail_if": ["fl.unreadable"]
+        },
+        {
+          "run": "draft_order_score",
+          "args": ["fl", "image", "reference.n", "reference.loads"],
+          "out": "r"
+        },
+        {
+          "fail_if": ["r.degenerate"]
+        }
+      ]
+    },
+    {
+      "name": "deepest_is_heaviest",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_order",
+          "out": "idx"
+        },
+        {
+          "fail_if": ["idx.unreadable"]
+        },
+        {
+          "run": "heaviest_float_picked",
+          "args": ["idx", "reference.loads"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

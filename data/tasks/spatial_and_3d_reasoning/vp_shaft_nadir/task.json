@@ -1,0 +1,139 @@
+{
+  "id": "vp_shaft_nadir",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Render a clean black-ink architectural line drawing on white of the inside of a narrow square brick ventilation shaft in an old mill, seen from the roof hatch looking straight DOWN the shaft to the basement floor far below.\n\nUse STRICT THREE-POINT perspective with the third vanishing point BELOW:\n- Because we are looking steeply down, the VERTICAL edges of the shaft (its corner edges, the brick courses' corner lines, the ladder stiles, the mullions) must NOT stay parallel: they must LEAN TOWARDS EACH OTHER as they go DOWN and converge on a single NADIR vanishing point far below the bottom of the picture, so that the shaft gets visibly NARROWER towards the bottom of the picture.\n- The horizontal edges at each level recede to their own vanishing points as usual.\n- Do not draw it as a flat elevation and do not leave the verticals parallel.\nPlain line rendering, no people, no text, no numbers, no labels.\n",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a line drawing looking down into a tall narrow shaft, well or trunk from above. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank panel, printed text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption anywhere on it (as opposed to being purely a drawing with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "q_updown": "Look at this drawing. Are we looking steeply DOWN into the inside of a tall narrow shaft, well or trunk from high up (so we can see the floor far below us), rather than seeing it from eye level or from below? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.8,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "verticals_converge_down",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "vertical_lean",
+          "args": ["image"],
+          "code": "code_986f2a94960b",
+          "out": "vl"
+        },
+        {
+          "fail_if": ["vl.no_read"]
+        },
+        {
+          "run": "downward_lean_score",
+          "args": ["vl.median_inward"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "looking_down_executed",
+      "weight": 1.0,
+      "gate": true,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "ask": "reference.q_updown",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_vertical_overlay",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "run": "vert_lean_overlay_marked",
+          "args": ["image"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "image": "ov.path",
+          "polylines": "ov.mk_measured_uprights.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "polylines": "ov.mk_true_plumb.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "ask": "Red lines have been painted over some of the near-vertical edges in this drawing and one green line runs straight down the middle of the picture. Are the RED lines lying on top of upright edges of the structure? Answer yes or no only.",
+          "image": "ovm2.path",
+          "out": "q"
+        },
+        {
+          "fail_if": ["q.unreadable"]
+        },
+        {
+          "compare": "q",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "2:3"
+}

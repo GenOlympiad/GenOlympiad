@@ -1,0 +1,207 @@
+{
+  "id": "duty_roster_week_n",
+  "axis": "latent_computation",
+  "prompt": "A tidy printed classroom duty-roster poster, headed 'Classroom Duty Roster - Week 7', with a two-column table (PUPIL, CHORE), one row per pupil. Five pupils -- ANA, BEN, CATO, DEV, ELLA -- rotate through five chores -- BOARD, PLANTS, RECYCLING, LIBRARY, PETS. In WEEK 1 the pairing is Ana=BOARD, Ben=PLANTS, Cato=RECYCLING, Dev=LIBRARY, Ella=PETS. Every following week the whole class rotates: each pupil moves ONE chore further down that chore list, wrapping from the last chore back to the first. Work the rotation forward to WEEK 7 and fill the table with each pupil's correct Week-7 chore. Print each pupil's name with the exact chore they are on in Week 7. Neat table, bold header, no other text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show printed classroom 'Duty Roster - Week 7' two-column table of five pupils rotated to their week-7 chores? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_wk": 7,
+    "chore_ana": "PLANTS",
+    "chore_ben": "RECYCLING",
+    "chore_cato": "LIBRARY",
+    "chore_dev": "PETS",
+    "chore_ella": "BOARD",
+    "n_pupils": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chore_ana",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "This is a classroom duty roster table with two columns, PUPIL and CHORE, one pupil per row. Find the row whose PUPIL is 'ANA'. What single CHORE word is printed in the CHORE column of that row? Answer with just the one chore word exactly as printed (one of: BOARD, PLANTS, RECYCLING, LIBRARY, PETS).",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "compare": "a",
+          "to": "reference.chore_ana",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chore_ben",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "This is a classroom duty roster table with two columns, PUPIL and CHORE, one pupil per row. Find the row whose PUPIL is 'BEN'. What single CHORE word is printed in the CHORE column of that row? Answer with just the one chore word exactly as printed (one of: BOARD, PLANTS, RECYCLING, LIBRARY, PETS).",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "compare": "a",
+          "to": "reference.chore_ben",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chore_cato",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "This is a classroom duty roster table with two columns, PUPIL and CHORE, one pupil per row. Find the row whose PUPIL is 'CATO'. What single CHORE word is printed in the CHORE column of that row? Answer with just the one chore word exactly as printed (one of: BOARD, PLANTS, RECYCLING, LIBRARY, PETS).",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "compare": "a",
+          "to": "reference.chore_cato",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chore_dev",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "This is a classroom duty roster table with two columns, PUPIL and CHORE, one pupil per row. Find the row whose PUPIL is 'DEV'. What single CHORE word is printed in the CHORE column of that row? Answer with just the one chore word exactly as printed (one of: BOARD, PLANTS, RECYCLING, LIBRARY, PETS).",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "compare": "a",
+          "to": "reference.chore_dev",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chore_ella",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "This is a classroom duty roster table with two columns, PUPIL and CHORE, one pupil per row. Find the row whose PUPIL is 'ELLA'. What single CHORE word is printed in the CHORE column of that row? Answer with just the one chore word exactly as printed (one of: BOARD, PLANTS, RECYCLING, LIBRARY, PETS).",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "compare": "a",
+          "to": "reference.chore_ella",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_week_header",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the week number printed in the roster heading 'Classroom Duty Roster - Week N'. Report the printed number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.q_wk",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_pupil_rows",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one table row naming a pupil and the chore that pupil is on, not the column-heading row",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole table row that gives a person's name and the chore written next to it, rather than the column-heading row or bare paper? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_pupils",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_two_column_table",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is the roster a two-column table with headers PUPIL and CHORE? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

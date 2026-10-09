@@ -1,0 +1,205 @@
+{
+  "id": "trains_meeting_time",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on railway DISPATCH control-room track diagram for a single line between two stations, ALDER on the left and BIRCH on the right, drawn 360 km apart on one horizontal track. Train A leaves ALDER heading right at 09:00 travelling 72 km/h; Train B leaves BIRCH heading left at 09:30 travelling 108 km/h (the two departures are at DIFFERENT clock times, so they do NOT meet at the midpoint). Both keep constant speed. In a boxed readout panel titled 'COMPUTED MEETING', print the single clock TIME at which the two trains meet, as 'TIME  HH:MM' in 24-hour form, and on the next line the distance of the meeting point from ALDER as '<number> km from ALDER' to one decimal place. Work both out yourself from the distance, speeds and the two different departure times; do not print any other numbers in the readout box.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show railway dispatch control-room single-line track diagram with two trains closing at staggered departure times and a boxed COMPUTED MEETING readout? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "meet_min": 678,
+    "meet_hhmm": "11:18",
+    "dist_a": 165.6,
+    "midpoint": 180.0,
+    "naive_min": 660,
+    "naive_hhmm": "11:00",
+    "q_time": "This is a railway dispatch track diagram. In the boxed 'COMPUTED MEETING' readout, a clock TIME is printed on the line beginning 'TIME'. Read ONLY the time actually printed in that box; do NOT do any sums or correct it yourself, just transcribe what is on the line. Answer as HH:MM (24-hour) only.",
+    "q_dist": "This is a railway dispatch track diagram. In the boxed 'COMPUTED MEETING' readout, a distance 'X.X km from ALDER' is printed. Read ONLY the number of kilometres actually printed in that box; do NOT do any sums or correct it, just transcribe the printed figure. Answer with just the number.",
+    "q_form": "Does this image show a railway track diagram with two stations at the ends of a horizontal line and a boxed readout panel labelled 'COMPUTED MEETING'? Answer yes or no only.",
+    "dist_total": 360,
+    "speed_a": 72,
+    "speed_b": 108
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "meet_time",
+      "weight": 3.0,
+      "steps": [
+        {
+          "crop_full": true,
+          "out": "img"
+        },
+        {
+          "ask": "reference.q_time",
+          "image": "img",
+          "out": "ans"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "to_minutes": "ans",
+          "out": "mins"
+        },
+        {
+          "fail_if": ["mins.unreadable"]
+        },
+        {
+          "compare_band": "mins",
+          "to": "reference.meet_min",
+          "core": 2.0,
+          "margin": 12.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "meet_dist",
+      "weight": 2.0,
+      "steps": [
+        {
+          "crop_full": true,
+          "out": "img"
+        },
+        {
+          "read_number": "reference.q_dist",
+          "image": "img",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare_band": "s",
+          "to": "reference.dist_a",
+          "core": 3.0,
+          "margin": 8.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "compare": "g",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_dist",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the distance between stations ALDER and BIRCH labelled on the track diagram (in km). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.dist_total",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_speed_a",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read Train A's speed labelled on the diagram (in km/h). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.speed_a",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_speed_b",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read Train B's speed labelled on the diagram (in km/h). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.speed_b",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_naive_time",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does the 'COMPUTED MEETING' readout box show the meeting time as 11:00 (the naive midpoint-meeting time ignoring the different departure times)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

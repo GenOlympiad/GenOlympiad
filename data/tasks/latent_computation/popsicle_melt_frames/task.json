@@ -1,0 +1,162 @@
+{
+  "id": "popsicle_melt_frames",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photograph of THREE popsicles (ice lollies) standing upright in a row on a light plain background, labelled A, B, C from LEFT to RIGHT, each on its own wooden stick, each a different solid colour, all the SAME width. Each popsicle started at its own length and has been melting (getting shorter) at its own steady rate since it was taken out of the freezer. Their starting lengths, melt rates and how long each has been out of the freezer:\n    A: started 12 cm, melts 0.8 cm per minute, out of freezer 10 minutes\n    B: started 11 cm, melts 1.0 cm per minute, out of freezer 3 minutes (taken out LATER)\n    C: started 13 cm, melts 1.2 cm per minute, out of freezer 7 minutes\nWork out how long EACH popsicle is RIGHT NOW (current length = starting length minus its melt rate times its own minutes out of the freezer), then draw the three coloured popsicle bodies at those current lengths, same width, standing on their sticks in the order A, B, C left to right. Do NOT draw three random different lengths and do NOT draw them equal -- the relative lengths must match your computed current lengths. No numbers, labels, rulers, drips or text anywhere in the image.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn, and never mind ignoring how melted they look. Does this picture show three popsicles / ice lollies standing in a row on their sticks? A photo, illustration, schematic or clean diagram ALL count as yes. Answer NO only if it shows just a blank card with none of that shown, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "names": ["A", "B", "C"],
+    "n": 3,
+    "cur_len_cm": [4.0, 8.0, 4.6],
+    "ratios": [0.5, 1.0, 0.575],
+    "tallest": "B",
+    "order_short_to_tall": ["A", "C", "B"],
+    "q_ratios": "Three popsicle bodies stand in a row, seen straight on. Compare each body's length with the LONGEST of the three: the longest counts as 1.0, and every other body counts as its length divided by the longest. Answer with exactly three decimal numbers separated by single spaces, for the LEFT, MIDDLE and RIGHT popsicle in that order, and nothing else.",
+    "q_order": "Three popsicles stand in a row; call the left one A, the middle one B and the right one C. Order them from the shortest remaining body to the longest remaining body. Answer with the three letters only, shortest first, separated by single spaces.",
+    "q_count": "How many popsicles are standing in the row? Whole number only.",
+    "enforce_notext": true,
+    "q_notext": "Is there any printed word or number anywhere in this image? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "length_ratios",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the coloured frozen POPSICLE BODY -- the solid block of ice itself. Box every popsicle body in the row separately. Each box must run from the body's TOP edge down to its BOTTOM edge, where the bare wooden stick comes out; the BARE WOODEN STICK BELOW THE BODY IS NOT PART OF IT and must stay outside the box. Box the ice body only, not the whole popsicle-with-stick and not the background.",
+          "expected_n": "reference.n",
+          "out": "oh"
+        },
+        {
+          "fail_if": ["oh.unreadable"]
+        },
+        {
+          "run": "popsicle_heights",
+          "args": ["oh", "reference['n']"],
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.no_read"]
+        },
+        {
+          "compare_sequence": "bd.ratios",
+          "to": "reference.ratios",
+          "core": 0.06,
+          "margin": 0.14,
+          "shape_frac": 1.0,
+          "shape_delta": 0.08,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "order_short_to_tall",
+      "weight": 1.5,
+      "score": "s.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the coloured frozen POPSICLE BODY -- the solid block of ice itself. Box every popsicle body in the row separately. Each box must run from the body's TOP edge down to its BOTTOM edge, where the bare wooden stick comes out; the BARE WOODEN STICK BELOW THE BODY IS NOT PART OF IT and must stay outside the box. Box the ice body only, not the whole popsicle-with-stick and not the background.",
+          "expected_n": "reference.n",
+          "out": "oh"
+        },
+        {
+          "fail_if": ["oh.unreadable"]
+        },
+        {
+          "run": "popsicle_heights",
+          "args": ["oh", "reference['n']"],
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.no_read"]
+        },
+        {
+          "run": "order_score",
+          "args": ["bd['heights']", "reference.names", "reference.order_short_to_tall"],
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one popsicle standing upright on its own wooden stick in the row",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_r"
+        },
+        {
+          "fail_if": ["box_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole popsicle standing on its stick, rather than bare background or only part of one? Answer yes or no only.",
+          "boxes": "box_r",
+          "out": "crop_r"
+        },
+        {
+          "fail_if": ["crop_r.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_r"],
+          "out": "cnt_r"
+        },
+        {
+          "compare_band": "cnt_r.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

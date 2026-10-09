@@ -1,0 +1,84 @@
+{
+  "id": "hydrometer_temperature_corrected_gravity",
+  "axis": "quantitative_precision",
+  "prompt": "The brewhouse logs a gravity at every sampling point, so the trial jar is photographed on the bench exactly as it stands while the reading is taken.\n\nA tall glass trial jar of wort stands on the sampling bench with a glass hydrometer floating in it, its stem rising clear of the liquid so that the printed scale on the stem and the wort surface meet in plain view. A strip thermometer taped to the outside of the jar has the wort at 30 Celsius. The recipe card propped against the jar gives this batch its target gravity of 1.052 and states that this hydrometer is calibrated at 15 Celsius. The brewer's log lies open beside the card with its gravity column still empty.\n\nWhat the stem has to read while the wort is this warm is what the recipe card does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a glass trial jar on a bench with a hydrometer floating in it and a thermometer taped to the jar? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "surface_above_the_card_mark"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the printed scale on the hydrometer stem at the wort surface, and write that figure only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "1.0485", "1.0515"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the hydrometer stem beside the gravity figure printed on the recipe card. Answer with one of: the wort surface cuts the stem above the mark the card names; the wort surface cuts the stem at the mark the card names; the wort surface cuts the stem below the mark the card names.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,247 @@
+{
+  "id": "parallel_lines_equidistant",
+  "axis": "quantitative_precision",
+  "prompt": "A clear aerial photograph looking straight down onto the surface of an outdoor running track, showing the white painted lane lines that run straight across the frame. There are EXACTLY 6 white lane lines painted on the red track surface, and they are spaced PERFECTLY EVENLY — the perpendicular distance from each line to the next is the same, so all 5 lanes between the 6 lines are exactly equal in width. Not 5 lines, not 7 — exactly 6 straight parallel white lines, none of the lanes wider or narrower than the others. A genuine top-down photograph: real painted track surface with texture, natural daylight, no athletes, no numbers, no text, no other markings.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a straight-down aerial photo of a running track surface with six white painted lane lines, all lanes the same width. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 6,
+    "d2_q_feature": "This image was supposed to depict: a top-down photo of a track surface with six evenly-spaced white lane lines. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This image should depict: a top-down photo of a painted running-track surface with lane lines. Is the object actually shown the KIND of thing described (a marked sports surface with parallel lines), rather than a different object or a generic placeholder? Answer with the single word yes or no only.",
+    "d2_q_single": "This image should depict: one track surface with its lane lines, and only that. Is the subject shown cleanly on its own, WITHOUT extra distracting objects, clutter, or unrelated markings that are not part of the described scene? Answer yes if only the intended subject is present, no if there is distracting clutter. Answer with the single word yes or no only.",
+    "d2_q_precise": "Does this image look like a PRECISE, deliberately painted set of straight parallel lines -- crisp, clean, regular -- as opposed to a rough, wobbly, sketchy or clearly-approximate rendering? Answer yes if it looks precisely constructed, no if it looks rough or freehand. Answer with the single word yes or no only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_line_count",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "white painted lane line -- one straight white stripe painted on the track surface; count a rectangle only if a white painted stripe runs right through it from one side to the other, and box each stripe on its own along its whole painted length; do not box the bare track between two stripes, a shadow, a seam or joint in the surface, or two stripes with the lane between them",
+          "retries": 6,
+          "out": "lb"
+        },
+        {
+          "fail_if": ["lb.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show a white painted line or stripe on the track surface? Answer yes only if you can see white paint lying on the track. Answer no if it shows bare track surface, or a shadow, or anything else that is not white paint. Answer yes or no only.",
+          "boxes": "lb",
+          "out": "lc"
+        },
+        {
+          "fail_if": ["lc.unreadable"]
+        },
+        {
+          "count_yes": "lc",
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_even_spacing",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "white painted lane line -- one straight white stripe painted on the track surface; count a rectangle only if a white painted stripe runs right through it from one side to the other, and box each stripe on its own along its whole painted length; do not box the bare track between two stripes, a shadow, a seam or joint in the surface, or two stripes with the lane between them",
+          "retries": 6,
+          "out": "lb2"
+        },
+        {
+          "fail_if": ["lb2.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show a white painted line or stripe on the track surface? Answer yes only if you can see white paint lying on the track. Answer no if it shows bare track surface, or a shadow, or anything else that is not white paint. Answer yes or no only.",
+          "boxes": "lb2",
+          "out": "lc2"
+        },
+        {
+          "fail_if": ["lc2.unreadable"]
+        },
+        {
+          "run": "line_spacing_deviation",
+          "args": ["lb2", "lc2", "reference"],
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.n_mismatch"]
+        },
+        {
+          "compare_band": "sp.gap_dev",
+          "to": 0.0,
+          "core": 0.06,
+          "margin": 0.2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_single_subject",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_single",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

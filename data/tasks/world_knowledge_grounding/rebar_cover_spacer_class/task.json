@@ -1,0 +1,84 @@
+{
+  "id": "rebar_cover_spacer_class",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The site engineer has to close the pre-pour inspection before the concrete is called, so the cage is photographed from the deck with the bins and the pour card in the same frame.\n\nThe reinforcement cage sits on the plywood soffit with plastic spacers clipped along its bottom bars, each spacer moulded on its side with the cover it gives and turned so that moulding faces the camera. Four spacer bins stand on the deck behind the cage, marked 20, 25, 45 and 50 millimetres, each with a hinged lid. The pour card wired to a top bar gives the deck's exposure class as XS1 and the structural class the designer has fixed, and nothing else. A tape and a bundle of tie wire lie on the soffit.\n\nWhich spacer belongs on this cage is what the pour card does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a reinforcement cage on plywood formwork with spacers clipped along its bars, lidded bins behind it and a pour card wired to the steel? Answer yes or no only.",
+  "reference": {
+    "part1": "spacer_moulded_45",
+    "part2": "3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at a spacer clipped to the bottom bars of the cage and say which number is moulded into its side. Answer with one of: the number moulded there is 45; the number moulded there is 25; the number moulded there is 20.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Count the spacer bins standing on the deck whose lids are still shut. Write the number only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

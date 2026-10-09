@@ -1,0 +1,188 @@
+{
+  "id": "count_diagonal_staggered",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic photograph of a diagonal solar array on a terraced roof whose green panels are offset row to row. The green panels do NOT form a regular rectangular grid -- each row is offset sideways from the one above (a staggered, stepped, brick-bond arrangement) and the rows have DIFFERENT lengths: 6, 4, 6, 4 from top to bottom. So the total is EXACTLY 20 -- not a round rows-times-columns number. Each one is separate and clearly visible. No text, no numerals.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict green solar panels on a terraced roof, arranged in a STAGGERED, stepped pattern with each row shifted sideways and the rows of unequal length (not a plain rectangular grid), so they do not line up into neat columns. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 20,
+    "rows": [6, 4, 6, 4],
+    "q": "How many green panels are in this image? They are staggered (not a neat grid); count every one individually, do not just take rows times columns. Count them one by one. Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This image should show the countable objects described as: green solar panels on a terraced roof, arranged in a STAGGERED, stepped pattern with each row shifted sideways and the rows of unequal length (not a plain rectangular grid), so they do not line up into neat columns. Look at the individual objects being counted. Are they clearly the correct KIND of object (the right thing, of the right colour where a colour was specified) rather than some other object, blobs, or a mix that does not match the description? Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them visible as its own separate individual (allowing for the intended overlaps/stacking the scene describes), rather than merged into one indistinct blob? Answer yes if each intended object can be told apart, no if they merge into an uncountable mass. Answer with the single word yes or no only.",
+    "q_count_noun": "a green panel"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.q_count_noun",
+          "out": "bx",
+          "propose_boxes": "vlm",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Is there a bright or coloured mark in this picture, as opposed to only plain dark background or bare wall? Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "count_yes": "cr",
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "premise_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show similar items arranged in a staggered, offset stepped pattern (each row shifted, not a plain rectangular grid)? Answer yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one green solar panel on the terraced roof",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_g"
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole green solar panel on the roof, rather than some other object, a shapeless blob, or only part of a panel? Answer yes or no only.",
+          "boxes": "box_g",
+          "out": "crop_g"
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a clump where several green solar panels smear together so badly the separate panels cannot be told apart",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g"
+        },
+        {
+          "fail_if": ["sweep_g.unreadable"]
+        },
+        {
+          "compare": "sweep_g.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a lit window",
+    "s2": "a round porthole light",
+    "s3": "a green solar panel"
+  },
+  "count_total": "reference.n"
+}

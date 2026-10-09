@@ -1,0 +1,193 @@
+{
+  "id": "roster_dualkey_sort",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed MEMBERSHIP ROSTER  (sorted by surname, then first name). It lists 40 people, one per line as 'SURNAME, First name', in two columns. CRITICAL two-level ordering: the roster is sorted by SURNAME alphabetically (primary key), and whenever several people share the SAME surname they are ordered among themselves by FIRST NAME alphabetically (secondary tie-break). In particular the people with surname 'MORGAN' (4 of them) must have their first names in strict alphabetical order. Print every line so both the surname order and, within each shared surname, the first-name order are strictly alphabetical. Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a printed roster of people 'SURNAME, First' filed by surname then by first name. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 40,
+    "tie": "MORGAN",
+    "k": 4,
+    "firsts": ["Ada", "Cy", "Eve", "Ida"],
+    "q_firsts": "Find ALL the people whose SURNAME is 'MORGAN'. Read their FIRST names in the exact top-to-bottom order they are printed, and give them as a comma-separated list. Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "roster_dualkey_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed sheet of paper that has the list of names on it",
+          "expected_n": 1,
+          "propose_boxes": "vlm",
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read_crop": "This page lists people with a surname printed in capitals, then a comma, then a first name. Find every line whose surname is {gt.tie}. Going down the page in the order the list is printed, write down the first name from each of those lines, separated by commas. Write only the first names, not the surname, and nothing else.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "rd_first"
+        },
+        {
+          "run": "read_first_names",
+          "args": ["rd_first"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "first_names_ascending",
+          "args": ["res.firsts", "reference.k"],
+          "out": "frac"
+        },
+        {
+          "run": "ag_plan",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["pl", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed sheet of paper that has the list of names on it",
+          "expected_n": 1,
+          "propose_boxes": "vlm",
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read_crop": "This page lists people with a surname printed in capitals at the start of each line. How many lines on this page have the surname {gt.tie}? Answer with just a number.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "rd_sur"
+        },
+        {
+          "run": "read_count",
+          "args": ["rd_sur"],
+          "out": "tie"
+        },
+        {
+          "fail_if": ["tie.no_read"]
+        },
+        {
+          "compare_band": "tie.n",
+          "to": "reference.k",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        },
+        {
+          "run": "ag_plan",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["pl", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ]
+}

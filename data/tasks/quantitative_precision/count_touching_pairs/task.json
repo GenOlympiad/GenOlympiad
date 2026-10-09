@@ -1,0 +1,209 @@
+{
+  "id": "count_touching_pairs",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic photograph of a plain white office whiteboard covered with identical round red magnets. EXACTLY 11 PAIRS of magnets are touching -- in each pair the two are stuck right up against each other, rim to rim -- and a further 16 magnets sit completely on their own with clear board all round each. So 38 magnets in all: 22 of them in 11 touching pairs, 16 of them isolated. No group of three or more magnets touches. Scatter them irregularly with uneven gaps -- never in rows, never in a grid, never arranged as a ring or a decorative border. Even light, sharp focus. No text, no numerals, no labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a whiteboard covered with red round magnets, some of them stuck together in pairs. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q": "Count the separate clumps of red magnets, counting two magnets that touch each other as ONE clump. Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This image should show the countable objects described as: a whiteboard covered with red round magnets, some of them stuck together in pairs. Look at the individual objects being counted. Are they clearly the correct KIND of object (the right thing, of the right colour where a colour was specified) rather than some other object, blobs, or a mix that does not match the description? Answer with the single word yes or no only.",
+    "pairs": 11,
+    "singles": 16,
+    "clumps": 27,
+    "total": 38,
+    "qc": "Count the separate clumps of red magnets, counting two magnets that touch each other as ONE clump. Answer with the integer number only.",
+    "qp": "Count the PAIRS of red magnets that are touching each other. Answer with the integer number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "clump_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "round red piece",
+          "out": "b",
+          "propose_boxes": "incremental"
+        },
+        {
+          "fail_if": ["b.unreadable"]
+        },
+        {
+          "read_crop": "Is there a round RED piece in this picture? Answer yes or no only.",
+          "boxes": "b",
+          "out": "c"
+        },
+        {
+          "fail_if": ["c.unreadable"]
+        },
+        {
+          "run": "candidate_pairs",
+          "args": ["b", "c", "1.6"],
+          "out": "cd"
+        },
+        {
+          "read_crop": "Are the two red pieces in this picture touching each other, edge to edge? Answer yes or no only.",
+          "boxes": "cd.boxes",
+          "out": "pj"
+        },
+        {
+          "run": "count_touching",
+          "args": ["cd", "pj"],
+          "out": "tal"
+        },
+        {
+          "run": "hold_clump_count",
+          "args": ["tal"],
+          "out": "tal_h"
+        },
+        {
+          "fail_if": ["tal_h.read_hole"]
+        },
+        {
+          "compare_band": "tal.clumps",
+          "to": "reference.clumps",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "touching_pair_count",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "round red piece",
+          "out": "b",
+          "propose_boxes": "incremental"
+        },
+        {
+          "fail_if": ["b.unreadable"]
+        },
+        {
+          "read_crop": "Is there a round RED piece in this picture? Answer yes or no only.",
+          "boxes": "b",
+          "out": "c"
+        },
+        {
+          "fail_if": ["c.unreadable"]
+        },
+        {
+          "run": "candidate_pairs",
+          "args": ["b", "c", "1.6"],
+          "out": "cd"
+        },
+        {
+          "read_crop": "Are the two red pieces in this picture touching each other, edge to edge? Answer yes or no only.",
+          "boxes": "cd.boxes",
+          "out": "pj"
+        },
+        {
+          "run": "count_touching",
+          "args": ["cd", "pj"],
+          "out": "tal"
+        },
+        {
+          "run": "hold_touching_pair_count",
+          "args": ["tal"],
+          "out": "tal_h"
+        },
+        {
+          "fail_if": ["tal_h.read_hole"]
+        },
+        {
+          "compare_band": "tal.pairs",
+          "to": "reference.pairs",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the board, dish or wall the round red pieces rest on",
+          "out": "box_g",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "reference.d2_q_objform",
+          "boxes": "box_g",
+          "out": "crop_g",
+          "pad": 0.02
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a red draughts piece",
+    "s2": "a round red bacterial colony",
+    "s3": "a round red magnet"
+  }
+}

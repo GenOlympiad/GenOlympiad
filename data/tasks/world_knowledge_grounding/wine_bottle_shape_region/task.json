@@ -1,0 +1,243 @@
+{
+  "id": "wine_bottle_shape_region",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photograph of the sampling bench in a wine importer's bonded warehouse, taken square-on under the bench lamp. Four bottles of wine stand in a row on the bench, front labels turned to the camera, the whole of every bottle from base to capsule inside the frame.\n\nThe four labels name four different European wine regions, one to a bottle: BORDEAUX, BOURGOGNE, RHEINGAU and ALSACE. Under the region, each label gives the single grape that wine is made from, and that grape has to be one its own region is actually allowed to use.\n\nClipped to the bench beside them is the day's sampling docket, which reads in full:\nSAMPLING DOCKET -- 4 BOTTLES DRAWN -- 1 BOTTLE IS IN THE WRONG SHAPE OF BOTTLE FOR THE REGION ON ITS LABEL\n\nThe importer's buyer signs the consignment off from this photograph, so the bench has to bear out the docket. Work out for yourself what each of these regions is bottled in and what it may be made from -- I am deliberately not telling you the shape of any of these bottles, which one is the odd bottle, or which grape belongs anywhere. No tasting note, no name for any bottle shape, no region key and no other writing may appear in the picture apart from the four labels and the docket line above.\n\nAll four bottles' shoulders and all four labels must be in the same frame and large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show four wine bottles standing in a row on a bench with a clipped paper docket beside them? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "shape_of": [
+      ["bordeaux", "square"],
+      ["bourgogne", "sloping"],
+      ["rheingau", "slender"],
+      ["alsace", "slender"]
+    ],
+    "grapes": [
+      ["bordeaux", "cabernet|merlot|malbec|petit verdot|carmenere"],
+      ["bourgogne", "pinot noir|chardonnay|aligot"],
+      ["rheingau", "riesling|burgunder|pinot noir"],
+      ["alsace", "riesling|pinot gris|pinot blanc|sylvaner|muscat|traminer"]
+    ],
+    "regions": ["bordeaux", "bourgogne", "rheingau", "alsace"],
+    "n_bottles": 4,
+    "n_shape_ok": 3,
+    "n_grape_ok": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "three_bottles_carry_the_shape_their_region_uses",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one wine bottle standing on the sampling bench",
+          "sweep": true,
+          "propose_boxes": "vlm",
+          "out": "bt"
+        },
+        {
+          "fail_if": ["bt.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one wine bottle. Copy the region name printed in LARGE letters on its label. If more than one bottle is visible in this cut-out, read the label of the bottle nearest the middle of it. Write the words only and nothing else.",
+          "boxes": "bt",
+          "out": "rg"
+        },
+        {
+          "fail_if": ["rg.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one whole wine bottle. What shape is its shoulder? Answer with one word: square if the shoulder turns sharply, sloping if it falls away gradually, or slender if there is hardly any shoulder at all.",
+          "boxes": "bt",
+          "out": "sh"
+        },
+        {
+          "fail_if": ["sh.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one wine bottle. Copy the grape name printed under the region name on its label. If more than one bottle is visible in this cut-out, read the label of the bottle nearest the middle of it. Write the words only and nothing else.",
+          "boxes": "bt",
+          "out": "gp"
+        },
+        {
+          "fail_if": ["gp.unreadable"]
+        },
+        {
+          "run": "check_bottle_regions",
+          "args": ["rg", "gp", "sh", "reference.shape_of", "reference.grapes"],
+          "out": "bd"
+        },
+        {
+          "compare_band": "bd.n_shape_ok",
+          "to": "reference.n_shape_ok",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_label_names_a_grape_its_region_may_use",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one wine bottle standing on the sampling bench",
+          "sweep": true,
+          "propose_boxes": "vlm",
+          "out": "bt2"
+        },
+        {
+          "fail_if": ["bt2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one wine bottle. Copy the region name printed in LARGE letters on its label. If more than one bottle is visible in this cut-out, read the label of the bottle nearest the middle of it. Write the words only and nothing else.",
+          "boxes": "bt2",
+          "out": "rg2"
+        },
+        {
+          "fail_if": ["rg2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one whole wine bottle. What shape is its shoulder? Answer with one word: square if the shoulder turns sharply, sloping if it falls away gradually, or slender if there is hardly any shoulder at all.",
+          "boxes": "bt2",
+          "out": "sh2"
+        },
+        {
+          "fail_if": ["sh2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one wine bottle. Copy the grape name printed under the region name on its label. If more than one bottle is visible in this cut-out, read the label of the bottle nearest the middle of it. Write the words only and nothing else.",
+          "boxes": "bt2",
+          "out": "gp2"
+        },
+        {
+          "fail_if": ["gp2.unreadable"]
+        },
+        {
+          "run": "check_bottle_regions",
+          "args": ["rg2", "gp2", "sh2", "reference.shape_of", "reference.grapes"],
+          "out": "bd2"
+        },
+        {
+          "compare_band": "bd2.n_grape_ok",
+          "to": "reference.n_grape_ok",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bottle_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one wine bottle standing on the sampling bench",
+          "sweep": true,
+          "propose_boxes": "vlm",
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole wine bottle from base to capsule, rather than the bare bench or only part of a bottle? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_bottles",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_four_regions",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one wine bottle standing on the sampling bench",
+          "sweep": true,
+          "propose_boxes": "vlm",
+          "out": "bt3"
+        },
+        {
+          "fail_if": ["bt3.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one wine bottle. Copy the region name printed in LARGE letters on its label. If more than one bottle is visible in this cut-out, read the label of the bottle nearest the middle of it. Write the words only and nothing else.",
+          "boxes": "bt3",
+          "out": "rg3"
+        },
+        {
+          "fail_if": ["rg3.unreadable"]
+        },
+        {
+          "compare_set": "rg3.answers",
+          "to": "reference.regions",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_written_key",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a tasting note, a name for a bottle shape or a note saying which bottle is wrong",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_d3_n"
+        },
+        {
+          "fail_if": ["sweep_d3_n.unreadable"]
+        },
+        {
+          "compare": "sweep_d3_n.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "id": "clef",
+  "axis": "symbolic_systems",
+  "prompt": "A museum facsimile of a Renaissance choirbook leaf, thick cream vellum, hand-lettered black notation, shot square on so the leaf fills the frame. A single staff of five ruled lines crosses the leaf; the rest of the leaf is bare.\n\nThe clef opening that staff is a C-clef standing on the LOWEST line of the five, which makes that bottom line middle C. Nothing else is written at the head of the staff -- no key signature, no mensuration sign.\n\nSet out exactly five whole notes on the staff, open oval noteheads with no stems, evenly spaced left to right, at these pitches in this order:\n\nB4, F5, D4, A3, E4\n\nTwo of those pitches lie beyond the ruled five lines and each of those needs its own short ledger line drawn through the notehead. Every notehead must read unambiguously as centred on a line or centred in a space. Put no letter names, no numerals, no words, no decoration and no other mark on the leaf.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a leaf carrying one staff of five ruled lines with a clef sign at its left-hand end and a row of separate oval noteheads placed along it. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a bare leaf, a page of lettering, a picture of people, or an unrelated image. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "clef": "soprano",
+    "pitches": ["B4", "F5", "D4", "A3", "E4"],
+    "n_notes": 5,
+    "pos_index": [6, 10, 1, -2, 2],
+    "pos_tol": 0.35,
+    "decoy_treble_pos_index": [4, 8, -1, -4, 0]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "staff_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a notehead on the music staff",
+          "out": "hd",
+          "sweep": true
+        },
+        {
+          "fail_if": ["hd.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of part of a five-line music staff. Exactly one notehead sits at the CENTRE of this picture; if any other noteheads appear near the left or right edge, ignore them completely. Number the five staff lines from the BOTTOM one upwards, so the lowest line is line 1 and the highest line is line 5, and number the four gaps between them the same way, so space 1 is the gap between line 1 and line 2. Where does the centre of that one notehead sit? Answer with EXACTLY one of these and nothing else: 'line 1' 'line 2' 'line 3' 'line 4' 'line 5' 'space 1' 'space 2' 'space 3' 'space 4' 'above 1' (the gap just over line 5) 'above 2' (one short extra line drawn over the staff) 'above 3' (the gap over that short line) 'below 1' (the gap just under line 1) 'below 2' (one short extra line drawn under the staff) 'below 3'.",
+          "boxes": "hd",
+          "pad": 2.5,
+          "out": "pz"
+        },
+        {
+          "fail_if": ["pz.unreadable"]
+        },
+        {
+          "run": "read_staff",
+          "args": ["hd", "pz", "reference.n_notes"],
+          "out": "m"
+        },
+        {
+          "run": "flag_unpaired_staff",
+          "args": ["m"],
+          "out": "mg"
+        },
+        {
+          "fail_if": ["mg.unreadable"]
+        },
+        {
+          "run": "readable_frac",
+          "args": ["m"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "notehead_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a notehead on the music staff",
+          "out": "hd",
+          "sweep": true
+        },
+        {
+          "fail_if": ["hd.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of part of a five-line music staff. Exactly one notehead sits at the CENTRE of this picture; if any other noteheads appear near the left or right edge, ignore them completely. Number the five staff lines from the BOTTOM one upwards, so the lowest line is line 1 and the highest line is line 5, and number the four gaps between them the same way, so space 1 is the gap between line 1 and line 2. Where does the centre of that one notehead sit? Answer with EXACTLY one of these and nothing else: 'line 1' 'line 2' 'line 3' 'line 4' 'line 5' 'space 1' 'space 2' 'space 3' 'space 4' 'above 1' (the gap just over line 5) 'above 2' (one short extra line drawn over the staff) 'above 3' (the gap over that short line) 'below 1' (the gap just under line 1) 'below 2' (one short extra line drawn under the staff) 'below 3'.",
+          "boxes": "hd",
+          "pad": 2.5,
+          "out": "pz"
+        },
+        {
+          "fail_if": ["pz.unreadable"]
+        },
+        {
+          "run": "read_staff_cnt",
+          "args": ["hd", "pz", "reference.n_notes"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "count_frac",
+          "args": ["m", "reference.n_notes"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "staff_positions",
+      "weight": 10.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a notehead on the music staff",
+          "out": "hd",
+          "sweep": true
+        },
+        {
+          "fail_if": ["hd.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of part of a five-line music staff. Exactly one notehead sits at the CENTRE of this picture; if any other noteheads appear near the left or right edge, ignore them completely. Number the five staff lines from the BOTTOM one upwards, so the lowest line is line 1 and the highest line is line 5, and number the four gaps between them the same way, so space 1 is the gap between line 1 and line 2. Where does the centre of that one notehead sit? Answer with EXACTLY one of these and nothing else: 'line 1' 'line 2' 'line 3' 'line 4' 'line 5' 'space 1' 'space 2' 'space 3' 'space 4' 'above 1' (the gap just over line 5) 'above 2' (one short extra line drawn over the staff) 'above 3' (the gap over that short line) 'below 1' (the gap just under line 1) 'below 2' (one short extra line drawn under the staff) 'below 3'.",
+          "boxes": "hd",
+          "pad": 2.5,
+          "out": "pz"
+        },
+        {
+          "fail_if": ["pz.unreadable"]
+        },
+        {
+          "run": "read_staff_pos",
+          "args": ["hd", "pz", "reference.n_notes"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "positions_frac",
+          "args": ["m", "reference.pos_index", "reference.pos_tol"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_appearance_page_form",
+      "weight": 0.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a notehead on the music staff",
+          "out": "hd",
+          "sweep": true
+        },
+        {
+          "fail_if": ["hd.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of part of a five-line music staff. Exactly one notehead sits at the CENTRE of this picture; if any other noteheads appear near the left or right edge, ignore them completely. Number the five staff lines from the BOTTOM one upwards, so the lowest line is line 1 and the highest line is line 5, and number the four gaps between them the same way, so space 1 is the gap between line 1 and line 2. Where does the centre of that one notehead sit? Answer with EXACTLY one of these and nothing else: 'line 1' 'line 2' 'line 3' 'line 4' 'line 5' 'space 1' 'space 2' 'space 3' 'space 4' 'above 1' (the gap just over line 5) 'above 2' (one short extra line drawn over the staff) 'above 3' (the gap over that short line) 'below 1' (the gap just under line 1) 'below 2' (one short extra line drawn under the staff) 'below 3'.",
+          "boxes": "hd",
+          "pad": 2.5,
+          "out": "pz"
+        },
+        {
+          "fail_if": ["pz.unreadable"]
+        },
+        {
+          "run": "read_staff_form",
+          "args": ["hd", "pz", "reference.n_notes"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "read_crop": "Is there a clef symbol -- the large curly sign that opens a piece of music -- printed at the LEFT-HAND end of the staff, before any of the noteheads? Answer yes or no only.",
+          "out": "cf"
+        },
+        {
+          "run": "appearance_frac",
+          "args": ["m", "reference.n_notes", "cf"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

@@ -1,0 +1,201 @@
+{
+  "id": "count_void_transfer",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic photograph looking straight down on a collector's desk: on the left an open stamp album page whose mounts are ALL EMPTY, each empty mount showing bright YELLOW backing paper; on the right the RED stamps that were taken out of them, laid out loose on the desk. Every empty yellow mount matches exactly one red stamp on the desk -- none were lost, none were added. You choose how many stamps were removed, but there must be AT LEAST 30, and the number of red stamps on the desk must come out EXACTLY equal to the number of empty yellow mounts on the page. Both the mounts on the page and the stamps on the desk sit at irregular, uneven positions -- never in neat rows, never in a grid. Sharp focus. No text, no numerals, no labels.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a stamp album page whose mounts are all empty and show yellow backing paper, with the red stamps now laid out on the desk beside the album? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q": "Count the yellow empty mounts on the album page in this image. Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Printing on the stamps or the album page itself does not count. Apart from that, is there a separate printed number or caption that states a count? Answer yes or no.",
+    "d2_q_objform": "This picture should show these countable objects: a stamp album page whose mounts are all empty and show yellow backing paper, with the red stamps now laid out on the desk beside the album. Look at the individual objects being counted. Is each one a red stamp, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "nmin": 30,
+    "qa": "Count the yellow empty mounts on the album page in this image. Answer with the integer number only.",
+    "qb": "Count the red stamps laid out on the desk in this image. Answer with the integer number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "density_floor",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "empty YELLOW slot left behind where an item was taken away (a bare yellow backing circle, a burst yellow foil pocket, or an empty yellow mount) -- nothing red is sitting in it",
+          "context": "the sheet, pack or album page that carries the empty yellow slots",
+          "out": "yb"
+        },
+        {
+          "fail_if": ["yb.unreadable"]
+        },
+        {
+          "read_crop": "Is there anything YELLOW in this picture? Answer yes or no only.",
+          "boxes": "yb",
+          "out": "yc"
+        },
+        {
+          "fail_if": ["yc.unreadable"]
+        },
+        {
+          "count_yes": "yc",
+          "out": "yn"
+        },
+        {
+          "run": "floor_score",
+          "args": ["yn.n", "reference.nmin"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "conservation_identity",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "empty YELLOW slot left behind where an item was taken away (a bare yellow backing circle, a burst yellow foil pocket, or an empty yellow mount) -- nothing red is sitting in it",
+          "context": "the sheet, pack or album page that carries the empty yellow slots",
+          "out": "yb"
+        },
+        {
+          "fail_if": ["yb.unreadable"]
+        },
+        {
+          "read_crop": "Is there anything YELLOW in this picture? Answer yes or no only.",
+          "boxes": "yb",
+          "out": "yc"
+        },
+        {
+          "fail_if": ["yc.unreadable"]
+        },
+        {
+          "count_yes": "yc",
+          "out": "yn"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "red round item",
+          "context": "the notebook, board, counter or desk on the right-hand side of the picture",
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "read_crop": "Is there anything RED in this picture? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.unreadable"]
+        },
+        {
+          "count_yes": "rc",
+          "out": "rn"
+        },
+        {
+          "run": "implausible",
+          "args": ["yn.n", "rn.n", "3"],
+          "out": "bad"
+        },
+        {
+          "fail_if": ["bad"]
+        },
+        {
+          "run": "count_ratio_gap",
+          "args": ["yn.n", "rn.n", "1", "0"],
+          "out": "gapv"
+        },
+        {
+          "compare_band": "gapv",
+          "to": 0,
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one red stamp lying loose on the desk",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_g"
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole red stamp lying loose on the desk, rather than an empty yellow mount, some other object, a shapeless blob, or only part of a stamp? Answer yes or no only.",
+          "boxes": "box_g",
+          "out": "crop_g"
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a red round sticker",
+    "s2": "a red tablet",
+    "s3": "a red stamp"
+  }
+}

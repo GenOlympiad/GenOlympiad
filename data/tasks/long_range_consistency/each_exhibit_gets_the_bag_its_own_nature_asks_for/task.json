@@ -1,0 +1,204 @@
+{
+  "id": "each_exhibit_gets_the_bag_its_own_nature_asks_for",
+  "axis": "long_range_consistency",
+  "prompt": "A photograph taken down the length of the fold-out packing bench in the back of a scene-of-crime van, the whole bench in the frame with the roller door at the far end.\n\nThree exhibits have just been sealed at this bench and stand along it, each in its own sealed bag with its own printed reference label facing the camera. The references and their contents are, word for word:\n        JB/1 .... flat-blade screwdriver, 250 mm\n        JB/2 .... left glove, wet with blood\n        JB/3 .... mobile telephone, switched on\n\nThis force keeps three kinds of packaging on the bench and the unused stock of all three sits at the far end where the officer can reach it: brown kraft sacks, clear plastic bags, and silver-foil pouches. Rigid tubes are kept in the same rack.\n\nWhich of those an exhibit goes into is a matter of what the exhibit is, and this officer has packed the three of them the way the force's own packaging policy requires. Work out for yourself what each one had to go into -- I am deliberately not telling you which bag any exhibit ended up in, and I am not telling you what goes round anything inside a bag.\n\nThe label of each bag has to be legible from the camera and its own exhibit reference has to be on it. Nothing on the bench and nothing on the van wall states the packaging policy or names a material for an exhibit.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show sealed exhibit bags standing on a bench with reference labels on them? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows nothing of the kind at all. Answer yes or no only.",
+  "reference": {
+    "bag_jb2": "paper",
+    "sleeve_jb1": "tube",
+    "bag_jb3": "silver",
+    "clean_sheet": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "l1_the_wet_glove_is_in_the_bag_that_breathes",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "exhibit bag on the bench whose printed label reads JB/2",
+          "out": "l1a",
+          "ring": true
+        },
+        {
+          "fail_if": ["l1a.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the bag itself brown paper, clear plastic, or silver foil? Answer with one word: paper, plastic, or silver. If the bag is not in the cut-out, answer none.",
+          "boxes": "l1a",
+          "pad": 0.2,
+          "out": "l1b"
+        },
+        {
+          "read_crop": "In this cut-out, is there an exhibit bag at all? Answer yes or no.",
+          "boxes": "l1a",
+          "out": "l1p",
+          "votes": null
+        },
+        {
+          "run": "word_or_absent",
+          "args": ["l1b", "l1p", "'paper|plastic|silver'", "'material of the bag holding JB/2'"],
+          "out": "l1c"
+        },
+        {
+          "fail_if": ["l1c.refused"]
+        },
+        {
+          "compare": "l1c.val",
+          "to": "reference.bag_jb2",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "l2_the_blade_is_sleeved_before_it_is_bagged",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "exhibit bag on the bench whose printed label reads JB/1",
+          "out": "l2a",
+          "ring": true
+        },
+        {
+          "fail_if": ["l2a.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the screwdriver inside a rigid tube, or lying bare against the bag? Answer with one word: tube, or bare. If the screwdriver is not in the cut-out, answer none.",
+          "boxes": "l2a",
+          "pad": 0.2,
+          "out": "l2b"
+        },
+        {
+          "read_crop": "In this cut-out, is there a screwdriver at all? Answer yes or no.",
+          "boxes": "l2a",
+          "out": "l2p",
+          "votes": null
+        },
+        {
+          "run": "word_or_absent",
+          "args": ["l2b", "l2p", "'tube|bare'", "'what is round the screwdriver in JB/1'"],
+          "out": "l2c"
+        },
+        {
+          "fail_if": ["l2c.refused"]
+        },
+        {
+          "compare": "l2c.val",
+          "to": "reference.sleeve_jb1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "l3_the_live_phone_is_in_the_bag_that_shields",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "exhibit bag on the bench whose printed label reads JB/3",
+          "out": "l3a",
+          "ring": true
+        },
+        {
+          "fail_if": ["l3a.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the bag itself brown paper, clear plastic, or silver foil? Answer with one word: paper, plastic, or silver. If the bag is not in the cut-out, answer none.",
+          "boxes": "l3a",
+          "pad": 0.2,
+          "out": "l3b"
+        },
+        {
+          "read_crop": "In this cut-out, is there an exhibit bag at all? Answer yes or no.",
+          "boxes": "l3a",
+          "out": "l3p",
+          "votes": null
+        },
+        {
+          "run": "word_or_absent",
+          "args": ["l3b", "l3p", "'paper|plastic|silver'", "'material of the bag holding JB/3'"],
+          "out": "l3c"
+        },
+        {
+          "fail_if": ["l3c.refused"]
+        },
+        {
+          "compare": "l3c.val",
+          "to": "reference.bag_jb3",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_bench_carries_nothing_it_is_barred_from_carrying",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "printed policy note on the bench naming a packaging material for an exhibit",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a printed note that names which packaging an exhibit has to go into, or a written instruction about bag materials? Answer yes or no. Answer no if the cut-out shows an exhibit reference label as given, the description of an exhibit, the bench, the packaging stock at the far end, or a bag itself.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as a printed note that names which packaging an exhibit has to go into, or a written instruction about bag materials? Answer yes or no. Answer no if it belongs there -- an exhibit reference label as given, the description of an exhibit, the bench, the packaging stock at the far end, or a bag itself.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_sheet",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

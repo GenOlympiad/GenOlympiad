@@ -1,0 +1,387 @@
+{
+  "id": "ean8",
+  "axis": "symbolic_systems",
+  "prompt": "A supermarket shelf-edge price ticket, photographed square on and filling the frame: stiff pale card, one thirteen-digit EAN-13 article number and nothing else -- no price, no product name, no shop name, no promotional text.\n\nThe twelve digits you are given, in order, are 6, 2, 0, 3, 9, 4, 8, 1, 7, 5, 2, 6. The thirteenth is the modulo-10 self-test digit and is yours to compute; print it last. All thirteen digits appear on the human-readable line beneath the symbol, in order, left to right.\n\nThe symbol itself is 95 equal-width vertical modules: a 3-module guard, six digits at 7 modules each, a 5-module centre guard, six digits at 7 modules each, a 3-module guard. Note what that arithmetic means -- only twelve of the thirteen digits get modules of their own. The very first digit is never drawn as bars at all; in EAN-13 it is carried instead by WHICH of the two left-hand code sets each of the six left digits is drawn from, the pattern of odd-parity and even-parity choices along that half being what a scanner reads it back out of. Choose those six left-hand encodings so that the pattern spells out the leading digit you were given, and draw the right-hand six in the R set as usual. No caption and no explanation anywhere on the ticket.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a small card carrying a band of dark vertical bars of differing widths, with a row of printed digits along the bottom of the band. Ignoring artistic quality and styling, does the picture actually show that? Answer NO only if it shows something else entirely -- a blank card, a page of prose, a picture of goods, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "prefix": "620394817526",
+    "n_modules": 95,
+    "n_digits": 13
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "barcode_readable",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "run": "ean_measure",
+          "args": ["image", "reference.prefix", "reference.n_modules"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "full_score",
+          "args": ["m.no_read"],
+          "code": {
+            "inline": "f_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "check_digit_printed",
+      "weight": 4.0,
+      "steps": [
+        {
+          "run": "ean_measure",
+          "args": ["image", "reference.prefix", "reference.n_modules"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "read_bars",
+          "args": ["image"],
+          "out": "bars"
+        },
+        {
+          "run": "paint_barcode_digits",
+          "args": ["image", "m", "bars", "'printed'"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        },
+        {
+          "run": "as_score",
+          "args": ["m.check_frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bars_encode_the_whole_code",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "ean_measure",
+          "args": ["image", "reference.prefix", "reference.n_modules"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "read_bars",
+          "args": ["image"],
+          "out": "bars"
+        },
+        {
+          "run": "paint_barcode_digits",
+          "args": ["image", "m", "bars", "'bars'"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        },
+        {
+          "run": "as_score",
+          "args": ["m.payload_exact_frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bars_encode_digitwise",
+      "weight": 2.0,
+      "steps": [
+        {
+          "run": "ean_measure",
+          "args": ["image", "reference.prefix", "reference.n_modules"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "read_bars",
+          "args": ["image"],
+          "out": "bars"
+        },
+        {
+          "run": "paint_barcode_digits",
+          "args": ["image", "m", "bars", "'bars'"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        },
+        {
+          "run": "as_score",
+          "args": ["m.payload_frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "module_width",
+      "weight": 2.0,
+      "steps": [
+        {
+          "run": "ean_measure",
+          "args": ["image", "reference.prefix", "reference.n_modules"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "read_bars",
+          "args": ["image"],
+          "out": "bars"
+        },
+        {
+          "run": "paint_barcode_digits",
+          "args": ["image", "m", "bars", "'bars'"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        },
+        {
+          "run": "as_score",
+          "args": ["m.width_frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_barcode_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "ean_overlay",
+          "args": ["image", "reference.prefix", "reference.n_modules"],
+          "out": "ov"
+        },
+        {
+          "fail_if": ["ov.no_read"]
+        },
+        {
+          "run": "as_score",
+          "args": ["ov.payload_frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_barcode_appearance",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "ean_measure",
+          "args": ["image", "reference.prefix", "reference.n_modules"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "as_score",
+          "args": ["m.appearance_frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_bars_agree_with_printed_digits",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "ean_measure",
+          "args": ["image", "reference.prefix", "reference.n_modules"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "as_score",
+          "args": ["m.selfconsistent_frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

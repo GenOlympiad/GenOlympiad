@@ -1,0 +1,86 @@
+{
+  "id": "the_posts_stand_on_the_posts_below",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The kiln is photographed with its door open before every firing, so the pack and the card on the door frame go into the record together.\n\nA front-loading kiln stands with its door swung back. Inside the chamber the ware is packed in decks: a bottom deck, a middle deck and a top deck. Each deck is a pair of kiln shelves butted together, so a joint runs across every deck, and each deck is carried on kiln props. The packing card clipped to the door frame gives the shelf size, names the deck heights and calls the prop columns L, M and R. Greenware is set out on the decks with room left around it, so the props and the joints stay in view. A work light on a stand throws even light into the chamber.\n\nWhich prop stands over which, and what each joint comes down on, is what the packing card does not draw.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph look into an open kiln chamber packed with decks of shelves carried on props, with a packing card clipped to the door frame? Answer yes or no only.",
+  "reference": {
+    "part1": "6",
+    "part2": "on_a_prop"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "kiln props standing on top of another kiln prop",
+          "out": "r_part1",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part1.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the joint between the two shelves of the middle deck. Answer with one of: on a prop; between props; at the deck end.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

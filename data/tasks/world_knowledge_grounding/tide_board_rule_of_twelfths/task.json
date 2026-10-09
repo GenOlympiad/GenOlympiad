@@ -1,0 +1,84 @@
+{
+  "id": "tide_board_rule_of_twelfths",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The harbour office logs the tide by camera every hour through the working day, and this is the frame the duty man took on his round, timed and filed exactly as it stands.\n\nA tide board is bolted flat to the quay wall with its foot at chart datum, graduated in tenths of a metre and numbered at every whole metre. The water crosses it. The tide table cutting clipped to the handrail beside the board gives today's low water as 03:15 at 0.9 metres and today's high water as 09:15 at 5.1 metres. The camera has burnt the time of the frame into its corner, reading 05:15. The wall on either side of the board is smooth grey concrete that dries pale within the hour, and no rain has fallen since yesterday.\n\nWhat the water reads on that board at the minute the shutter went is what the tide table does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a numbered measuring board fixed flat to a harbour wall with water standing against it, and a printed paper clipped to a rail beside the board? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "dry_above"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the tide board bolted to the quay wall and give the figure on its printed scale at the surface of the water, in metres.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "1.8", "2.1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the quay wall just above the surface of the water, beside the board. Answer with one of: the wall above the water is dry and pale right up from the surface; there is a dark wet band on the wall above the water; the wall is dark and wet all the way up to the quay edge.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

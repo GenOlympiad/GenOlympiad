@@ -1,0 +1,84 @@
+{
+  "id": "ice_block_core_white",
+  "axis": "physical_consistency",
+  "prompt": "The shift chargehand has to show the cold-store buyer why the tank's air line is being re-plumbed, so two blocks were stood on the drip table in front of the window and shot against the light.\n\nBoth blocks are freshly stripped can ice, standing on end with meltwater running off them, the brine tank and the empty can racks behind. A slate ticket leans at the foot of each. The first reads CAN 14, AIR AGITATION LINE OPEN THROUGHOUT THE FREEZE. The second reads CAN 15, AIR AGITATION LINE BLANKED OFF AT THE HEADER, FROZEN STILL. Both cans took the same fill of the same treated water, sat in the same brine at minus nine degrees, and were pulled at the same hour, and both blocks stand as they came out of the can, mouth end uppermost. The daylight is coming straight through them from the window.\n\nWhat the inside of each block came out looking like is what the tickets do not say.",
+  "difficulty": "s1",
+  "easy_question": "Are two blocks of ice standing on a drip table against a window with a slate ticket leaning at the foot of each Answer yes or no only.",
+  "reference": {
+    "part1": "core_up_the_middle",
+    "part2": "clear_through"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look through the block whose ticket reads CAN 15, at what the daylight shows inside it. Answer with one of: It carries a white core standing up the middle of the block; It carries a white core lying against one of the outside faces; It is clear right through.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Now look through the block whose ticket reads CAN 14, at what the daylight shows inside that one. Answer with one of: That one is glass clear from face to face; That one carries a white core of its own; That one is milky all over.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

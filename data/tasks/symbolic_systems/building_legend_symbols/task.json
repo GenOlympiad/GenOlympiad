@@ -1,0 +1,74 @@
+{
+  "id": "building_legend_symbols",
+  "axis": "symbolic_systems",
+  "prompt": "A clean architectural FLOOR PLAN of a single square room, drawn straight-on (top-down) on white paper, laid out as a 2x2 arrangement of the room's four wall panels. A colour LEGEND (stated here) defines four wall symbols, each panel filled in its legend colour with the symbol shape drawn on it: a BLACK panel = a solid WALL (a heavy bar), a CYAN panel = a WINDOW (a double / broken bar), an ORANGE panel = a DOOR (a quarter-circle swing arc), a GREEN panel = a STAIR (a chevron run). Place these on the room's FOUR walls, one per wall, matching this pinned assignment clockwise starting from the NORTH (top) wall: the NORTH wall has a WINDOW, the EAST (right) wall is a solid WALL, the SOUTH (bottom) wall has a DOOR, and the WEST (left) wall is a solid WALL. Arrange the four wall panels as a 2x2 block: TOP-LEFT = NORTH wall, TOP-RIGHT = EAST wall, BOTTOM-LEFT = WEST wall, BOTTOM-RIGHT = SOUTH wall. Fill each panel in its legend colour with its symbol shape on it. Crisp top-down plan, no text labels on the panels themselves.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a top-down architectural FLOOR PLAN of a room with symbols on its walls (a window, a door, solid walls). Ignoring artistic quality, does the image actually DEPICT that / plan? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "reader_types": ["window", "wall", "wall", "door"],
+    "reader_colors": ["cyan", "black", "black", "orange"],
+    "walls_cw": {
+      "north": "window",
+      "east": "wall",
+      "south": "door",
+      "west": "wall"
+    },
+    "n": 4,
+    "rows": 2,
+    "cols": 2,
+    "palette": ["black", "cyan", "orange", "green"],
+    "color_type": {
+      "black": "wall",
+      "cyan": "window",
+      "orange": "door",
+      "green": "stair"
+    },
+    "q_slots": "This is a top-down architectural floor plan of a single square room, shown as a 2x2 arrangement of four colour-filled wall panels. Reading the four panels in this order — TOP-LEFT, TOP-RIGHT, BOTTOM-LEFT, BOTTOM-RIGHT — name each panel's wall symbol as exactly one of: wall, window, door, stair (a solid heavy bar = wall, a double / broken bar = window, a quarter-circle swing arc = door, a chevron run = stair). Answer four words separated by single spaces. If unreadable answer 'unreadable'."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "wall_symbols",
+      "weight": 4.0,
+      "score": "pf.frac",
+      "steps": [
+        {
+          "read_crop": "This picture is one quarter of an architectural FLOOR PLAN that is laid out as a 2x2 block of four colour-filled wall panels, so one whole panel fills most of it. Each panel is filled with a legend colour and carries one wall symbol: a BLACK panel with a solid heavy bar is a WALL, a CYAN panel with a double or broken bar is a WINDOW, an ORANGE panel with a quarter-circle swing arc is a DOOR, a GREEN panel with a chevron run is a STAIR. Which of the four is the panel in this picture? Answer with exactly one word: wall, window, door or stair.",
+          "boxes": [
+            [0, 0, 500, 500],
+            [0, 500, 500, 1000],
+            [500, 0, 1000, 500],
+            [500, 500, 1000, 1000]
+          ],
+          "out": "wr"
+        },
+        {
+          "fail_if": ["wr.unreadable"]
+        },
+        {
+          "run": "wall_type_score",
+          "args": ["wr", "reference"],
+          "out": "pf"
+        }
+      ]
+    }
+  ]
+}

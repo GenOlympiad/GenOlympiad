@@ -1,0 +1,270 @@
+{
+  "id": "piste_grade_gradient_monotone",
+  "axis": "world_knowledge_grounding",
+  "prompt": "Between now and the first lift of the season the area has to get its trail map to the printer, and this corner of the map is the one that has come back twice from the patrol director.\n\nThe corner shows three runs leaving the same summit and finishing at the same collection point above the base station, with the run's own name lettered along it, and beside each name that run's difficulty mark in the form a North American ski area uses.\n\nDown the side of the corner runs a column of three small profile charts, one for each run, in this order down the column, each headed with its run's name and each figured with the two heights and the run-out exactly as the survey gives them:\n\n  ELKHORN         top 3450 m   bottom 3300 m   run-out 1500 m\n  SPRUCE ALLEY    top 3450 m   bottom 3150 m   run-out 1200 m\n  TALUS CHUTE     top 3450 m   bottom 3210 m   run-out 1200 m\n\nAll three profile charts are drawn to one and the same scale so that they can be compared by eye, each with its height axis at the left and its distance axis along the foot, and each figure printed where a skier can read it.\n\nWhich mark belongs beside which run is the whole of what the patrol director sends this page back for, and I am deliberately not telling you. Nothing on the map states a steepness: no percentage, no degrees, no note calling a run steep or gentle. Apart from the three run names, the three marks, the three chart headings and the figures listed above, the corner carries no lettering. Keep the three marks large enough that the shape of each one is easy to make out, and keep every figure on the profile charts legible.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a piece of a ski area map with named runs on it, together with one or more small side charts showing how the ground falls? A map, a printed page or a scan of one all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "runs": ["ELKHORN", "SPRUCE ALLEY", "TALUS CHUTE"],
+    "gradient_expected": [10.0, 25.0, 20.0],
+    "system_state": "match"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_marks_stand_in_the_order_the_profiles_on_the_same_page_give",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the run names lettered along a run on the map",
+          "out": "rk_b",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rk_b.unreadable"]
+        },
+        {
+          "read_crop": "What run name is lettered in this cut-out? Answer with that name only.",
+          "boxes": "rk_b",
+          "pad": 0.4,
+          "out": "rk_bn",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rk_bn.unreadable"]
+        },
+        {
+          "read_crop": "What shape is the small difficulty mark printed beside the run name in this cut-out? Answer with one word.",
+          "boxes": "rk_b",
+          "pad": 0.4,
+          "out": "rk_sh",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rk_sh.unreadable"]
+        },
+        {
+          "read_crop": "What colour is the small difficulty mark printed beside the run name in this cut-out? Answer with one word.",
+          "boxes": "rk_b",
+          "pad": 0.4,
+          "out": "rk_co",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rk_co.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one of the small profile charts in the column down the side",
+          "out": "rk_p",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rk_p.unreadable"]
+        },
+        {
+          "read_crop": "What run name is printed as the heading of the chart in this cut-out? Answer with that name only.",
+          "boxes": "rk_p",
+          "pad": 0.2,
+          "out": "rk_pn",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rk_pn.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one slope profile chart. What figure is printed on that chart for the height at the TOP of the run? If more than one profile is visible in this cut-out, read the one nearest the middle of it. Answer with that number only.",
+          "boxes": "rk_p",
+          "pad": 0.2,
+          "out": "rk_tp",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rk_tp.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one slope profile chart. What figure is printed on that chart for the height at the BOTTOM of the run? If more than one profile is visible in this cut-out, read the one nearest the middle of it. Answer with that number only.",
+          "boxes": "rk_p",
+          "pad": 0.2,
+          "out": "rk_bt",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rk_bt.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one slope profile chart. What figure is printed on that chart for the run-out along the ground? If more than one profile is visible in this cut-out, read the one nearest the middle of it. Answer with that number only.",
+          "boxes": "rk_p",
+          "pad": 0.2,
+          "out": "rk_rl",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rk_rl.unreadable"]
+        },
+        {
+          "run": "mark_ranks_vs_gradients",
+          "args": ["rk_bn", "rk_sh", "rk_co", "rk_pn", "rk_tp", "rk_bt", "rk_rl", "reference.runs"],
+          "out": "rk_s"
+        },
+        {
+          "compare_set": "rk_s.obs",
+          "to": "rk_s.exp",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_profiles_carry_the_heights_and_run_outs_the_survey_gives",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the small profile charts in the column down the side",
+          "out": "sl_p",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sl_p.unreadable"]
+        },
+        {
+          "read_crop": "What run name is printed as the heading of the chart in this cut-out? Answer with that name only.",
+          "boxes": "sl_p",
+          "pad": 0.2,
+          "out": "sl_pn",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sl_pn.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one slope profile chart. What figure is printed on that chart for the height at the TOP of the run? If more than one profile is visible in this cut-out, read the one nearest the middle of it. Answer with that number only.",
+          "boxes": "sl_p",
+          "pad": 0.2,
+          "out": "sl_tp",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sl_tp.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one slope profile chart. What figure is printed on that chart for the height at the BOTTOM of the run? If more than one profile is visible in this cut-out, read the one nearest the middle of it. Answer with that number only.",
+          "boxes": "sl_p",
+          "pad": 0.2,
+          "out": "sl_bt",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sl_bt.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one slope profile chart. What figure is printed on that chart for the run-out along the ground? If more than one profile is visible in this cut-out, read the one nearest the middle of it. Answer with that number only.",
+          "boxes": "sl_p",
+          "pad": 0.2,
+          "out": "sl_rl",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sl_rl.unreadable"]
+        },
+        {
+          "run": "profile_gradients",
+          "args": ["sl_pn", "sl_tp", "sl_bt", "sl_rl", "reference.runs"],
+          "out": "sl_s"
+        },
+        {
+          "match_trend": "sl_s.seq",
+          "to": "reference.gradient_expected",
+          "min_delta": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_marks_are_the_family_this_mountain_belongs_to",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the run names lettered along a run on the map",
+          "out": "sy_b",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sy_b.unreadable"]
+        },
+        {
+          "read_crop": "What shape is the small difficulty mark printed beside the run name in this cut-out? Answer with one word.",
+          "boxes": "sy_b",
+          "pad": 0.4,
+          "out": "sy_sh",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sy_sh.unreadable"]
+        },
+        {
+          "read_crop": "What colour is the small difficulty mark printed beside the run name in this cut-out? Answer with one word.",
+          "boxes": "sy_b",
+          "pad": 0.4,
+          "out": "sy_co",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sy_co.unreadable"]
+        },
+        {
+          "run": "marks_match_house_set",
+          "args": ["sy_sh", "sy_co", "reference.runs"],
+          "out": "sy_s"
+        },
+        {
+          "compare": "sy_s.state",
+          "to": "reference.system_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_steepness_figure_was_written_on_the_map",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a percentage or a gradient note written on the map",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "st_r"
+        },
+        {
+          "fail_if": ["st_r.unreadable"]
+        },
+        {
+          "compare": "st_r.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

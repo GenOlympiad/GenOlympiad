@@ -1,0 +1,198 @@
+{
+  "id": "site_ponding_test_contour",
+  "axis": "physical_consistency",
+  "prompt": "A site record photograph of the 24-hour flood test on a new bathroom floor, taken for the waterproofing sign-off file. It looks straight down on the whole floor from above, with the door threshold along the bottom of the frame.\n\nThe floor is screeded to falls over a level slab and the screed is still bare, no tiles yet. Six small brass thickness pads are fixed to the screed where the screeder took his readings, and each pad is stamped with its own name and the screed thickness under it in millimetres:\nP1 18\nP2 21\nP3 34\nP4 30\nP5 26\nP6 19\nP1 and P2 are within a metre of the floor drain, P3 and P4 are out along the far wall, P5 is beside the door, and P6 is in the far corner behind P3 and P4. The top of the drain's grate sits at 15 mm of screed. Every pad is flush with the screed and stays legible in the picture.\n\nThe test itself: the drain has been plugged, water was run in until it stood 8 mm deep over the grate, and it has been standing like that for 24 hours. Nobody has touched it since.\n\nHow far the water reaches and what it leaves showing are for you to work out -- I am deliberately not telling you which pads end up under water, and I am not telling you what shape the water takes. Do not print any pass or fail word, any fall arrow, or any note about the screed anywhere in the frame: the only writing anywhere is the six stamped pad markings.\n\nThe whole floor, the drain and all six pads must be inside the frame and big enough that each pad's stamping can be read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture look straight down on a bare bathroom floor with a drain in it and small numbered pads fixed to the floor? A photograph, an illustration or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel with none of that, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_pads": 6,
+    "wet_pads": [1, 2, 6],
+    "water_height_mm": 23,
+    "pool_state": "separate"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "wet_pads_follow_the_levels",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered brass thickness pad fixed into the bathroom floor",
+          "out": "pad_box",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["pad_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one brass pad stamped into the floor. Copy the marking stamped on that pad, exactly as stamped. If more than one pad is visible in this cut-out, read the one nearest the middle of it. Write nothing else.",
+          "boxes": "pad_box",
+          "out": "pad_tag"
+        },
+        {
+          "fail_if": ["pad_tag.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one brass pad in a floor. Is this pad under water, or is the floor around it dry? Answer with one word: water or dry.",
+          "boxes": "pad_box",
+          "out": "pad_state"
+        },
+        {
+          "fail_if": ["pad_state.unreadable"]
+        },
+        {
+          "run": "pad_wet_matches",
+          "args": ["pad_tag", "pad_state", "reference.wet_pads", "reference.n_pads"],
+          "out": "ws"
+        },
+        {
+          "compare_band": "ws.frac",
+          "to": 1.0,
+          "core_abs": 0.001,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "far_corner_pool_stands_alone",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the bare bathroom floor seen from above in this picture",
+          "out": "flr_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["flr_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a floor with water lying on it. Is all the water joined together in one pool, or is there a separate pool away from the main one? Answer with one word: joined or separate.",
+          "boxes": "flr_box",
+          "out": "pool"
+        },
+        {
+          "fail_if": ["pool.unreadable"]
+        },
+        {
+          "compare": "pool.answers.0",
+          "to": "reference.pool_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pad_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered brass thickness pad fixed into the bathroom floor",
+          "out": "box_read",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole brass pad in the floor, rather than bare screed or only part of a pad? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_pads",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "drain_present",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the drain grate set into the bathroom floor",
+          "out": "dr_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["dr_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show a drain grate in a floor? Answer yes or no only.",
+          "boxes": "dr_box",
+          "out": "dr"
+        },
+        {
+          "fail_if": ["dr.unreadable"]
+        },
+        {
+          "compare": "dr.answers.0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_written_verdict",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written pass or fail word, a fall arrow, or a note about the screed",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

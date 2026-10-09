@@ -1,0 +1,153 @@
+{
+  "id": "unit_scale_ruler",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a metal engineer's scale bar on a blueprint shown straight-on, filling most of the frame, as a clean horizontal measuring ruler with 9 EQUAL cells (so there are 10 tick marks along the top edge, numbered from the left).\n\nIMPORTANT UNIT RULE: on this ruler ONE cell is worth 5 tiks, NOT one unit. So the printed value at each tick is that tick's position multiplied by 5: the first tick (left end) is 0, the next tick is 5, the next is 10, the next is 15, and so on, adding 5 at every tick. Do NOT number the ticks 0, 1, 2, 3 — number them 0, 5, 10, 15, ... going up by 5 each cell, and print each value under its tick.\n\nPut a small red arrow above the 7th tick counting from the left (the left end is tick 0), and label it 'READ THIS TICK'. Under this unit rule, that tick's printed value must be 7 times 5. Print the running values under every tick as described; do NOT print the answer for the marked tick anywhere else as a separate caption.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a measuring RULER / scale bar: a straight ruler with equal cells and numbers printed under its tick marks. Ignoring what the numbers are and ignoring artistic quality, does the image actually DEPICT such a ruler (a straight scale with ticks and printed numbers)? A photo, illustration or clean graphic all count as yes. Answer NO only if it is a blank panel, unrelated object, or just prints a number with no ruler. Answer yes or no only.",
+  "reference": {
+    "target": 35
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "named_tick_value",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the ruler itself -- one box from its left end to its right end, holding the tick marks and the numbers printed under them",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the small red arrow drawn above the ruler",
+          "expected_n": 1,
+          "propose_boxes": "vlm",
+          "out": "arw"
+        },
+        {
+          "fail_if": ["arw.unreadable"]
+        },
+        {
+          "run": "arrow_tip",
+          "args": ["arw"],
+          "out": "tip"
+        },
+        {
+          "fail_if": ["tip.unreadable"]
+        },
+        {
+          "run": "split_ruler_into_squares",
+          "args": ["image", "anc", "9", "'x'"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "locate_tip_square",
+          "args": ["pl", "tip", "'x'"],
+          "out": "mk"
+        },
+        {
+          "run": "refuse_missing_tip_square",
+          "args": ["mk"],
+          "out": "held_mk"
+        },
+        {
+          "fail_if": ["held_mk.no_read"]
+        },
+        {
+          "read_crop": "This is one short stretch of a ruler, cut out of a picture. What numbers are printed under the tick marks in this stretch? Answer with just the numbers, separated by commas, in left-to-right order, and nothing else.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "read_tick_number",
+          "args": ["pl", "rd", "mk"],
+          "out": "res"
+        },
+        {
+          "run": "refuse_missing_tick_number",
+          "args": ["res", "rd", "mk"],
+          "out": "held_res"
+        },
+        {
+          "fail_if": ["held_res.no_read"]
+        },
+        {
+          "run": "number_matches_reference",
+          "args": ["res.v", "reference.target"],
+          "out": "frac"
+        },
+        {
+          "run": "paint_tip_square",
+          "args": ["pl", "mk", "frac >= 1.0"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.line",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [20, 90, 235],
+          "out": "ovp_line"
+        }
+      ]
+    }
+  ]
+}

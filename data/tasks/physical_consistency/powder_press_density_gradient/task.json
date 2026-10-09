@@ -1,0 +1,84 @@
+{
+  "id": "powder_press_density_gradient",
+  "axis": "physical_consistency",
+  "prompt": "The batch cannot go to the customer until the sintered part has been checked at both ends, so the process engineer sets a micrometer on each end of one compact and photographs the bench as it stands.\n\nA sintered cylindrical compact lies on the inspection bench with a digital micrometer clamped on each end face. The frames are lettered: N stands on the end that took the top punch, F on the end away from it. The process card propped against the part gives the die bore as 20.00 millimetres, the powder grade as FC-0208, and the press as single action from the top punch. The same card carries the shrink figures for this grade: on sintering the dense end of a compact draws in by 1.2 per cent and the loose end by 0.4 per cent. Behind the bench stand the press and a row of sintering boats.\n\nWhich figure each micrometer settles on is what the process card does not give.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a sintered cylindrical part lying on an inspection bench with a digital micrometer clamped on each of its end faces? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "out_of_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the figure showing on the display of the micrometer whose frame is lettered F, and give it in millimetres.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "19.86", "19.98"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the figure showing on the display of the micrometer whose frame is lettered N, and give it in millimetres.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part2", "19.86", "19.98"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

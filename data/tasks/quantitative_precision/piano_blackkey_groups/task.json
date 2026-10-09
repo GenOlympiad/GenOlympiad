@@ -1,0 +1,62 @@
+{
+  "id": "piano_blackkey_groups",
+  "axis": "quantitative_precision",
+  "prompt": "A a clean front-on macro photo of a synthesizer keyboard spanning EXACTLY 1 full octave, seen straight-on so the whole key strip fills the frame left to right. Draw the white keys as one even row, then place the BLACK keys correctly. Do NOT assume the black keys are evenly spaced: on a real keyboard the black keys of each octave form the usual 2-then-3 grouping -- a pair of black keys (C#/D#), then a GAP with no black key (between E and F), then a group of three black keys (F#/G#/A#), then another GAP with no black key (between B and the next C). Place every black key at its true position so the 2+3 clustering and the two gaps are clearly correct. Plain background, no labels, no text, just the keyboard.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a clean front-on macro photo of a synthesizer keyboard -- a row of white keys with black keys on top. Ignoring artistic quality, does the image actually DEPICT a piano-style keyboard (a horizontal row of white keys with several shorter dark/black keys placed on top of them)? A photo, render or clean drawing all count as yes. Answer NO only if there is no keyboard, no black keys at all, or something unrelated. Answer yes or no.",
+  "reference": {
+    "spec": [0.1429, 0.2857, 0.5714, 0.7143, 0.8571],
+    "tol": 0.03,
+    "n_black": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "blackkey_positions",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "each black key of the keyboard -- a tall narrow BLACK rectangle standing between two white keys, running from the top of the picture about half-way down. Draw one tight upright box per black key. Do not box the dark frame around the outside of the keyboard, and do not box a whole row.",
+          "out": "bk"
+        },
+        {
+          "fail_if": ["bk.unreadable"]
+        },
+        {
+          "run": "match_black_key_positions",
+          "args": ["bk", "reference"],
+          "out": "bkp"
+        },
+        {
+          "fail_if": ["bkp.degenerate"]
+        },
+        {
+          "compare_band": "bkp.frac",
+          "to": 1.0,
+          "core": 0.05,
+          "margin": 0.2,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

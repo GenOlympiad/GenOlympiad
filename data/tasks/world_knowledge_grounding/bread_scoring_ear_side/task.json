@@ -1,0 +1,190 @@
+{
+  "id": "bread_scoring_ear_side",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The morning bake is out and the shift has to sign off the batch before it goes to the shop floor.\n\nAlready fixed and not yours to move: three loaves from the one bake are lying on the cooling rack, each with its numbered batch tag clipped to the rail below it, 1, 2 and 3; the curved lame the baker cut them with hangs at the head of the rack with its blade face turned towards the oven; the product card is propped beside it. The oven is at one end of the room and the shop door at the other, and both are in the frame.\n\nWhat the product card carries:\ntags 1 and 2 are the long loaves, cut with a run of shallow slanting cuts;\ntag 3 is the round loaf, cut with a straight-down cross;\na shallow slanting cut lifts a flap on the side the blade leans towards, and the flap bakes into an ear on that side;\non a long loaf each cut is started before the one in front of it has finished, so the run of cuts overlaps along the loaf.\n\nWhich way the ears end up facing and how the cuts end up lying along each loaf is the part I am deliberately not telling you, and no loaf from an earlier bake is on the rack to copy. Nothing is written on the rack or on a loaf beyond the batch tags and that card.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show baked loaves of bread lying on a rack or tray? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no bread in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "ear_side": "1=towards the oven|2=towards the oven|3=evenly on both sides",
+    "cut_run": "1=each cut starts before the one in front ends|2=each cut starts before the one in front ends",
+    "n_loaves": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_ear_opens_the_way_the_blade_on_the_rack_leans",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a loaf on the cooling rack with its numbered batch tag",
+          "sweep": true,
+          "out": "er_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["er_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a batch tag. What number is on that tag? If more than one tag is visible in this cut-out, read the one nearest the middle of it. Answer with the number exactly as it is on the tag, or none if no number is on it.",
+          "boxes": "er_box",
+          "pad": 0.9,
+          "out": "er_key"
+        },
+        {
+          "fail_if": ["er_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which way do the cuts on this loaf open? Answer with one of: towards the left edge of the picture, towards the right edge of the picture, evenly on both sides, or none if the cuts cannot be made out.",
+          "boxes": "er_box",
+          "pad": 0.9,
+          "out": "er_val"
+        },
+        {
+          "fail_if": ["er_val.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the oven at its end of the room",
+          "out": "ov_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["ov_r.unreadable"]
+        },
+        {
+          "run": "ear_match",
+          "args": ["er_key", "er_val", "er_box", "ov_r", "reference.ear_side"],
+          "out": "er_v"
+        },
+        {
+          "compare_band": "er_v.n",
+          "to": "reference.n_loaves",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_run_of_cuts_overlaps_along_each_long_loaf",
+      "weight": 1.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a loaf on the cooling rack with its numbered batch tag",
+          "sweep": true,
+          "out": "cr_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cr_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a batch tag. What number is on that tag? If more than one tag is visible in this cut-out, read the one nearest the middle of it. Answer with the number exactly as it is on the tag, or none if no number is on it.",
+          "boxes": "cr_box",
+          "pad": 0.9,
+          "out": "cr_key"
+        },
+        {
+          "fail_if": ["cr_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how do the cuts sit along the loaf? Answer with one of: each cut starts before the one in front ends, the cuts sit end to end with gaps between them, there is only one cut on this loaf, or none if the cuts cannot be made out.",
+          "boxes": "cr_box",
+          "pad": 0.9,
+          "out": "cr_val"
+        },
+        {
+          "fail_if": ["cr_val.unreadable"]
+        },
+        {
+          "run": "match_pinned_states",
+          "args": ["cr_key", "cr_val", "reference.cut_run"],
+          "out": "cr_v"
+        },
+        {
+          "minimum": ["cr_v.a", "cr_v.b"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_loaf_on_the_rack_has_its_batch_tag",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a loaf on the cooling rack with its numbered batch tag",
+          "sweep": true,
+          "out": "bt_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["bt_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a number on the batch tag? Answer yes or no only.",
+          "boxes": "bt_box",
+          "pad": 0.5,
+          "out": "bt_rd"
+        },
+        {
+          "fail_if": ["bt_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["bt_rd"],
+          "out": "bt_v"
+        },
+        {
+          "compare_band": "bt_v.n",
+          "to": "reference.n_loaves",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_word_is_added_to_the_rack",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written word or mark on the rack or a loaf beyond the batch tags and product card",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "pr_sw"
+        },
+        {
+          "fail_if": ["pr_sw.unreadable"]
+        },
+        {
+          "compare": "pr_sw.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

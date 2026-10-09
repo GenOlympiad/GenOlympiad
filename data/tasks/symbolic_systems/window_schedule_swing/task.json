@@ -1,0 +1,185 @@
+{
+  "id": "window_schedule_swing",
+  "axis": "symbolic_systems",
+  "prompt": "A photograph of one drafting sheet clamped to the plan table of a window fabricator's site office, seen flat from above. The sheet carries two things: on the left, a facade elevation detail of a stair-tower wall with three windows in a vertical band, tagged W1, W2 and W3 beside their frames; on the right, the window schedule, a small ruled table quoting exactly these three entries, word for word:\nW1 -- SIDE-HUNG, HINGES ON THE LEFT JAMB, OPENS INWARD\nW2 -- SIDE-HUNG, HINGES ON THE RIGHT JAMB, OPENS OUTWARD\nW3 -- BOTTOM-HUNG, HINGES ON THE SILL, TILTS INWARD\nEach window on the elevation must carry its opening symbol, the V of thin lines every fabricator reads before hanging a sash, drawn strictly to the standard drafting convention. Which edge the point of the V touches and whether its two lines run solid or dashed both follow from that window's schedule entry -- work each one out yourself; I am deliberately not spelling the convention out, and the sheet may not spell it out either: no legend, no note about hinges or line styles anywhere outside the schedule's three quoted entries. The tags and the schedule text must be large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a drafting sheet with a building elevation and a small ruled schedule table on one page? A realistic photo, an illustration or a plain mockup ALL count as yes. Answer NO only if the image shows something unrelated or just a bare card of text. Answer yes or no only.",
+  "reference": {
+    "sym_map": "w1:left:dashed|w2:right:solid|w3:bottom:dashed",
+    "sched_rows": "w1:left:inward|w2:right:outward|w3:sill:inward",
+    "n_windows": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "opening_symbols_obey_the_schedule",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one tagged window drawn on the facade elevation",
+          "sweep": true,
+          "out": "wb"
+        },
+        {
+          "fail_if": ["wb.unreadable"]
+        },
+        {
+          "read_crop": "Copy the tag printed beside this window. Write the tag only.",
+          "boxes": "wb",
+          "pad": 0.3,
+          "out": "wt",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["wt.unreadable"]
+        },
+        {
+          "read_crop": "Which edge of this window does the point of the V-shaped symbol touch: left, right, top or bottom? Answer with one word.",
+          "boxes": "wb",
+          "pad": 0.3,
+          "out": "wa",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["wa.unreadable"]
+        },
+        {
+          "read_crop": "Are the two thin V lines drawn on this window solid or dashed? Answer with one word.",
+          "boxes": "wb",
+          "pad": 0.3,
+          "out": "ws",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ws.unreadable"]
+        },
+        {
+          "run": "read_opening_symbols",
+          "args": ["wt", "wa", "ws"],
+          "out": "sp"
+        },
+        {
+          "compare": "sp.canon",
+          "to": "reference.sym_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "schedule_carries_the_pinned_entries",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one entry row of the window schedule table",
+          "sweep": true,
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a schedule. Copy that row's wording exactly as printed. Ignore anything printed on a row above or below it. Write nothing else.",
+          "boxes": "sb",
+          "pad": 0.3,
+          "out": "sr"
+        },
+        {
+          "fail_if": ["sr.unreadable"]
+        },
+        {
+          "run": "read_schedule_entries",
+          "args": ["sr"],
+          "out": "sv"
+        },
+        {
+          "compare": "sv.canon",
+          "to": "reference.sched_rows",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "three_windows_on_the_elevation",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one tagged window drawn on the facade elevation",
+          "sweep": true,
+          "out": "wq_b",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["wq_b.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole window with a tag beside it, rather than the schedule table or several windows at once? Answer yes or no only.",
+          "boxes": "wq_b",
+          "pad": 0.3,
+          "out": "wq_c"
+        },
+        {
+          "fail_if": ["wq_c.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["wq_c"],
+          "out": "wq_n"
+        },
+        {
+          "compare_band": "wq_n.n",
+          "to": "reference.n_windows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_convention_legend",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a legend, key or note explaining hinge sides or line styles, outside the schedule's three entries",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "lg"
+        },
+        {
+          "fail_if": ["lg.unreadable"]
+        },
+        {
+          "compare": "lg.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "id": "ellipse_whispering_gallery",
+  "axis": "quantitative_precision",
+  "prompt": "A clean a diagram of an elliptical ORBIT: a faint ellipse, its two foci as dark dots, and 5 magenta sample points placed ON the orbit curve. Every magenta point must lie exactly ON the ellipse: by the definition of an ellipse, the sum of its distances to the two foci must be the SAME constant for every point. Place all points on the true ellipse so their two-focus distance sums are equal. Do NOT place any point off the curve. Plain background.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a diagram of an elliptical ORBIT: a faint ellipse, its two foci as dark dots, and 5 magenta sample points placed ON the orbit curve. Ignoring artistic quality, does the image show an oval/ellipse with several magenta points on or near it and two dark focus dots inside? Answer NO only if those are missing or it is unrelated. yes or no.",
+  "reference": {
+    "mark_lo": [135, 80, 80],
+    "mark_hi": [160, 255, 255],
+    "f1": [0.2462, 0.5],
+    "f2": [0.7538, 0.5],
+    "min_pts": 4,
+    "tol": 0.07
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "focal_sum_const",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "magenta dot",
+          "out": "mk"
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "black dot",
+          "expected_n": 2,
+          "out": "fc",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["fc.unreadable"]
+        },
+        {
+          "read_crop": "This is a small cut-out from a diagram. Look at the middle of it. If a filled round dot is there, say what colour it is. Answer with exactly one word: magenta if the dot is bright pink or magenta, dark if the dot is black or dark grey, or none if there is no filled round dot here.",
+          "boxes": "mk",
+          "out": "colm"
+        },
+        {
+          "fail_if": ["colm.unreadable"]
+        },
+        {
+          "read_crop": "This is a small cut-out from a diagram. Look at the middle of it. If a filled round dot is there, say what colour it is. Answer with exactly one word: magenta if the dot is bright pink or magenta, dark if the dot is black or dark grey, or none if there is no filled round dot here.",
+          "boxes": "fc",
+          "out": "colf"
+        },
+        {
+          "fail_if": ["colf.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "focal_sum_spread",
+          "args": ["mk", "fc", "colm", "colf", "src", "reference"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.no_read"]
+        },
+        {
+          "compare_band": "rd.frac",
+          "to": 1.0,
+          "core": 0.15,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

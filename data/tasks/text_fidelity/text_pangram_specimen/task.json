@@ -1,0 +1,120 @@
+{
+  "id": "text_pangram_specimen",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on scan of a printed proof sheet titled 'PANGRAM PROOF SHEET', sub-heading 'Compact settings, ten words maximum'. Print EXACTLY 4 numbered lines (1. to 4.).\n\nCRITICAL SETTING LAW: each of the four lines must be a PANGRAM -- it must contain every letter of the alphabet from a to z at least once -- and each line may be AT MOST 10 words long. Write four NEW pangrams of your own; do not print any famous stock pangram.\n\nBlack text on warm white paper, nothing else on the sheet.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a printed card with numbered sentence lines. Ignoring artistic quality and ignoring whether the wording is correct, does the image DEPICT that -- a printed page carrying a numbered list of text lines? A photo, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_lines": 4,
+    "max_words": 10,
+    "famous": [
+      "the quick brown fox jumps over the lazy dog",
+      "pack my box with five dozen liquor jugs",
+      "how vexingly quick daft zebras jump",
+      "sphinx of black quartz judge my vow",
+      "the five boxing wizards jump quickly",
+      "jackdaws love my big sphinx of quartz",
+      "waltz bad nymph for quick jigs vex",
+      "bright vixens jump dozy fowl quack"
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_crop": "Copy out all the printed text on this page, exactly as it appears. Put each printed line on its own line of your answer, and keep that line's leading number (for example '3.') at the start of it. Copy every word letter for letter, even if a word looks misspelled, made-up or wrong -- do not correct it, complete it, translate it or improve it. Add nothing of your own and leave nothing out.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Transcribe this page word for word. Write one line of your answer for each line of printed text, beginning with that line's printed number. Spell every word exactly as it stands on the page, including any word that looks like nonsense or a mistake; never repair it. No commentary, no summary, no extra lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "read_crop": "Read the printed page out line by line and copy each line exactly as printed. When a line starts with a number that is PRINTED on the page, keep that printed number at the front of it; when a line carries no printed number -- a heading, for instance -- copy it with no number in front. Never number the lines of your answer yourself and never add a number the page does not print. Spell every word exactly as printed. Print what is on the paper, not what you think it should say. Output nothing else.",
+          "votes": 1,
+          "out": "t3"
+        },
+        {
+          "run": "score_pangrams",
+          "args": [
+            "_passes(t1, t2, t3)",
+            "reference.n_lines",
+            "reference.max_words",
+            "reference.famous"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read_crop": "Copy out all the printed text on this page, exactly as it appears. Put each printed line on its own line of your answer, and keep that line's leading number (for example '3.') at the start of it. Copy every word letter for letter, even if a word looks misspelled, made-up or wrong -- do not correct it, complete it, translate it or improve it. Add nothing of your own and leave nothing out.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Transcribe this page word for word. Write one line of your answer for each line of printed text, beginning with that line's printed number. Spell every word exactly as it stands on the page, including any word that looks like nonsense or a mistake; never repair it. No commentary, no summary, no extra lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "read_crop": "Read the printed page out line by line and copy each line exactly as printed. When a line starts with a number that is PRINTED on the page, keep that printed number at the front of it; when a line carries no printed number -- a heading, for instance -- copy it with no number in front. Never number the lines of your answer yourself and never add a number the page does not print. Spell every word exactly as printed. Print what is on the paper, not what you think it should say. Output nothing else.",
+          "votes": 1,
+          "out": "t3"
+        },
+        {
+          "run": "score_pangrams",
+          "args": [
+            "_passes(t1, t2, t3)",
+            "reference.n_lines",
+            "reference.max_words",
+            "reference.famous"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

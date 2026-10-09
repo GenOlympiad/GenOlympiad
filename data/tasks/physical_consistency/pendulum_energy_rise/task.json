@@ -1,0 +1,185 @@
+{
+  "id": "pendulum_energy_rise",
+  "axis": "physical_consistency",
+  "prompt": "A flat-colour school worksheet on a plain white page. Three pendulums hang from one horizontal rail across the top, well apart. Each is a thin straight cord with a round bob. Counting from the left, the first pendulum is drawn RED and its cord is 10 cm long, the second is GREEN with a 40 cm cord, and the third is BLUE with a 25 cm cord. Each pendulum is drawn only in its own colour and no other pendulum shares it.\n\nEach bob was raised straight UP from the point where it hangs at rest and then let go: the RED bob by 2 cm, the GREEN bob by 14 cm, the BLUE bob by 2.5 cm. Each pendulum is drawn as a double exposure showing it at BOTH ends of its swing -- EXACTLY two cords and EXACTLY two bobs for that pendulum, one swung left and one swung right, and no third position anywhere.\n\nNothing is lost to the air, so a swinging bob climbs on the far side to precisely the height it was let go from, and both of its turning points stand that pendulum's own release height above that pendulum's own lowest point. That is a height in centimetres, not an angle: a short cord lifted a long way must be flung out to a very wide angle, while a long cord lifted a little barely leaves the vertical. Work each pendulum from its own cord length and its own lift alone. The three must NOT be drawn swung out at matching angles, and no two of them share an angle.\n\nThe rail is exactly horizontal, every cord is straight, exactly two bobs per pendulum, every bob inside the picture and clear of its neighbours. Flat colours, thick clean outlines, plain white background, items well separated, no text, no numerals, no arrows, no rulers, no scale marks, no labels.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a row of pendulums hanging from one horizontal rail, each drawn twice, once swung out to each side. Ignoring artistic quality and styling, does the image actually DEPICT that requested subject? A realistic photograph, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if it instead shows a blank page, a page of text or a single hanging weight, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "k": 3,
+    "colours": ["red", "green", "blue"],
+    "cord_units": [10, 40, 25],
+    "lift_units": [2, 14, 2.5],
+    "rise_targets": [0.2, 0.35, 0.1],
+    "spread": 3.5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pendulums_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "pendulum_read",
+          "args": ["image", "reference.colours"],
+          "code": "code_cc598a02e032",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "score_readable",
+          "args": ["m", "reference.k"],
+          "code": "code_ecc4f194366a",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "two_exposures_per_pendulum",
+      "weight": 0.75,
+      "steps": [
+        {
+          "run": "pendulum_read",
+          "args": ["image", "reference.colours"],
+          "code": "code_cc598a02e032",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "score_exposures",
+          "args": ["m", "reference.k"],
+          "code": "code_fa058405e56d",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "colour_position_map",
+      "weight": 0.75,
+      "steps": [
+        {
+          "run": "pendulum_read",
+          "args": ["image", "reference.colours"],
+          "code": "code_cc598a02e032",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "score_colour_order",
+          "args": ["m", "reference.colours"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rise_fraction_per_pendulum",
+      "weight": 4.0,
+      "steps": [
+        {
+          "run": "pendulum_read",
+          "args": ["image", "reference.colours"],
+          "code": "code_cc598a02e032",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "score_rise_ratios",
+          "args": ["m", "reference.rise_targets"],
+          "code": "code_f504fd42b330",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rise_fraction_spread",
+      "weight": 1.5,
+      "steps": [
+        {
+          "run": "pendulum_read",
+          "args": ["image", "reference.colours"],
+          "code": "code_cc598a02e032",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "score_rise_spread",
+          "args": ["m", "reference.spread"],
+          "code": "code_8c8bb5a078ce",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_pendulum_rise_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "pendulum_read",
+          "args": ["image", "reference.colours"],
+          "code": "code_cc598a02e032",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "draw_pendulum_overlay",
+          "args": ["image", "reference.colours", "reference.rise_targets"],
+          "code": "code_cc598a02e032",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_cord_lengths_copied",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "pendulum_read",
+          "args": ["image", "reference.colours"],
+          "code": "code_cc598a02e032",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "score_cord_lengths",
+          "args": ["m", "reference.cord_units"],
+          "code": "code_f32b8a000df9",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

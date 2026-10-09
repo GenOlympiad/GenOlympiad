@@ -1,0 +1,84 @@
+{
+  "id": "the_captured_pair_loses_two_thicknesses",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The cutting office has to send the sheet down to the saw before the shift ends, so the contact sheet is photographed flat on the desk with both halves in the frame.\n\nThe left half of the sheet shows a four-panel carcass drawn assembled, with one corner blown up beside it so the joint can be seen. The head of the sheet gives the carcass at 600 mm wide by 800 mm high over its outside faces, and carries a photograph of the thickness stamp on the board, reading 18 mm. A note under the head calls the job up as a through-side carcass: the two side panels run the full height, and the top and bottom panels are captured between them. The right half of the sheet is a cutting table with four rows, marked top, bottom, left side and right side, each with an empty length column.\n\nWhat goes in the four length columns is what the head of the sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a works contact sheet lying flat, with an assembled carcass drawn on one half and a four-row cutting table on the other? Answer yes or no only.",
+  "reference": {
+    "part1": "sides_show_their_ends",
+    "part2": "row_reads_564"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the assembled carcass and its blown-up corner, and say whose end faces show on the outside of the box. Answer with one of: the end faces showing on the outside are those of the left and right panels; the end faces showing on the outside are those of the top and bottom panels; every corner is mitred, so no end face shows on the outside at all.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the figure written in the cutting table against the row marked top. Answer with one of: that row reads 564 mm, that row reads 600 mm, or that row reads 636 mm.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

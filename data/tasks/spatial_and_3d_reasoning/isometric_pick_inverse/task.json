@@ -1,0 +1,190 @@
+{
+  "id": "isometric_pick_inverse",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A game studio's tools team is writing the handbook page that explains how its level editor picks tiles, and wants one screenshot of the editor doing it. The viewport panel on its own, straight out of the editor: nothing but the ground grid and what has been dropped on it -- no toolbars, no menus, no panels round the edge, and no words, numbers or labels anywhere in the shot.\n\nThe editor lays its ground out as an isometric grid: identical diamond tiles, each twice as wide as it is tall, tessellated edge to edge so that four tiles meet at every corner and the viewport is covered without a gap or an overlap. Three cross-hair markers have been dropped on that grid for the screenshot. Two of them sit near the middle of the tile they landed on. The third is the one the handbook page is about, and it has been dropped into the narrow sliver of its tile just inside one of that tile's side corners, at the corner where four tiles meet -- still inside its own tile, but only just.\n\nThe editor's behaviour is the whole point of the page: it shades the one tile each marker is inside and leaves every other tile plain. So the shot comes to a field of plain diamonds, three cross-hair markers, and the tiles the editor picked, shaded.\n\nWhich tile gets shaded for each of those three markers is for you to work out from where the markers are sitting -- I am deliberately not telling you, and nothing in the shot says it either.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a field of diamond ground tiles filling the frame, with cross-hair markers on it and some tiles shaded while the rest are plain? A game screenshot, a flat drawing or a rendering ALL count as yes. Answer NO only if the image instead shows square tiles seen from straight above, a page of writing, or nothing tiled at all. Answer yes or no only.",
+  "reference": {
+    "n_markers": 3,
+    "n_shaded": 3,
+    "n_corner_markers": 1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_shaded_tile_holds_its_marker",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a shaded diamond ground tile in the editor viewport",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out has a shaded diamond tile in it. Is a cross-hair marker drawn inside that shaded diamond? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "marker_hit_rate",
+          "args": ["crop_read"],
+          "out": "prc"
+        },
+        {
+          "compare_band": "prc.r",
+          "to": 1.0,
+          "core_abs": 0.0001,
+          "margin_abs": 0.34,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_marker_left_on_a_plain_tile",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a cross-hair marker sitting on a diamond tile that is not shaded",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_loose"
+        },
+        {
+          "fail_if": ["sweep_loose.unreadable"]
+        },
+        {
+          "compare": "sweep_loose.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "one_marker_sits_in_the_sliver",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a cross-hair marker dropped on the ground grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_marks"
+        },
+        {
+          "fail_if": ["box_marks.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out has one cross-hair marker on a diamond tile. Is the marker close to one of that diamond's pointed corners, or close to the middle of the diamond? Answer with one word: corner or middle.",
+          "boxes": "box_marks",
+          "pad": 0.6,
+          "out": "rd_where"
+        },
+        {
+          "fail_if": ["rd_where.unreadable"]
+        },
+        {
+          "run": "corner_marker_check",
+          "args": ["rd_where", "reference.n_corner_markers", "reference.n_markers"],
+          "out": "cm"
+        },
+        {
+          "compare": "cm.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "exactly_three_tiles_are_shaded",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a shaded diamond ground tile in the editor viewport",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_shaded"
+        },
+        {
+          "fail_if": ["box_shaded.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole shaded diamond tile, rather than only part of one or a plain unshaded tile? Answer yes or no only.",
+          "boxes": "box_shaded",
+          "out": "crop_shaded"
+        },
+        {
+          "fail_if": ["crop_shaded.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_shaded"],
+          "out": "cnt_shaded"
+        },
+        {
+          "compare_band": "cnt_shaded.n",
+          "to": "reference.n_shaded",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_lettering_in_the_shot",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word, number or label printed anywhere in the editor viewport",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_text"
+        },
+        {
+          "fail_if": ["sweep_text.unreadable"]
+        },
+        {
+          "compare": "sweep_text.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,509 @@
+{
+  "id": "weave",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A photograph, taken square on, of a sheet of jacquard point paper on a designer's desk: warm cream card ruled into a square lattice of small boxes with a fine grey line and a fine grey border, some boxes painted flat vermilion. Flat colour only, no brush texture, no shadow across the sheet, no writing, no marks in the margins.\n\nThe lattice is 15 boxes wide and 15 boxes tall and stands for a cloth of 15 vertical threads by 15 horizontal threads. A box is painted vermilion where the VERTICAL thread rides over the horizontal one, and left bare cream where the horizontal thread rides over the vertical.\n\nAlong the topmost line of boxes the horizontal thread rides over the first four vertical threads and dips under the fifth, then over four and under one again, all the way across.\n\nEach line of boxes below carries the same over-four-under-one rhythm displaced TWO threads further to the RIGHT than the line above it, wrapping round the right-hand edge back to the left.\n\nThe point paper fills the frame and there is nothing else in the picture.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a sheet of ruled card divided into a square lattice of small boxes, with some of the boxes painted a strong colour and the rest left bare. Ignoring styling and quality, does the picture actually show such a ruled lattice of boxes? Answer NO only if it shows something else entirely -- a blank sheet, a page of text, a photograph of fabric, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "n": 15,
+    "over": 4,
+    "under": 1,
+    "shift": 2,
+    "phase": 0,
+    "grid": [
+      "HHHHVHHHHVHHHHV",
+      "HVHHHHVHHHHVHHH",
+      "HHHVHHHHVHHHHVH",
+      "VHHHHVHHHHVHHHH",
+      "HHVHHHHVHHHHVHH",
+      "HHHHVHHHHVHHHHV",
+      "HVHHHHVHHHHVHHH",
+      "HHHVHHHHVHHHHVH",
+      "VHHHHVHHHHVHHHH",
+      "HHVHHHHVHHHHVHH",
+      "HHHHVHHHHVHHHHV",
+      "HVHHHHVHHHHVHHH",
+      "HHHVHHHHVHHHHVH",
+      "VHHHHVHHHHVHHHH",
+      "HHVHHHHVHHHHVHH"
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lattice_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of chequered squares itself -- the rectangular area actually covered by the light and dark squares, not the plain paper, card, margin or border around it; the box must reach from the outer edge of the leftmost column of squares to the outer edge of the rightmost, and from the top row's outer edge to the bottom row's, so every square lies inside it and none is cut off",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "plan_lattice_strips",
+          "args": ["image", "lat", "reference.n"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "circles": "pl.circles",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.003,
+          "color": [0, 255, 0],
+          "out": "ov"
+        },
+        {
+          "read_crop": "This is one horizontal strip cut out of a grid, with {pl.m} green circles drawn on it, one on each square. Reading strictly left to right, for each green circle say whether the square underneath it is DARK (a solid dark or strongly coloured square) or PALE (a plain white, cream or very light square). Write one letter per circle: D for a dark square, L for a pale one. Output only the {pl.m} letters, no spaces and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.chunks",
+          "pad": 0,
+          "out": "rd"
+        },
+        {
+          "read_crop": "This is a thin strip cut out of a chequered pattern with {pl.m} green circles drawn on it. Look at where each green circle sits. Does every green circle sit inside a single square, well away from the lines between squares -- that is, is the area inside each circle all one colour? Answer yes or no only.",
+          "image": "ov.path",
+          "boxes": "pl.premise_chunks",
+          "pad": 0,
+          "out": "pm"
+        },
+        {
+          "run": "score_weave_grid",
+          "args": [
+            "rd",
+            "pm",
+            "pl",
+            "reference.n",
+            "reference.grid",
+            "reference.over",
+            "reference.under",
+            "reference.shift"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["1.0"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "crossing_matrix",
+      "weight": 10.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of chequered squares itself -- the rectangular area actually covered by the light and dark squares, not the plain paper, card, margin or border around it; the box must reach from the outer edge of the leftmost column of squares to the outer edge of the rightmost, and from the top row's outer edge to the bottom row's, so every square lies inside it and none is cut off",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "plan_lattice_strips",
+          "args": ["image", "lat", "reference.n"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "circles": "pl.circles",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.003,
+          "color": [0, 255, 0],
+          "out": "ov"
+        },
+        {
+          "read_crop": "This is one horizontal strip cut out of a grid, with {pl.m} green circles drawn on it, one on each square. Reading strictly left to right, for each green circle say whether the square underneath it is DARK (a solid dark or strongly coloured square) or PALE (a plain white, cream or very light square). Write one letter per circle: D for a dark square, L for a pale one. Output only the {pl.m} letters, no spaces and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.chunks",
+          "pad": 0,
+          "out": "rd"
+        },
+        {
+          "read_crop": "This is a thin strip cut out of a chequered pattern with {pl.m} green circles drawn on it. Take the green circles one at a time, reading strictly left to right. For each circle write one word from this list: inside (everything the circle encloses is one single colour) or across (the circle encloses parts of two colours). Separate one circle from the next with a semicolon, write exactly {pl.m} words and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.premise_chunks",
+          "pad": 0,
+          "out": "pm"
+        },
+        {
+          "run": "all_items_satisfy",
+          "args": ["pm", "[[['inside'],'T'],[['across'],'F']]", "'yes'", "'no'", "'unlisted'"],
+          "out": "pm__mapped"
+        },
+        {
+          "run": "score_weave_grid",
+          "args": [
+            "rd",
+            "pm__mapped",
+            "pl",
+            "reference.n",
+            "reference.grid",
+            "reference.over",
+            "reference.under",
+            "reference.shift"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_cells"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "float_length_conservation",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of chequered squares itself -- the rectangular area actually covered by the light and dark squares, not the plain paper, card, margin or border around it; the box must reach from the outer edge of the leftmost column of squares to the outer edge of the rightmost, and from the top row's outer edge to the bottom row's, so every square lies inside it and none is cut off",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "plan_lattice_strips",
+          "args": ["image", "lat", "reference.n"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "circles": "pl.circles",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.003,
+          "color": [0, 255, 0],
+          "out": "ov"
+        },
+        {
+          "read_crop": "This is one horizontal strip cut out of a grid, with {pl.m} green circles drawn on it, one on each square. Reading strictly left to right, for each green circle say whether the square underneath it is DARK (a solid dark or strongly coloured square) or PALE (a plain white, cream or very light square). Write one letter per circle: D for a dark square, L for a pale one. Output only the {pl.m} letters, no spaces and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.chunks",
+          "pad": 0,
+          "out": "rd"
+        },
+        {
+          "read_crop": "This is a thin strip cut out of a chequered pattern with {pl.m} green circles drawn on it. Take the green circles one at a time, reading strictly left to right. For each circle write one word from this list: inside (everything the circle encloses is one single colour) or across (the circle encloses parts of two colours). Separate one circle from the next with a semicolon, write exactly {pl.m} words and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.premise_chunks",
+          "pad": 0,
+          "out": "pm"
+        },
+        {
+          "run": "all_items_satisfy",
+          "args": ["pm", "[[['inside'],'T'],[['across'],'F']]", "'yes'", "'no'", "'unlisted'"],
+          "out": "pm__mapped"
+        },
+        {
+          "run": "score_weave_grid",
+          "args": [
+            "rd",
+            "pm__mapped",
+            "pl",
+            "reference.n",
+            "reference.grid",
+            "reference.over",
+            "reference.under",
+            "reference.shift"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_float"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "row_displacement",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of chequered squares itself -- the rectangular area actually covered by the light and dark squares, not the plain paper, card, margin or border around it; the box must reach from the outer edge of the leftmost column of squares to the outer edge of the rightmost, and from the top row's outer edge to the bottom row's, so every square lies inside it and none is cut off",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "plan_lattice_strips",
+          "args": ["image", "lat", "reference.n"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "circles": "pl.circles",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.003,
+          "color": [0, 255, 0],
+          "out": "ov"
+        },
+        {
+          "read_crop": "This is one horizontal strip cut out of a grid, with {pl.m} green circles drawn on it, one on each square. Reading strictly left to right, for each green circle say whether the square underneath it is DARK (a solid dark or strongly coloured square) or PALE (a plain white, cream or very light square). Write one letter per circle: D for a dark square, L for a pale one. Output only the {pl.m} letters, no spaces and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.chunks",
+          "pad": 0,
+          "out": "rd"
+        },
+        {
+          "read_crop": "This is a thin strip cut out of a chequered pattern with {pl.m} green circles drawn on it. Take the green circles one at a time, reading strictly left to right. For each circle write one word from this list: inside (everything the circle encloses is one single colour) or across (the circle encloses parts of two colours). Separate one circle from the next with a semicolon, write exactly {pl.m} words and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.premise_chunks",
+          "pad": 0,
+          "out": "pm"
+        },
+        {
+          "run": "all_items_satisfy",
+          "args": ["pm", "[[['inside'],'T'],[['across'],'F']]", "'yes'", "'no'", "'unlisted'"],
+          "out": "pm__mapped"
+        },
+        {
+          "run": "score_weave_grid",
+          "args": [
+            "rd",
+            "pm__mapped",
+            "pl",
+            "reference.n",
+            "reference.grid",
+            "reference.over",
+            "reference.under",
+            "reference.shift"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_shift"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_interlacing_present",
+      "weight": 0.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of chequered squares itself -- the rectangular area actually covered by the light and dark squares, not the plain paper, card, margin or border around it; the box must reach from the outer edge of the leftmost column of squares to the outer edge of the rightmost, and from the top row's outer edge to the bottom row's, so every square lies inside it and none is cut off",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "plan_lattice_strips",
+          "args": ["image", "lat", "reference.n"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "circles": "pl.circles",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.003,
+          "color": [0, 255, 0],
+          "out": "ov"
+        },
+        {
+          "read_crop": "This is one horizontal strip cut out of a grid, with {pl.m} green circles drawn on it, one on each square. Reading strictly left to right, for each green circle say whether the square underneath it is DARK (a solid dark or strongly coloured square) or PALE (a plain white, cream or very light square). Write one letter per circle: D for a dark square, L for a pale one. Output only the {pl.m} letters, no spaces and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.chunks",
+          "pad": 0,
+          "out": "rd"
+        },
+        {
+          "read_crop": "This is a thin strip cut out of a chequered pattern with {pl.m} green circles drawn on it. Look at where each green circle sits. Does every green circle sit inside a single square, well away from the lines between squares -- that is, is the area inside each circle all one colour? Answer yes or no only.",
+          "image": "ov.path",
+          "boxes": "pl.premise_chunks",
+          "pad": 0,
+          "out": "pm"
+        },
+        {
+          "run": "score_weave_grid",
+          "args": [
+            "rd",
+            "pm",
+            "pl",
+            "reference.n",
+            "reference.grid",
+            "reference.over",
+            "reference.under",
+            "reference.shift"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_interlace"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_weave_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of chequered squares itself -- the rectangular area actually covered by the light and dark squares, not the plain paper, card, margin or border around it; the box must reach from the outer edge of the leftmost column of squares to the outer edge of the rightmost, and from the top row's outer edge to the bottom row's, so every square lies inside it and none is cut off",
+          "expected_n": 1,
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "plan_lattice_strips",
+          "args": ["image", "lat", "reference.n"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "circles": "pl.circles",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.003,
+          "color": [0, 255, 0],
+          "out": "ov"
+        },
+        {
+          "read_crop": "This is one horizontal strip cut out of a grid, with {pl.m} green circles drawn on it, one on each square. Reading strictly left to right, for each green circle say whether the square underneath it is DARK (a solid dark or strongly coloured square) or PALE (a plain white, cream or very light square). Write one letter per circle: D for a dark square, L for a pale one. Output only the {pl.m} letters, no spaces and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.chunks",
+          "pad": 0,
+          "out": "rd"
+        },
+        {
+          "read_crop": "This is a thin strip cut out of a chequered pattern with {pl.m} green circles drawn on it. Look at where each green circle sits. Does every green circle sit inside a single square, well away from the lines between squares -- that is, is the area inside each circle all one colour? Answer yes or no only.",
+          "image": "ov.path",
+          "boxes": "pl.premise_chunks",
+          "pad": 0,
+          "out": "pm"
+        },
+        {
+          "run": "score_weave_grid",
+          "args": [
+            "rd",
+            "pm",
+            "pl",
+            "reference.n",
+            "reference.grid",
+            "reference.over",
+            "reference.under",
+            "reference.shift"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_cells"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

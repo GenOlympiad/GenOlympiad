@@ -1,0 +1,159 @@
+{
+  "id": "pinyin_tone_mark_vowel",
+  "axis": "text_fidelity",
+  "prompt": "At a travel publisher the pronunciation column of a pocket phrasebook is being proofed, and the proof stands on the screen filling the frame, square on, one entry to a line and typeset large because the book is read at arm's length in the street.\n\nThe manuscript hands over five entries. Each is a romanised syllable with a tone figure after it, and the English it stands for:\n\njiao3 -- foot\nliu2 -- to stay\ngui1 -- to return\nxue2 -- to study\nzuo4 -- to sit\n\nThe finished page is what a traveller reads aloud from, so it carries the tone as the small sign that stands over the syllable rather than as the figure the manuscript uses, and each line keeps its English beside it. This is a romanised phrasebook: the page carries no Chinese characters anywhere, only the romanised syllables and the English.\n\nWhich letter of a syllable the sign belongs over is for you to work out, and so is the shape the sign takes for each figure -- I am deliberately not telling you either, and I am not telling you that the letters of any two of these syllables behave alike. Nothing else goes on the page: no figures left standing beside the syllables, no note of the tone rules, no headings.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed page with lines of short words in the Latin alphabet and an English meaning beside each of them? A photograph of a page, a scan, a flat artwork or a screen grab ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer, or shows something with no lines of words in it. Answer yes or no only.",
+  "reference": {
+    "n_entries": 5,
+    "letter_by_gloss": {
+      "foot": "a",
+      "stay": "u",
+      "return": "i",
+      "study": "e",
+      "sit": "o"
+    },
+    "shape_by_gloss": {
+      "foot": "v",
+      "stay": "rising",
+      "return": "level",
+      "study": "rising",
+      "sit": "falling"
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sign_stands_over_the_letter_the_rule_picks",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of the phrasebook's pronunciation column",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "ent_box"
+        },
+        {
+          "fail_if": ["ent_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of an entry list. Copy the LAST English word printed on this line -- the English word furthest to the right on it. Ignore any word on a line above or below it. Write that one word and nothing else.",
+          "boxes": "ent_box",
+          "pad": 0.2,
+          "out": "gloss_rd"
+        },
+        {
+          "fail_if": ["gloss_rd.unreadable"]
+        },
+        {
+          "read_crop": "Copy the one letter that the small sign sits directly above on this line, and write nothing else. If no sign stands over any letter, answer the single word blank.",
+          "boxes": "ent_box",
+          "pad": 0.2,
+          "out": "letter_rd"
+        },
+        {
+          "fail_if": ["letter_rd.unreadable"]
+        },
+        {
+          "run": "bind_by_gloss",
+          "args": ["gloss_rd", "letter_rd", "reference.letter_by_gloss"],
+          "out": "letters"
+        },
+        {
+          "compare_band": "letters.ok",
+          "to": "reference.n_entries",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sign_takes_the_shape_its_own_figure_stood_for",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of the phrasebook's pronunciation column",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "ent_box2"
+        },
+        {
+          "fail_if": ["ent_box2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of an entry list. Copy the LAST English word printed on this line -- the English word furthest to the right on it. Ignore any word on a line above or below it. Write that one word and nothing else.",
+          "boxes": "ent_box2",
+          "pad": 0.2,
+          "out": "gloss_rd2"
+        },
+        {
+          "fail_if": ["gloss_rd2.unreadable"]
+        },
+        {
+          "read_crop": "Is the small sign over the word on this line a level bar, a stroke rising to the right, a small v, or a stroke falling to the right? Answer level, rising, v, or falling.",
+          "boxes": "ent_box2",
+          "pad": 0.2,
+          "out": "shape_rd"
+        },
+        {
+          "fail_if": ["shape_rd.unreadable"]
+        },
+        {
+          "run": "bind_by_gloss",
+          "args": ["gloss_rd2", "shape_rd", "reference.shape_by_gloss"],
+          "out": "shapes"
+        },
+        {
+          "compare_band": "shapes.ok",
+          "to": "reference.n_entries",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_figure_and_no_character_is_left_on_the_page",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a digit or a Chinese character standing beside one of the romanised words",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "extras"
+        },
+        {
+          "fail_if": ["extras.unreadable"]
+        },
+        {
+          "compare": "extras.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

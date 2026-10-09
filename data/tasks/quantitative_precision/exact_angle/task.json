@@ -1,0 +1,257 @@
+{
+  "id": "exact_angle",
+  "axis": "quantitative_precision",
+  "prompt": "A clear, photorealistic photograph on a construction site of a single long straight wooden scaffold plank used as a walk-up ramp, one end resting on the flat level ground and the other end leaning up against the flat vertical face of a low brick wall. The plank makes an angle of EXACTLY 22 degrees with the ground — not about 22, exactly 22 degrees between the plank and the horizontal ground. The whole plank is visible from where its lower end meets the ground up to where it touches the wall, viewed straight from the side so the lean angle is clearly measurable. A real everyday site photograph, sharp focus, natural daylight and shadows. Not a diagram, not an illustration, not a 3D render, no text or annotations.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict construction-site photo of a wooden scaffold plank ramp leaning from the ground up to a brick wall at an exact measurable angle. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "target": 22,
+    "q_side": "Is the plank shown roughly side-on and fully visible from where it meets the ground to where it meets the wall, NOT from an oblique 3/4 angle and NOT cropped? Answer yes or no.",
+    "d2_q_feature": "This image was supposed to depict: a construction-site photo of a wooden scaffold plank ramp leaning from the ground up to a brick wall at an exact measurable angle. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This image should depict: a construction-site photo of a wooden scaffold plank ramp leaning from the ground up to a brick wall at an exact measurable angle. Is the object / instrument / worksheet actually shown the KIND of thing described (the right carrier for the measurement), rather than a different object or a generic placeholder? Answer with the single word yes or no only.",
+    "d2_q_single": "This image should depict: a construction-site photo of a wooden scaffold plank ramp leaning from the ground up to a brick wall at an exact measurable angle, and only that. Is the measured object / construction shown cleanly on its own, WITHOUT extra distracting objects, clutter, or duplicate copies that are not part of the described scene? Answer yes if only the intended subject is present, no if there is distracting clutter or extra objects. Answer with the single word yes or no only.",
+    "d2_q_precise": "Does this image look like a PRECISE, deliberately constructed measurement or technical drawing -- crisp straight lines, sharp marks, cleanly drawn scale divisions, the look of something laid out with instruments -- as opposed to a rough, wobbly, freehand or sketchy rendering where the geometry is clearly approximate? Answer yes if it looks precisely / deliberately constructed, no if it looks rough or freehand. Answer with the single word yes or no only.",
+    "d2_q_units": "This image should depict: a construction-site photo of a wooden scaffold plank ramp leaning from the ground up to a brick wall at an exact measurable angle. Does it show a graduated measuring scale -- a numbered ruler, dial, vernier, gauge, or marked graduations with visible tick marks or numbers -- that a reading could be taken from, rather than the scale being missing or blank? Answer with the single word yes or no only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_angle_deg",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "line",
+          "target": "the long straight wooden plank ramp, running from where its lower end rests on the ground up to where its upper end leans on the wall",
+          "out": "ax"
+        },
+        {
+          "fail_if": ["ax.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "plank_angle",
+          "args": ["ax", "src", "reference.target"],
+          "out": "meas"
+        },
+        {
+          "fail_if": ["meas.degenerate"]
+        },
+        {
+          "compare_band": "meas.deg",
+          "to": "reference.target",
+          "core": 3.0,
+          "margin": 15.0,
+          "out": "frac"
+        },
+        {
+          "compose_ray": "meas.ray",
+          "caption": "meas.caption",
+          "out": "viz"
+        }
+      ]
+    },
+    {
+      "name": "side_view",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_side",
+          "out": "a"
+        },
+        {
+          "compare": "a",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_single_subject",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_single",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_units_ref",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_units",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

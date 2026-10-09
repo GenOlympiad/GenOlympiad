@@ -1,0 +1,182 @@
+{
+  "id": "compass_point_boxing",
+  "axis": "symbolic_systems",
+  "prompt": "Render a clean, straight-on navigation diagram titled 'MARINER'S ROSE  -  name-to-point': a 32-point compass rose drawn as a circle with North (N) at the very TOP and the 32 points spaced evenly around the ring (every 11.25 degrees), using the standard 'boxing the compass' naming system going clockwise (N, NbE, NNE, NEbN, NE, NEbE, ENE, EbN, E, and so on -- where 'EbN' means East by North, one point north of due East). Draw short tick marks at all 32 points and print the principal cardinal labels around the rim.\nNow, using the standard 32-point compass point names, place THREE small solid coloured WEDGES (narrow filled triangles pointing outward from the centre to the ring), one exactly at each of these three named compass points: a RED wedge at the SEbE point, a BLUE wedge at the SWbW point, a GREEN wedge at the NbE point. Each wedge must sit at the correct ANGULAR DIRECTION for its compass-point NAME on the 32-point rose -- for example the 'SEbE' point is the standard boxing-the-compass bearing for that name, not any other point. The three named points are SEbE, SWbW, NbE. Do NOT write the wedge colours or the point names as a caption or legend; show each wedge ONLY as a coloured triangle sitting at its correct point on the rose. Plain background.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a compass rose: a round dial with North at the top and compass points spaced around the ring, with a few small coloured wedges (triangles) marking specific points. Ignoring artistic quality, does the image actually DEPICT a round compass rose with coloured wedge markers on it? A clean diagram or illustration counts as yes. Answer NO only if it shows just plain text, a blank card, a legend/table, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "oct_red": "SE",
+    "oct_blue": "SW",
+    "oct_green": "N",
+    "name_red": "SEbE",
+    "name_blue": "SWbW",
+    "name_green": "NbE",
+    "q_red": "This is a compass rose with North at the very TOP, East at the RIGHT, South at the BOTTOM, and West at the LEFT. One narrow solid RED-coloured wedge (a filled triangle pointing outward from the centre) marks a single compass point. Which one of these eight compass directions is the RED wedge pointing MOST NEARLY toward: N (straight up), NE (upper-right), E (right), SE (lower-right), S (straight down), SW (lower-left), W (left), or NW (upper-left)? Judge ONLY by the geometric direction the RED triangle points, ignoring any text labels and any other coloured wedges. Answer with exactly one of: N, NE, E, SE, S, SW, W, NW.",
+    "q_blue": "This is a compass rose with North at the very TOP, East at the RIGHT, South at the BOTTOM, and West at the LEFT. One narrow solid BLUE-coloured wedge (a filled triangle pointing outward from the centre) marks a single compass point. Which one of these eight compass directions is the BLUE wedge pointing MOST NEARLY toward: N (straight up), NE (upper-right), E (right), SE (lower-right), S (straight down), SW (lower-left), W (left), or NW (upper-left)? Judge ONLY by the geometric direction the BLUE triangle points, ignoring any text labels and any other coloured wedges. Answer with exactly one of: N, NE, E, SE, S, SW, W, NW.",
+    "q_green": "This is a compass rose with North at the very TOP, East at the RIGHT, South at the BOTTOM, and West at the LEFT. One narrow solid GREEN-coloured wedge (a filled triangle pointing outward from the centre) marks a single compass point. Which one of these eight compass directions is the GREEN wedge pointing MOST NEARLY toward: N (straight up), NE (upper-right), E (right), SE (lower-right), S (straight down), SW (lower-left), W (left), or NW (upper-left)? Judge ONLY by the geometric direction the GREEN triangle points, ignoring any text labels and any other coloured wedges. Answer with exactly one of: N, NE, E, SE, S, SW, W, NW.",
+    "q_ticks": "Look at this compass rose. Around the outer ring, are there many small evenly-spaced tick marks (more than about twenty short radial marks around the circle), rather than just a few?  Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "boxing_slots",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the round compass rose itself -- the circle with the tick marks and the direction letters around its rim, counting the whole rose as one shape; not one coloured wedge on its own, and not the title lettering or the page around it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_rose_sectors",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is a wedge-shaped piece cut from a round compass diagram; it runs from the middle of the circle out to the rim. Is a small solid coloured triangle drawn inside this piece? If there is one, answer with just its colour: red, blue or green. If this piece holds no solid coloured triangle, answer the single word none.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "wedges"
+        },
+        {
+          "run": "find_colour_point",
+          "args": ["wedges", "pl", "'red'"],
+          "out": "rres"
+        },
+        {
+          "fail_if": ["rres.no_read"]
+        },
+        {
+          "run": "result_value",
+          "args": ["rres"],
+          "out": "rd"
+        },
+        {
+          "run": "find_colour_point",
+          "args": ["wedges", "pl", "'blue'"],
+          "out": "bres"
+        },
+        {
+          "fail_if": ["bres.no_read"]
+        },
+        {
+          "run": "result_value",
+          "args": ["bres"],
+          "out": "bl"
+        },
+        {
+          "run": "find_colour_point",
+          "args": ["wedges", "pl", "'green'"],
+          "out": "gres"
+        },
+        {
+          "fail_if": ["gres.no_read"]
+        },
+        {
+          "run": "result_value",
+          "args": ["gres"],
+          "out": "gn"
+        },
+        {
+          "run": "all_dots_match",
+          "args": [
+            "rd",
+            "bl",
+            "gn",
+            "reference.oct_red",
+            "reference.oct_blue",
+            "reference.oct_green"
+          ],
+          "out": "frac"
+        },
+        {
+          "run": "mark_sectors",
+          "args": ["pl", "rres", "bres", "gres", "reference"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "rose_has_ticks",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.q_ticks",
+          "out": "tk"
+        },
+        {
+          "fail_if": ["tk.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "tk",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

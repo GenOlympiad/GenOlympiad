@@ -1,0 +1,199 @@
+{
+  "id": "ludo_capture_position",
+  "axis": "latent_computation",
+  "prompt": "A children's board-game teaching diagram shows a single looped track of 24 numbered squares (0 to 23) around the edge of the board. MY red token starts on square 3. An opponent's blue token sits on square 14 and never moves on its own. I roll the die three times in a row and move my red token forward by that many squares each time: first I roll 5, then 4, then 2. If my red token ever LANDS exactly on the opponent's square, the opponent's blue token is CAPTURED and sent off the track (removed), while my red token stays on that square. Work the three moves forward and render the board's FINAL state: place MY red token on its final square, and show the blue token only if it was NOT captured. Do NOT print the die rolls or the square number of my token anywhere on the board.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show children's board-game teaching diagram of a 24-square looped track showing a red token on its final square after three rolls with the opponent captured? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "my_pos": 14,
+    "captured": true,
+    "yn_captured": "yes",
+    "q_form": "Look at this image. Is it a board-game diagram showing a looped track of numbered squares with a red game token on it? Answer ONLY 'yes' or 'no'.",
+    "q_pos": "Read ONLY the number of the square that MY RED token is sitting on in this board diagram. Report the printed square number the red token occupies; do NOT play out any moves yourself. Output only digits.",
+    "q_blue": "Look at this board diagram. Is there a BLUE opponent token still present ON the track? Report ONLY what is drawn; answer ONLY 'yes' or 'no'.",
+    "n_squares": 24,
+    "n_red": 1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ludo_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_pos",
+          "out": "mp"
+        },
+        {
+          "ask": "reference.q_blue",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["mp.unreadable"]
+        },
+        {
+          "run": null,
+          "expression": "j(mp,bl,reference.my_pos,reference.captured)",
+          "code": {
+            "inline": "j_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ludo_pos",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_pos",
+          "out": "mp2"
+        },
+        {
+          "fail_if": ["mp2.unreadable"]
+        },
+        {
+          "compare_tolerance": "mp2",
+          "to": "reference.my_pos",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_blue_removed",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a blue game token sitting anywhere on the numbered track",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_track_squares",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered square of the looped track around the edge of the board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole track square with its printed position number, rather than bare board or only part of a square? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_squares",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_red_tokens",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one red game token sitting on a numbered square of the track",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole red game token, rather than bare board or only part of a token? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_red",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

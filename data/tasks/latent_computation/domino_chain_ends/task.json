@@ -1,0 +1,197 @@
+{
+  "id": "domino_chain_ends",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on illustration of a horizontal DOMINO CHAIN laid out left to right on a table. Each domino is a tile split into two square halves, each half showing a number of pip DOTS from 0 to 6 (0 = a blank half). The chain follows the normal domino rule: where two tiles touch, the touching halves must show the SAME number of dots.\n\nStart by placing the first domino [1 | 1] flat, so its left half (1 dots) is the chain's left exposed end and its right half (1 dots) is the right exposed end. Then make these plays in this exact order, each time adding one domino to the named end and flipping it if needed so its touching half matches the pip count currently exposed at that end (the tile's OTHER half then becomes the new exposed end):\nPlay 1: add domino [1 | 3] to the RIGHT end of the chain\nPlay 2: add domino [2 | 1] to the LEFT end of the chain\nPlay 3: add domino [3 | 5] to the RIGHT end of the chain\nPlay 4: add domino [2 | 6] to the LEFT end of the chain\n\nAfter all the plays are made, the finished chain has two EXPOSED END halves -- one at the far left, one at the far right. Draw the finished chain of dominoes with the correct pip dots on every tile, and in particular make sure the two END halves show the correct final numbers of dots. Do NOT print any numbers, the play list, or words of working; the only thing that shows each end's value is the number of PIP DOTS drawn on the left-end and right-end halves.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a horizontal chain of dominoes laid end to end on a table, each domino tile split into two halves showing pip dots? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      [6],
+      [5]
+    ],
+    "left_end": "6",
+    "right_end": "5",
+    "ends": [6, 5],
+    "n_tiles": 5,
+    "q_grid": "Look ONLY at the two EXPOSED END halves of the domino chain: the outer half of the left-most tile, and the outer half of the right-most tile. Count the pip DOTS on each (a blank half = 0). Report two numbers: the LEFT-end half's dot count first (top of the list), then the RIGHT-end half's dot count second. Judge purely by counting dots; do not reason about the play sequence.",
+    "q_left": "Look at the OUTER (far-left) half of the left-most domino in the chain -- the left exposed end. Write down every pip DOT on that half, each with a few plain words saying where on the half it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If that half carries no dot, write the single word NONE.",
+    "q_right": "Look at the OUTER (far-right) half of the right-most domino in the chain -- the right exposed end. Write down every pip DOT on that half, each with a few plain words saying where on the half it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If that half carries no dot, write the single word NONE.",
+    "q_ntiles": "How many domino tiles are laid in the chain? Answer with a whole number only.",
+    "n_ends": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "end_pips",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_grid": "the number of pip dots on each of the two EXPOSED END halves of the chain: the LEFT-end (outer half of the left-most tile) first, then the RIGHT-end (outer half of the right-most tile). A blank half = 0",
+          "rows": "reference.n_ends",
+          "cols": 1,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "compare_grid": "cells.values",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "left_end_pips",
+      "weight": 0.4,
+      "steps": [
+        {
+          "ask": "reference.q_left",
+          "out": "v"
+        },
+        {
+          "fail_if": ["v.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["v", "empty_as='0'"],
+          "out": "v__std"
+        },
+        {
+          "fail_if": ["v__std.refused"]
+        },
+        {
+          "extract": "(?s)(\\d+)(?!.*\\d)",
+          "value": "v__std.text",
+          "out": "d"
+        },
+        {
+          "fail_if": ["d.none"]
+        },
+        {
+          "compare": "d",
+          "to": "reference.left_end",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "right_end_pips",
+      "weight": 0.4,
+      "steps": [
+        {
+          "ask": "reference.q_right",
+          "out": "v"
+        },
+        {
+          "fail_if": ["v.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["v", "empty_as='0'"],
+          "out": "v__std"
+        },
+        {
+          "fail_if": ["v__std.refused"]
+        },
+        {
+          "extract": "(?s)(\\d+)(?!.*\\d)",
+          "value": "v__std.text",
+          "out": "d"
+        },
+        {
+          "fail_if": ["d.none"]
+        },
+        {
+          "compare": "d",
+          "to": "reference.right_end",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_tile_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole domino tile in the chain, both halves included",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nt"
+        },
+        {
+          "fail_if": ["box_nt.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole domino tile with both of its halves, rather than bare table or only part of a tile? Answer yes or no only.",
+          "boxes": "box_nt",
+          "out": "crop_nt"
+        },
+        {
+          "fail_if": ["crop_nt.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nt"],
+          "out": "cnt_nt"
+        },
+        {
+          "compare_band": "cnt_nt.n",
+          "to": "reference.n_tiles",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chain_form",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show a horizontal chain of dominoes laid end to end, each tile split into two halves with pip dots? Answer with the single word yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

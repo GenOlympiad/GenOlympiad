@@ -1,0 +1,158 @@
+{
+  "id": "date_format_disambiguation",
+  "axis": "text_fidelity",
+  "prompt": "A customs broker is preparing the entry for one mixed consignment and has the entry preparation sheet on the clearance desk. Photograph the sheet square on, the whole ruled body in view and every figure legible.\n\nThe sheet has six entry lines. Each line already carries two things copied straight off the paperwork -- the invoice date exactly as the exporter's own invoice shows it, and the country the goods were dispatched from:\n  05/03/2025    Germany\n  05/03/2025    United States\n  12/07/2024    Brazil\n  12/07/2024    United States\n  30/01/2025    India\n  09/11/2024    United States\n\nThe last column of every line is empty and headed ENTRY DATE, and so is the box at the foot headed EARLIEST INVOICE DATE ON THIS ENTRY. Those are what the broker fills in.\n\nTaped to the desk beside the sheet is the office's own card of dispatch conventions, and it is the reason two of these lines carry the same figures and are not the same day at all: exporters in Germany, in Brazil and in India write the day before the month, while exporters in the United States write the month before the day. Every entry date has to be restated in the international form, that is the four-figure year, then the month, then the day, joined by hyphens.\n\nWhich day each of those invoice dates actually is, and which of the six is the earliest, is deliberately being kept from you: reading them under the right convention is the broker's whole job on this sheet. Do not write the conventions, any working or any note about which order was used anywhere on the sheet.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed ruled form with several lines of dates on it and a box at the foot? A photograph, a scan or a document mockup ALL count as yes. Answer NO only if the image instead shows a blank card that just states an answer, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "earliest_date": "2024 07 12",
+    "n_entry_lines": 6,
+    "entry_pairs": [
+      "05032025 germany=2025 03 05",
+      "05032025 united states=2025 05 03",
+      "12072024 brazil=2024 07 12",
+      "12072024 united states=2024 12 07",
+      "30012025 india=2025 01 30",
+      "09112024 united states=2024 11 09"
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_line_is_restated_under_its_own_dispatch_convention",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one entry line on the broker's preparation sheet",
+          "sweep": true,
+          "out": "el"
+        },
+        {
+          "fail_if": ["el.unreadable"]
+        },
+        {
+          "read_crop": "Copy the invoice date and the country printed on this line exactly as they stand (the first two columns). Write them and nothing else.",
+          "boxes": "el",
+          "pad": 0.2,
+          "out": "elk",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["elk.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of a table. Copy the date printed in its LAST column -- the date nearest the right edge of this cut-out. Ignore anything printed on a line above or below it. Write the date only and nothing else.",
+          "boxes": "el",
+          "pad": 0.2,
+          "out": "elr",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["elr.unreadable"]
+        },
+        {
+          "run": "entry_pairs_by_key",
+          "args": ["elk", "elr", "reference.entry_pairs"],
+          "out": "elj"
+        },
+        {
+          "compare_set": "elj.pairs",
+          "to": "reference.entry_pairs",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_foot_box_names_the_earliest_of_the_restated_days",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the earliest invoice date box at the foot of the preparation sheet",
+          "sweep": true,
+          "out": "eb"
+        },
+        {
+          "fail_if": ["eb.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date printed in this box. Write the date only.",
+          "boxes": "eb",
+          "pad": 0.3,
+          "out": "ebr",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ebr.unreadable"]
+        },
+        {
+          "run": "join_readings",
+          "args": ["ebr"],
+          "out": "ebj"
+        },
+        {
+          "compare": "ebj.seq",
+          "to": "reference.earliest_date",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_six_entry_lines_stand_on_the_sheet",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one entry line on the broker's preparation sheet",
+          "sweep": true,
+          "out": "ez"
+        },
+        {
+          "fail_if": ["ez.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole entry line, rather than a column heading or part of a line? Answer yes or no only.",
+          "boxes": "ez",
+          "pad": 0.3,
+          "out": "ezc"
+        },
+        {
+          "fail_if": ["ezc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["ezc"],
+          "out": "ezn"
+        },
+        {
+          "compare_band": "ezn.n",
+          "to": "reference.n_entry_lines",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

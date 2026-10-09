@@ -1,0 +1,84 @@
+{
+  "id": "heatshrink_legend_compresses_across",
+  "axis": "text_fidelity",
+  "prompt": "The panel cannot be wired until the identification sleeving has been printed and shrunk on, so the marking station photographs both stages on one page.\n\nThe left frame is a length of heatshrink identification sleeving lying flat as it comes off the printer, with the circuit word printed along it and a centimetre scale band printed beside the word. The right frame is that same length after heating, shrunk down onto two conductors of different diameter, a thicker one and a thinner one, carrying the same word and the same scale band. The consumables card on the bench gives the sleeving's shrink ratio and the two conductor diameters, and states the property the station works to: this sleeving pulls in around its circumference as it heats and holds its length along the wire.\n\nWhat the printed word ends up looking like on each conductor is the whole of the job and the card does not print it.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a printed plastic sleeve lying flat in one frame and the same sleeve fitted onto wires in another? Answer yes or no only.",
+  "reference": {
+    "part1": "narrower_but_same_height",
+    "part2": "narrower_on_the_thinner"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Compare the same word in the left frame and in the right frame, reading both against the printed scale band. Answer with one of: in the right frame the word is narrower across but stands the same height; in the right frame the word is smaller both across and in height; in the right frame the word is the same size as in the left.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the two stretches of the fitted sleeve in the right frame, the stretch sitting on the thicker conductor and the stretch sitting on the thinner one. Answer with one of: the word is narrower on the stretch sitting on the thinner conductor; the word is narrower on the stretch sitting on the thicker conductor; the word is the same width on both stretches.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

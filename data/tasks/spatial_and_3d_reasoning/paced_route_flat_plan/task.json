@@ -1,0 +1,190 @@
+{
+  "id": "paced_route_flat_plan",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "An estate agent has to draw up a measured flat plan for a one-bedroom flat, working only from what the viewer said into a phone on the way round. The finished plan is what this picture shows: a plan view drawn to scale on the agent's sheet, with a scale bar, the front door drawn at the foot of the page, and every place the viewer mentioned lettered on the plan in capitals -- HALL, TELEVISION, SOFA, KITCHEN, BEDROOM.\n\nThis is what the viewer said, word for word:\n  \"In at the front door and you're looking straight down the hall. Six metres in there's the television, on your left against the wall. Turn left at it and it's two metres across to the sofa. Turn left again and three metres brings you to the kitchen doorway. Turn right there and four metres takes you into the bedroom.\"\n\nBeside the plan the agent sets out a walked-distance schedule: one line for each of the four places the viewer named after the front door, each line carrying that place's name at the left and, at the right, how far you have walked from the front door by the time you reach it, in metres.\n\nThe walk is all you get. How the flat is shaped, and where each place ends up on the sheet, are for you to work out by following it. I am deliberately not telling you which side of the hall anything is on except the television, and I am not telling you any of the four figures in the schedule.\n\nAll five capital labels, the front door, the scale bar and all four lines of the schedule must be legible in the one frame. The sheet carries no compass rose, no photographs and no notes.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a plan view of rooms with words lettered on them? An estate agent's plan, a technical drawing or a diagram ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no plan at all. Answer yes or no only.",
+  "reference": {
+    "walk_map": "bedroom=15|kitchen=11|sofa=8|television=6",
+    "bedroom_side": "left",
+    "kitchen_nearer": "nearer",
+    "page_is_clean": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_turns_put_the_bedroom_on_one_side_of_the_hall",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the drawn flat plan on the agent's sheet",
+          "out": "fp"
+        },
+        {
+          "fail_if": ["fp.unreadable"]
+        },
+        {
+          "read_crop": "On the plan in this cut-out, is the room lettered BEDROOM to the left of the hall or to the right of the hall? Answer with one of: left, right.",
+          "boxes": "fp",
+          "pad": 0.08,
+          "out": "fpv"
+        },
+        {
+          "run": "first_word",
+          "args": ["fpv"],
+          "out": "fs"
+        },
+        {
+          "fail_if": ["fs.refused"]
+        },
+        {
+          "compare": "fs.val",
+          "to": "reference.bedroom_side",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_walk_doubles_back_so_the_kitchen_comes_back_towards_the_door",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the drawn flat plan on the agent's sheet",
+          "out": "fq"
+        },
+        {
+          "fail_if": ["fq.unreadable"]
+        },
+        {
+          "read_crop": "On the plan in this cut-out, is the doorway lettered KITCHEN nearer the front door than the item lettered TELEVISION, or further from it? Answer with one of: nearer, further.",
+          "boxes": "fq",
+          "pad": 0.08,
+          "out": "fqv"
+        },
+        {
+          "run": "first_word",
+          "args": ["fqv"],
+          "out": "fk"
+        },
+        {
+          "fail_if": ["fk.refused"]
+        },
+        {
+          "compare": "fk.val",
+          "to": "reference.kitchen_nearer",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_schedule_totals_the_same_walk",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one line of the walked-distance schedule, from its place name across to its figure",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "column",
+          "out": "wd"
+        },
+        {
+          "fail_if": ["wd.unreadable"]
+        },
+        {
+          "read_crop": "Copy the place name lettered at the left of this cut-out. Write the name only.",
+          "boxes": "wd",
+          "pad": 0.1,
+          "sort": "reading_order",
+          "layout": "column",
+          "out": "wdk"
+        },
+        {
+          "read_crop": "Copy the figure printed at the right of this cut-out. Write the figure only, without the letter m. If no figure is printed there, answer none.",
+          "boxes": "wd",
+          "pad": 0.1,
+          "sort": "reading_order",
+          "layout": "column",
+          "out": "wdv"
+        },
+        {
+          "run": "read_key_values",
+          "args": ["wdk", "wdv"],
+          "out": "wm"
+        },
+        {
+          "fail_if": ["wm.refused"]
+        },
+        {
+          "compare": "wm.seq",
+          "to": "reference.walk_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_was_added_to_the_agents_sheet",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a compass rose, a photograph or a note added to the agent's sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "xg"
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a compass rose, a photograph, or a note added to the sheet? Answer yes or no. Answer no if the cut-out shows part of the plan, a wall, a doorway, the scale bar, one of the capital labels, or one of the schedule's own lines.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "run": "sweep_holds_nothing_banned",
+          "args": ["xg", "xgw", "xgy"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.page_is_clean",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

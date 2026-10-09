@@ -1,0 +1,193 @@
+{
+  "id": "text_anagram_pairing",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on scan of a printed puzzle-page worksheet titled 'ANAGRAM MATCH-UP', sub-heading 'Word bank printed above'. Directly under the title print the WORD BANK on one line, exactly these ten words in this order: scion, elbow, pears, silent, night, glean, cried, least, study, earth.\n\nThen print EXACTLY 10 numbered lines (1. to 10.). Line k prints its cue word, then an equals sign, then ONE word from the bank:\n1. listen = ?\n2. dusty = ?\n3. below = ?\n4. cider = ?\n5. heart = ?\n6. thing = ?\n7. spare = ?\n8. stale = ?\n9. sonic = ?\n10. angel = ?\n\nCRITICAL PAIRING LAW: the word you print after the equals sign must be an ANAGRAM of the cue -- exactly the same letters rearranged, no letter added or dropped -- and every bank word must be used exactly once across the ten lines; replace every ? with that bank word. Work out which bank word belongs to which cue.\n\nBlack text on white paper, nothing else on the sheet.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a printed puzzle sheet with numbered word pairs. Ignoring artistic quality and ignoring whether the wording is correct, does the image DEPICT that -- a printed page carrying a numbered list of text lines? A photo, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_lines": 10,
+    "cues": [
+      "listen",
+      "dusty",
+      "below",
+      "cider",
+      "heart",
+      "thing",
+      "spare",
+      "stale",
+      "sonic",
+      "angel"
+    ],
+    "bank": [
+      "scion",
+      "elbow",
+      "pears",
+      "silent",
+      "night",
+      "glean",
+      "cried",
+      "least",
+      "study",
+      "earth"
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered line of this printed match-up list",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_t1"
+        },
+        {
+          "fail_if": ["box_t1.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one numbered line of a printed worksheet list. Copy that line exactly as it is printed: first the number it carries, then a full stop, then the words on the line in the order they stand, with the equals sign between them. Copy each word letter for letter, keeping capital and small letters as printed. Do not fix spelling and do not add anything else.",
+          "boxes": "box_t1",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_t1"
+        },
+        {
+          "fail_if": ["crop_t1.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_t1", "\"\\n\""],
+          "out": "txt_t1"
+        },
+        {
+          "read": "boxes",
+          "target": "one printed line of the numbered list, its number and everything printed after it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_t2"
+        },
+        {
+          "fail_if": ["box_t2.unreadable"]
+        },
+        {
+          "read_crop": "Transcribe the single numbered line shown in this cut-out. Begin with its printed number, then a full stop, then the rest of the line word for word in the order it appears, equals sign included, with upper-case and lower-case letters exactly as printed. Reproduce anything that looks like a mistake just as it stands, and write nothing else.",
+          "boxes": "box_t2",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_t2"
+        },
+        {
+          "fail_if": ["crop_t2.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_t2", "\"\\n\""],
+          "out": "txt_t2"
+        },
+        {
+          "run": "score_anagram_pairs",
+          "args": ["[txt_t1, txt_t2]", "reference.n_lines", "reference.cues", "reference.bank"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered line of this printed match-up list",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_t1"
+        },
+        {
+          "fail_if": ["box_t1.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one numbered line of a printed worksheet list. Copy that line exactly as it is printed: first the number it carries, then a full stop, then the words on the line in the order they stand, with the equals sign between them. Copy each word letter for letter, keeping capital and small letters as printed. Do not fix spelling and do not add anything else.",
+          "boxes": "box_t1",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_t1"
+        },
+        {
+          "fail_if": ["crop_t1.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_t1", "\"\\n\""],
+          "out": "txt_t1"
+        },
+        {
+          "read": "boxes",
+          "target": "one printed line of the numbered list, its number and everything printed after it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_t2"
+        },
+        {
+          "fail_if": ["box_t2.unreadable"]
+        },
+        {
+          "read_crop": "Transcribe the single numbered line shown in this cut-out. Begin with its printed number, then a full stop, then the rest of the line word for word in the order it appears, equals sign included, with upper-case and lower-case letters exactly as printed. Reproduce anything that looks like a mistake just as it stands, and write nothing else.",
+          "boxes": "box_t2",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_t2"
+        },
+        {
+          "fail_if": ["crop_t2.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_t2", "\"\\n\""],
+          "out": "txt_t2"
+        },
+        {
+          "run": "score_anagram_pairs",
+          "args": ["[txt_t1, txt_t2]", "reference.n_lines", "reference.cues", "reference.bank"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

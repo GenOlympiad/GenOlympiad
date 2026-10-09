@@ -1,0 +1,86 @@
+{
+  "id": "three_two_one_pins_the_billet",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The jig has to go down to the toolroom this shift, so the assembly drawing is photographed flat on the board with the operation card lying alongside it.\n\nThe sheet carries a plan view and a front view of a milling jig on one drawing frame. The workpiece is a plain rectangular billet. Its faces, at right angles to one another, each carry a large lettered plate: A, B and C. The title block names A as the primary datum, B as the secondary and C as the tertiary, and notes only that the work is to be located on the six point principle. Blue round-headed locating pins stand up from the base plate and from the side plates, and one end stop pin stands against the billet. The operation card clipped to the frame prints the cutter, the operation name and a heavy feed arrow.\n\nHow the pins are shared out between the lettered faces, and which end the stop pin takes, is what the drawing does not note.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a jig assembly drawing lying flat with a plan view and a front view of a billet held on lettered datum faces? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "stop_at_the_end_away_from_the_arrow"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "round-headed locating pins standing on the face that carries the lettered plate A",
+          "out": "r_part1",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part1.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the end stop pin and the feed arrow printed on the operation card, and say which end of the billet the stop pin stands at. Answer with one of: the stop pin stands at the end of the billet the feed arrow points away from; the stop pin stands at the end of the billet the feed arrow points towards; the stop pin stands part way along the side of the billet.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

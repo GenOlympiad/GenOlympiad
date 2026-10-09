@@ -1,0 +1,91 @@
+{
+  "id": "loto_group_lockbox_tally",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The third day of a turnaround at a refinery. The vessel beside the scaffold has been isolated and the isolation keys are shut inside the group lock box hanging on the frame, whose multi-hole hasp is where the men working inside the vessel secure the box in the way a group isolation is worked. The shift signs itself in and out on the flip-tag board on the wall beside the box: a rack of ten name tags, each turned face out while its man is inside the vessel and turned to its blank back once he is out again. The isolation list is stuck to the lid of the box. Photograph the box and the board as the permit issuer finds them in the middle of the shift, with the men at work inside the vessel.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a group lock box hanging on a scaffold frame beside a vessel on a refinery turnaround, with the shift's flip-tag sign-in board on the wall beside it? Answer yes or no.",
+  "reference": {
+    "part1_tally": "match",
+    "part2_rack": 10
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1_tally",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "How many padlocks are hanging through the hasp on the front of the lock box? Answer with a number.",
+          "out": "a_locks"
+        },
+        {
+          "fail_if": ["a_locks.unreadable"]
+        },
+        {
+          "ask": "How many of the name tags on the rack beside the box are turned face out with a written name showing? Answer with a number.",
+          "out": "a_tags"
+        },
+        {
+          "fail_if": ["a_tags.unreadable"]
+        },
+        {
+          "run": "locks_match_tags",
+          "args": ["a_locks", "a_tags"],
+          "out": "s_tally"
+        },
+        {
+          "fail_if": ["s_tally.refused"]
+        },
+        {
+          "compare": "s_tally.state",
+          "to": "reference.part1_tally",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2_rack",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "How many name tags in total are hanging on the rack beside the box, counting the ones showing a name and the ones showing a blank back together? Answer with a number.",
+          "out": "a_rack"
+        },
+        {
+          "fail_if": ["a_rack.unreadable"]
+        },
+        {
+          "run": "rack_count",
+          "args": ["a_rack"],
+          "out": "s_rack"
+        },
+        {
+          "fail_if": ["s_rack.refused"]
+        },
+        {
+          "compare": "s_rack.state",
+          "to": "reference.part2_rack",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "id": "tree_ring_chronology",
+  "axis": "quantitative_precision",
+  "prompt": "A clean botanical illustration of a sawn LOG END on a naturalist's study card, a round cross-section of a young trunk shown flat and straight-on, fine ink-and-wash rendering on off-white paper. The trunk must show EXACTLY 40 concentric annual GROWTH RINGS as thin brown lines around one central pith, counted as-is from the centre outward (do NOT default to an even decorative ring pattern or an arbitrary number -- there must be exactly 40 complete rings). MOST rings are evenly spaced, BUT at two specified DROUGHT YEARS the spacing is abruptly NARROW -- those rings crowd tightly against their neighbours: the drought years are ring number 12 and ring number 27 counting outward from the pith. Every other ring keeps the normal wide spacing. Delicate continuous ring lines, subtle wood tone. No text, no numbers, no labels, no scale bar.",
+  "difficulty": "s2",
+  "easy_question": "This picture was supposed to show a round sawn log-end cross-section with concentric growth rings around a centre. Never mind how well it is drawn. Does the picture show a round wood cross-section with concentric ring lines? A realistic photo or an illustration BOTH count as yes. Answer NO only if the image instead shows a blank card, a plain panel, or something with no concentric rings. Answer yes or no only.",
+  "reference": {
+    "n_target": 40,
+    "n_droughts": 2,
+    "count_tol": 6
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ring_joint",
+      "weight": 4.0,
+      "steps": [
+        {
+          "run": "read_rings",
+          "args": ["image"],
+          "out": "rr"
+        },
+        {
+          "run": "ring_check",
+          "args": [
+            "rr",
+            "reference['n_target']",
+            "reference['n_droughts']",
+            "reference['count_tol']"
+          ],
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.no_read"]
+        },
+        {
+          "compare_band": "rc.joint",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_ring_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "read_rings",
+          "args": ["image"],
+          "out": "rr2"
+        },
+        {
+          "run": "ring_check",
+          "args": [
+            "rr2",
+            "reference['n_target']",
+            "reference['n_droughts']",
+            "reference['count_tol']"
+          ],
+          "out": "rc2"
+        },
+        {
+          "fail_if": ["rc2.no_read"]
+        },
+        {
+          "compare_tolerance": "rc2.count_ok",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_drought_narrowing",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "read_rings",
+          "args": ["image"],
+          "out": "rr3"
+        },
+        {
+          "run": "ring_check",
+          "args": [
+            "rr3",
+            "reference['n_target']",
+            "reference['n_droughts']",
+            "reference['count_tol']"
+          ],
+          "out": "rc3"
+        },
+        {
+          "fail_if": ["rc3.no_read"]
+        },
+        {
+          "compare_tolerance": "rc3.drought_ok",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

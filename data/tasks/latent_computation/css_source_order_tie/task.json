@@ -1,0 +1,226 @@
+{
+  "id": "css_source_order_tie",
+  "axis": "latent_computation",
+  "prompt": "Draw the page exactly as a browser renders it from this source. Work out the final colour of every tile yourself from the cascade — selector weight, declaration order, inheritance and structural selectors all take part; do not guess from the class names.\n\n```html\n<div id=\"doc\">\n  <h1 class=\"hd\">Pill Organiser — Week 24</h1>\n  <p class=\"sub\">morning / evening dose wells</p>\n  <div class=\"kit\">\n    <main id=\"tray\" class=\"tray\">\n      <div class=\"dose am\" data-day=\"odd\">1</div>\n      <div class=\"dose\" data-day=\"even\">2</div>\n      <div class=\"dose am pm\" data-day=\"odd\">3</div>\n      <div class=\"dose pm\" data-day=\"even\">4</div>\n      <div class=\"dose\" data-day=\"odd\">5</div>\n      <div class=\"dose am\" data-day=\"even\">6</div>\n      <div class=\"dose am pm\" data-day=\"odd\">7</div>\n      <div class=\"dose\" data-day=\"even\">8</div>\n      <div class=\"dose pm\" data-day=\"odd\">9</div>\n      <div class=\"dose am\" data-day=\"even\">10</div>\n      <div class=\"dose\" data-day=\"odd\">11</div>\n      <div class=\"dose am pm\" data-day=\"even\">12</div>\n      <div class=\"dose\" data-day=\"odd\">13</div>\n      <div class=\"dose pm\" data-day=\"even\">14</div>\n      <div class=\"dose am\" data-day=\"odd\">15</div>\n      <div class=\"dose am pm\" data-day=\"even\">16</div>\n      <div class=\"dose\" data-day=\"odd\">17</div>\n      <div class=\"dose am\" data-day=\"even\">18</div>\n    </main>\n  </div>\n  <p class=\"foot\">18 wells</p>\n</div>\n```\n\n```css\n.hd { margin:0 0 6px; font:bold 34px sans-serif; color:#1b1b1b }\n.sub { margin:0 0 28px; font:20px sans-serif; color:#5a5a5a }\n.foot { margin:28px 0 0; font:20px sans-serif; color:#5a5a5a }\n.tray { display:grid; grid-template-columns:repeat(6,96px); grid-auto-rows:96px; gap:14px }\n.dose { display:flex; align-items:center; justify-content:center; box-sizing:border-box; border:3px solid #4a4a4a; color:#111; font:bold 20px sans-serif; border-radius:50%; background:#3949ab }\n.kit .tray .dose { background:#e53935 }\n.dose.am[data-day=\"odd\"] { background:#2e7d32 }\n.tray .dose.pm { background:#ffeb3b }\n.dose.am.pm { background:#00acc1 }\n.kit .dose[data-day=\"even\"] { background:#8e24aa }\n.kit .dose.pm { background:#3949ab }\n```\n\nOutput ONLY the rendered page as a clean, flat screenshot: the dark heading and small grey sub-heading exactly as the markup gives them, and below them the circular tiles laid out as a single grid of exactly 3 rows by 6 columns (18 tiles), each tile filled with one flat solid colour and carrying its dark label text. Show no source code, no browser window, address bar, tabs or developer tools, no legend, no colour names, no swatch key, no arrows or annotations, no shadows or gradients. The page background is plain white and every coloured area in the image must be one of the 18 tiles — nothing else in the picture may be coloured.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a weekly pill organiser of eighteen round dose wells? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "rows": 3,
+    "cols": 6,
+    "n_tiles": 18,
+    "palette": ["blue", "cyan", "green", "purple", "red", "yellow"],
+    "grid": [
+      ["green", "purple", "blue", "blue", "red", "purple"],
+      ["blue", "purple", "blue", "purple", "red", "blue"],
+      ["red", "blue", "green", "blue", "red", "purple"]
+    ],
+    "contested": [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [0, 5],
+      [1, 0],
+      [1, 1],
+      [1, 2],
+      [1, 3],
+      [1, 5],
+      [2, 1],
+      [2, 2],
+      [2, 3],
+      [2, 5]
+    ],
+    "ct_grid": [
+      [
+        "green",
+        "purple",
+        "blue",
+        "blue",
+        "purple",
+        "blue",
+        "purple",
+        "blue",
+        "purple",
+        "blue",
+        "blue",
+        "green",
+        "blue",
+        "purple"
+      ]
+    ],
+    "probe": [0, 0],
+    "q_form": "Does this image show one single rectangular grid of exactly 3 rows and 6 columns of circular tiles (that is 18 tiles in total), each tile filled with one flat solid colour, on a plain white page? Answer yes or no only.",
+    "q_colors": "The image shows a grid of 18 coloured tiles arranged in 3 rows of 6. Report the fill colour of every tile in reading order (left to right along the top row first, then the next row, and so on). Use exactly one word per tile from this list: red, yellow, green, cyan, blue, purple. Answer with the 18 colour words separated by commas and nothing else.",
+    "q_probe": "A thick WHITE rectangle has been drawn on top of exactly one tile in this image. What colour is the tile it is drawn on -- that is, the colour surrounding and showing through inside that white rectangle? Answer with exactly one word from this list: red, yellow, green, cyan, blue, purple.",
+    "q_count": "How many separate coloured tiles are shown in the grid? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "grid_form",
+      "weight": 0.4,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cascade_contested_cells",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coloured tile",
+          "expected_n": "reference.n_tiles",
+          "out": "tl"
+        },
+        {
+          "fail_if": ["tl.unreadable"]
+        },
+        {
+          "run": "order_tile_grid",
+          "args": ["tl", "reference.rows", "reference.cols"],
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "square_boxes",
+          "args": ["lat", "reference.contested"],
+          "out": "cl"
+        },
+        {
+          "fail_if": ["cl.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of ONE tile cut out of a grid of flat coloured tiles. What is this tile's fill colour -- the colour of the large flat area, ignoring any dark number or label printed on it and ignoring any thin border line? Answer with exactly one word from this list: red, yellow, green, cyan, blue, purple.",
+          "boxes": "cl",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "assemble_row",
+          "args": ["cr", "len(reference.contested)"],
+          "out": "rd"
+        },
+        {
+          "compare_grid": "rd.grid",
+          "to": "reference.ct_grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tile_lattice_confirm",
+      "weight": 0.4,
+      "gate": true,
+      "score": "lat.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coloured tile",
+          "expected_n": "reference.n_tiles",
+          "out": "tl"
+        },
+        {
+          "fail_if": ["tl.unreadable"]
+        },
+        {
+          "run": "order_tile_grid",
+          "args": ["tl", "reference.rows", "reference.cols"],
+          "out": "lat"
+        }
+      ]
+    },
+    {
+      "name": "probe_cell_recheck",
+      "weight": 0.4,
+      "gate": true,
+      "score": "ag.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coloured tile",
+          "expected_n": "reference.n_tiles",
+          "out": "tl"
+        },
+        {
+          "fail_if": ["tl.unreadable"]
+        },
+        {
+          "run": "order_tile_grid",
+          "args": ["tl", "reference.rows", "reference.cols"],
+          "out": "lat"
+        },
+        {
+          "fail_if": ["lat.unreadable"]
+        },
+        {
+          "run": "square_boxes",
+          "args": ["lat", "[reference.probe]"],
+          "out": "pc"
+        },
+        {
+          "fail_if": ["pc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of ONE tile cut out of a grid of flat coloured tiles. What is this tile's fill colour -- the colour of the large flat area, ignoring any dark number or label printed on it and ignoring any thin border line? Answer with exactly one word from this list: red, yellow, green, cyan, blue, purple.",
+          "boxes": "pc",
+          "out": "pcr"
+        },
+        {
+          "fail_if": ["pcr.unreadable"]
+        },
+        {
+          "run": "probe_position",
+          "args": ["reference.probe"],
+          "out": "pq"
+        },
+        {
+          "ask": "This picture shows a grid of flat coloured tiles, {gt.rows} rows by {gt.cols} columns. Look at the tile in row {pq.row} counting rows from the top, and column {pq.col} counting columns from the left. What is that tile's fill colour? Answer with exactly one word from this list: red, yellow, green, cyan, blue, purple.",
+          "out": "wf"
+        },
+        {
+          "fail_if": ["wf.unreadable"]
+        },
+        {
+          "run": "crop_frame_agree",
+          "args": ["pcr", "wf"],
+          "out": "ag"
+        }
+      ]
+    }
+  ]
+}

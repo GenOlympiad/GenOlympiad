@@ -1,0 +1,98 @@
+{
+  "id": "racecard_weigh_in_ledger",
+  "axis": "text_fidelity",
+  "prompt": "The weighing room is photographed before the race so the declared weights can go up on the board and into the stewards' file.\n\nThe conditions sheet on the clerk's desk sets the base weight for this race at 60 kilograms. The penalty sheet pinned on the wall adds 3 kilograms to Marram and 5 kilograms to Dunlin, and adds nothing to Coppice. The apprentice register pinned beside it allows Marram's rider 7 kilograms and Dunlin's rider 3 kilograms, and allows Coppice's rider nothing. The race board hung on that wall carries a line for each of the three horses, printed with the horse's name, its rider and the weight it is to carry. The rider sitting on the trial scale with his saddle across his knees is Dunlin's rider, and the scale window above him shows what the scale is reading.\n\nWhat weight stands against any horse is what the stewards' file does not give.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a racecourse weighing room with a race board on the wall, a penalty sheet and register pinned beside it, and a rider sitting on a trial scale? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "bend_meter_matches"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the weight standing on the Marram line of the race board and write that figure only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "55.5", "56.5"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the figure showing in the window of the trial scale and write that figure only.",
+          "out": "m_bend"
+        },
+        {
+          "fail_if": ["m_bend.unreadable"]
+        },
+        {
+          "ask": "Read the weight standing on the Marram line of the race board and write that figure only.",
+          "out": "m_straight"
+        },
+        {
+          "fail_if": ["m_straight.unreadable"]
+        },
+        {
+          "ask": "Read the weight standing on the Dunlin line of the race board and write that figure only.",
+          "out": "m_sheet"
+        },
+        {
+          "fail_if": ["m_sheet.unreadable"]
+        },
+        {
+          "run": "meter_matching_sheet_noting_tolerance",
+          "args": ["m_bend", "m_straight", "m_sheet"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

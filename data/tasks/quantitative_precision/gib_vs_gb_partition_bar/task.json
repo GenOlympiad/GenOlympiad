@@ -1,0 +1,214 @@
+{
+  "id": "gib_vs_gb_partition_bar",
+  "axis": "quantitative_precision",
+  "prompt": "A photograph taken across the bench of a computer shop's build station while a new drive is being checked in before it goes out to a customer.\n\nThe drive lies on the bench in front of its carton. The carton's front face carries the capacity the maker sells it as, in the form makers use: 2 TB (2,000,000,000,000 bytes). Behind the drive the workstation is open on that same drive's properties window, which gives three figures in gigabytes to two decimal places -- USED, FREE and CAPACITY -- and beneath them a bar showing how much of the drive is in use.\n\nEveryone on the counter quotes the same arithmetic all day: the maker counts a gigabyte as a thousand million bytes, while the operating system counts it as 1024 x 1024 x 1024 bytes, which is why a window never gives back what a carton claims. The fitter has already copied the shop's test image collection onto the drive, and it now takes up exactly 30% of the space the window reports.\n\nThis photograph goes into the shop's check-in file, and it is what the counter shows a customer who comes back asking where the missing space went, so the carton face and the window have to be legible in the same shot. Work the three window figures out for yourself -- I am deliberately not telling you any of them. Do not put any arithmetic, any conversion or any note about how a figure was obtained anywhere in the picture; the only figures in the picture are the carton's own printing and the three lines in the window. The carton face and all three window lines must be big and sharp enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a hard drive and its carton on a bench with a disk properties window on the screen behind them? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cap_gb": 1862.65,
+    "used_gb": 558.79,
+    "free_gb": 1303.85,
+    "line_grid": [
+      ["yes"],
+      ["yes"],
+      ["yes"]
+    ],
+    "yes_expect": "yes",
+    "n_window_lines": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "window_capacity_lines",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one figure line of the disk properties window, its caption and its figure",
+          "out": "box_lines",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_lines.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of a disk properties window. Copy the caption printed on it, then an equals sign, then the figure beside it. Write nothing else.",
+          "boxes": "box_lines",
+          "out": "wl"
+        },
+        {
+          "fail_if": ["wl.unreadable"]
+        },
+        {
+          "run": "window_lines_match",
+          "args": ["wl", "reference"],
+          "out": "lk"
+        },
+        {
+          "compare_grid": "lk.rows",
+          "to": "reference.line_grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "carton_and_window_disagree",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the capacity printed on the front face of the drive carton",
+          "out": "area_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["area_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows the front of a drive carton. Copy the capacity printed on it. Write nothing else.",
+          "boxes": "area_box",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the CAPACITY line of the disk properties window",
+          "out": "box_cap",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_cap.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows the capacity line of a disk properties window. Copy the figure and its unit printed on it. Write nothing else.",
+          "boxes": "box_cap",
+          "out": "wn"
+        },
+        {
+          "fail_if": ["wn.unreadable"]
+        },
+        {
+          "run": "figures_differ",
+          "args": ["bx", "wn", "reference"],
+          "out": "df"
+        },
+        {
+          "compare": "df.ok",
+          "to": "reference.yes_expect",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "window_lines",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one figure line of the disk properties window, its caption and its figure",
+          "out": "box_read",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole figure line of the properties window, with a caption and a figure beside it, rather than the usage bar, the window title, or only part of a line? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_window_lines",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "usage_bar",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the usage bar beneath the figures in the properties window",
+          "out": "box_bar",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_bar.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show a bar that is part filled and part empty, rather than a bar that is completely filled or completely empty? Answer yes or no only.",
+          "boxes": "box_bar",
+          "out": "ub"
+        },
+        {
+          "fail_if": ["ub.unreadable"]
+        },
+        {
+          "compare": "ub.answers.0",
+          "to": "reference.yes_expect",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "arithmetic, a unit conversion, or a note saying how a figure was obtained",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

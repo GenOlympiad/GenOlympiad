@@ -1,0 +1,150 @@
+{
+  "id": "fresco_giornata_seams",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A survey frame taken on the scaffold platform of a conservation studio: one washed section of a wall painting under raking light, shot square-on and filling the frame, with the recorder's roll of transparent film resting on the platform rail at the edge of the picture.\n\nWhat the section is and how it was made. It is true fresco, so the painter could only work into plaster laid that same morning, and this section took four mornings; each morning's patch was closed off against the one before it, and those closures survive as fine seams in the plaster which raking light picks out. The section shows three standing figures on a plain ground, all three heads well inside the frame and clear of one another. The workshop rule that governs where a closure may fall is the one every fresco painter follows: a seam is taken along the outline of a form -- the edge of a robe, the line of an arm, the top of the ground -- and is never taken across a face.\n\nThis frame is the record of where the day joins actually are, so the seams have to be visible in it. Work out for yourself where they run -- I am deliberately not telling you what shape they take or where any of them starts and ends.\n\nAll three figures and the whole section must be in the one frame. Nothing may be laid over the photograph: no tracing, no arrows, no numbers and no caption.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a painted wall surface with human figures on it? A photograph, an illustration, a painting or a diagram ALL count as yes. Answer NO only if the image instead shows a plain card of words with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_faces_crossed": 0,
+    "seam_shape": "curved",
+    "n_seams": 3,
+    "q_face_seam": "Does a fine line in the plaster run across the face in this cut-out? Answer yes or no only.",
+    "q_seam_shape": "Is the fine plaster line in this cut-out a straight line running clean across the wall, or does it bend around the shapes that are painted there? Answer with one word: straight or curved.",
+    "q_seam_cert": "Does this cut-out show a fine seam line in the plaster, rather than a painted outline of a robe or the edge of the wall? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_day_join_was_taken_across_a_face",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the head of one of the painted figures in the wall painting",
+          "out": "fc",
+          "sweep": true
+        },
+        {
+          "fail_if": ["fc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_face_seam",
+          "boxes": "fc",
+          "pad": 0.15,
+          "out": "fs"
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["fs"],
+          "out": "fs_n"
+        },
+        {
+          "compare_band": "fs_n.n",
+          "to": "reference.n_faces_crossed",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_joins_follow_the_drawing_rather_than_the_wall",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the painted section of wall inside its border",
+          "out": "sm"
+        },
+        {
+          "fail_if": ["sm.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_seam_shape",
+          "boxes": "sm",
+          "pad": 0.02,
+          "out": "ss"
+        },
+        {
+          "run": "read_seam_shapes",
+          "args": ["ss"],
+          "out": "ss_w"
+        },
+        {
+          "fail_if": ["ss_w.refused"]
+        },
+        {
+          "run": "distinct_words",
+          "args": ["ss_w"],
+          "out": "ss_v"
+        },
+        {
+          "compare_set": "ss_v.vals",
+          "to": "reference.seam_shape",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "four_mornings_leave_three_closures",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the plastered surface of the washed section of wall painting",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "read_crop": "Write down every fine seam line running across the plaster in this cut-out, each with a few plain words saying where it runs. A seam is a hairline join in the plaster, not a painted outline and not the edge of the wall. Separate one item from the next with a semicolon; write no running total and nothing else. If no seam runs across the plaster here, write the single word NONE.",
+          "boxes": "sc",
+          "pad": 0.02,
+          "out": "sc_c"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["sc_c", "empty_as='0'"],
+          "out": "sc_c__std"
+        },
+        {
+          "fail_if": ["sc_c__std.refused"]
+        },
+        {
+          "run": "median_crop_count",
+          "args": ["sc_c__std"],
+          "out": "sc_n"
+        },
+        {
+          "fail_if": ["sc_n.refused"]
+        },
+        {
+          "compare_band": "sc_n.n",
+          "to": "reference.n_seams",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "id": "ca_rule30_row_n",
+  "axis": "latent_computation",
+  "prompt": "A discrete-mathematics classroom poster demonstrates the one-dimensional cellular automaton 'Rule 30'. There is a horizontal strip of 15 cells. In generation 1 only the CENTER cell (the 8th) is BLACK and all others are WHITE. Each next generation is computed from the one above by Rule 30: a cell becomes BLACK exactly when its left-neighbour, itself, and right-neighbour in the previous row match one of the patterns (left,self,right) = 100, 011, 010, 001 (reading black=1, white=0); otherwise it becomes WHITE. Cells beyond the strip edges count as WHITE. Apply the rule generation by generation and render ONLY generation 8 (the 8th row) as a single horizontal strip of 15 square cells, each cell painted solid BLACK or solid WHITE, in order left to right. Do NOT draw the earlier generations, gridline numbers, or any text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show discrete-mathematics classroom poster showing generation 8 of the Rule-30 1-D cellular automaton as a single horizontal 15-cell black/white strip? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      ["B", "B", "W", "B", "B", "B", "B", "W", "W", "B", "B", "B", "B", "B", "B"]
+    ],
+    "n_cells": 15,
+    "n_black": 12,
+    "first_cell": "black",
+    "last_cell": "B"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "row8_exact",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_sequence": "Read the single horizontal strip of 15 square cells left to right. For each cell output 'B' if it is solid black or 'W' if it is solid white. Output exactly 15 letters separated by single spaces and nothing else.",
+          "n": 15,
+          "as_column": false,
+          "out": "seq"
+        },
+        {
+          "fail_if": ["seq.unreadable", "seq.empty"]
+        },
+        {
+          "run": "first_letters_upper",
+          "args": ["seq"],
+          "out": "row"
+        },
+        {
+          "compare_grid": "row",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_strip_cells",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square cell of the horizontal strip",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Answer yes only if this cut-out shows ONE complete square cell of the strip, with the whole cell inside the picture. Answer no if it shows two or more cells, or only part of a cell, or bare background. Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_cells",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_black_cells",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square cell of the horizontal strip painted solid black",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole square cell filled solid black, rather than a white cell or only part of a cell? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_black",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_first_cell",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is the LEFTMOST cell of the horizontal strip painted BLACK or WHITE? Answer with the single word black or white.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.first_cell",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_last_cell",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "This is a horizontal strip of 15 black/white cells (one Rule-30 generation). Look at the RIGHTMOST (last) cell. Is it black or white? Answer with the single word black or white.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.last_cell",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

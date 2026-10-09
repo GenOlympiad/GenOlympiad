@@ -1,0 +1,138 @@
+{
+  "id": "coanda_jet_drop_point",
+  "axis": "physical_consistency",
+  "prompt": "Commissioning is on this floor today and the engineer needs one photograph of the air pattern for the balancing file, taken from below so the ceiling runs across the top of the frame and the wall on the left is in shot as well.\n\nAlready taped up and not yours to move: a square supply diffuser set flush in the ceiling; light paper tufts taped along the ceiling tees on both sides of it, four of them, each with a small numbered sticker on the tee beside it reading 1 and 2 to the left of the diffuser and 3 and 4 to the right; two more tufts taped to the wall a little below the ceiling line on the left; and the engineer standing with the anemometer.\n\nThe state of the system when the shutter goes: the fan is running at design flow and the room is otherwise still, with the door shut. Nothing else in the room is moving.\n\nHow each tuft lies, and which way each one is blown, is the part you have to work out -- I am not telling you, and no tuft in the room has been set as an example. Take it so all six tufts and the diffuser face are in one frame and the free end of each tuft can be seen. Do not put any airflow arrow or any reading on the photograph.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a ceiling with a square fitting set into it and small paper strips taped near it? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no drawing on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "tuft_dirs": "1=270|2=270|3=90|4=90",
+    "n_ceiling": 4,
+    "n_wall": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_ceiling_tuft_is_blown_along_the_ceiling_away_from_the_diffuser",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a paper tuft taped to the ceiling beside a numbered sticker",
+          "sweep": true,
+          "out": "tf_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["tf_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which number is on the small sticker on the ceiling tee beside the tuft? Answer with the number exactly as it is printed.",
+          "boxes": "tf_box",
+          "pad": 0.6,
+          "out": "tkey"
+        },
+        {
+          "fail_if": ["tkey.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which edge or corner is the free end of the paper tuft nearest to? Answer with one of: top, top right, right, bottom right, bottom, bottom left, left, top left, cannot tell.",
+          "boxes": "tf_box",
+          "pad": 0.6,
+          "out": "tdir"
+        },
+        {
+          "fail_if": ["tdir.unreadable"]
+        },
+        {
+          "run": "worst_tuft_angle",
+          "args": ["tkey", "tdir", "reference.tuft_dirs"],
+          "out": "tg"
+        },
+        {
+          "compare_compass": "tg.gap",
+          "to": 0,
+          "core": 25.0,
+          "margin": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_wall_tufts_are_held_flat_against_the_wall_by_the_jet_coming_down",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a paper tuft taped to the wall below the ceiling line",
+          "sweep": true,
+          "out": "wl_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["wl_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how does the paper tuft on the wall lie? Answer with one of: flat against the wall pointing down, hanging slack away from the wall, flat against the wall pointing up, cannot tell.",
+          "boxes": "wl_box",
+          "pad": 0.5,
+          "out": "wal"
+        },
+        {
+          "fail_if": ["wal.unreadable"]
+        },
+        {
+          "run": "count_wall_tufts_down",
+          "args": ["wal"],
+          "out": "wl"
+        },
+        {
+          "compare_band": "wl.n",
+          "to": "reference.n_wall",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_airflow_arrow_or_reading_is_put_on_the_photograph",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow or a written reading laid over the photograph",
+          "sweep": true,
+          "out": "swp",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,276 @@
+{
+  "id": "muster_person_equivalent",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph taken at the head of a passenger ship's accommodation ladder: the muster board bolted to the bulkhead, photographed square on so the whole board is readable.\n\nThe board is laid out as three columns, one per lifeboat, headed NO 1, NO 2 and NO 3, and each column carries its own certified number under that heading -- NO 1 carries 12, NO 2 carries 10 and NO 3 carries 8. Under the heading each column has a space for the codes that go in it, and under that space a box labelled ALLOCATED TOTAL.\n\nThe people to be muster-listed this voyage are the crew C1, C2, C3, C4, C5 and C6, and the passengers P1, P2, P3, P4, P5, P6, P7, P8 and P9. Every one of them belongs somewhere on the board.\n\nThe ship's standing order for the muster board is quoted along the foot of the board and the quotation belongs in the picture: \"A crew member carrying equipment occupies one and a half places. A passenger occupies one place. No boat is loaded past its certified number, and the allocated total is entered under each boat.\"\n\nThe port state inspector reads this board, so a boat loaded past its certified number holds the ship alongside.\n\nWork the muster-listing and the totals out yourself -- I am deliberately not telling you who goes to which boat, and I am not telling you what any allocated total comes to. Keep the working off the board: no sums, no arrows, no note beyond the standing order.\n\nAll three columns, every one of the fifteen codes, all three certified numbers and all three ALLOCATED TOTAL boxes must be in the same picture, and the writing must be large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a ship's muster board laid out as three lifeboat columns, each headed with a boat name and holding written person codes and a labelled total box? A photo, an illustration or a plain printed sheet all count as yes. Answer no only if it shows something unrelated, or just a blank panel with an answer written on it. Answer yes or no only.",
+  "reference": {
+    "boat_checks": "ok",
+    "roster": "c1,c2,c3,c4,c5,c6,p1,p2,p3,p4,p5,p6,p7,p8,p9",
+    "n_boats": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_total_is_its_own_column_in_places",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of lifeboat columns on the muster board, from the boat headings down to the ALLOCATED TOTAL boxes",
+          "expected_n": 1,
+          "out": "anc_box_col",
+          "context": "the muster board on the bulkhead"
+        },
+        {
+          "fail_if": ["anc_box_col.unreadable"]
+        },
+        {
+          "run": "plan_pinned_grid",
+          "args": ["image", "anc_box_col", "rows=1", "cols=reference.n_boats"],
+          "out": "pl_box_col"
+        },
+        {
+          "fail_if": ["pl_box_col.no_plan"]
+        },
+        {
+          "read_crop": "Copy the boat name printed at the head of this column. Write it and nothing else.",
+          "boxes": "pl_box_col.cells",
+          "pad": 0.0,
+          "out": "bname"
+        },
+        {
+          "fail_if": ["bname.unreadable"]
+        },
+        {
+          "read_crop": "Copy the certified number printed under the boat name in this column. Write the number and nothing else.",
+          "boxes": "pl_box_col.cells",
+          "pad": 0.0,
+          "out": "bcap"
+        },
+        {
+          "fail_if": ["bcap.unreadable"]
+        },
+        {
+          "read_crop": "Copy every person code written in this column, separated by commas. Write the codes and nothing else, and write none when no code is written there.",
+          "boxes": "pl_box_col.cells",
+          "pad": 0.0,
+          "out": "blist"
+        },
+        {
+          "fail_if": ["blist.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written in the box labelled ALLOCATED TOTAL in this column. Write the figure and nothing else, and write none when that box is empty.",
+          "boxes": "pl_box_col.cells",
+          "pad": 0.0,
+          "out": "btot"
+        },
+        {
+          "fail_if": ["btot.unreadable"]
+        },
+        {
+          "run": "check_boat_loads",
+          "args": ["bname", "bcap", "btot", "blist"],
+          "out": "chk"
+        },
+        {
+          "compare": "chk.seq",
+          "to": "reference.boat_checks",
+          "out": "frac"
+        },
+        {
+          "run": "paint_cells_by_fraction",
+          "args": ["pl_box_col", "frac"],
+          "out": "pa_box_col"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_box_col.hit",
+          "ref_anchors": "pa_box_col.ref_anchors",
+          "found_anchors": "pa_box_col.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_box_col_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_col_hit.path",
+          "rects": "pa_box_col.miss",
+          "ref_anchors": "pa_box_col.ref_anchors",
+          "found_anchors": "pa_box_col.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_box_col_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_col_miss.path",
+          "rects": "pa_box_col.edge",
+          "ref_anchors": "pa_box_col.ref_anchors",
+          "found_anchors": "pa_box_col.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_box_col_edge"
+        }
+      ]
+    },
+    {
+      "name": "every_code_is_on_the_board_once",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of lifeboat columns on the muster board, from the boat headings down to the ALLOCATED TOTAL boxes",
+          "expected_n": 1,
+          "out": "anc_box_col2",
+          "context": "the muster board on the bulkhead"
+        },
+        {
+          "fail_if": ["anc_box_col2.unreadable"]
+        },
+        {
+          "run": "plan_pinned_grid",
+          "args": ["image", "anc_box_col2", "rows=1", "cols=reference.n_boats"],
+          "out": "pl_box_col2"
+        },
+        {
+          "fail_if": ["pl_box_col2.no_plan"]
+        },
+        {
+          "read_crop": "Copy every person code written in this column, separated by commas. Write the codes and nothing else, and write none when no code is written there.",
+          "boxes": "pl_box_col2.cells",
+          "pad": 0.0,
+          "out": "blist2"
+        },
+        {
+          "fail_if": ["blist2.unreadable"]
+        },
+        {
+          "run": "read_roster_codes",
+          "args": ["blist2"],
+          "out": "ros"
+        },
+        {
+          "compare_set": "ros.seq",
+          "to": "reference.roster",
+          "out": "frac"
+        },
+        {
+          "run": "paint_cells_by_fraction",
+          "args": ["pl_box_col2", "frac"],
+          "out": "pa_box_col2"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_box_col2.hit",
+          "ref_anchors": "pa_box_col2.ref_anchors",
+          "found_anchors": "pa_box_col2.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_box_col2_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_col2_hit.path",
+          "rects": "pa_box_col2.miss",
+          "ref_anchors": "pa_box_col2.ref_anchors",
+          "found_anchors": "pa_box_col2.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_box_col2_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_col2_miss.path",
+          "rects": "pa_box_col2.edge",
+          "ref_anchors": "pa_box_col2.ref_anchors",
+          "found_anchors": "pa_box_col2.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_box_col2_edge"
+        }
+      ]
+    },
+    {
+      "name": "d1_lifeboat_column_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one lifeboat column printed on the muster board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole lifeboat column of the board, rather than the board's heading or only part of a column? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_boats",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_working_added",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a sum written out by hand, an arrow or a note added on the board",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

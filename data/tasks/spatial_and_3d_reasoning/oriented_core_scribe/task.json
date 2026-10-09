@@ -1,0 +1,84 @@
+{
+  "id": "oriented_core_scribe",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The structural readings for this hole are due at the end of shift, so the run just pulled is laid out in the box for the logger's photograph.\n\nOne wooden core box sits on the logging bench, its first row filled end to end with lengths of pale sandstone core. Each length was scribed down one side with a marker pen in the barrel, and each carries a painted arrow. The near end of the box is stamped HEAD in the timber. The log book open beside it gives the run numbers in order, their depths, 18.40 down to 22.10 metres, and the azimuth the barrel was set to, 135 degrees throughout. Printed inside the book cover is the site rule: the scribe line is laid on one side of the core and stays on that side down the whole hole, and the arrow points towards the top of the hole.\n\nHow each length has been turned in the box is not written in the log.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a long wooden box on a bench holding a row of rock core lengths, with a marked line and a painted arrow along each of them? Answer yes or no only.",
+  "reference": {
+    "part1": "carries_on_unbroken",
+    "part2": "all_toward_the_stamped_end"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look along the row of core lengths in the box and at the marked line down each of them. Answer with one of: the marked line carries on from one piece into the next all the way along the row; the marked line steps to a different side from one piece to the next; just one piece has its line on a different side from the rest.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the painted arrows on the core lengths and at the end of the box stamped HEAD. Answer with one of: all of the arrows point the same way, towards the stamped end; one arrow points back towards the far end; the arrows point in several different ways.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

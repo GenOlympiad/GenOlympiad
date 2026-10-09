@@ -1,0 +1,186 @@
+{
+  "id": "subway_line_sequence",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A clean printed POCKET TRANSIT MAP for tourists showing GENOA's single metro line, drawn as one horizontal blue line with a white dot for every station, each station labelled with its real name, running in the correct real-world order from the northern terminus BRIN to the eastern terminus BRIGNOLE. Include EVERY intermediate station of the real line, no extras and none missing. White background, a thick blue line, a clear round white dot at each station, station names printed clearly in an unbroken left-to-right sequence.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show printed tourist pocket transit map of Genoa's single metro line, Brin to Brignole? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "stations": [
+      "Brin",
+      "Dinegro",
+      "Principe",
+      "Darsena",
+      "San Giorgio",
+      "Sarzano/Sant'Agostino",
+      "De Ferrari",
+      "Brignole"
+    ],
+    "station_text": "Brin Dinegro Principe Darsena San Giorgio Sarzano/Sant'Agostino De Ferrari Brignole",
+    "n_stations": 8,
+    "line_name": "Genoa Metro",
+    "city": "Genoa"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "station_seq",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single station stop on the transit line: one round dot sitting on the coloured line together with the station name printed beside it",
+          "votes": 3,
+          "out": "sqab",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sqab.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a printed transit map. Does this cut-out show exactly ONE station stop -- one round dot sitting on the coloured line with one station name printed next to that dot -- rather than two stops together, only a piece of one stop, or just a stretch of the line with no stop on it? Answer yes or no only.",
+          "boxes": "sqab",
+          "pad": 0.1,
+          "out": "sqac"
+        },
+        {
+          "fail_if": ["sqac.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a printed transit map. It shows one station stop: a round dot on the line with its name printed beside it. Read that printed station name. Answer with just that name, spelled exactly as it is printed, and nothing else.",
+          "boxes": "sqab",
+          "pad": 0.1,
+          "out": "sqan"
+        },
+        {
+          "fail_if": ["sqan.unreadable"]
+        },
+        {
+          "run": "read_stations",
+          "args": ["sqab", "sqac", "sqan"],
+          "out": "sda"
+        },
+        {
+          "run": "stations_in_order",
+          "args": ["sda.text", "reference.stations"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "station_seq_f1",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single station stop on the transit line: one round dot sitting on the coloured line together with the station name printed beside it",
+          "votes": 3,
+          "out": "sqbb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sqbb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a printed transit map. Does this cut-out show exactly ONE station stop -- one round dot sitting on the coloured line with one station name printed next to that dot -- rather than two stops together, only a piece of one stop, or just a stretch of the line with no stop on it? Answer yes or no only.",
+          "boxes": "sqbb",
+          "pad": 0.1,
+          "out": "sqbc"
+        },
+        {
+          "fail_if": ["sqbc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a printed transit map. It shows one station stop: a round dot on the line with its name printed beside it. Read that printed station name. Answer with just that name, spelled exactly as it is printed, and nothing else.",
+          "boxes": "sqbb",
+          "pad": 0.1,
+          "out": "sqbn"
+        },
+        {
+          "fail_if": ["sqbn.unreadable"]
+        },
+        {
+          "run": "read_stations",
+          "args": ["sqbb", "sqbc", "sqbn"],
+          "out": "sdb"
+        },
+        {
+          "compare_text": "sdb.text",
+          "to": "reference.station_text",
+          "core": 0.9,
+          "margin": 0.22,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "n_stations",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single station stop on the transit line: one round dot sitting on the coloured line together with the station name printed beside it",
+          "votes": 3,
+          "out": "sqcb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sqcb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a printed transit map. Does this cut-out show exactly ONE station stop -- one round dot sitting on the coloured line with one station name printed next to that dot -- rather than two stops together, only a piece of one stop, or just a stretch of the line with no stop on it? Answer yes or no only.",
+          "boxes": "sqcb",
+          "pad": 0.1,
+          "out": "sqcc"
+        },
+        {
+          "fail_if": ["sqcc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a printed transit map. It shows one station stop: a round dot on the line with its name printed beside it. Read that printed station name. Answer with just that name, spelled exactly as it is printed, and nothing else.",
+          "boxes": "sqcb",
+          "pad": 0.1,
+          "out": "sqcn"
+        },
+        {
+          "fail_if": ["sqcn.unreadable"]
+        },
+        {
+          "run": "read_stations",
+          "args": ["sqcb", "sqcc", "sqcn"],
+          "out": "sdc"
+        },
+        {
+          "run": "count_stations",
+          "args": ["sdc.text"],
+          "out": "read_n"
+        },
+        {
+          "compare_band": "read_n",
+          "to": "reference.n_stations",
+          "core": 1.0,
+          "margin": 2.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

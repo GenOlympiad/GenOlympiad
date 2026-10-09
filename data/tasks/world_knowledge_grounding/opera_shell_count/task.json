@@ -1,0 +1,134 @@
+{
+  "id": "opera_shell_count",
+  "axis": "world_knowledge_grounding",
+  "prompt": "An aerial tourist-postcard illustration of the Sydney Opera House seen from above over the harbour at sunset, warm palette. The Opera House roof is famously built from FOURTEEN separate precast concrete sail/shell segments -- individual curved, pointed white shells grouped into vaulted rows. Draw all 14 shells as clearly SEPARATED, distinctly outlined rounded sails of varying height seen at an oblique angle, so each shell is a countable unit. Do NOT simplify the roof into just two or three big generic triangles; render the full set of individual curved shells. White shells against warm sunset water. No numerals or text labels.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an illustration of a white shell-roofed opera house by the water whose roof is made of many separate curved sail/shell segments? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "count": "14",
+    "q_count": "Count the number of individual curved sail/shell roof segments on this building -- each separate rounded pointed shell that makes up the roof. Count them one by one. Answer with just the number.",
+    "core": 1.0,
+    "margin": 6.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shell_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one pointed white roof sail standing on its own along the roofline",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_cb"
+        },
+        {
+          "fail_if": ["box_cb.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole pointed roof sail, its curved outline complete from base to tip, rather than plain sky, the podium, the water, or only part of a sail? Answer yes or no only.",
+          "boxes": "box_cb",
+          "out": "crop_cb"
+        },
+        {
+          "fail_if": ["crop_cb.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_cb"],
+          "out": "cnt_cb"
+        },
+        {
+          "run": "count_as_read",
+          "args": ["cnt_cb"],
+          "out": "as_cb"
+        },
+        {
+          "run": "last_number",
+          "args": ["as_cb"],
+          "out": "bn"
+        },
+        {
+          "fail_if": ["bn.none"]
+        },
+        {
+          "compare_band": "bn.n",
+          "to": "reference.count",
+          "core": "reference.core",
+          "margin": "reference.margin",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shell_count_confirm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one curved white shell segment of the roof, drawn as its own rounded unit",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_a"
+        },
+        {
+          "fail_if": ["box_a.unreadable"]
+        },
+        {
+          "read_crop": "Is exactly one complete rounded shell segment of the roof shown in this cut-out, standing clear of its neighbours, rather than two shells at once or a broken piece of one? Answer yes or no only.",
+          "boxes": "box_a",
+          "out": "crop_a"
+        },
+        {
+          "fail_if": ["crop_a.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_a"],
+          "out": "cnt_a"
+        },
+        {
+          "run": "count_as_read",
+          "args": ["cnt_a"],
+          "out": "as_a"
+        },
+        {
+          "run": "last_number",
+          "args": ["as_a"],
+          "out": "cn"
+        },
+        {
+          "fail_if": ["cn.none"]
+        },
+        {
+          "compare_band": "cn.n",
+          "to": "reference.count",
+          "core": "reference.core",
+          "margin": "reference.margin",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "source": "The roof of the Sydney Opera House has 14 precast concrete shells (design by Jorn Utzon).",
+  "grounding": "static"
+}

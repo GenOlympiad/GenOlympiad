@@ -1,0 +1,140 @@
+{
+  "id": "big_dipper_pointer",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A realistic night-sky astrophotography star chart showing how to find the North Star from the Big Dipper. Draw the seven bright stars of the BIG DIPPER (Ursa Major's plough) in their correct shape — the four-star bowl and the three-star curved handle — as white star points on a deep dark-blue night sky with a faint scatter of dimmer background stars. Then also draw POLARIS, the North Star, in its correct position relative to the Dipper: the two 'pointer' stars at the front of the bowl (Merak at the bottom and Dubhe at the top) point to Polaris — follow the line from Merak through Dubhe and continue about FIVE times the distance between those two pointer stars to reach Polaris. Place Polaris exactly there, as a bright white star point. No labels, no star names, no lines, no arrows, no text of any kind — just the star points on the night sky.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a night-sky star chart with the Big Dipper and the North Star as bright star points on a dark sky. Ignoring artistic quality, does the image actually DEPICT that requested subject / scene — a star chart with bright star points on a dark sky? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "catalog": [
+      [0.0, 0.0],
+      [0.0, -0.95],
+      [0.62, -1.2],
+      [0.66, -0.55],
+      [1.55, -0.6],
+      [2.35, -0.52],
+      [3.2, -0.95]
+    ],
+    "pointer": [1, 0],
+    "n_body": 7,
+    "target_ratio": 5.0,
+    "enforce_notext": true,
+    "q_notext": "Is there any printed word or number anywhere on this star chart? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pointer_place",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "distinctly bright star point -- one of the large, bright stars that clearly stand out from the faint background speckle of dim stars",
+          "out": "stars"
+        },
+        {
+          "fail_if": ["stars.unreadable"]
+        },
+        {
+          "read_crop": "This is a small close-up of a patch of night sky. Is there a BIG BRIGHT star in it -- a large white star that stands out clearly, much brighter than the tiny faint specks of background stars? Answer yes or no only.",
+          "boxes": "stars",
+          "out": "chk"
+        },
+        {
+          "run": "place_polaris",
+          "args": ["stars", "chk", "image", "reference"],
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.no_read"]
+        },
+        {
+          "compare_band": "s.place",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        },
+        {
+          "compose_ray": "s.ray",
+          "circle": "s.circ",
+          "caption": "s.verdict",
+          "out": "viz"
+        }
+      ]
+    },
+    {
+      "name": "dipper_shape",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "distinctly bright star point -- one of the large, bright stars that clearly stand out from the faint background speckle of dim stars",
+          "out": "stars3"
+        },
+        {
+          "fail_if": ["stars3.unreadable"]
+        },
+        {
+          "read_crop": "This is a small close-up of a patch of night sky. Is there a BIG BRIGHT star in it -- a large white star that stands out clearly, much brighter than the tiny faint specks of background stars? Answer yes or no only.",
+          "boxes": "stars3",
+          "out": "chk3"
+        },
+        {
+          "run": "place_polaris",
+          "args": ["stars3", "chk3", "image", "reference"],
+          "out": "s3"
+        },
+        {
+          "fail_if": ["s3.no_read"]
+        },
+        {
+          "compare_band": "s3.body",
+          "to": 0.0,
+          "core": 0.06,
+          "margin": 0.34,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

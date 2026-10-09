@@ -1,0 +1,270 @@
+{
+  "id": "binary_addition_column",
+  "axis": "latent_computation",
+  "prompt": "A photograph of a university COMPUTER-SCIENCE lecture CHALKBOARD, straight-on, chalk on dark green slate. The lecturer has worked a BINARY long-addition of the two decimal numbers 3067 and 1489 using 12-bit column addition, chalked in exactly FOUR aligned rows of 0/1 digits, one bit per column, most significant bit on the LEFT:\n  - the top row is the CARRY row (the carry bit carried INTO each column),\n  - the second row is 3067 written in binary,\n  - the third row is 1489 written in binary, with a + chalked to its left,\n  - then a horizontal chalk line,\n  - the bottom row is the SUM in binary.\nGive every row the SAME number of columns (a leading overflow column so all four rows line up). Chalk ONLY 0s and 1s in the four rows (plus the + and the line); no decimal numbers, no labels, no other writing anywhere on the board.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show university computer-science lecture chalkboard with a binary long-addition chalked in four aligned 0/1 rows? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 12,
+    "cols": 13,
+    "a": 3067,
+    "b": 1489,
+    "total": 4556,
+    "carry_row": [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0],
+    "a_row": [0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1],
+    "b_row": [0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1],
+    "sum_row": [1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0],
+    "q_grid": "This is a binary column-addition chalked on a board with exactly FOUR horizontal rows of 0/1 digits, all columns aligned. Reading TOP to BOTTOM: row1 = the carry row, row2 = the first number, row3 = the second number, row4 = the sum (below the line). Each row has the SAME number of columns. Transcribe all four rows.",
+    "four_rows": 4,
+    "carry_lead": 1,
+    "sum_lead": 1,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sum_row",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read_crop": "This is a binary column-addition chalked on a board: four horizontal rows of 0/1 digits, all columns lined up, and every row is exactly {gt.cols} digits long. Transcribe the BOTTOM row -- the SUM, written under the horizontal line. Reply with only that row's {gt.cols} 0/1 digits, left to right, separated by single spaces, and nothing else.",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "run": "row_exact",
+          "args": ["rd", "reference.sum_row"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "carry_row",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read_crop": "This is a binary column-addition chalked on a board: four horizontal rows of 0/1 digits, all columns lined up, and every row is exactly {gt.cols} digits long. Transcribe the TOP row -- the small carry row written above the two numbers. Reply with only that row's {gt.cols} 0/1 digits, left to right, separated by single spaces, and nothing else.",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "run": "row_exact",
+          "args": ["rd", "reference.carry_row"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_a",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_crop": "This is a binary column-addition chalked on a board: four horizontal rows of 0/1 digits, all columns lined up, and every row is exactly {gt.cols} digits long. Transcribe the SECOND row from the top -- the first of the two numbers being added. Reply with only that row's {gt.cols} 0/1 digits, left to right, separated by single spaces, and nothing else.",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "run": "row_frac",
+          "args": ["rd", "reference.a_row"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_b",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_crop": "This is a binary column-addition chalked on a board: four horizontal rows of 0/1 digits, all columns lined up, and every row is exactly {gt.cols} digits long. Transcribe the THIRD row from the top -- the second of the two numbers being added, the one with a + sign to its left. Reply with only that row's {gt.cols} 0/1 digits, left to right, separated by single spaces, and nothing else.",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "run": "row_frac",
+          "args": ["rd", "reference.b_row"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_a_dec",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one chalked 0 or 1 digit in the SECOND row from the top of the four chalked rows",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "digits_box"
+        },
+        {
+          "fail_if": ["digits_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one chalked character. Is it a 0 or a 1? Answer with just that one character.",
+          "boxes": "digits_box",
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "rseq"
+        },
+        {
+          "fail_if": ["rseq.unreadable"]
+        },
+        {
+          "run": "row_frac",
+          "args": ["rseq.answers", "reference.a_row"],
+          "code": {
+            "inline": "row_frac_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_carry_top_left",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Look at the TOP row (the carry row) of the four chalked rows. Read the single bit in its LEFT-MOST column (the most significant / overflow column). Answer a single character, 0 or 1.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.carry_lead",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_sum_lead_bit",
+      "weight": 0.75,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Look at the BOTTOM row (the SUM row, below the horizontal line). Read the single bit in its LEFT-MOST column (the most significant / overflow column). Answer a single character, 0 or 1.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.sum_lead",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_rows",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does the chalked working consist of exactly FOUR aligned horizontal rows of 0/1 digits -- a carry row on top, then two operand rows, then one sum row below the horizontal line? (The + sign and the horizontal line are not rows.) Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_cols",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one column of the chalked addition, its digits stacked one above another",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "cols_box"
+        },
+        {
+          "fail_if": ["cols_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole column of the chalked addition, with its digits stacked one above another, rather than bare board or only part of a column? Answer yes or no only.",
+          "boxes": "cols_box",
+          "out": "cols_chk"
+        },
+        {
+          "fail_if": ["cols_chk.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cols_chk"],
+          "out": "cnt_cols"
+        },
+        {
+          "compare_band": "cnt_cols.n",
+          "to": "reference.cols",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

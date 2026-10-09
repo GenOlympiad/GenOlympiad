@@ -1,0 +1,163 @@
+{
+  "id": "zodiac_year_mod60",
+  "axis": "latent_computation",
+  "prompt": "A festive vertical SPRING-FESTIVAL street poster in bold red and gold, photographed flat against a wall. Centred top: 'SPRING FESTIVAL' and 'New Year 2087'. A large round gold medallion in the middle names the Chinese ZODIAC ANIMAL of the year 2087 (one English word) with the small word 'year' beneath it. Near the bottom, on a gold banner, print 'Sexagenary:' followed by that year's stem-branch name in the Roman form 'Stem-Branch' (for example 'Yi-Chou'). Compute both correctly for the year 2087 using the sixty-year cycle: the heavenly stem repeats every ten years and the earthly branch and its animal every twelve years (the year 1984 was 'Jia-Zi', the Rat). The stem and the animal must both match 2087. No other text, no dates, no numbers besides the year.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show red-and-gold Spring Festival street poster naming the sexagenary stem-branch and zodiac animal of a future new year? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "ganzhi": "Ding-Wei",
+    "animal": "Goat",
+    "stem": "Ding",
+    "branch": "Wei",
+    "q_ganzhi": "This festival poster prints a stem-branch name after the word 'Sexagenary:' on a gold banner near the bottom, written as two capitalised words joined by a hyphen. Read ONLY that stem-branch name and answer with just those two hyphenated words, nothing else.",
+    "q_animal": "This festival poster shows one English zodiac ANIMAL word inside the large round gold medallion in the middle (with the small word 'year' beneath it). Read ONLY that single animal word and answer with just that one word, nothing else.",
+    "q_form": "Look at this image. Is it a red-and-gold SPRING FESTIVAL poster with a round gold medallion naming a zodiac animal and a banner reading 'Sexagenary:' followed by a hyphenated stem-branch name? Answer ONLY 'yes' or 'no'.",
+    "year_val": 2087
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ganzhi",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_ganzhi",
+          "out": "ans"
+        },
+        {
+          "run": "normalise_answer",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "matches_reference",
+          "args": ["read", "reference.ganzhi"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "animal",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_animal",
+          "out": "ans"
+        },
+        {
+          "run": "normalise_answer",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "matches_reference",
+          "args": ["read", "reference.animal"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_year",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the four-digit year printed in the 'New Year YYYY' line at the top of the poster. Report the printed year digits. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.year_val",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "animal_word",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the single English zodiac-animal word printed on the large round gold medallion in the middle of the poster. Answer that one word.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.animal",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sexagenary_label",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is the word 'Sexagenary:' printed on the gold banner near the bottom of the poster, followed by a Stem-Branch name? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

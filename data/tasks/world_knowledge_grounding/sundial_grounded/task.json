@@ -1,0 +1,143 @@
+{
+  "id": "sundial_grounded",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A crisp, photorealistic outdoor PHOTOGRAPH taken on a clear sunny winter day at a science-museum outdoor exhibit: a single straight vertical wooden post (a gnomon, about 1 metre tall) standing upright on flat open ground, casting one sharp dark shadow. Painted on the flat ground around the base of the post is a large compass rose with the four cardinal directions in big bold letters N (north), E (east), S (south) and W (west), correctly oriented. The photo is taken from a slightly elevated angle so the whole shadow and the compass letters are fully visible. This exhibit is at Anchorage, Alaska (61.2 deg N) on January 25th at 3:00 PM (15:00) local Alaska time (AKST). Render the post's shadow with the correct real-world DIRECTION and LENGTH for the sun's actual position at that exact place, date and time -- compute where the sun is in the sky and cast the shadow accordingly (a low winter sun makes a long shadow; a high sun makes a short one). Show the ENTIRE shadow from the base of the post to its tip, even if it is long. Natural daylight, realistic, high detail, no text overlays other than the compass letters.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show science-museum outdoor gnomon exhibit at Anchorage on a winter afternoon, painted compass rose on the ground? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "bearing": 25.7,
+    "dir8": "NE",
+    "dir_deg": 45.0,
+    "ratio": 8.14,
+    "band_core": 2.0,
+    "band_margin": 2.0,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shadow_length_band",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "wooden post standing upright together with the whole dark shadow it casts, from the foot of the post out to the shadow's far tip -- ONE box holding both, big enough that the top of the post and the very tip of the shadow are inside it; ground, painted compass letters or sky caught inside that box do not disqualify it. Do not box the post alone or the shadow alone.",
+          "expected_n": 1,
+          "out": "ratio_txt_box"
+        },
+        {
+          "fail_if": ["ratio_txt_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut showing an upright post standing on the ground and the dark shadow it casts. Compare two lengths: the height of the post, measured from the ground at its foot up to its top, and the length of the shadow, measured from the foot of the post out to the far tip of the shadow. How many times the post's height is the shadow's length? Reply with just a single number (for example 0.5, 1, 2, 4, or 10).",
+          "boxes": "ratio_txt_box",
+          "pad": 0.12,
+          "out": "ratio_txt_cr"
+        },
+        {
+          "fail_if": ["ratio_txt_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "ratio_txt_cr",
+          "out": "ratio_txt"
+        },
+        {
+          "extract": "([0-9]+\\.?[0-9]*)",
+          "value": "ratio_txt",
+          "out": "ratio_raw"
+        },
+        {
+          "fail_if": ["ratio_raw.empty"]
+        },
+        {
+          "compare_band": "ratio_raw",
+          "to": "reference.ratio",
+          "core": "reference.band_core",
+          "margin": "reference.band_margin",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shadow_direction",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "compass rose painted on the ground with its big letters N, E, S and W, together with the post at its centre and the dark shadow running out from the foot of that post",
+          "expected_n": 1,
+          "out": "dir_txt_box"
+        },
+        {
+          "fail_if": ["dir_txt_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut showing a compass rose painted on the ground, with big letters N, E, S and W around it, and a post standing at its centre casting a dark shadow. Starting at the foot of the post at the centre and following the shadow out to its far tip, toward which of those painted letters does the shadow run? Answer with exactly one of: N, NE, E, SE, S, SW, W, NW.",
+          "boxes": "dir_txt_box",
+          "pad": 0.08,
+          "out": "dir_txt_cr"
+        },
+        {
+          "fail_if": ["dir_txt_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "dir_txt_cr",
+          "out": "dir_txt"
+        },
+        {
+          "run": "compass_to_degrees",
+          "args": ["dir_txt"],
+          "out": "dir_deg_read"
+        },
+        {
+          "compare_compass": "dir_deg_read",
+          "to": "reference.dir_deg",
+          "core": 0,
+          "margin": 90,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

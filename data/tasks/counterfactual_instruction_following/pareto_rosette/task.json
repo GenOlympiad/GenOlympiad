@@ -1,0 +1,373 @@
+{
+  "id": "pareto_rosette",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photorealistic straight-on view of a garden-centre display bench in flat daylight, with eight potted olive trees standing side by side in one straight row, evenly spaced and clearly separated. A small printed label is clipped to the rim of each pot, giving in plain black type that tree's height and its trunk girth. From left to right the eight labels read: '255 CM TALL / 26 CM GIRTH', '230 CM TALL / 34 CM GIRTH', '185 CM TALL / 41 CM GIRTH', '240 CM TALL / 25 CM GIRTH', '210 CM TALL / 31 CM GIRTH', '222 CM TALL / 33 CM GIRTH', '170 CM TALL / 38 CM GIRTH', '200 CM TALL / 29 CM GIRTH'. The nursery's grading rule, which the grower has just finished applying, is this: a gold cardboard disc is hung round a tree's own trunk if and only if there is no other tree on the bench that is BOTH strictly taller AND strictly thicker in girth than it. Several trees may qualify, or only one; do not simply hang a disc on the tallest tree. Hang gold discs on exactly the trees the rule selects and leave every other trunk completely bare. Nothing else is printed on the labels.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a row of potted trees standing side by side on a bench, with a small printed label clipped to each pot carrying two figures. Ignoring artistic quality, and ignoring WHICH trees are marked in any way, does the image DEPICT that? Answer NO only if it is blank or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_look": "Ignore everything about which items are marked. Looking only at the picture itself, is this a tidy, well-lit picture of a nursery bench in which every pot is separate and every printed label is sharp enough to read? Answer yes or no only.",
+    "q_verbatim": "Transcribe EVERY line of printed, painted, chalked or written text you can see anywhere in this picture, including text on cards, labels, tickets and small printed slips. Copy each line exactly as it appears, character by character. Do NOT correct spelling or arithmetic and do not leave any line out. Reply with the transcribed lines only, one per line, and no explanation.",
+    "exp_lines": [
+      "255 CM TALL / 26 CM GIRTH",
+      "230 CM TALL / 34 CM GIRTH",
+      "185 CM TALL / 41 CM GIRTH",
+      "240 CM TALL / 25 CM GIRTH",
+      "210 CM TALL / 31 CM GIRTH",
+      "222 CM TALL / 33 CM GIRTH",
+      "170 CM TALL / 38 CM GIRTH",
+      "200 CM TALL / 29 CM GIRTH"
+    ],
+    "rows": [
+      [255, 26],
+      [230, 34],
+      [185, 41],
+      [240, 25],
+      [210, 31],
+      [222, 33],
+      [170, 38],
+      [200, 29]
+    ],
+    "dirs": [1, 1],
+    "yes_word": "DISC",
+    "no_word": "BARE",
+    "labels": ["255 26", "230 34", "185 41", "240 25", "210 31", "222 33", "170 38", "200 29"],
+    "nl": 4,
+    "nr": 4,
+    "qa": "Look at the four LEFT-MOST potted trees, in order from left to right. For each one give the two figures printed on that tree's own pot label and then one single word: DISC if a gold cardboard disc hangs round that tree's own trunk, or BARE if that trunk carries nothing at all. Separate the four entries with semicolons, like this: 'nnn nnn BARE; nnn nnn DISC'. Reply with those entries only, and no explanation.",
+    "qb": "Look at the four RIGHT-MOST potted trees, in order from left to right. For each one give the two figures printed on that tree's own pot label and then one single word: DISC if a gold cardboard disc hangs round that tree's own trunk, or BARE if that trunk carries nothing at all. Separate the four entries with semicolons, like this: 'nnn nnn BARE; nnn nnn DISC'. Reply with those entries only, and no explanation.",
+    "qa2": "Going along the row from the left-hand end, take the first four potted trees one at a time. Report each one as: its two printed figures, then the word DISC when a gold cardboard disc hangs round that tree's own trunk, or the word BARE when that trunk carries nothing at all. Put a semicolon between one item and the next. Reply with that list only.",
+    "qb2": "Take the last four potted trees at the right-hand end of the row and report them from LEFT to RIGHT. Report each one as: its two printed figures, then the word DISC when a gold cardboard disc hangs round that tree's own trunk, or the word BARE when that trunk carries nothing at all. Put a semicolon between one item and the next. Reply with that list only.",
+    "q_region_text": "This picture is one part cut out of a wider photograph of a row of potted trees on a bench. Copy out every number and every word you can see written anywhere in this part -- on the printed labels clipped to the pots and on anything else that carries writing. If something is cut off by the edge of this part, copy the characters you can actually see and do not guess the rest. Copy each one exactly as it appears, character by character; do not correct the spelling, do not correct any figure and do not leave any out. Put a single space between one line and the next, and write nothing else.",
+    "q_look_separate": "Look at the potted trees in this picture. Is there a clear gap between each pot and the pot next to it, so that no two pots run into one another? Answer yes or no only.",
+    "q_look_legible": "Look at the small printed labels clipped to the pots in this picture. Is the printing on every one of them sharp enough to read? Answer yes or no only.",
+    "q_box_unit": "one potted tree standing on the bench, with the printed label clipped to its pot",
+    "q_box_item": "This cut-out shows one potted tree and its pot label. Give the two figures printed on the label, then one word: DISC if a gold cardboard disc hangs round this tree's trunk, or BARE if the trunk carries nothing. Write nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "data_present",
+      "weight": 2.0,
+      "pass_at": 0.8,
+      "steps": [
+        {
+          "read_crop": "reference.q_region_text",
+          "boxes": [
+            [0.0, 0.0, 1000.0, 400.0],
+            [0.0, 266.7, 1000.0, 733.3],
+            [0.0, 600.0, 1000.0, 1000.0]
+          ],
+          "pad": 0.0,
+          "out": "rr"
+        },
+        {
+          "fail_if": ["rr.unreadable"]
+        },
+        {
+          "run": "region_text_coverage",
+          "args": ["rr", "reference.exp_lines"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "derived_object_set",
+      "weight": 7.0,
+      "score": "res.member",
+      "steps": [
+        {
+          "read_sequence": "reference.qa",
+          "n": "reference.nl",
+          "delimiter": ";",
+          "out": "raw_qa_read"
+        },
+        {
+          "read_fallback": "raw_qa_read",
+          "primary_flags": ["raw_qa_read.unreadable"],
+          "else": [
+            {
+              "read_sequence": "reference.qa2",
+              "n": "reference.nl",
+              "delimiter": ";",
+              "out": "alt_qa_read"
+            }
+          ],
+          "else_value": "alt_qa_read",
+          "else_flags": ["alt_qa_read.unreadable"],
+          "out": "qa_read"
+        },
+        {
+          "fail_if": ["qa_read.exhausted"]
+        },
+        {
+          "read_sequence": "reference.qb",
+          "n": "reference.nr",
+          "delimiter": ";",
+          "out": "raw_qb_read"
+        },
+        {
+          "read_fallback": "raw_qb_read",
+          "primary_flags": ["raw_qb_read.unreadable"],
+          "else": [
+            {
+              "read_sequence": "reference.qb2",
+              "n": "reference.nr",
+              "delimiter": ";",
+              "out": "alt_qb_read"
+            }
+          ],
+          "else_value": "alt_qb_read",
+          "else_flags": ["alt_qb_read.unreadable"],
+          "out": "qb_read"
+        },
+        {
+          "fail_if": ["qb_read.exhausted"]
+        },
+        {
+          "run": "score_unbeaten_marks",
+          "args": [
+            "[qa_read, qb_read]",
+            "reference.rows",
+            "reference.dirs",
+            "reference.yes_word",
+            "reference.no_word",
+            "reference.labels"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "set_boundary_size",
+      "weight": 1.0,
+      "score": "res.card",
+      "steps": [
+        {
+          "read_sequence": "reference.qa",
+          "n": "reference.nl",
+          "delimiter": ";",
+          "out": "raw_qa_read"
+        },
+        {
+          "read_fallback": "raw_qa_read",
+          "primary_flags": ["raw_qa_read.unreadable"],
+          "else": [
+            {
+              "read_sequence": "reference.qa2",
+              "n": "reference.nl",
+              "delimiter": ";",
+              "out": "alt_qa_read"
+            }
+          ],
+          "else_value": "alt_qa_read",
+          "else_flags": ["alt_qa_read.unreadable"],
+          "out": "qa_read"
+        },
+        {
+          "fail_if": ["qa_read.exhausted"]
+        },
+        {
+          "read_sequence": "reference.qb",
+          "n": "reference.nr",
+          "delimiter": ";",
+          "out": "raw_qb_read"
+        },
+        {
+          "read_fallback": "raw_qb_read",
+          "primary_flags": ["raw_qb_read.unreadable"],
+          "else": [
+            {
+              "read_sequence": "reference.qb2",
+              "n": "reference.nr",
+              "delimiter": ";",
+              "out": "alt_qb_read"
+            }
+          ],
+          "else_value": "alt_qb_read",
+          "else_flags": ["alt_qb_read.unreadable"],
+          "out": "qb_read"
+        },
+        {
+          "fail_if": ["qb_read.exhausted"]
+        },
+        {
+          "run": "score_unbeaten_marks",
+          "args": [
+            "[qa_read, qb_read]",
+            "reference.rows",
+            "reference.dirs",
+            "reference.yes_word",
+            "reference.no_word",
+            "reference.labels"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "binding_agreement",
+      "weight": 2.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read_sequence": "reference.qa",
+          "n": "reference.nl",
+          "delimiter": ";",
+          "out": "raw_qa_read"
+        },
+        {
+          "read_fallback": "raw_qa_read",
+          "primary_flags": ["raw_qa_read.unreadable"],
+          "else": [
+            {
+              "read_sequence": "reference.qa2",
+              "n": "reference.nl",
+              "delimiter": ";",
+              "out": "alt_qa_read"
+            }
+          ],
+          "else_value": "alt_qa_read",
+          "else_flags": ["alt_qa_read.unreadable"],
+          "out": "qa_read"
+        },
+        {
+          "fail_if": ["qa_read.exhausted"]
+        },
+        {
+          "read_sequence": "reference.qb",
+          "n": "reference.nr",
+          "delimiter": ";",
+          "out": "raw_qb_read"
+        },
+        {
+          "read_fallback": "raw_qb_read",
+          "primary_flags": ["raw_qb_read.unreadable"],
+          "else": [
+            {
+              "read_sequence": "reference.qb2",
+              "n": "reference.nr",
+              "delimiter": ";",
+              "out": "alt_qb_read"
+            }
+          ],
+          "else_value": "alt_qb_read",
+          "else_flags": ["alt_qb_read.unreadable"],
+          "out": "qb_read"
+        },
+        {
+          "fail_if": ["qb_read.exhausted"]
+        },
+        {
+          "run": "score_unbeaten_marks",
+          "args": [
+            "[qa_read, qb_read]",
+            "reference.rows",
+            "reference.dirs",
+            "reference.yes_word",
+            "reference.no_word",
+            "reference.labels"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_read_ledger",
+      "weight": 0.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.q_box_unit",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "items_box"
+        },
+        {
+          "fail_if": ["items_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_box_item",
+          "boxes": "items_box",
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "items_read"
+        },
+        {
+          "fail_if": ["items_read.unreadable"]
+        },
+        {
+          "run": "record_unbeaten_marks",
+          "args": [
+            "image",
+            "[items_read.answers]",
+            "reference.rows",
+            "reference.dirs",
+            "reference.yes_word",
+            "reference.no_word",
+            "reference.labels"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d2_appearance_only",
+      "weight": 0.0,
+      "score": "res2.frac",
+      "steps": [
+        {
+          "ask": "reference.q_look_separate",
+          "out": "la"
+        },
+        {
+          "fail_if": ["la.unreadable"]
+        },
+        {
+          "ask": "reference.q_look_legible",
+          "out": "lb"
+        },
+        {
+          "fail_if": ["lb.unreadable"]
+        },
+        {
+          "run": "separate_and_legible",
+          "args": ["la", "lb"],
+          "out": "res2"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a marked item",
+  "aspect_ratio": "3:2"
+}

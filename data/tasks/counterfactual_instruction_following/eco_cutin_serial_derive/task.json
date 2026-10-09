@@ -1,0 +1,171 @@
+{
+  "id": "eco_cutin_serial_derive",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of the kanban board beside an assembly line, taken square to the board. Pinned at the top is the quality notice; below it runs the changeover marker row; below that hang TEN work-in-progress cards in two rows of five, in serial order reading left to right along the top row and then the bottom row. The notice, the marker row and every card must be readable in the picture.\n\nThe quality notice is quoted word for word: 'Fastener batch F-88 is defective. It entered the line with the FIRST unit built on 2026-08-18. The line completes 40 units a day and serial numbers run consecutively with no gaps; the first unit of 2026-08-15 carried serial A5120. Every unit from the first 2026-08-18 serial onward carries the bad batch: its card is stamped REWORK. Every earlier unit's card is stamped RELEASE. The changeover marker row carries the first REWORK serial, and nothing else.'\n\nThe ten cards carry these serial numbers, printed large, one per card: A5232, A5236, A5238, A5239, A5240, A5241, A5244, A5247, A5251, A5254. Each card also wears its one stamp word.\n\nWork the first REWORK serial out yourself, and stamp every card accordingly -- I am deliberately not telling you the marker row's serial or which stamp any card wears. No date sum, no day count and no working-out note may appear anywhere on the board: the only writing in the picture is the notice as quoted, the marker row's one serial, and each card's serial with its stamp. Cards must hang apart so each is read on its own.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a board with a pinned notice and rows of small cards hanging on it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image shows just a bare card stating an answer with nothing of that laid out, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "stamp_map": "a5232:release|a5236:release|a5238:release|a5239:release|a5240:rework|a5241:rework|a5244:rework|a5247:rework|a5251:rework|a5254:rework",
+    "cutin_serial": "a5240",
+    "anchor_serial": "a5120",
+    "no_working_expected": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_card_sits_on_the_right_side_of_the_cut",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one work-in-progress card hanging on the kanban board",
+          "sweep": true,
+          "out": "cards"
+        },
+        {
+          "fail_if": ["cards.unreadable"]
+        },
+        {
+          "read_crop": "Copy the serial number printed on this card. Write it exactly as printed.",
+          "boxes": "cards",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "ks"
+        },
+        {
+          "fail_if": ["ks.unreadable"]
+        },
+        {
+          "read_crop": "Copy the stamp word on this card. Write one word only.",
+          "boxes": "cards",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "kt"
+        },
+        {
+          "fail_if": ["kt.unreadable"]
+        },
+        {
+          "run": "pair_serials_with_stamps",
+          "args": ["ks", "kt"],
+          "out": "km"
+        },
+        {
+          "compare": "km.txt",
+          "to": "reference.stamp_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "marker_row_carries_the_derived_cutin",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the serial number printed on the changeover marker row of the board",
+          "sweep": true,
+          "out": "mk"
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "read_crop": "Copy the serial number printed in this cut-out. Write it exactly as printed.",
+          "boxes": "mk",
+          "pad": 0.3,
+          "out": "mr"
+        },
+        {
+          "fail_if": ["mr.unreadable"]
+        },
+        {
+          "run": "normalise_reading",
+          "args": ["mr"],
+          "out": "mn"
+        },
+        {
+          "compare": "mn.txt",
+          "to": "reference.cutin_serial",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_on_the_board",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written date sum, day count or working-out note anywhere on the board",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "reference.no_working_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "anchor_serial_as_pinned",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the anchor serial A5120 printed in the quality notice text",
+          "sweep": true,
+          "out": "an"
+        },
+        {
+          "fail_if": ["an.unreadable"]
+        },
+        {
+          "read_crop": "Copy the serial number printed in this cut-out. Write it exactly as printed.",
+          "boxes": "an",
+          "pad": 0.3,
+          "out": "ar"
+        },
+        {
+          "fail_if": ["ar.unreadable"]
+        },
+        {
+          "run": "normalise_reading",
+          "args": ["ar"],
+          "out": "av"
+        },
+        {
+          "compare": "av.txt",
+          "to": "reference.anchor_serial",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

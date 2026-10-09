@@ -1,0 +1,56 @@
+{
+  "id": "star_trail_arc_len",
+  "axis": "latent_computation",
+  "prompt": "A luminous long-exposure NIGHT PHOTOGRAPH looking over a still dark LAKE toward a low forested horizon, a mirror-calm reflection hinting at the bottom edge, the sky a wall of fine bright STAR TRAILS drawn as smooth CONCENTRIC circular arcs all turning about one common pivot (the celestial pole) low near the horizon. This is a single continuous exposure lasting EXACTLY 3 hours. The sky rotates fifteen degrees every hour (a quarter degree per minute), so over this exposure every star sweeps a circular arc of the matching angular length. Derive that angular span yourself from the 3-hour exposure and draw EVERY trail as an arc of EXACTLY that same angular span, all concentric about the one pivot. Set the arc length AS-IS from the exposure time; do NOT draw full circles, do NOT default to tiny dashes, and do NOT snap to any standard length. Render one continuous photorealistic star-trail photograph over the lake: no text, no numbers, no labels, no drawn circles, dots, protractors or crosshairs.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a long-exposure night-sky photograph of star trails -- many thin bright CURVED streaks (circular arcs) sweeping across a dark sky over a horizon. Ignoring artistic quality, does the image actually DEPICT that requested subject -- a dark sky with curved star-trail arcs? A realistic photo or an illustration BOTH count as yes. Answer NO only if the image instead shows a blank card, plain text, straight non-curved streaks only, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "exposure_hours": 3,
+    "deg_per_hour": 15,
+    "arc_span_target": 45.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "arc_span",
+      "weight": 4.0,
+      "steps": [
+        {
+          "run": "median_arc_span",
+          "args": ["image"],
+          "out": "asr"
+        },
+        {
+          "fail_if": ["asr.no_read"]
+        },
+        {
+          "compare_band": "asr.span",
+          "to": "reference.arc_span_target",
+          "core": 5.0,
+          "margin": 8.0,
+          "clamp_floor": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

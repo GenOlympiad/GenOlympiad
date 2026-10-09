@@ -1,0 +1,184 @@
+{
+  "id": "shop_pressfit_force_curve",
+  "axis": "physical_consistency",
+  "prompt": "On the quality bench beside a servo press, the three parts of today's first-off check are laid out in front of the press screen. Frame the bench face on, big enough to read the screen.\n\nEach part carries its own serial tag, S01, S02 or S03, and each is exactly as the ram left it. The press screen behind them holds the three force against travel curves it recorded for those same three presses, each curve captioned with the serial it belongs to, and the screen draws the process window on every curve as a box, as the press does on the shop floor.\n\nThe process card pins the window, word for word: 'Force stays under 4 kN until 11.5 mm of travel and passes 18 kN before 12.0 mm of travel. The ram stops as soon as force passes 18 kN, or at 12.4 mm of travel, whichever comes first.' The card also pins the stack that goes under the ram: a bearing, a shim washer 1.2 mm thick and a retaining cap, which seat at 11.8 mm of travel when all three are there.\n\nThe three parts were built like this, word for word: S01 has its full stack. S02 was built with its shim washer left out. S03 was built with a spacer 1.8 mm thick in place of the 1.2 mm shim washer.\n\nWhat each curve does, and how each part came off the ram, you work out for yourself -- I am deliberately telling you neither. Nothing else belongs in the picture: no wording naming a pass or a fail anywhere on the screen or the bench.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a screen carrying line graphs above or behind small machined parts lying on a bench? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "curve_signatures": "s01 through climbs, s02 outside stays, s03 outside climbs",
+    "cap_seating": "s01 flush, s02 proud, s03 flush",
+    "q_curve_cert": "Does this cut-out show one whole recorded curve with a serial caption? Answer yes or no only.",
+    "q_curve_serial": "Copy the serial captioned on the curve in this cut-out. Write only that code.",
+    "q_curve_box": "Does the curve in this cut-out pass through the rectangular box drawn on the same graph? Answer yes or no only.",
+    "q_curve_rise": "Does the curve in this cut-out climb to the top of the force scale, or does it stay low all the way across? Answer climbs or stays.",
+    "q_part_cert": "Does this cut-out show one whole part with a serial tag? Answer yes or no only.",
+    "q_part_serial": "Copy the serial printed on the tag in this cut-out. Write only that code.",
+    "q_part_seat": "Is the cap on this part sitting flush against the shoulder below it or standing proud of it? Answer with one word: flush or proud.",
+    "q_curve_window": "Is a rectangular box drawn on the graph in this cut-out? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_curve_signs_the_stack_that_was_actually_under_the_ram",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a recorded force curve on the press screen",
+          "sweep": true,
+          "out": "cv_area"
+        },
+        {
+          "fail_if": ["cv_area.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_curve_cert",
+          "boxes": "cv_area",
+          "pad": 0.25,
+          "out": "cv_cert"
+        },
+        {
+          "fail_if": ["cv_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_curve_serial",
+          "boxes": "cv_area",
+          "pad": 0.25,
+          "out": "cv_ser"
+        },
+        {
+          "fail_if": ["cv_ser.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_curve_window",
+          "boxes": "cv_area",
+          "pad": 0.25,
+          "out": "cv_win"
+        },
+        {
+          "fail_if": ["cv_win.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_curve_box",
+          "boxes": "cv_area",
+          "pad": 0.25,
+          "out": "cv_box"
+        },
+        {
+          "fail_if": ["cv_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_curve_rise",
+          "boxes": "cv_area",
+          "pad": 0.25,
+          "out": "cv_rise"
+        },
+        {
+          "fail_if": ["cv_rise.unreadable"]
+        },
+        {
+          "run": "describe_curves",
+          "args": ["cv_cert", "cv_ser", "cv_win", "cv_box", "cv_rise"],
+          "out": "sigs"
+        },
+        {
+          "compare": "sigs.seq",
+          "to": "reference.curve_signatures",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_part_that_never_seated_came_off_with_its_cap_proud",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a pressed part on the bench with its serial tag",
+          "sweep": true,
+          "out": "pt_box"
+        },
+        {
+          "fail_if": ["pt_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_part_cert",
+          "boxes": "pt_box",
+          "pad": 0.3,
+          "out": "pt_cert"
+        },
+        {
+          "fail_if": ["pt_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_part_serial",
+          "boxes": "pt_box",
+          "pad": 0.3,
+          "out": "pt_ser"
+        },
+        {
+          "fail_if": ["pt_ser.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_part_seat",
+          "boxes": "pt_box",
+          "pad": 0.3,
+          "out": "pt_seat"
+        },
+        {
+          "fail_if": ["pt_seat.unreadable"]
+        },
+        {
+          "run": "read_seat_states",
+          "args": ["pt_cert", "pt_ser", "pt_seat"],
+          "out": "seats"
+        },
+        {
+          "compare": "seats.seq",
+          "to": "reference.cap_seating",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_wording_names_a_pass_or_a_fail",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word naming a pass or a fail printed on the press screen or on the bench",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_v"
+        },
+        {
+          "fail_if": ["sweep_v.unreadable"]
+        },
+        {
+          "compare": "sweep_v.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

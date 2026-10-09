@@ -1,0 +1,106 @@
+{
+  "id": "even_floor_elevator",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw an office-tower elevator button panel shown straight-on: a vertical column of round floor buttons with the GROUND button ('G') at the BOTTOM.\n\nIMPORTANT FLOOR RULE: this building has ONLY EVEN-NUMBERED floors. Above Ground the floors are, going up, 2, 4, 6, 8, ... (there is no floor 1, 3, 5 — odd floors do not exist). So the buttons above 'G' must be labelled, from bottom to top: 2, 4, 6, 8, and so on. Draw at least 3 buttons above Ground. Put a small red ring around the button that is #2 counting up from Ground (Ground itself is not counted). Do not print that button's number anywhere except on the button itself.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict an ELEVATOR BUTTON PANEL: a vertical column of round numbered floor buttons with a 'G' (Ground) button. Ignoring the exact numbers and ignoring artistic quality, does the image actually DEPICT such an elevator button panel (a column of round floor buttons)? A photo, render or clean graphic all count as yes. Answer NO only if it is a blank panel, an unrelated object, or a single button. Answer yes or no only.",
+  "reference": {
+    "k_number": 4,
+    "k": 2,
+    "q_notext": "The digits and letters printed ON the elevator buttons themselves do not count. Apart from the buttons, is there any printed number, word or caption anywhere else in this picture? Answer yes or no only.",
+    "enforce_notext": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "kth_button_number",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "round floor button in the column of buttons on the lift panel",
+          "votes": 3,
+          "out": "ebb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["ebb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a lift button panel with a column of round floor buttons. Does this cut-out show exactly ONE whole round floor button -- one single one on its own, not two of them together, not just a part of one, and not only the plain background of the panel with no button on it? Answer yes or no only.",
+          "boxes": "ebb",
+          "pad": 0.1,
+          "out": "ebc"
+        },
+        {
+          "fail_if": ["ebc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a lift button panel. Look only at the one round button in the middle of this cut-out. Is there a red ring or a red circle drawn around the outside of that button? Answer yes or no only.",
+          "boxes": "ebb",
+          "pad": 0.35,
+          "out": "er"
+        },
+        {
+          "fail_if": ["er.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a lift button panel. Look only at the one round button in the middle of this cut-out. What is printed on the face of that button? Answer with just what is printed there, which may be a number or a letter. If nothing is printed on it, answer none.",
+          "boxes": "ebb",
+          "pad": 0.06,
+          "out": "el"
+        },
+        {
+          "fail_if": ["el.unreadable"]
+        },
+        {
+          "run": "read_ringed_button",
+          "args": ["ebb", "ebc", "er", "el"],
+          "out": "rb"
+        },
+        {
+          "run": "number_matches_reference",
+          "args": ["rb.number", "reference.k_number"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

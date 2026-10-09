@@ -1,0 +1,100 @@
+{
+  "id": "discount_receipt_bulk_tax",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed sales RECEIPT from 'HARBOUR TRADE STORE'. Print a table with columns ITEM, QTY, UNIT, BULK, GROSS and NET. Here are the items:\n    Bolt M6        qty 40, unit GBP 0.20, bulk offer: 20% off this line if qty >= 25\n    Nut M6         qty 40, unit GBP 0.10, bulk offer: 20% off this line if qty >= 25\n    Washer         qty 30, unit GBP 0.05, bulk offer: 20% off this line if qty >= 25\n    Cable 2m       qty 12, unit GBP 4.80, bulk offer: 25% off this line if qty >= 10\n    Tape roll      qty 6, unit GBP 2.60, bulk offer: 15% off this line if qty >= 10\n    Clamp          qty 8, unit GBP 3.50, bulk offer: 10% off this line if qty >= 6\n    Bracket        qty 5, unit GBP 1.80, bulk offer: 15% off this line if qty >= 8\n    Screw pack     qty 16, unit GBP 1.50, bulk offer: 20% off this line if qty >= 10\nFor each line: GROSS = QTY times UNIT price. A BULK discount applies ONLY if that line's QTY reaches its threshold: if so, take the stated percentage off that line (show the offer in the BULK column, e.g. '20% if >=10'); otherwise BULK shows '-'. NET = GROSS minus the bulk discount for that line. At the foot print SUBTOTAL = the sum of all NET amounts, TAX = 20% of the SUBTOTAL, and TOTAL = SUBTOTAL plus TAX. CRITICAL: each NET must reflect the bulk discount rule, and TOTAL must equal subtotal plus 20% tax. Print amounts in GBP. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed store receipt with line items, a bulk-discount column, gross and net per line, and a subtotal, tax and total at the foot. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_rows": 8,
+    "read_item": "Cable 2m",
+    "read_net": 43.2,
+    "grand_total": 147.6,
+    "q_count": "How many ITEM lines does this receipt have? Count only the item lines, not the header row and not the SUBTOTAL/TAX/TOTAL rows. Whole number only.",
+    "q_net": "Find the line for the item 'Cable 2m'. Read the amount printed in its NET column. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Report as a decimal number, ignore the currency symbol.",
+    "q_total": "At the foot of the receipt read the amount printed on the 'TOTAL' row. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Report as a decimal number, ignore the currency symbol."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "discount_tax_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_net",
+          "out": "nt"
+        },
+        {
+          "fail_if": ["nt.unreadable"]
+        },
+        {
+          "read_number": "reference.q_total",
+          "out": "tt"
+        },
+        {
+          "fail_if": ["tt.unreadable"]
+        },
+        {
+          "run": "net_and_total_match",
+          "args": ["nt", "tt", "reference.read_net", "reference.grand_total"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "item row of the receipt table that names a product, not the header row and not a subtotal, tax or total row",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed receipt row naming a product being bought rather than bare background or only part of a row? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

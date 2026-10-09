@@ -1,0 +1,178 @@
+{
+  "id": "gomoku_tactical",
+  "axis": "physical_consistency",
+  "prompt": "A photorealistic top-down photograph, taken looking straight down, of a bamboo Gomoku (five-in-a-row) board resting on a cafe table, its 15x15 grid of lines clearly visible, during the middle-to-late stage of a real game. There are exactly 18 black stones and 17 white stones placed ON THE LINE INTERSECTIONS. The position must be legal and tactically sharp: NEITHER side has five in a row yet, but Black threatens to complete five in a row on the very next move (Black has a four). White's stones form plausible defensive formations. No hands, no stone bowls, no text, no labels, even lighting, every stone clearly visible.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict top-down photo of a bamboo Gomoku board on a cafe table, mid/late game, Black threatens five-in-a-row with legal parity and no existing five. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_black": 18,
+    "n_white": 17,
+    "n_total": 35
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "board_legal",
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "expected_n": 1,
+          "target": "the Gomoku playing grid -- the square area bounded by the OUTERMOST horizontal and vertical grid lines drawn on the board (the ruled grid itself, not the wooden border or table around it)",
+          "retries": 4,
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "run": "line_strip_boxes",
+          "args": ["bd"],
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.bad"]
+        },
+        {
+          "read_crop": "This strip is ONE horizontal row of a Gomoku board. Along the horizontal grid line running through the middle of the strip there is a row of line intersections, evenly spaced from left to right. Going from LEFT to RIGHT, report what sits on each of those intersections, in order: B for a black stone, W for a white stone, and a full stop for an empty intersection. Only count a stone whose centre sits on this strip's middle line; ignore stones that are merely clipped at the top or bottom edge of the strip. Answer with one character per intersection, in order, made only of B, W and full stops, and nothing else.",
+          "boxes": "rw.boxes",
+          "pad": 0,
+          "out": "rr"
+        },
+        {
+          "fail_if": ["rr.unreadable"]
+        },
+        {
+          "run": "assemble_board",
+          "args": ["rr"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.bad"]
+        },
+        {
+          "run": "position_legal",
+          "args": ["read"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "win_in_one",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "expected_n": 1,
+          "target": "the Gomoku playing grid -- the square area bounded by the OUTERMOST horizontal and vertical grid lines drawn on the board (the ruled grid itself, not the wooden border or table around it)",
+          "retries": 4,
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "run": "line_strip_boxes",
+          "args": ["bd"],
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.bad"]
+        },
+        {
+          "read_crop": "This strip is ONE horizontal row of a Gomoku board. Along the horizontal grid line running through the middle of the strip there is a row of line intersections, evenly spaced from left to right. Going from LEFT to RIGHT, report what sits on each of those intersections, in order: B for a black stone, W for a white stone, and a full stop for an empty intersection. Take a stone only where its centre sits on this strip's middle line; ignore stones that are merely clipped at the top or bottom edge of the strip. Answer with one character per intersection, in order, made only of B, W and full stops, and nothing else.",
+          "boxes": "rw.boxes",
+          "pad": 0,
+          "out": "rr"
+        },
+        {
+          "fail_if": ["rr.unreadable"]
+        },
+        {
+          "run": "assemble_board",
+          "args": ["rr"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.bad"]
+        },
+        {
+          "run": "black_wins_in_one",
+          "args": ["read"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "stone_counts",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "expected_n": 1,
+          "target": "the Gomoku playing grid -- the square area bounded by the OUTERMOST horizontal and vertical grid lines drawn on the board (the ruled grid itself, not the wooden border or table around it)",
+          "retries": 4,
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "run": "line_strip_boxes",
+          "args": ["bd"],
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.bad"]
+        },
+        {
+          "read_crop": "This strip is ONE horizontal row of a Gomoku board. Along the horizontal grid line running through the middle of the strip there is a row of line intersections, evenly spaced from left to right. Going from LEFT to RIGHT, report what sits on each of those intersections, in order: B for a black stone, W for a white stone, and a full stop for an empty intersection. Take a stone only where its centre sits on this strip's middle line; ignore stones that are merely clipped at the top or bottom edge of the strip. Answer with one character per intersection, in order, made only of B, W and full stops, and nothing else.",
+          "boxes": "rw.boxes",
+          "pad": 0,
+          "out": "rr"
+        },
+        {
+          "fail_if": ["rr.unreadable"]
+        },
+        {
+          "run": "assemble_board",
+          "args": ["rr"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.bad"]
+        },
+        {
+          "run": "count_stones",
+          "args": ["read"],
+          "out": "n_read"
+        },
+        {
+          "compare_band": "n_read",
+          "to": "reference.n_total",
+          "core": 0.0,
+          "margin": 2.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

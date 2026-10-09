@@ -1,0 +1,248 @@
+{
+  "id": "miller_intercepts",
+  "axis": "symbolic_systems",
+  "prompt": "A scanned page from a student's mineralogy lab report: pale blue-green graph-paper squares, drawn on in dark navy fineliner, with the faint warm cast of an office scanner.\n\nOn the page is one cubic unit cell drawn as a hollow wireframe box, seen from a high three-quarter angle so that its three edge directions are widely separated.\n\nOne corner of the box is the origin, and the three box edges meeting at that one corner are the crystal axes, inked over thickly in colour: the a axis edge RED, the b axis edge GREEN, the c axis edge BLUE. Each colour runs the whole length of its own edge and stops at that edge's far corner -- no arrowheads, no overshoot. The letters a, b and c are written in dark ink just beyond the far end of the red, the green and the blue edge respectively. Every remaining edge of the box is a thin navy line and no other part of the drawing is coloured.\n\nThe lattice plane whose Miller indices are (3 0 2) is shaded on the drawing: wherever that plane passes through the cell, the area is filled flat mid-grey, about 45 % grey -- clearly darker than the paper and clearly lighter than the ink lines. Work out for yourself, from those three indices alone, how far along each of the three axes that plane reaches, and put the edge of the shaded area exactly there. Do not assume in advance what shape that region has, and do not simply run it from one corner of the cell to another. The three coloured axis edges are drawn over the shading so all three stay visible along their whole length.\n\nBelow the box, (3 0 2) is written in dark ink. Nothing else appears on the page: no other numbers, no fractions, no tick marks, no arrows, no captions, no title, and no other shaded region.\n",
+  "difficulty": "s3",
+  "easy_question": "Does this scanned sheet show a box drawn in outline over graph-paper squares, three straight coloured lines meeting at one corner of that box, and a single grey shaded area inside it? Answer yes or no only.",
+  "reference": {
+    "hkl": [3, 0, 2],
+    "index_text": "3 0 2",
+    "t_a": 0.3333333333333333,
+    "t_b": null,
+    "t_c": 0.5,
+    "axis_letters": ["a", "b", "c"],
+    "enforce_label": true,
+    "q_label": "Three digits are printed inside round brackets in this image. Read them out in the order they appear, separated by single spaces. Give the digits only, no explanation.",
+    "vlm_leaves": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cell_axes_and_patch_drawn",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "miller_read",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "frame_check_score",
+          "args": ["m.frame_ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "intercept_on_axis_1",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "miller_read",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "score_intercept",
+          "args": ["m.f_a", "m.has_a", "reference.t_a"],
+          "out": "frac"
+        },
+        {
+          "run": "miller_overlay_marked",
+          "args": ["image", "reference.t_a", "reference.t_b", "reference.t_c", "'intercepts'"],
+          "out": "mmk"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "mmk.ref_anchors",
+          "found_anchors": "mmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [60, 60, 60],
+          "label": "the three cell axes the gauge fitted",
+          "out": "mv1",
+          "polylines": "mmk.mk_axes.polylines"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "mmk.ref_anchors",
+          "found_anchors": "mmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 175, 0],
+          "label": "where the plane has to cut each axis",
+          "out": "mv2",
+          "polylines": "mmk.mk_want_intercept.polylines",
+          "circles": "mmk.mk_want_intercept.circles"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "mmk.ref_anchors",
+          "found_anchors": "mmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [230, 40, 40],
+          "label": "where the drawn plane actually cuts each axis",
+          "out": "mv3",
+          "polylines": "mmk.mk_measured_intercept.polylines",
+          "circles": "mmk.mk_measured_intercept.circles"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "mmk.ref_anchors",
+          "found_anchors": "mmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [190, 0, 190],
+          "label": "the corners of the drawn plane",
+          "out": "mv4",
+          "points": "mmk.mk_patch_corners.points"
+        }
+      ]
+    },
+    {
+      "name": "intercept_on_axis_2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "miller_read",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "score_intercept",
+          "args": ["m.f_b", "m.has_b", "reference.t_b"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "intercept_on_axis_3",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "miller_read",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "score_intercept",
+          "args": ["m.f_c", "m.has_c", "reference.t_c"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "index_triple_printed",
+      "weight": 1.0,
+      "only_if": "reference.enforce_label",
+      "steps": [
+        {
+          "ask": "reference.q_label",
+          "out": "lab"
+        },
+        {
+          "run": "index_triple_score",
+          "args": ["lab", "reference.index_text"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_intercept_overlay",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "run": "miller_overlay_marked",
+          "args": ["image", "reference.t_a", "reference.t_b", "reference.t_c", "'intercepts'"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "image": "ov.path",
+          "polylines": "ov.mk_axes.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [60, 60, 60],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "polylines": "ov.mk_want_intercept.polylines",
+          "circles": "ov.mk_want_intercept.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 165, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "polylines": "ov.mk_measured_intercept.polylines",
+          "circles": "ov.mk_measured_intercept.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [225, 30, 30],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm3.path",
+          "points": "ov.mk_patch_corners.points",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [190, 0, 190],
+          "width_frac": 0.004,
+          "out": "ovm4"
+        },
+        {
+          "ask": "Small circular rings have been drawn on this picture, some green and some red. Is every red ring sitting inside a green ring? Answer yes or no only.",
+          "image": "ovm4.path",
+          "out": "q"
+        },
+        {
+          "fail_if": ["q.unreadable"]
+        },
+        {
+          "compare": "q",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

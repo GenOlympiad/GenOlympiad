@@ -1,0 +1,84 @@
+{
+  "id": "studio_first_reflection_bay",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The fit-out crew cannot start lining the control room until the acoustic consultant marks up where the absorbers go, so a setting-out plan goes out with the package.\n\nThe room on the plan is four metres across between the side walls. Each side wall is divided into ten equal bays, numbered 1 to 10 from the front wall backwards, and every bay number is printed on the plan. The left monitor stands against the front wall one metre in from the left-hand wall. The listening position is marked on the room centre line, in line with bay 4. One absorber panel is drawn on the left-hand wall.\n\nWhere that panel sits along the wall is the entire reason the consultant is paid, and the plan you are being asked for does not carry the answer anywhere in words. Every bay number and every marked point stays legible.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a room plan with numbers printed along its side walls and a panel drawn on one wall? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "lower_numbered"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the printed bay numbers along the left-hand wall of the plan. The absorber panel is drawn on that wall. Which printed bay number is the panel sitting on? Answer with that number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the printed bay numbers along the left-hand wall, and at the bay number that the listening position marked on the plan sits opposite. Answer with one of: the absorber panel is on a lower-numbered bay than that one; the absorber panel is on a higher-numbered bay than that one; the absorber panel is on that same bay.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

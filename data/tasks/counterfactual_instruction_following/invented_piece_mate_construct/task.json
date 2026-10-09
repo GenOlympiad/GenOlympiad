@@ -1,0 +1,136 @@
+{
+  "id": "invented_piece_mate_construct",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of a newspaper page's chess-variant column, square on, the column filling the frame in newsprint halftone.\n\nThe column is headed 'THE SENTRY PROBLEM'. A boxed paragraph under the heading gives the piece rule, word for word: 'THE SENTRY moves and attacks like a rook, any number of empty squares along a rank or file, and it ALSO attacks the four squares diagonally adjacent to it. Any piece standing in its straight-line path blocks it. Kings move as in chess. A king may not capture a defended piece and the two kings may never stand on adjacent squares.'\n\nBelow the box sits the problem DIAGRAM: a printed eight-by-eight board with file letters a to h and rank numbers 1 to 8 on its margins, carrying exactly THREE pieces -- the white king, one white Sentry and the black king. Beneath the diagram sits ONE caption line in the column's house format, exactly: 'White: K__, S__. Black: K__. Mate.' with the three squares filled in.\n\nThis week's composition commission: place the three pieces so that the BLACK KING IS CHECKMATED by the Sentry -- its own square attacked, every square beside it attacked or illegal to enter. Work the placement out yourself -- I am deliberately not telling you where any piece stands; composing the mate is the commission. The diagram and the caption must show the same position. Do not print any analysis, move list or extra line: the only text in the column is the heading, the boxed rule, the diagram's margin coordinates and the one caption line, all readable.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed page with a chessboard diagram, a text box and a caption line? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image shows just a bare card of text with no board diagram, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "mate_expected": "yes",
+    "n_pieces": 3,
+    "no_analysis_expected": "yes",
+    "q_cap_cert": "Does this cut-out show one printed caption line naming chess squares, rather than the heading or the rule box? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "caption_position_is_a_true_sentry_mate",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the caption line printed directly beneath the board diagram",
+          "sweep": true,
+          "out": "cap_box"
+        },
+        {
+          "fail_if": ["cap_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_cap_cert",
+          "boxes": "cap_box",
+          "pad": 0.3,
+          "out": "cap_cert"
+        },
+        {
+          "fail_if": ["cap_cert.unreadable"]
+        },
+        {
+          "read_crop": "Copy the caption line in this cut-out exactly as printed. Write nothing else.",
+          "boxes": "cap_box",
+          "pad": 0.3,
+          "out": "cap_txt"
+        },
+        {
+          "fail_if": ["cap_txt.unreadable"]
+        },
+        {
+          "run": "check_sentry_mate",
+          "args": ["cap_txt"],
+          "out": "mate"
+        },
+        {
+          "compare": "mate.ok",
+          "to": "reference.mate_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "diagram_carries_exactly_three_pieces",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one chess piece symbol printed on the board diagram",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole chess piece symbol on a board square, rather than a margin letter or an empty square? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.35,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_pieces",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_analysis_line_printed",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a printed line of move analysis or a second caption below the one caption line",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "reference.no_analysis_expected",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

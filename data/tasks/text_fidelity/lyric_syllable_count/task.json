@@ -1,0 +1,229 @@
+{
+  "id": "lyric_syllable_count",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed HYMN LYRIC SHEET arranged in 8 numbered bars (a 4-by-2 grid of bar boxes). In each bar draw a row of NOTE BEAT marks (filled dots with stems) and, beneath them, the lyric SYLLABLES for that bar -- one syllable under each beat. The bars are:\n  Bar 1: 2 beats, syllables: A-maze\n  Bar 2: 1 beats, syllables: grace\n  Bar 3: 2 beats, syllables: how-sweet\n  Bar 4: 2 beats, syllables: the-sound\n  Bar 5: 1 beats, syllables: saved\n  Bar 6: 1 beats, syllables: me\n  Bar 7: 2 beats, syllables: wretch-like\n  Bar 8: 1 beats, syllables: found\nCRITICAL: in every bar the number of lyric syllables printed must equal the number of note beats drawn (one syllable per beat). Print the numbered bars with their beats and syllables, nothing else.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a printed song/hymn lyric sheet arranged in numbered bars, with note beats above lyric syllables. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_bars": 8,
+    "sample_bars": [0, 2, 3, 6],
+    "note_counts": {
+      "0": 2,
+      "1": 1,
+      "2": 2,
+      "3": 2,
+      "4": 1,
+      "5": 1,
+      "6": 2,
+      "7": 1
+    },
+    "q_count": "How many numbered bars are shown on this lyric sheet? Give a whole number only.",
+    "q_notes0": "Look at Bar 1 of this lyric sheet. Write down every NOTE BEAT mark in the upper part of that bar -- the filled dots with stems -- working from left to right, each with a few plain words saying where in the bar it stands. Separate one item from the next with a semicolon; write no running total and nothing else. If that bar carries no such mark, write the single word NONE.",
+    "q_syls0": "Look at Bar 1 of this lyric sheet. Write down every lyric SYLLABLE printed underneath the beats of that bar, copying the chunk of letters as it is printed and working from left to right. Each separate chunk of letters is one syllable: two chunks are two only if you can see a gap or a hyphen between them, and letters joined up with no gap are one. Ignore any number printed on the sheet. Separate one item from the next with a semicolon; write no running total and nothing else. If that bar carries no lyric underneath, write the single word NONE.",
+    "q_notes1": "Look at Bar 3 of this lyric sheet. Write down every NOTE BEAT mark in the upper part of that bar -- the filled dots with stems -- working from left to right, each with a few plain words saying where in the bar it stands. Separate one item from the next with a semicolon; write no running total and nothing else. If that bar carries no such mark, write the single word NONE.",
+    "q_syls1": "Look at Bar 3 of this lyric sheet. Write down every lyric SYLLABLE printed underneath the beats of that bar, copying the chunk of letters as it is printed and working from left to right. Each separate chunk of letters is one syllable: two chunks are two only if you can see a gap or a hyphen between them, and letters joined up with no gap are one. Ignore any number printed on the sheet. Separate one item from the next with a semicolon; write no running total and nothing else. If that bar carries no lyric underneath, write the single word NONE.",
+    "q_notes2": "Look at Bar 4 of this lyric sheet. Write down every NOTE BEAT mark in the upper part of that bar -- the filled dots with stems -- working from left to right, each with a few plain words saying where in the bar it stands. Separate one item from the next with a semicolon; write no running total and nothing else. If that bar carries no such mark, write the single word NONE.",
+    "q_syls2": "Look at Bar 4 of this lyric sheet. Write down every lyric SYLLABLE printed underneath the beats of that bar, copying the chunk of letters as it is printed and working from left to right. Each separate chunk of letters is one syllable: two chunks are two only if you can see a gap or a hyphen between them, and letters joined up with no gap are one. Ignore any number printed on the sheet. Separate one item from the next with a semicolon; write no running total and nothing else. If that bar carries no lyric underneath, write the single word NONE.",
+    "q_notes3": "Look at Bar 7 of this lyric sheet. Write down every NOTE BEAT mark in the upper part of that bar -- the filled dots with stems -- working from left to right, each with a few plain words saying where in the bar it stands. Separate one item from the next with a semicolon; write no running total and nothing else. If that bar carries no such mark, write the single word NONE.",
+    "q_syls3": "Look at Bar 7 of this lyric sheet. Write down every lyric SYLLABLE printed underneath the beats of that bar, copying the chunk of letters as it is printed and working from left to right. Each separate chunk of letters is one syllable: two chunks are two only if you can see a gap or a hyphen between them, and letters joined up with no gap are one. Ignore any number printed on the sheet. Separate one item from the next with a semicolon; write no running total and nothing else. If that bar carries no lyric underneath, write the single word NONE."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "syllable_note_equal",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_notes0",
+          "out": "n0"
+        },
+        {
+          "fail_if": ["n0.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["n0", "empty_as='0'"],
+          "out": "n0__std"
+        },
+        {
+          "fail_if": ["n0__std.refused"]
+        },
+        {
+          "ask": "reference.q_syls0",
+          "out": "s0"
+        },
+        {
+          "fail_if": ["s0.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["s0", "empty_as='0'"],
+          "out": "s0__std"
+        },
+        {
+          "fail_if": ["s0__std.refused"]
+        },
+        {
+          "ask": "reference.q_notes1",
+          "out": "n1"
+        },
+        {
+          "fail_if": ["n1.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["n1", "empty_as='0'"],
+          "out": "n1__std"
+        },
+        {
+          "fail_if": ["n1__std.refused"]
+        },
+        {
+          "ask": "reference.q_syls1",
+          "out": "s1"
+        },
+        {
+          "fail_if": ["s1.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["s1", "empty_as='0'"],
+          "out": "s1__std"
+        },
+        {
+          "fail_if": ["s1__std.refused"]
+        },
+        {
+          "ask": "reference.q_notes2",
+          "out": "n2"
+        },
+        {
+          "fail_if": ["n2.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["n2", "empty_as='0'"],
+          "out": "n2__std"
+        },
+        {
+          "fail_if": ["n2__std.refused"]
+        },
+        {
+          "ask": "reference.q_syls2",
+          "out": "s2"
+        },
+        {
+          "fail_if": ["s2.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["s2", "empty_as='0'"],
+          "out": "s2__std"
+        },
+        {
+          "fail_if": ["s2__std.refused"]
+        },
+        {
+          "ask": "reference.q_notes3",
+          "out": "n3"
+        },
+        {
+          "fail_if": ["n3.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["n3", "empty_as='0'"],
+          "out": "n3__std"
+        },
+        {
+          "fail_if": ["n3__std.refused"]
+        },
+        {
+          "ask": "reference.q_syls3",
+          "out": "s3"
+        },
+        {
+          "fail_if": ["s3.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["s3", "empty_as='0'"],
+          "out": "s3__std"
+        },
+        {
+          "fail_if": ["s3__std.refused"]
+        },
+        {
+          "run": "beats_equal_syllables",
+          "args": [
+            "n0__std.n",
+            "s0__std.n",
+            "n1__std.n",
+            "s1__std.n",
+            "n2__std.n",
+            "s2__std.n",
+            "n3__std.n",
+            "s3__std.n"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered bar box on the lyric sheet, holding beat marks with syllables under them",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole bordered bar box holding printed beat marks with words underneath, rather than bare paper or only part of a box? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n_bars",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

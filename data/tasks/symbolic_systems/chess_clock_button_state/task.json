@@ -1,0 +1,76 @@
+{
+  "id": "chess_clock_button_state",
+  "axis": "symbolic_systems",
+  "prompt": "Create a clean, realistic photo-style image of a vintage brass-cased mechanical chess clock. It is a single case holding TWO round analogue clock dials side by side, each with a push-button plunger on top. Show a clear mutual-exclusion state: the plunger on the LEFT dial is UP (raised high, sticking up) and the plunger on the RIGHT dial is DOWN (pressed flush). Near the 12 of each dial draw a small red flag: the flag on the LEFT dial has FALLEN to horizontal (out of time), and the flag on the RIGHT dial is still RAISED (vertical). Make the raised-vs-pressed plunger difference and the fallen-vs-raised flag clearly visible on the correct sides. Crisp, clearly readable.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict an analogue CHESS CLOCK: a single body holding TWO round clock dials side by side, each with a push-button plunger on top. Ignoring artistic quality, does the image actually DEPICT that twin-dial chess clock with a plunger button above each dial? Answer NO only if it shows just prose, a single clock, a blank panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "up_side": "left",
+    "fallen_side": "left",
+    "q_flag": "Same chess clock. Near the 12 position of each dial is a small red FLAG. On one dial the flag is RAISED (standing up, vertical); on the other it has FALLEN (dropped to horizontal, sticking out sideways). Which physical side has the red flag that has FALLEN (horizontal): the LEFT dial or the RIGHT dial? Answer with exactly one word: 'left' or 'right'.",
+    "q_up_left": "Look ONLY at the LEFT dial of this twin-dial chess clock (the dial on the left half of the image). On top of it is a push-button plunger. Is that LEFT plunger raised UP high on a visible stem above the case, or pressed DOWN flush with the case top? Answer with exactly one word: 'up' or 'down'.",
+    "q_up_right": "Look ONLY at the RIGHT dial of this twin-dial chess clock (the dial on the right half of the image). On top of it is a push-button plunger. Is that RIGHT plunger raised UP high on a visible stem above the case, or pressed DOWN flush with the case top? Answer with exactly one word: 'up' or 'down'."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "button_flag_state",
+      "weight": 4.0,
+      "score": "st.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the left push button on top of the clock case (not the red flag)",
+          "expected_n": 1,
+          "context": "upper-LEFT area of the picture containing the top of the clock case above the left dial and the button standing on it",
+          "retries": 5,
+          "out": "capL"
+        },
+        {
+          "fail_if": ["capL.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the right push button on top of the clock case (not the red flag)",
+          "expected_n": 1,
+          "context": "upper-RIGHT area of the picture containing the top of the clock case above the right dial and the button standing on it",
+          "retries": 5,
+          "out": "capR"
+        },
+        {
+          "fail_if": ["capR.unreadable"]
+        },
+        {
+          "ask": "reference.q_flag",
+          "out": "fl"
+        },
+        {
+          "fail_if": ["fl.unreadable"]
+        },
+        {
+          "run": "plunger_flag_score",
+          "args": ["capL", "capR", "fl", "reference"],
+          "out": "st"
+        }
+      ]
+    }
+  ]
+}

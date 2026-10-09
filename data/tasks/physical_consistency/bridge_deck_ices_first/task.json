@@ -1,0 +1,176 @@
+{
+  "id": "bridge_deck_ices_first",
+  "axis": "physical_consistency",
+  "prompt": "Dawn on a winter patrol, the van pulled onto the verge with the engine still running: look along the country road towards the small bridge that carries it over the river, the road surface filling the lower half of the frame and every verge post easy to read.\n\nThe patrol has stopped before any salt has gone down. The road carries chainage posts every 40 m, each lettered with its own chainage, at K12+340, K12+380, K12+420, K12+460, K12+500 and K12+540. The bridge is a single span 100 m long and its centre is at K12+460; its two expansion joints cross the carriageway as steel lines, one at each end of that span, and both are in frame. A small board at the verge carries the air temperature.\n\nThe patrol's readings, word for word and figure for figure: air temperature -1 C; the road surface probe at K12+340, which is on the embankment, reads +1.2 C; no rain since midnight; the whole road wet.\n\nWhich lengths of the road have gone over to ice and which are only wet you work out for yourself -- I am deliberately not telling you, and I am not telling you where along the road the two joints fall. Nothing else belongs in the picture: no salt or grit on the road, and no wording naming a length of road.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a road running away from the camera with small lettered posts along its verge and a bridge ahead? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "road_clean": "yes",
+    "q_post_chain": "Copy the chainage lettered on the post in this cut-out. Write only that chainage.",
+    "q_post_ice": "Is the road surface beside this post white with frost rather than dark and wet? Answer yes or no only.",
+    "frosted_posts": "k12+420, k12+460, k12+500",
+    "n_posts": 6,
+    "n_joints": 2,
+    "joint_edge_ok": "yes",
+    "no_length_named": "yes",
+    "q_joint_side": "At the steel line in this cut-out, is the road white with frost on both sides of it, on one side of it only, or on neither side? Answer with one word: both, one, or neither.",
+    "q_joint_cert": "Does this cut-out show a steel line crossing the carriageway? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_frosted_posts_are_the_ones_standing_on_the_deck",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lettered chainage post at the verge of the road",
+          "sweep": true,
+          "out": "po_box"
+        },
+        {
+          "fail_if": ["po_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_post_chain",
+          "boxes": "po_box",
+          "pad": 0.35,
+          "out": "po_chain"
+        },
+        {
+          "fail_if": ["po_chain.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_post_ice",
+          "boxes": "po_box",
+          "pad": 0.35,
+          "out": "po_ice"
+        },
+        {
+          "fail_if": ["po_ice.unreadable"]
+        },
+        {
+          "run": "frosted_post_chainages",
+          "args": ["po_chain", "po_ice", "reference.n_posts"],
+          "out": "iced"
+        },
+        {
+          "fail_if": ["iced.unreadable"]
+        },
+        {
+          "compare": "iced.seq",
+          "to": "reference.frosted_posts",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_ice_begins_and_ends_on_the_two_steel_joints",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a steel expansion joint line crossing the carriageway",
+          "sweep": true,
+          "out": "jt_box"
+        },
+        {
+          "fail_if": ["jt_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_joint_cert",
+          "boxes": "jt_box",
+          "pad": 0.3,
+          "out": "jt_cert"
+        },
+        {
+          "fail_if": ["jt_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_joint_side",
+          "boxes": "jt_box",
+          "pad": 0.3,
+          "out": "jt_side"
+        },
+        {
+          "fail_if": ["jt_side.unreadable"]
+        },
+        {
+          "run": "frost_one_side_at_joints",
+          "args": ["jt_cert", "jt_side", "reference.n_joints"],
+          "out": "jn"
+        },
+        {
+          "fail_if": ["jn.unreadable"]
+        },
+        {
+          "compare": "jn.ok",
+          "to": "reference.joint_edge_ok",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_salt_has_gone_down_yet",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "salt or grit spread on the road surface",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sg_box"
+        },
+        {
+          "fail_if": ["sg_box.unreadable"]
+        },
+        {
+          "compare": "sg_box.clean",
+          "to": "reference.road_clean",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_length_of_road_is_named_in_writing",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "wording naming a length of road, such as a chainage range written out",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "wl_box"
+        },
+        {
+          "fail_if": ["wl_box.unreadable"]
+        },
+        {
+          "compare": "wl_box.clean",
+          "to": "reference.no_length_named",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

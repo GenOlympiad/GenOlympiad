@@ -1,0 +1,84 @@
+{
+  "id": "over_box_counts_only_the_legal_balls",
+  "axis": "symbolic_systems",
+  "prompt": "The two scorers have to agree their books at the interval, so the page is photographed open on the table exactly as it stands after the over just called.\n\nThis is the club's ball-by-ball book, open at the over that has just been bowled. The left-hand page runs a ruled box for each over, every box divided into its own ruled cells; the right-hand page runs the bowlers' analysis, a line to each over. The over went like this: a dot ball, then another dot, then a wide down the leg side, then a dot, then a leg bye off the pads, then a dot, and a dot to finish. The scorers work to the standard scoring notation named on the inside cover of the book, and the pencil and the match ball rest on the open page.\n\nWhat goes into that box is what the book does not tell the scorer.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a cricket scoring book lying open with ruled over boxes on one page and a bowlers' analysis on the other? Answer yes or no only.",
+  "reference": {
+    "part1": "more_marks_than_cells",
+    "part2": "5"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the box for this over on the ball-by-ball page and say how the marks in it stand against its ruled cells. Answer with one of: more marks stand in the over box than there are ruled cells in it; the marks fill the ruled cells of the over box exactly; fewer marks stand in the over box than there are ruled cells in it.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Count the cells of this over's box whose only mark is a dot. Write the number only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

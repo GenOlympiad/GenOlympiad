@@ -1,0 +1,84 @@
+{
+  "id": "lens_optical_centre_fit",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The job cannot be handed to the customer until the crosses on the lenses have been checked against the docket, so the dispenser lays the finished pair on the centration chart and takes the check shot before cleaning them off.\n\nA finished pair of spectacles lies on an optician's bench on the shop's centration chart, a card printed with a millimetre grid and a horizontal datum line. Both lenses still carry the marking-up cross and the fitting line the glazer left on them. One temple is turned up to show its stamped size, 52-18-140, which sets the frame's own centres 70 millimetres apart. The docket held down beside the pair gives the customer's centre distance as 62 millimetres and the fitting height as 22 millimetres, and calls for single-vision lenses in this frame.\n\nWhere the crosses have to land on the lenses is what the docket does not draw.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a finished pair of spectacles lying on a printed centration chart on a workshop bench with a prescription docket beside them? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "in_toward_nose"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the printed millimetre grid under the glasses and give the figure between the two ink crosses in millimetres.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "60.5", "63.5"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the ink cross on each lens against the middle of that lens. Answer with one of: each cross sits in toward the nose side of its lens; each cross sits at the middle of its lens; each cross sits out toward the hinge side of its lens.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

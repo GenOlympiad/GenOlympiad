@@ -1,0 +1,127 @@
+{
+  "id": "inverted_grade",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean, straight-on class REPORT CARD table for Homeroom 9C, filling most of the frame, with one row per student showing the student's name and their letter grade.\n\nIMPORTANT GRADING RULE: at this school the letter grades are ranked the OTHER way round from usual. Here F is the HIGHEST, best grade and A is the LOWEST, worst grade — the order from best to worst is F, E, D, C, B, A. (So a student with an E has done better than a student with a B.)\n\nThe students and their grades are: Ravi = C; Tom = B; Zoe = D; Ann = A; Ola = E; Uma = F. List every student in a row with their grade in a GRADE column. Then put a single gold STAR on the row of the student who is TOP of the class — that is, the student whose grade is the BEST under this school's rule (the grade nearest to F). Star exactly ONE row. Do NOT add any caption naming the top student — the answer is which row carries the star.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a class REPORT CARD: a table of student names each with a letter grade. Ignoring which row is marked and ignoring artistic quality, does the image actually DEPICT such a report table (rows of names with letter grades)? A photo, illustration or clean graphic all count as yes. Answer NO only if it is a blank panel, an unrelated object, or just prints a single letter with no table. Answer yes or no only.",
+  "reference": {
+    "best_grade": "F"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "starred_grade_is_best",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of student rows in the report table -- draw ONE box holding ALL the student rows together, its top edge on the top rule of the first student row, its bottom edge on the bottom rule of the last, its sides on the table's left and right rules, so every printed name and grade letter is inside it; the column rules and the gold star inside it do not disqualify it; not the heading row, not the title bar, not the paper",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read_crop": "This is the block of student rows cut out of a report table. Each row prints one student. Write down every student row printed here, copying the student name printed on it. Take a row only if its student name is fully inside this cut-out, and ignore any total printed here. Separate one item from the next with a semicolon; write no running total and nothing else. If no student row is printed here, write the single word NONE.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "nrow"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["nrow", "empty_as='0'"],
+          "out": "nrow__std"
+        },
+        {
+          "fail_if": ["nrow__std.refused"]
+        },
+        {
+          "run": "plan_grade_rows",
+          "args": ["image", "anc", "nrow__std"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one row cut out of a report table. Is there a gold star drawn on this row? Answer yes or no only.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd_star"
+        },
+        {
+          "read_crop": "This is one row cut out of a report table. What single letter is printed in this row's grade column? Answer with just that one letter and nothing else.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd_grade"
+        },
+        {
+          "run": "read_starred_grades",
+          "args": ["rd_star", "rd_grade", "pl"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "single_grade_matches",
+          "args": ["res.v", "reference.best_grade"],
+          "out": "frac"
+        },
+        {
+          "run": "paint_starred_rows",
+          "args": ["pl", "res", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ]
+}

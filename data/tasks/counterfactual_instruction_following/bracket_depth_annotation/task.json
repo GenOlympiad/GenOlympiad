@@ -1,0 +1,72 @@
+{
+  "id": "bracket_depth_annotation",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Please draw a single clean ORG-CHART CAPTION EXPRESSION: a horizontal row of role tokens (board, division, unit, team, lead, aide), written on ONE horizontal line.\n\nIMPORTANT NOTATION RULE (a special markup used here): the whole expression is wrapped in NESTING angle brackets written as « ... ». These angle brackets NEST inside one another. Every token has a DEPTH: the outermost token pair is at depth 1, and each additional « opening bracket wrapped around a token adds 1 to its depth (a token inside one more « is at depth 2, inside two more is at depth 3, and so on). Count ONLY the « » angle brackets for depth — do not count round ( ) parentheses, and do not treat every token as depth 1.\n\nWrite the tokens board, division, unit, team, lead, aide in this order on one line, wrapped in « » angle brackets so the nesting goes deeper toward the middle and shallower at the ends. Directly BENEATH each token, print its DEPTH as a single digit (1, 2, 3, ...) computed by this rule. Then draw a clear RED BOX around the token \"lead\" (and the depth digit under it) to highlight it. Keep all text in English. Do NOT write any sentence or caption that states what depth \"lead\" is — the depth must be shown ONLY as the printed digit beneath the token.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a BRACKETED TEXT EXPRESSION: a horizontal row of word-tokens wrapped in nesting brackets, with a small NUMBER printed directly beneath each token, and one token highlighted with a red box. Ignoring what the numbers are and ignoring artistic quality, does the image actually DEPICT such a bracketed expression with a small number under each token? A clean graphic or render counts as yes. Answer NO only if it is a blank panel, an unrelated object, or has no numbers under the tokens. Answer yes or no only.",
+  "reference": {
+    "marked_depth": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "marked_depth",
+      "weight": 5.0,
+      "score": "chk.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "RED rectangle outline drawn on the picture (the box with red borders)",
+          "expected_n": 1,
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "run": "annotation_window",
+          "args": ["rb"],
+          "out": "reg"
+        },
+        {
+          "fail_if": ["reg.degenerate"]
+        },
+        {
+          "crop": "reg.bbox",
+          "out": "cd"
+        },
+        {
+          "read_crop": "This is a cropped bracketed text expression in which one token is highlighted with a red box. Directly BENEATH that highlighted token a small DEPTH NUMBER is printed. Read the depth number printed under the highlighted (red-boxed) token and answer with just that number. Judge only by the number physically printed under the marked token; do not recount the brackets yourself. Answer with just that single number.",
+          "image": "cd",
+          "out": "dp"
+        },
+        {
+          "fail_if": ["dp.unreadable"]
+        },
+        {
+          "run": "check_depth",
+          "args": ["dp", "reference.marked_depth"],
+          "out": "chk"
+        }
+      ]
+    }
+  ]
+}

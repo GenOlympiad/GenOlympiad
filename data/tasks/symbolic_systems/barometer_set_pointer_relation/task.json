@@ -1,0 +1,146 @@
+{
+  "id": "barometer_set_pointer_relation",
+  "axis": "symbolic_systems",
+  "prompt": "Create a clean, realistic desk weather-station barometer dial: a round dial (treat it like a clock face, 12 at the top) with TWO pointers coming from the centre. Draw a HEAVY FAT solid black live NEEDLE pointing to the 5 o'clock position, and a SLENDER THIN brass SET-HAND (with a small ring near its tip) pointing to the 2 o'clock position. Make the two pointers clearly different: the live needle is thick and solid, the set-hand is thin with a ring tip. Keep each pointer at its stated clock position and well separated. Crisp, clearly readable dial.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict an aneroid BAROMETER dial: a round weather dial with TWO pointers from the centre -- one heavy solid NEEDLE and one slender pointer (a 'set-hand', often with a small ring at its tip). Ignoring artistic quality, does the image actually DEPICT a round dial with TWO distinct pointers (one fat, one thin)? Answer NO only if it shows just prose, a single-pointer gauge, a blank panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "needle_clock": 5,
+    "set_clock": 2,
+    "relation": "clockwise",
+    "set_hand_clock": 2,
+    "q_which": "Same barometer, two pointers. One pointer is a THIN slender set-hand (with a small ring near its tip) and the other is a FAT heavy needle. Treat the dial as a clock face (12 at top). At which clock-hour position (1 to 12) is the THIN set-hand pointing? Answer with just the clock number.",
+    "q_fat": "This is a barometer dial with two pointers from the centre: a HEAVY FAT solid needle and a SLENDER THIN set-hand. Treat the dial as a clock face (12 at top). At which clock-hour position (1 to 12) is the FAT heavy solid needle pointing? Do not judge the pointers against each other; just report the FAT needle's clock number. Answer with just the number."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pointer_relation",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the round barometer dial itself -- the circular face that both pointers turn on, counting the whole face as one shape; not one pointer on its own, and not the brass case, bulkhead or desk around it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read": "ray",
+          "target": [
+            "very tip of the HEAVY THICK solid pointer on this dial",
+            "small centre hub in the middle of the dial that both pointers turn around"
+          ],
+          "out": "fatr"
+        },
+        {
+          "fail_if": ["fatr.unreadable"]
+        },
+        {
+          "read": "ray",
+          "target": [
+            "very tip of the SLENDER THIN pointer that has a small ring near its tip on this dial",
+            "small centre hub in the middle of the dial that both pointers turn around"
+          ],
+          "out": "thinr"
+        },
+        {
+          "fail_if": ["thinr.unreadable"]
+        },
+        {
+          "run": "dial_hour_sectors",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "pointer_hour",
+          "args": ["pl", "fatr"],
+          "out": "fres"
+        },
+        {
+          "fail_if": ["fres.no_read"]
+        },
+        {
+          "run": "result_value",
+          "args": ["fres"],
+          "out": "fat"
+        },
+        {
+          "run": "pointer_hour",
+          "args": ["pl", "thinr"],
+          "out": "tres"
+        },
+        {
+          "fail_if": ["tres.no_read"]
+        },
+        {
+          "run": "result_value",
+          "args": ["tres"],
+          "out": "thin"
+        },
+        {
+          "run": "score_pointer_relation",
+          "args": ["fat", "thin", "reference"],
+          "out": "frac"
+        },
+        {
+          "run": "paint_sector_marks",
+          "args": ["pl", "[fres.idx, tres.idx]", "[s3_verdict(frac), s3_verdict(frac)]"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ]
+}

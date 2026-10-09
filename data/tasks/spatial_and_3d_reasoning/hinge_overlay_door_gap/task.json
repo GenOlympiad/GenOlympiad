@@ -1,0 +1,167 @@
+{
+  "id": "hinge_overlay_door_gap",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A cutting ticket from a custom furniture workshop, the sheet the saw bench cuts to. The job: one two-door wardrobe front, hung on FULL-OVERLAY hinges.\n\nWhat the ticket hands over, lettered in its header: carcass external width 900 mm; the two side panels and the centre partition are 18 mm board each; hinge class full overlay at both side panels, the two doors sharing the centre partition; the shop's standing figures -- outer reveal 2 mm at each cabinet edge, centre joint 3 mm between the doors; door widths cut to the half millimetre. Under the header sit two panels: the carcass front elevation with both doors hung, and the door schedule with two rows, one tagged L and one tagged R, each row taking that door's cut width in millimetres.\n\nCut the two widths yourself the way full overlay demands -- I am deliberately not telling you either figure, and the internal bay width is not the answer. The maker rejects a ticket whose doors would slam into each other, would leave carcass board showing beside or between them, or would hang as two unequal leaves. Beyond the header, the elevation and the two schedule rows, the ticket carries no working and no other figure.\n\nThe elevation with its two hung doors and the two completed schedule rows must be easy to read on one ticket.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a workshop ticket with a cabinet front drawing and a small two-row schedule? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "doors_expected": "l:446.5|r:446.5",
+    "overlay_look": "yes",
+    "n_doors": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "schedule_widths_close_the_front",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one completed row of the door schedule",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_rows"
+        },
+        {
+          "fail_if": ["box_rows.unreadable"]
+        },
+        {
+          "read_crop": "Copy the door tag letter on this schedule row. Write the letter only.",
+          "boxes": "box_rows",
+          "pad": 0.3,
+          "out": "tags"
+        },
+        {
+          "fail_if": ["tags.unreadable"]
+        },
+        {
+          "read_crop": "Copy the width figure on this schedule row. Write the number only.",
+          "boxes": "box_rows",
+          "pad": 0.3,
+          "out": "vals"
+        },
+        {
+          "fail_if": ["vals.unreadable"]
+        },
+        {
+          "run": "check_door_widths",
+          "args": ["tags", "vals"],
+          "out": "hang"
+        },
+        {
+          "compare": "hang.state",
+          "to": "closes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "doors_run_out_to_the_edges",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the carcass front elevation with its two hung doors",
+          "sweep": true,
+          "out": "box_elev"
+        },
+        {
+          "fail_if": ["box_elev.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, do the two doors run out to the cabinet's outer edges leaving only slim joints? Answer yes or no only.",
+          "boxes": "box_elev",
+          "pad": 0.35,
+          "out": "elev_rd"
+        },
+        {
+          "fail_if": ["elev_rd.unreadable"]
+        },
+        {
+          "compare": "elev_rd.answers.0",
+          "to": "reference.overlay_look",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "two_door_leaves_certificate",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one door leaf drawn in the front elevation",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_dr"
+        },
+        {
+          "fail_if": ["box_dr.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE door leaf in the cabinet elevation, rather than the schedule or the header? Answer yes or no only.",
+          "boxes": "box_dr",
+          "pad": 0.3,
+          "out": "cert_dr"
+        },
+        {
+          "fail_if": ["cert_dr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cert_dr"],
+          "out": "n_dr"
+        },
+        {
+          "compare_band": "n_dr.n",
+          "to": "reference.n_doors",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_lettering",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a subtraction, division or written working lettered on the ticket",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

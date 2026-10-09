@@ -1,0 +1,190 @@
+{
+  "id": "hooke_spring_scale",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photograph of a materials-lab FORCE STAND: a vertical rig holding TWO coil EXTENSION SPRINGS joined END TO END (in SERIES) with a single weight hanging from the bottom of the lower spring, and a small DIGITAL EXTENSION READOUT box (a DRO showing centimetres) mounted beside them that reads the TOTAL stretch of the two-spring chain. Each spring obeys Hooke's law. The upper spring's stiffness is printed on a tag as k1 = 245 newtons per metre and the lower spring's as k2 = 180 newtons per metre. The hanging weight pulls the chain with a force of F = 17.5 newtons (label the weight). Two springs in series behave like ONE softer spring whose effective stiffness is (k1 times k2) divided by (k1 plus k2); the total extension is then that force divided by the effective stiffness (in metres), which you convert to CENTIMETRES. Work out the total extension yourself and show it, to two decimal places in centimetres, on the DIGITAL EXTENSION READOUT box. Draw both k tags and the F weight label clearly, but the readout must show your COMPUTED total extension in cm. Bright even lab lighting, the digital readout crisp and legible; no other numbers on the readout box.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show materials-lab vertical force stand with TWO series coil extension springs, a hanging weight, and a digital cm total-extension readout? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "force_n": 17.5,
+    "k1_nm": 245.0,
+    "k2_nm": 180.0,
+    "k_eff_nm": 103.765,
+    "ext_cm": 16.87,
+    "q_ext": "Look at the small DIGITAL EXTENSION readout box (the centimetre display). Read ONLY the digits printed on that readout. Transcribe exactly what is shown -- do NOT do any sums from the force or the stiffness. Answer with just that number, digits only.",
+    "q_form": "Does this image show one or more springs on a stand together with a small digital readout box displaying a numeric value? Answer yes or no only.",
+    "n_springs": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "extension_cm",
+      "weight": 3.0,
+      "steps": [
+        {
+          "crop_full": true,
+          "out": "img"
+        },
+        {
+          "read_number": "reference.q_ext",
+          "image": "img",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare_band": "s",
+          "to": "reference.ext_cm",
+          "out": "frac",
+          "core": 0.3,
+          "margin": 1.2
+        }
+      ]
+    },
+    {
+      "name": "is_spring_readout",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "compare": "g",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_force",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the hanging weight force F (in newtons) labelled on the force stand. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.force_n",
+          "core_abs": 0.499,
+          "margin_abs": 0.1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_k1",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the UPPER spring stiffness k1 (in newtons per metre) printed on its tag. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.k1_nm",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_k2",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the LOWER spring stiffness k2 (in newtons per metre) printed on its tag. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.k2_nm",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count_springs",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "How many coil extension springs are joined end to end (in series) on the force stand? Give a whole number only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.n_springs",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_has_dro",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is there a digital extension readout (DRO) box beside the springs showing a value in centimetres? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

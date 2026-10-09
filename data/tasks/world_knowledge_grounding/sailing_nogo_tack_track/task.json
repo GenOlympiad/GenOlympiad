@@ -1,0 +1,182 @@
+{
+  "id": "sailing_nogo_tack_track",
+  "axis": "world_knowledge_grounding",
+  "prompt": "One page from the teaching plates a sailing school hands out to its dinghy course, the page about the windward leg.\n\nThe sheet is drawn north up and carries a compass rose in the corner. The race committee has put the wind at 000 degrees, blowing straight down the sheet from the top edge, and a printed wind arrow on the sheet says so. The start line lies across the foot of the sheet between two small square posts, and the windward mark stands due north of the middle of it, straight upwind; the school's plates always draw that windward mark as one round inflatable buoy with a flag on top of it, and nothing else on the sheet is drawn that way.\n\nOn the sheet is the track a boat should sail from the start line up to that mark, drawn as a run of straight legs. One small boat figure sits on each leg, seen from above at the middle of its own leg, with hull, boom and sail.\n\nTrainees copy this page and then go out and sail it, so the track has to be one that a boat can really sail, and each boat figure has to show the sail lying the way it really lies on that leg. How many legs the track takes, which way each leg runs, and which way the sail lies on each of them is the instructor's work -- I am deliberately not telling you how close to the wind a boat can go, and I am deliberately not telling you how many legs to use. Nothing else may go on the sheet: no angle figures, no wind vectors beside the boats, no note about the reasoning. Keep the legs long and the boat figures big enough that the sail is easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a sheet with a zigzag or angled line running up it from a line at the bottom towards a mark, with small boat figures on it? A teaching plate, an illustration or a diagram all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "track_state": "clear",
+    "sail_state": "match",
+    "n_marks": 1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_leg_of_the_track_lies_in_the_forbidden_sector",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a small boat figure sitting on a leg of the drawn track",
+          "out": "lg_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["lg_r.unreadable"]
+        },
+        {
+          "read_crop": "Which way does the leg of track under this boat run? Answer with one of these eight words: north, northeast, east, southeast, south, southwest, west, northwest.",
+          "boxes": "lg_r",
+          "pad": 0.6,
+          "out": "lg_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["lg_q.unreadable"]
+        },
+        {
+          "run": "check_beat_courses",
+          "args": ["lg_q"],
+          "out": "lg_s"
+        },
+        {
+          "compare": "lg_s.state",
+          "to": "reference.track_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sail_lies_on_the_side_that_leg_demands",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a small boat figure sitting on a leg of the drawn track",
+          "out": "sl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sl_r.unreadable"]
+        },
+        {
+          "read_crop": "Which way does the leg of track under this boat run? Answer with one of these eight words: north, northeast, east, southeast, south, southwest, west, northwest.",
+          "boxes": "sl_r",
+          "pad": 0.6,
+          "out": "sd_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sd_q.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the sail on the left hand side of the hull or on the right hand side? Answer with one word: left or right.",
+          "boxes": "sl_r",
+          "pad": 0.35,
+          "out": "sw_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sw_q.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show exactly one whole boat figure, hull and sail together, sitting on a line of the drawn track? Answer yes or no only.",
+          "boxes": "sl_r",
+          "pad": 0.35,
+          "out": "sc_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sc_q.unreadable"]
+        },
+        {
+          "run": "check_sail_sides",
+          "args": ["sd_q", "sw_q", "sc_q"],
+          "out": "sl_s"
+        },
+        {
+          "compare": "sl_s.state",
+          "to": "reference.sail_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_notes_were_added_beside_the_track",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an angle figure or a written note added to the sheet beyond the track and the boats",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_windward_mark_stands_on_the_sheet",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the windward mark buoy drawn at the top of the track",
+          "propose_boxes": "vlm",
+          "out": "box_read",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole round inflatable buoy with a flag on top of it, rather than a square post, a boat, or only part of a buoy? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.3,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_marks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

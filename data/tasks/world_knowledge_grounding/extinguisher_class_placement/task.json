@@ -1,0 +1,220 @@
+{
+  "id": "extinguisher_class_placement",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photograph of one sheet from a fire-safety contractor's annual inspection file for a small industrial estate in the United States. Three site photographs from the same visit are mounted in a row across the sheet, and under them is the snag note the inspector wrote out that day.\n\nThe three photographs are the deep-fryer range in the estate's canteen kitchen, the switchgear room off the loading bay, and the racking in the paper store. In each of them a single fire extinguisher hangs on the wall within reach, and its body carries one class letter -- the letter that says what the agent inside that cylinder is for -- big enough to read off this sheet.\n\nThe snag note reads, in full:\nANNUAL INSPECTION -- 3 EXTINGUISHERS CHECKED -- 1 NON-CONFORMITY FOUND\n\nThe estate manager works the snag list off this sheet, so the sheet has to bear out its own note. Work out for yourself what belongs where -- I am deliberately not telling you what burns in any of these three rooms, which agent suits it, which letter that agent carries, or which of the three photographs holds the non-conformity. Nothing on the sheet may name a fire class, an agent, a room or a photograph number apart from the one class letter on each cylinder and the snag line above.\n\nAll three class letters and the snag line must be in the same frame and large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an inspection sheet with three site photographs in a row and a handwritten note under them? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "expect": [
+      ["fryer", "k"],
+      ["switchgear", "c"],
+      ["paper", "a"]
+    ],
+    "rooms": ["fryer", "switchgear", "paper"],
+    "n_units": 3,
+    "n_bad": 1,
+    "n_lettered": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "exactly_one_cylinder_is_wrong_for_its_room",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one fire extinguisher hanging on a wall in the inspection photographs",
+          "sweep": true,
+          "propose_boxes": "vlm",
+          "out": "ex"
+        },
+        {
+          "fail_if": ["ex.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one fire extinguisher on a wall. Which letter is shown in the class marking on its body? Answer with one letter: A, B, C, D, K or the word none.",
+          "boxes": "ex",
+          "out": "lt"
+        },
+        {
+          "fail_if": ["lt.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one fire extinguisher on a wall. What is the thing standing right behind it? Answer with one word: fryer, switchgear, paper or other.",
+          "boxes": "ex",
+          "out": "rm"
+        },
+        {
+          "fail_if": ["rm.unreadable"]
+        },
+        {
+          "run": "check_extinguisher_letters",
+          "args": ["lt", "rm", "reference.expect"],
+          "out": "kt"
+        },
+        {
+          "compare_band": "kt.n_bad",
+          "to": "reference.n_bad",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_cylinder_carries_a_real_class_letter",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one fire extinguisher hanging on a wall in the inspection photographs",
+          "sweep": true,
+          "propose_boxes": "vlm",
+          "out": "ex2"
+        },
+        {
+          "fail_if": ["ex2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one fire extinguisher on a wall. Which letter is shown in the class marking on its body? Answer with one letter: A, B, C, D, K or the word none.",
+          "boxes": "ex2",
+          "out": "lt2"
+        },
+        {
+          "fail_if": ["lt2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one fire extinguisher on a wall. What is the thing standing right behind it? Answer with one word: fryer, switchgear, paper or other.",
+          "boxes": "ex2",
+          "out": "rm2"
+        },
+        {
+          "fail_if": ["rm2.unreadable"]
+        },
+        {
+          "run": "check_extinguisher_letters",
+          "args": ["lt2", "rm2", "reference.expect"],
+          "out": "kt2"
+        },
+        {
+          "compare_band": "kt2.n_lettered",
+          "to": "reference.n_lettered",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cylinder_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one fire extinguisher hanging on a wall in the inspection photographs",
+          "sweep": true,
+          "propose_boxes": "vlm",
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole fire extinguisher, rather than bare wall or only part of one? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_three_rooms",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one fire extinguisher hanging on a wall in the inspection photographs",
+          "sweep": true,
+          "propose_boxes": "vlm",
+          "out": "ex3"
+        },
+        {
+          "fail_if": ["ex3.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one fire extinguisher on a wall. What is the thing standing right behind it? Answer with one word: fryer, switchgear, paper or other.",
+          "boxes": "ex3",
+          "out": "rm3"
+        },
+        {
+          "fail_if": ["rm3.unreadable"]
+        },
+        {
+          "compare_set": "rm3.answers",
+          "to": "reference.rooms",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_written_class_key",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written list of fire classes or a note saying which cylinder is wrong",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_d3_n"
+        },
+        {
+          "fail_if": ["sweep_d3_n.unreadable"]
+        },
+        {
+          "compare": "sweep_d3_n.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,767 @@
+{
+  "id": "sky_diurnal_rotation",
+  "axis": "world_knowledge_grounding",
+  "prompt": "Render a page from a hand-kept observing notebook, southern hemisphere: three circular eyepiece-field sketches of exactly the same size, drawn in a row across the ruled page, with the time written under each circle -- 19:20 under the left circle, 22:00 under the middle circle and 00:40 under the right circle.\n\nAll three circles look at the same patch of sky from the same spot, so all three must show THE SAME five stars. Use an invented practice asterism of five stars -- make up your own arrangement, do not draw a real constellation. Mark the south celestial pole with one small cross, drawn at exactly the same place inside all three circles.\n\nWork out for yourself how far, and which way round, that star pattern has moved between each printed time and the next, and draw the middle and right circles accordingly. The pattern must keep its shape and its size exactly: every star stays exactly as far from the marked cross as it was in the first circle. Do not simply repeat one circle in the next.\n\nEach star is a small solid pencil dot, all five about the same size, with no lines joining them and no labels on them. The three times are the only writing on the page.\n",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a notebook page carrying THREE circular sketches drawn in a row, each circle holding a scatter of small dots and one small cross-shaped mark, with a time written under it. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank panel, a page of text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "n_panels": 3,
+    "axis": "lr",
+    "n_stars": 5,
+    "steps": [-40.0, -40.0]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "same_star_field_in_every_panel",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["image", "reference.n_panels", "reference.axis"],
+          "out": "pb"
+        },
+        {
+          "crop": "pb.p0",
+          "out": "c0"
+        },
+        {
+          "crop": "pb.p1",
+          "out": "c1"
+        },
+        {
+          "crop": "pb.p2",
+          "out": "c2"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0a"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0b"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0c"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1a"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1b"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1c"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2a"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2b"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2c"
+        },
+        {
+          "read": "circle",
+          "image": "c0",
+          "target": "small cross-shaped mark",
+          "out": "q0"
+        },
+        {
+          "read": "circle",
+          "image": "c1",
+          "target": "small cross-shaped mark",
+          "out": "q1"
+        },
+        {
+          "read": "circle",
+          "image": "c2",
+          "target": "small cross-shaped mark",
+          "out": "q2"
+        },
+        {
+          "run": "sky_fit",
+          "args": [
+            "image",
+            "reference.n_panels",
+            "reference.axis",
+            "pb",
+            "[r0a, r0b, r0c]",
+            "[r1a, r1b, r1c]",
+            "[r2a, r2b, r2c]",
+            "q0",
+            "q1",
+            "q2"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "run": "same_star_counts",
+          "args": ["m.counts", "reference.n_panels"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rigid_body_star_field",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["image", "reference.n_panels", "reference.axis"],
+          "out": "pb"
+        },
+        {
+          "crop": "pb.p0",
+          "out": "c0"
+        },
+        {
+          "crop": "pb.p1",
+          "out": "c1"
+        },
+        {
+          "crop": "pb.p2",
+          "out": "c2"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0a"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0b"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0c"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1a"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1b"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1c"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2a"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2b"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2c"
+        },
+        {
+          "read": "circle",
+          "image": "c0",
+          "target": "small cross-shaped mark",
+          "out": "q0"
+        },
+        {
+          "read": "circle",
+          "image": "c1",
+          "target": "small cross-shaped mark",
+          "out": "q1"
+        },
+        {
+          "read": "circle",
+          "image": "c2",
+          "target": "small cross-shaped mark",
+          "out": "q2"
+        },
+        {
+          "run": "sky_fit",
+          "args": [
+            "image",
+            "reference.n_panels",
+            "reference.axis",
+            "pb",
+            "[r0a, r0b, r0c]",
+            "[r1a, r1b, r1c]",
+            "[r2a, r2b, r2c]",
+            "q0",
+            "q1",
+            "q2"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "run": "rigid_turn_score",
+          "args": ["m.shape_err", "m.scale_err", "m.spread_deg"],
+          "code": {
+            "inline": "f_code_2"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "turn_angle_matches_elapsed_time",
+      "weight": 5.0,
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["image", "reference.n_panels", "reference.axis"],
+          "out": "pb"
+        },
+        {
+          "crop": "pb.p0",
+          "out": "c0"
+        },
+        {
+          "crop": "pb.p1",
+          "out": "c1"
+        },
+        {
+          "crop": "pb.p2",
+          "out": "c2"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0a"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0b"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0c"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1a"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1b"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1c"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2a"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2b"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2c"
+        },
+        {
+          "read": "circle",
+          "image": "c0",
+          "target": "small cross-shaped mark",
+          "out": "q0"
+        },
+        {
+          "read": "circle",
+          "image": "c1",
+          "target": "small cross-shaped mark",
+          "out": "q1"
+        },
+        {
+          "read": "circle",
+          "image": "c2",
+          "target": "small cross-shaped mark",
+          "out": "q2"
+        },
+        {
+          "run": "sky_fit",
+          "args": [
+            "image",
+            "reference.n_panels",
+            "reference.axis",
+            "pb",
+            "[r0a, r0b, r0c]",
+            "[r1a, r1b, r1c]",
+            "[r2a, r2b, r2c]",
+            "q0",
+            "q1",
+            "q2"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "run": "turn_step_score",
+          "args": ["m.steps_deg", "reference.steps"],
+          "code": {
+            "inline": "f_code_3"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "turn_sense_matches_hemisphere",
+      "weight": 2.0,
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["image", "reference.n_panels", "reference.axis"],
+          "out": "pb"
+        },
+        {
+          "crop": "pb.p0",
+          "out": "c0"
+        },
+        {
+          "crop": "pb.p1",
+          "out": "c1"
+        },
+        {
+          "crop": "pb.p2",
+          "out": "c2"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0a"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0b"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0c"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1a"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1b"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1c"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2a"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2b"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2c"
+        },
+        {
+          "read": "circle",
+          "image": "c0",
+          "target": "small cross-shaped mark",
+          "out": "q0"
+        },
+        {
+          "read": "circle",
+          "image": "c1",
+          "target": "small cross-shaped mark",
+          "out": "q1"
+        },
+        {
+          "read": "circle",
+          "image": "c2",
+          "target": "small cross-shaped mark",
+          "out": "q2"
+        },
+        {
+          "run": "sky_fit",
+          "args": [
+            "image",
+            "reference.n_panels",
+            "reference.axis",
+            "pb",
+            "[r0a, r0b, r0c]",
+            "[r1a, r1b, r1c]",
+            "[r2a, r2b, r2c]",
+            "q0",
+            "q1",
+            "q2"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "run": "turn_direction_share",
+          "args": ["m.steps_deg", "reference.steps"],
+          "code": {
+            "inline": "f_code_4"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_rigid_turn_overlay",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "run": "panel_boxes",
+          "args": ["image", "reference.n_panels", "reference.axis"],
+          "out": "pb"
+        },
+        {
+          "crop": "pb.p0",
+          "out": "c0"
+        },
+        {
+          "crop": "pb.p1",
+          "out": "c1"
+        },
+        {
+          "crop": "pb.p2",
+          "out": "c2"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0a"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0b"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r0c"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1a"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1b"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r1c"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small round star dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2a"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small solid round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2b"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "small round dots",
+          "expected_n": "reference.n_stars",
+          "retries": 4,
+          "out": "r2c"
+        },
+        {
+          "read": "circle",
+          "image": "c0",
+          "target": "small cross-shaped mark",
+          "out": "q0"
+        },
+        {
+          "read": "circle",
+          "image": "c1",
+          "target": "small cross-shaped mark",
+          "out": "q1"
+        },
+        {
+          "read": "circle",
+          "image": "c2",
+          "target": "small cross-shaped mark",
+          "out": "q2"
+        },
+        {
+          "run": "sky_fit",
+          "args": [
+            "image",
+            "reference.n_panels",
+            "reference.axis",
+            "pb",
+            "[r0a, r0b, r0c]",
+            "[r1a, r1b, r1c]",
+            "[r2a, r2b, r2c]",
+            "q0",
+            "q1",
+            "q2"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "run": "expected_star_circles",
+          "args": ["m", "pb", "reference.steps"],
+          "out": "ex"
+        },
+        {
+          "run": "corners",
+          "args": ["pb"],
+          "out": "cn"
+        },
+        {
+          "overlay": "affine",
+          "circles": "ex.circles",
+          "rects": [],
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "cn",
+          "color": [0, 255, 0],
+          "width_frac": 0.002,
+          "out": "ov"
+        },
+        {
+          "ask": "Bright green rings have been drawn on this picture. Is there a small round star dot inside every one of those green rings? Answer yes or no only.",
+          "image": "ov.path",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "compare": "a",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

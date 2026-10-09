@@ -1,0 +1,167 @@
+{
+  "id": "regression_line",
+  "axis": "latent_computation",
+  "prompt": "A clean training-log CHART a gym coach would pin on the wall, titled 'Reps vs training week' with a fitted trend line. The x-axis 'Training week' runs 0 to 14 with vertical gridlines every 1 week; the y-axis 'Reps completed' runs 0 to 100 with horizontal gridlines every 10 reps. Plot exactly 14 data points as filled dark dots at these (week, reps) coordinates: (0, 18); (1, 44); (2, 29); (3, 26); (4, 55); (5, 38); (6, 66); (8, 49); (9, 78); (10, 58); (11, 85); (12, 64); (13, 92); (14, 71). Then draw the LEAST-SQUARES BEST-FIT straight line (ordinary linear regression) through all 14 points, extended right across the chart from week 0 to week 14. Compute the regression line yourself from the points -- the scatter zig-zags, so the best-fit line will NOT pass through any single dot and is NOT the line through the first and last dots. Draw it as one solid straight line. Accurate dot positions and line on the gridded axes, no legend, no equation text, no caption.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show gym coach's wall-pinned training-log chart of reps vs training week with a least-squares trend line? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "K": 14,
+    "XMAX": 14,
+    "xs": [0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14],
+    "ys": [18, 44, 29, 26, 55, 38, 66, 49, 78, 58, 85, 64, 92, 71],
+    "slope": 4.0786,
+    "intercept": 26.6643,
+    "y_at_0": 26.66,
+    "y_at_max": 83.76,
+    "q_y0": "This is a training-log chart: a scatter of dots with one straight fitted trend line. The x-axis 'Training week' has gridlines every 1 from 0 to 14; the y-axis 'Reps completed' has gridlines every 10 from 0 to 100. Look at the straight trend LINE ONLY (ignore the scattered dots). At the very LEFT edge, where week = 0, what is the y value (reps) of the line? Read it off the y-axis and answer with the number only.",
+    "q_ymax": "This is a training-log chart: a scatter of dots with one straight fitted trend line. The x-axis 'Training week' has gridlines every 1 from 0 to 14; the y-axis 'Reps completed' has gridlines every 10 from 0 to 100. Look at the straight trend LINE ONLY (ignore the scattered dots). At the very RIGHT edge, where week = 14, what is the y value (reps) of the line? Read it off the y-axis and answer with the number only.",
+    "ys0": 18
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "line_y_at_0",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_y0",
+          "out": "y0"
+        },
+        {
+          "fail_if": ["y0.unreadable"]
+        },
+        {
+          "compare_band": "y0",
+          "to": "reference.y_at_0",
+          "core": 2.0,
+          "margin": 6.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "line_y_at_max",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_ymax",
+          "out": "ym"
+        },
+        {
+          "fail_if": ["ym.unreadable"]
+        },
+        {
+          "compare_band": "ym",
+          "to": "reference.y_at_max",
+          "core": 2.0,
+          "margin": 6.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_points",
+      "weight": 0.45,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "How many filled dark data dots are plotted on the chart? Count them and answer a whole number only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.K",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_axis_x_max",
+      "weight": 0.45,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the largest number printed on the x-axis ('Training week') scale. Report the printed value. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.XMAX",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_first_dot_y",
+      "weight": 0.45,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Reading only the plotted dots: the left-most dot sits at week 0. Read its y-coordinate (reps) value from the y-axis gridlines. Report the value you read. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.ys0",
+          "core_abs": 0.499,
+          "margin_abs": 4,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_single_solid_line",
+      "weight": 0.45,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is the best-fit trend drawn as ONE single solid straight line spanning the chart (not multiple lines, not a curve, no legend or equation text)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

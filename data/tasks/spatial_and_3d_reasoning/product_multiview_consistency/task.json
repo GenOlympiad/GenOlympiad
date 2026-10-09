@@ -1,0 +1,99 @@
+{
+  "id": "product_multiview_consistency",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A clean e-commerce product listing image on a plain white background, in ONE wide strip of THREE equal panels side by side, each panel with a large printed label at the top reading (left to right) 'FRONT', 'SIDE', and 'BACK'. All three panels show the SAME single hiking BACKPACK -- identical pack, same colour -- just photographed from three viewpoints. A round brand LOGO badge is printed on the FRONT flap of the pack: it must be clearly VISIBLE in the FRONT panel, and because it is printed on the front face it must be HIDDEN (not shown at all) in the BACK panel. A mesh water-bottle side POCKET is sewn onto the RIGHT side of the pack: it must appear on the RIGHT in the FRONT panel and stay on that same physical side (toward the viewer's right edge of the pack) in the SIDE panel. Keep it a single coherent physical backpack across all three views. Do NOT print the logo on the back panel, and do NOT move the side pocket to the other side between panels.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a product listing strip: the SAME product photographed in three labelled panels FRONT / SIDE / BACK. Ignoring artistic quality, does the image actually DEPICT that -- one product shown across three separate labelled panels? A photo, illustration or clean diagram all count as yes. Answer NO only if it shows a blank panel, plain text with no product, a single view only, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "product": "backpack",
+    "front_logo": "yes",
+    "back_logo": "no",
+    "side_feature": "right",
+    "q_front": "This is a cropped photo of one side of a backpack. Is a round brand LOGO badge printed and clearly VISIBLE on the pack in this picture? Do NOT assume a product must show a logo; answer only about THIS picture. Answer with exactly one word: yes or no.",
+    "q_back": "This is a cropped photo of one side of a backpack. Is a round brand LOGO badge printed and clearly VISIBLE on the pack in this picture? Do NOT assume a product must show a logo; answer only about THIS picture. Answer with exactly one word: yes or no.",
+    "q_side": "This is a cropped side-view photo of a backpack. A mesh water-bottle POCKET is sewn onto one side of the pack. Do NOT assume a standard side; answer only about THIS picture. Which side of the pack is the mesh side pocket on -- the LEFT side or the RIGHT side? Answer with exactly one word: left or right.",
+    "bb_front": [0.015, 0.1, 0.318, 0.99],
+    "bb_side": [0.348, 0.1, 0.652, 0.99],
+    "bb_back": [0.682, 0.1, 0.985, 0.99]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "multiview_3d_consistency",
+      "weight": 5.0,
+      "steps": [
+        {
+          "crop": "reference.bb_front",
+          "out": "cf"
+        },
+        {
+          "ask": "reference.q_front",
+          "image": "cf",
+          "out": "af"
+        },
+        {
+          "crop": "reference.bb_back",
+          "out": "cb"
+        },
+        {
+          "ask": "reference.q_back",
+          "image": "cb",
+          "out": "ab"
+        },
+        {
+          "crop": "reference.bb_side",
+          "out": "cs"
+        },
+        {
+          "ask": "reference.q_side",
+          "image": "cs",
+          "out": "a_side"
+        },
+        {
+          "fail_if": ["af.unreadable", "ab.unreadable", "a_side.unreadable"]
+        },
+        {
+          "run": "keyword_match_score",
+          "args": ["af", "reference.front_logo"],
+          "code": {
+            "inline": "code_8c0f3b41d704"
+          },
+          "out": "s_front"
+        },
+        {
+          "run": "keyword_match_score",
+          "args": ["ab", "reference.back_logo"],
+          "out": "s_back"
+        },
+        {
+          "run": "keyword_match_score",
+          "args": ["a_side", "reference.side_feature"],
+          "out": "s_side"
+        },
+        {
+          "product": ["s_front", "s_back", "s_side"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "16:9"
+}

@@ -1,0 +1,91 @@
+{
+  "id": "leaning_book_angle",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "a photorealistic photograph of a single hardback BOOK propped against a wall on a study desk. The book stands on the floor with its top edge resting against the vertical wall, leaning like a propped domino. Paint the book's SPINE edge a crisp bright RED so its angle is clear. GEOMETRY IS THE SUBJECT and must be EXACT (do NOT default to a book standing straight up or lying flat): the book leans so that its spine makes an angle of about 45 DEGREES with the vertical wall -- its base sits out from the wall and its top rests on the wall, the spine tilted 45 degrees away from vertical. Photoreal book, floor and wall, no text, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a single book leaning against a wall with its spine painted red. Ignoring quality, does it depict one book propped at an angle against a wall with a red spine edge? A photo or render both count. Answer NO only for a blank panel or no book. Answer yes or no only.",
+  "reference": {
+    "angle": 45.0,
+    "core": 7.0,
+    "margin": 14.0,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lean_angle",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "ray",
+          "target": [
+            "top end of the leaning book -- the corner of the book that is resting up against the wall",
+            "bottom end of the leaning book -- the corner of the book that is standing on the floor or desk"
+          ],
+          "retries": 4,
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "book_tilt_from_wall",
+          "args": ["rd", "src"],
+          "out": "t"
+        },
+        {
+          "fail_if": ["t.no_read"]
+        },
+        {
+          "compare_band": "t.from_wall",
+          "to": "reference.angle",
+          "core": "reference.core",
+          "margin": "reference.margin",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

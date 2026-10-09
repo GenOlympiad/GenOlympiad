@@ -1,0 +1,201 @@
+{
+  "id": "stair_plan_three_levels",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Sheet 12 of a school extension package is on the drawing board this morning and it carries the stair details for the main block. The picture is that sheet seen square on and flat, with the edge of the board and a scale rule beside it.\n\nThree panels are ruled and titled on the sheet already, side by side, and their titles do not move: GROUND FLOOR PLAN, TYPICAL FLOOR PLAN and TOP FLOOR PLAN. The same stair belongs in all three: one straight flight up, a half landing, then a second straight flight back the other way, in a well 2600 mm wide.\n\nThese are the figures the job is built to, together with this practice's standing conventions: storey height 3300 mm, riser 150 mm, going 275 mm; the block has 4 storeys and nothing at all stands above the top one; a plan is a horizontal cut taken 1250 mm above the floor of the storey it belongs to, with everything above that cut left off the drawing; wherever the cut passes through a flight, the flight is closed off on the drawing by the usual jagged break line; and every flight that appears in a plan carries one arrow along it, running from the floor that plan belongs to towards the far end of that flight.\n\nWhat each of the three plans is left with, and where its break line falls, are the parts you have to work out -- I am deliberately not telling you, and there is no worked example anywhere on the sheet. The treads, the arrows and the break lines want to be at a size that can be counted. Other than the three panel titles, the well dimension, the figures already given and the flight arrows themselves, no further note, word or mark belongs on the sheet face.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a drawing sheet with three titled plan panels of a stair on it? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no drawing on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "arrows": "GROUND FLOOR PLAN=up only,TYPICAL FLOOR PLAN=both,TOP FLOOR PLAN=down only",
+    "breaks": "GROUND FLOOR PLAN=yes,TYPICAL FLOOR PLAN=yes,TOP FLOOR PLAN=no",
+    "break_panels": "GROUND FLOOR PLAN,TYPICAL FLOOR PLAN",
+    "cut_treads": 8,
+    "n_panels": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_plan_is_left_with_the_flights_the_cut_plane_leaves_in_it",
+      "weight": 3.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a titled stair plan panel on the drawing sheet",
+          "sweep": true,
+          "out": "pan_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["pan_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which title is lettered under the drawing? Answer with the words exactly as they are printed.",
+          "boxes": "pan_box",
+          "pad": 0.9,
+          "out": "ptit_rd"
+        },
+        {
+          "fail_if": ["ptit_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which flight arrows are drawn on the stair? Answer with one of: up only, down only, both, or none.",
+          "boxes": "pan_box",
+          "pad": 0.9,
+          "out": "parr_rd"
+        },
+        {
+          "fail_if": ["parr_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a jagged break line drawn across a flight of the stair? Answer yes or no only.",
+          "boxes": "pan_box",
+          "pad": 0.9,
+          "out": "pbrk_rd"
+        },
+        {
+          "fail_if": ["pbrk_rd.unreadable"]
+        },
+        {
+          "run": "plans_agree",
+          "args": ["ptit_rd", "parr_rd", "pbrk_rd", "reference.arrows", "reference.breaks"],
+          "out": "planv"
+        },
+        {
+          "compare": "planv.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_break_line_crosses_the_flight_at_the_same_tread_in_both_plans_that_have_one",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a titled stair plan panel on the drawing sheet",
+          "sweep": true,
+          "out": "stp_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["stp_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which title is lettered under the drawing? Answer with the words exactly as they are printed.",
+          "boxes": "stp_box",
+          "pad": 0.9,
+          "out": "stit_rd"
+        },
+        {
+          "fail_if": ["stit_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, write down every tread of the stair drawn between the floor and the jagged break line, each with a few plain words saying where it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no break line here, write the single word NONE.",
+          "boxes": "stp_box",
+          "pad": 0.9,
+          "out": "scnt_rd"
+        },
+        {
+          "fail_if": ["scnt_rd.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["scnt_rd", "empty_as='0'"],
+          "out": "scnt_rd__std"
+        },
+        {
+          "fail_if": ["scnt_rd__std.refused"]
+        },
+        {
+          "run": "break_step",
+          "args": ["stit_rd", "scnt_rd__std", "reference.break_panels", "reference.cut_treads"],
+          "out": "stepv"
+        },
+        {
+          "compare_band": "stepv.gap",
+          "to": 0,
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sheet_carries_its_three_titled_plans",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a titled stair plan panel on the drawing sheet",
+          "sweep": true,
+          "out": "cen_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a title lettered under the drawing? Answer yes or no only.",
+          "boxes": "cen_box",
+          "pad": 0.9,
+          "out": "cen_rd"
+        },
+        {
+          "fail_if": ["cen_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_rd"],
+          "out": "cenn"
+        },
+        {
+          "compare_band": "cenn.n",
+          "to": "reference.n_panels",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_note_word_or_mark_is_added_to_the_sheet_face",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a note, word or mark on the sheet other than the panel titles, the dimensions, the figures and the flight arrows",
+          "sweep": true,
+          "out": "sweep_s",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

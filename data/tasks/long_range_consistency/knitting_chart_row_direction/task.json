@@ -1,0 +1,84 @@
+{
+  "id": "knitting_chart_row_direction",
+  "axis": "long_range_consistency",
+  "prompt": "The technical editor has to pass both halves of the pattern before it goes to press, so the chart and the written instructions are photographed together on the desk as they lie.\n\nThe chart on the left is ruled into squares, eight rows deep, with a row number printed beside each row. The written instructions on the right give one line for each row, and each line names the symbols of that row in the order the knitter works them. The reading rule printed at the head of the chart says that a right-side row is read from the right-hand edge of the chart towards the left, that a wrong-side row is read from the left-hand edge towards the right, and that a row's number always stands at the edge the knitter starts from. Row six is a right-side row, and the rows alternate.\n\nWhat any written line actually says is what the head note does not tell you.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a printed stitch chart lying open beside a column of written row instructions on a desk? Answer yes or no only.",
+  "reference": {
+    "part1": "numbers_take_turn_about",
+    "part2": "line_starts_at_the_right_end"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the row numbers printed beside the rows of the chart and say how they stand. Answer with one of: the row numbers stand at one edge and then at the other, taking turn about down the chart; all the row numbers stand down the same edge of the chart; a row number stands at both edges of every row.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Take the written line for row six and row six of the chart, and say which end of that chart row the line names first. Answer with one of: the line names first the symbol standing at the right-hand end of the row; the line names first the symbol standing at the left-hand end of the row; the line names the symbols in an order starting at neither end of the row.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

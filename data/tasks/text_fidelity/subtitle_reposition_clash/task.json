@@ -1,0 +1,175 @@
+{
+  "id": "subtitle_reposition_clash",
+  "axis": "text_fidelity",
+  "prompt": "A documentary is being laid off for delivery and the technical reviewer wants one screen grab of the check strip before the file goes, so the picture is the review screen with the strip of frames across it and the operator's hand on the jog wheel.\n\nOn the screen and not yours to rearrange: five frames from the programme laid left to right in one row, each with its timecode printed on the strip below it; and the subtitle line already written for each of the five.\n\nWhat the programme itself carries, which came from the producer and cannot be moved: the second and the fourth frames each have the programme's own caption bar across their lower third, naming the person on screen. The other three frames carry no caption.\n\nThe delivery specification, which lives in the technical schedule and never on screen: a subtitle is set across the lower third of the frame; but where the frame already carries the programme's own text in that lower third, the whole subtitle is moved to the upper third instead, and it is moved WHOLE -- a subtitle is never split between the top and the bottom of one frame, and it never overlaps the programme's own text.\n\nWhich frames end up with their subtitle at the top is the part you have to work out -- I am not telling you, and none of the five frames has been laid out as an example. Take it so all five frames and the text in each of them can be read. Nothing beyond the subtitle line and the programme's own caption is to be burnt into any frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a screen carrying a row of several video frames side by side with text in them? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no drawing on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "pos_seq": ["lower", "upper", "lower", "upper", "lower"],
+    "strap_seq": ["no", "yes", "no", "yes", "no"],
+    "n_frames": 5,
+    "n_codes": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_subtitle_sits_at_the_end_of_the_frame_the_caption_layer_leaves_free",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the video frames laid out across the review screen",
+          "sweep": true,
+          "out": "fr_box",
+          "propose_boxes": "vlm",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["fr_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the subtitle line set across the upper part of the frame or across the lower part? Answer with one of: upper, lower, split between the two, no subtitle here.",
+          "boxes": "fr_box",
+          "pad": 0.2,
+          "out": "sub",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["sub.unreadable"]
+        },
+        {
+          "run": "count_subtitle_places",
+          "args": ["sub", "reference.pos_seq"],
+          "out": "sfit"
+        },
+        {
+          "compare_band": "sfit.n",
+          "to": "reference.n_frames",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_programmes_own_caption_bars_are_on_the_frames_that_carry_them",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a video frame in the row across the review screen",
+          "sweep": true,
+          "out": "cp_box",
+          "propose_boxes": "vlm",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["cp_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is there a caption bar naming a person across the lower part of the frame? Answer yes or no only.",
+          "boxes": "cp_box",
+          "pad": 0.2,
+          "out": "cap",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["cap.unreadable"]
+        },
+        {
+          "run": "count_caption_places",
+          "args": ["cap", "reference.strap_seq"],
+          "out": "cfit"
+        },
+        {
+          "compare_band": "cfit.n",
+          "to": "reference.n_frames",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_frame_on_the_strip_carries_its_printed_timecode",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the strip below a video frame on the review screen",
+          "sweep": true,
+          "out": "tc_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["tc_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a timecode printed on the strip below the frame? Answer yes or no only.",
+          "boxes": "tc_box",
+          "pad": 0.2,
+          "out": "tcd"
+        },
+        {
+          "fail_if": ["tcd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["tcd"],
+          "out": "tn"
+        },
+        {
+          "compare_band": "tn.n",
+          "to": "reference.n_codes",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_further_is_burnt_into_any_frame",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "text burnt into a frame other than the subtitle line and the caption bar",
+          "sweep": true,
+          "out": "swp",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,317 @@
+{
+  "id": "dynamic_pointer",
+  "axis": "long_range_consistency",
+  "prompt": "A seven-panel photo strip of the same mountain cable-car station, panels side by side left to right. Each panel is numbered 1 to 7 in its top-left corner. In each panel a single kit bag of one solid flat colour stands in the middle of the scene, and a printed log slip pinned to the wall states what happened at that moment. In panel order the kit bag colours are MAROON, CREAM, OLIVE, NAVY, TURQUOISE, GREY, SCARLET. The log slips read WHISTLE BLOWN in panels 1, 2, 5 and NO WHISTLE in panels 3, 4, 6, 7. Now the rule about the enamel disc, which is a big plain shape of flat colour fixed well away from the kit bag. In each panel the enamel disc is the colour of the kit bag that stood there at the MOST RECENT EARLIER panel whose slip reads WHISTLE BLOWN. A panel's own slip never counts as earlier than itself. In the first panel there is no earlier panel at all, so there the enamel disc is left plain unpainted bare. I am deliberately not listing the answer anywhere in this request; work it out from the figures printed in the picture.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a strip of separate numbered panels in a row, each panel showing one big single-coloured object standing in it and a printed slip of text on the wall. Ignoring artistic quality, and ignoring whether the details are right or wrong, does the image DEPICT that? Answer NO only if the picture is unrelated to that description or contains no such arrangement at all. Answer yes or no only.",
+  "reference": {
+    "q_verbatim": "Transcribe EVERY line of printed, painted, chalked or written text you can see anywhere in this picture — including text on boards, signs, slates, placards, plates, cards, labels and stickers. Copy each line exactly as it appears, character by character. Do NOT correct spelling or arithmetic and do not leave any line out. Separate the lines with spaces.",
+    "q_region_text": "This picture is one part cut out of a longer photo strip. Copy out every line of printed, painted, chalked or written text you can see in it -- on boards, signs, slates, placards, plates, cards, labels and stickers. If part of a neighbouring panel shows at the left or right edge of this picture, ignore it and copy only the part in the middle. Copy each line exactly as it appears, character by character; do not correct the spelling, do not correct any figure and do not leave a line out. Put a single space between one line and the next, and write nothing else.",
+    "q_slot_item": "This picture is a strip of 7 separate panels standing side by side in one row, numbered 1 to 7. Work through the panels in that order, panel 1 first. In each panel, say what colour the kit bag standing in the middle of the scene is. Choose the closest word from this list and use no other colour word: CREAM, GREY, MAROON, NAVY, OLIVE, SCARLET, TURQUOISE, BARE -- where BARE means it is left plain and unpainted. Judge each one on its own; the same word may come up several times in a row. Give exactly 7 answers separated by semicolons, in panel order, and write nothing else.",
+    "q_slot_mark": "This picture is a strip of 7 separate panels standing side by side in one row, numbered 1 to 7. Work through the panels in that order, panel 1 first. In each panel, say what colour the enamel disc -- the big plain shape of flat colour fixed well away from the kit bag is. Choose the closest word from this list and use no other colour word: CREAM, GREY, MAROON, NAVY, OLIVE, SCARLET, TURQUOISE, BARE -- where BARE means it is left plain and unpainted. Judge each one on its own; the same word may come up several times in a row. Give exactly 7 answers separated by semicolons, in panel order, and write nothing else.",
+    "q_slot_word": "This picture is a strip of 7 separate panels standing side by side in one row, numbered 1 to 7. Work through the panels in that order, panel 1 first. Read the printed log slip pinned to the wall in each panel. Write EVENT where that panel's slip says WHISTLE BLOWN, or QUIET where that panel's slip says NO WHISTLE. Judge each one on its own; the same word may come up several times in a row. Give exactly 7 answers separated by semicolons, in panel order, and write nothing else.",
+    "exp_lines": [
+      "WHISTLE BLOWN",
+      "WHISTLE BLOWN",
+      "NO WHISTLE",
+      "NO WHISTLE",
+      "WHISTLE BLOWN",
+      "NO WHISTLE",
+      "NO WHISTLE"
+    ],
+    "count_noun": "a numbered panel of the strip",
+    "na": 7,
+    "qa": "This picture is a strip of 7 separate panels in a single row, numbered 1 to 7. Go through the panels in order from panel 1 to panel 7. For EACH panel report three things joined by spaces: first the colour of the kit bag standing in that panel, then the word EVENT if that panel's printed slip says WHISTLE BLOWN or the word QUIET if it says NO WHISTLE, then the colour of the enamel disc in that panel. For BOTH colours you must choose the closest word from this list and use no other colour word at all: CREAM, GREY, MAROON, NAVY, OLIVE, SCARLET, TURQUOISE, BARE — where BARE means it is left plain and unpainted. Judge every panel on its own — the panels do not have to agree with one another, and the same answer may come up several times in a row. Give exactly 7 answers separated by semicolons, in panel order, and nothing else. ...'.",
+    "qa2": "The picture is a row of 7 separate photographs numbered 1 to 7. Working from the first to the last, tell me for each one in turn: the colour of its kit bag, then EVENT or QUIET according to whether its printed slip says WHISTLE BLOWN or NO WHISTLE, then the colour of its enamel disc. Every colour you give must be one of these exact words and nothing else: CREAM, GREY, MAROON, NAVY, OLIVE, SCARLET, TURQUOISE, BARE (BARE meaning plain and unpainted). Judge every panel on its own — the panels do not have to agree with one another, and the same answer may come up several times in a row. Give exactly 7 answers separated by semicolons, in panel order, and nothing else.",
+    "expa": [
+      "MAROON EVENT BARE",
+      "CREAM EVENT MAROON",
+      "OLIVE QUIET CREAM",
+      "NAVY QUIET CREAM",
+      "TURQUOISE EVENT CREAM",
+      "GREY QUIET TURQUOISE",
+      "SCARLET QUIET TURQUOISE"
+    ],
+    "q_cell_item": "This picture is one panel cut out of a photo strip of a mountain cable-car station. One kit bag stands in the middle of this panel. What colour is that kit bag? Choose the closest word from this list and use no other colour word: CREAM, GREY, MAROON, NAVY, OLIVE, SCARLET, TURQUOISE, BARE -- where BARE means it is left plain and unpainted. Answer with just that one word and nothing else.",
+    "q_cell_word": "This picture is one panel cut out of a photo strip of a mountain cable-car station. A printed log slip is pinned to the wall in this panel. Answer EVENT if that slip says WHISTLE BLOWN, or QUIET if it says NO WHISTLE. Answer with just that one word and nothing else.",
+    "q_cell_mark": "This picture is one panel cut out of a photo strip of a mountain cable-car station. The enamel disc is the big plain shape of flat colour fixed well away from the kit bag. What colour is that enamel disc? Choose the closest word from this list and use no other colour word: CREAM, GREY, MAROON, NAVY, OLIVE, SCARLET, TURQUOISE, BARE -- where BARE means it is left plain and unpainted. Answer with just that one word and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 8.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the photo strip itself -- the whole row of numbered panels standing side by side, taken together as one shape, from the outer edge of the first panel to the outer edge of the last one; not any single panel on its own and not the wall, ground or border around the strip",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_panel_boxes",
+          "args": ["image", "anc", "reference.na"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.q_cell_item",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "r0"
+        },
+        {
+          "read_crop": "reference.q_cell_word",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "r1"
+        },
+        {
+          "read_crop": "reference.q_cell_mark",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "r2"
+        },
+        {
+          "run": "pack_panel_reads",
+          "args": ["r0", "r1", "r2"],
+          "out": "pk"
+        },
+        {
+          "run": "panel_slots_verdict",
+          "args": ["[compose_reads(\"www\", pk.c0, pk.c1, pk.c2)]", "[reference.expa]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "paint_panel_results",
+          "args": ["pl", "res", "pk"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "binding_agreement",
+      "weight": 1.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the photo strip itself -- the whole row of numbered panels standing side by side, taken together as one shape, from the outer edge of the first panel to the outer edge of the last one; not any single panel on its own and not the wall, ground or border around the strip",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_panel_boxes",
+          "args": ["image", "anc", "reference.na"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.q_cell_item",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "r0"
+        },
+        {
+          "read_crop": "reference.q_cell_word",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "r1"
+        },
+        {
+          "read_crop": "reference.q_cell_mark",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "r2"
+        },
+        {
+          "run": "pack_panel_reads",
+          "args": ["r0", "r1", "r2"],
+          "out": "pk"
+        },
+        {
+          "run": "panel_slots_verdict",
+          "args": ["[compose_reads(\"www\", pk.c0, pk.c1, pk.c2)]", "[reference.expa]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "paint_panel_results",
+          "args": ["pl", "res", "pk"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "data_present",
+      "weight": 2.0,
+      "pass_at": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the photo strip itself -- the whole row of numbered panels standing side by side, taken together as one shape, from the outer edge of the first panel to the outer edge of the last one; not any single panel on its own and not the wall, ground or border around the strip",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_panel_text_boxes",
+          "args": ["image", "anc", "reference.na"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.q_region_text",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rt"
+        },
+        {
+          "run": "blank_panel_reads",
+          "args": ["rt"],
+          "out": "tx"
+        },
+        {
+          "fail_if": ["tx.no_read"]
+        },
+        {
+          "run": "line_coverage",
+          "args": ["join_answers(rt.answers)", "reference.exp_lines"],
+          "out": "frac"
+        },
+        {
+          "run": "paint_text_panels",
+          "args": ["pl", "tx", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a numbered panel of the strip",
+  "aspect_ratio": "3:2"
+}

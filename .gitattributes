@@ -1,0 +1,2 @@
+# Task files are hash checked, so keep their bytes exactly as they are.
+data/tasks/** -text

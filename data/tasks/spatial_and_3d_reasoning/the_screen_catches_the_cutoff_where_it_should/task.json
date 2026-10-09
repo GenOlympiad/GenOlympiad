@@ -1,0 +1,84 @@
+{
+  "id": "the_screen_catches_the_cutoff_where_it_should",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The test lane files one photograph with every lamp report, so the car is left where it stood and the board is shot square on from the lane side.\n\nA car faces a matt white aiming board 10.0 m away, that distance painted on the floor. The board is printed with a centre cross and a vertical centimetre scale running down from the lamp height mark, with a figure at every 5 cm, and its two ends are stencilled END A and END B. One dipped beam is lit and the other lamp is masked, so a single bright cut off is thrown on the board. The lamp lens carries a moulded aiming figure of 1.2 per cent, and the lamp centre sits 650 mm above the floor. A plate bolted to the rig beam reads KERB SIDE END A.\n\nWhere the flat part of that cut off falls on the printed scale, and which end it steps up toward, is what the report sheet leaves blank.",
+  "difficulty": "s1",
+  "easy_question": "Is this photograph taken in a lamp bay where a matt aiming board printed with a centre cross carries a bright cut off thrown by one dipped beam? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "steps_up_toward_end_a"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the printed centimetre scale on the aiming board and give, in centimetres, the figure at which the flat part of the bright cut off stands below the lamp height mark.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "9.5", "14.5"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the bright cut off thrown on the aiming board. Answer with one of: the cut off steps up toward END A; the cut off steps up toward END B; the cut off runs straight across with no step in it.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

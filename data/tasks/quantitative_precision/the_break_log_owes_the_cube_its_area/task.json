@@ -1,0 +1,84 @@
+{
+  "id": "the_break_log_owes_the_cube_its_area",
+  "axis": "quantitative_precision",
+  "prompt": "The laboratory files one photograph of the press at every break, so the machine and the log go into the record together.\n\nA compression machine in a site laboratory holds a crushed concrete cube between its platens, cracks running out to the corners. The machine's display holds the peak load of the break at 855.0 kN. Spare moulds from the same batch stand on the bench, each with a plate riveted to its side stamped with the cube size and with a bearing area of 22500 square millimetres. The break log is spread open beside them. Its header is printed with the site's strength grades, C25, C30, C35 and C40, and with the band of megapascals each of them covers. The strength column and the assessment column of the log are filled in by hand in felt pen, and the pen lies across the page.\n\nWhat the hand has written in those two columns is what the header does not print.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a compression machine holding a crushed cube with its display lit, and a break log spread open on the bench beside spare moulds? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "35"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the strength the hand has written in the strength column of the break log and give it in megapascals.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "37.6", "38.4"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the grade the hand has written in the assessment column of the break log. Write the number in it only, with no letter and no unit.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,225 @@
+{
+  "id": "soundex_collision_cluster",
+  "axis": "text_fidelity",
+  "prompt": "A county records office keeps its birth-register index on cards, and this is the indexing bench at the end of the morning: a shallow card cabinet turned to face the room with its drawers pulled open, and the twelve surname cards that came in this morning standing in them.\n\nThe twelve surnames are fixed and they are these: SMITH, SMYTH, SMYTHE, CLARK, CLARKE, JOHNSON, JONSON, JANSEN, JANSSEN, BAKER, BACKER, BAKKER.\n\nThis office does not file by spelling. It files by the sound index, and the rule hangs on a card over the bench. Keep the first letter of the surname as it stands. Then go along the remaining letters giving each one the figure of its own group: B F P V are 1; C G J K Q S X Z are 2; D and T are 3; L is 4; M and N are 5; R is 6; and A E I O U H W Y take no figure at all. Two letters that would take the same figure and stand next to each other count once between them. The code is that first letter followed by the first three figures, made up to three figures with noughts if fewer come out.\n\nThe clerk pencils each surname's code onto its own card, under the surname, and stands every card in the drawer whose front carries that same code. One drawer is pulled open for each code that has come up this morning and none is pulled open for a code that has not. How many drawers that comes to, and which code lands on which card, is deliberately being kept from you -- that is the whole of the morning's work.\n\nGive me the bench square to the camera with every open drawer front and every one of the twelve cards in one frame, the codes and the surnames big enough to read. The rule card is out of frame: no coding rule, no working and no tally may appear on the cards, on the drawer fronts or anywhere else on the bench.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a card cabinet with open drawers and filing cards standing in them? A realistic photo, a document mockup or an illustration ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "card_codes": "B260|B260|B260|C462|C462|J525|J525|J525|J525|S530|S530|S530",
+    "drawer_codes": "B260|C462|J525|S530",
+    "n_cards": 12,
+    "placement_expected": "match|match|match|match|match|match|match|match|match|match|match|match",
+    "clean_bench": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_card_stands_behind_the_front_its_own_surname_codes_to",
+      "weight": 4.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one surname card standing in an open drawer, with that drawer's front in view",
+          "sweep": true,
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.unreadable"]
+        },
+        {
+          "read_crop": "Copy the surname printed on the card in this cut-out. Write the surname only.",
+          "boxes": "pl",
+          "pad": 0.4,
+          "out": "pl_name"
+        },
+        {
+          "fail_if": ["pl_name.unreadable"]
+        },
+        {
+          "read_crop": "Copy the code lettered on the front of the drawer this card stands in. Write the code only.",
+          "boxes": "pl",
+          "pad": 0.4,
+          "out": "pl_front"
+        },
+        {
+          "fail_if": ["pl_front.unreadable"]
+        },
+        {
+          "run": "fronts_carry_surname_codes",
+          "args": ["pl_name", "pl_front"],
+          "out": "plc"
+        },
+        {
+          "compare": "plc.seq",
+          "to": "reference.placement_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_card_carries_the_code_its_surname_gives",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one surname card standing in an open drawer of the cabinet",
+          "sweep": true,
+          "out": "cd"
+        },
+        {
+          "fail_if": ["cd.unreadable"]
+        },
+        {
+          "read_crop": "Copy the code pencilled under the surname on the card in this cut-out. Write the code only.",
+          "boxes": "cd",
+          "pad": 0.25,
+          "out": "cdr"
+        },
+        {
+          "fail_if": ["cdr.unreadable"]
+        },
+        {
+          "run": "sorted_sound_codes",
+          "args": ["cdr"],
+          "out": "cdc"
+        },
+        {
+          "compare": "cdc.seq",
+          "to": "reference.card_codes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_books_close_on_each_other",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the code lettered on the front of one open drawer of the card cabinet",
+          "sweep": true,
+          "out": "dw"
+        },
+        {
+          "fail_if": ["dw.unreadable"]
+        },
+        {
+          "read_crop": "Copy the code lettered on the drawer front in this cut-out. Write the code only.",
+          "boxes": "dw",
+          "pad": 0.25,
+          "out": "dwr"
+        },
+        {
+          "fail_if": ["dwr.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one surname card standing in an open drawer of the cabinet",
+          "sweep": true,
+          "out": "bk"
+        },
+        {
+          "fail_if": ["bk.unreadable"]
+        },
+        {
+          "read_crop": "Copy the code pencilled under the surname on the card in this cut-out. Write the code only.",
+          "boxes": "bk",
+          "pad": 0.25,
+          "out": "bkr"
+        },
+        {
+          "fail_if": ["bkr.unreadable"]
+        },
+        {
+          "run": "cards_match_fronts",
+          "args": ["bkr", "dwr"],
+          "out": "tw"
+        },
+        {
+          "compare": "tw.seq",
+          "to": "reference.drawer_codes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_coding_rule_or_tally_on_the_bench",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a coding rule, a line of working or a tally written on a card, a front or the bench",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "ms"
+        },
+        {
+          "fail_if": ["ms.unreadable"]
+        },
+        {
+          "compare": "ms.clean",
+          "to": "reference.clean_bench",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_bench_carries_twelve_cards",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one surname card standing in an open drawer of the cabinet",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole filing card carrying a surname, rather than a drawer front or only part of a card? Answer yes or no only.",
+          "boxes": "cc",
+          "pad": 0.3,
+          "out": "ccc"
+        },
+        {
+          "fail_if": ["ccc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["ccc"],
+          "out": "ccn"
+        },
+        {
+          "compare_band": "ccn.n",
+          "to": "reference.n_cards",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

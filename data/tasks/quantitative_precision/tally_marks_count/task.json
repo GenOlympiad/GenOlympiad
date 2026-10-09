@@ -1,0 +1,306 @@
+{
+  "id": "tally_marks_count",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic close-up photograph of a grey slate dock-board, showing a hand-drawn WESTERN TALLY-MARK count of EXACTLY 52 items in white chalk. Tally notation rule: strokes are grouped in fives — a group of five is FOUR vertical strokes with a FIFTH stroke drawn DIAGONALLY across them (the five-bar gate), and any remainder is that many separate vertical strokes to the right of the complete groups. Draw the tally to represent EXACTLY 52: the correct number of complete five-bar gates followed by the correct number of leftover single strokes, with a wide gap between adjacent groups. The strokes are the ONLY place the count may appear: write NO digits, numerals, number words or labels anywhere.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show grey dock-slate at a fishing port chalked with a five-bar-gate catch tally of a stated exact total? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "number": 52,
+    "full_groups": 10,
+    "loose_sticks": 2,
+    "total_str": "52",
+    "struct": [
+      [10],
+      [2]
+    ],
+    "d2_q_objform": "This picture should show chalk tally strokes written on a grey dock-slate at a fishing port. Never mind whether the details are right or wrong. Look at the individual marks being counted. Is each one a chalked tally stroke on the slate, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "d2_q_arrange": "This picture should show a chalk tally written on a grey dock-slate at a fishing port. Never mind whether the details are right or wrong. Are the chalk strokes laid out as rows of five-bar-gate groups (four upright strokes with a fifth stroke drawn across them), rather than jumbled up, overlapping each other, or in a completely different arrangement? Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them fully visible and clearly separate from its neighbours -- none hidden behind another, none merged or overlapping into a single blob, none cut off by the edge of the frame -- so that each one could be counted individually? Answer yes if every object is fully visible and separate, no if objects overlap, merge, are hidden or are cut off. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_is_tally",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "Does this image show hand-drawn TALLY MARKS — short strokes grouped in fives (four vertical strokes with a fifth drawn diagonally across them) plus some leftover single strokes? Answer with the single word yes or no only.",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "sc",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_transcription",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "read_crop": "Copy out every printed or written number, digit or numeral that appears anywhere in this image, exactly as it is written, separated by spaces. Tally strokes are NOT numerals -- ignore them, and do not work anything out. Only copy characters that are actually written as digits or number words in the picture. If there are none, answer with the single word NONE.",
+          "out": "w"
+        },
+        {
+          "fail_if": ["w.unreadable"]
+        },
+        {
+          "run": "no_written_total",
+          "args": ["w", "reference.total_str"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "total_exact",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "one complete five-bar gate: a group of four upright strokes with a fifth stroke drawn diagonally across them",
+          "context": "the whole tally of chalk marks written on the board",
+          "out": "bg"
+        },
+        {
+          "fail_if": ["bg.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show a complete five-bar gate -- four upright strokes with a fifth stroke drawn diagonally across them? Answer yes or no only.",
+          "boxes": "bg",
+          "out": "cg"
+        },
+        {
+          "fail_if": ["cg.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "a single upright stroke standing on its own, with no diagonal stroke drawn across it and not part of any crossed group of four",
+          "context": "the whole tally of chalk marks written on the board",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show a single upright stroke with no diagonal stroke drawn across it? Answer yes or no only.",
+          "boxes": "bl",
+          "out": "cl"
+        },
+        {
+          "fail_if": ["cl.unreadable"]
+        },
+        {
+          "run": "tally_total",
+          "args": ["cg", "cl"],
+          "out": "tc"
+        },
+        {
+          "compare": "tc.total",
+          "to": "reference.number",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "group_structure",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "one complete five-bar gate: a group of four upright strokes with a fifth stroke drawn diagonally across them",
+          "context": "the whole tally of chalk marks written on the board",
+          "out": "bg"
+        },
+        {
+          "fail_if": ["bg.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show a complete five-bar gate -- four upright strokes with a fifth stroke drawn diagonally across them? Answer yes or no only.",
+          "boxes": "bg",
+          "out": "cg"
+        },
+        {
+          "fail_if": ["cg.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "a single upright stroke standing on its own, with no diagonal stroke drawn across it and not part of any crossed group of four",
+          "context": "the whole tally of chalk marks written on the board",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show a single upright stroke with no diagonal stroke drawn across it? Answer yes or no only.",
+          "boxes": "bl",
+          "out": "cl"
+        },
+        {
+          "fail_if": ["cl.unreadable"]
+        },
+        {
+          "run": "tally_total",
+          "args": ["cg", "cl"],
+          "out": "tc"
+        },
+        {
+          "compare_grid": "tc.struct",
+          "to": "reference.struct",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_objform",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_arrangement",
+      "weight": 0.8,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_arrange",
+          "out": "g1"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g1",
+          "out": "yn1"
+        },
+        {
+          "compare": "yn1",
+          "to": "yes",
+          "out": "f1"
+        },
+        {
+          "ask": "Look at the overall layout of the many similar items in this image. Are their positions irregular and unaligned -- i.e. NOT organized into neat rows, columns, a grid, or one regular repeating pattern? Judge the layout as a whole. Answer yes or no only.",
+          "out": "g2"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g2",
+          "out": "yn2"
+        },
+        {
+          "compare": "yn2",
+          "to": "yes",
+          "out": "f2"
+        },
+        {
+          "any": ["f1", "f2"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "chalk tally stroke that overlaps another stroke, is hidden behind one, or is cut off by the edge of the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g1"
+        },
+        {
+          "fail_if": ["sweep_g1.unreadable"]
+        },
+        {
+          "compare": "sweep_g1.clean",
+          "to": "yes",
+          "out": "f1"
+        },
+        {
+          "read": "boxes",
+          "target": "clump where chalk tally strokes merge so badly they cannot be told apart",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g2"
+        },
+        {
+          "fail_if": ["sweep_g2.unreadable"]
+        },
+        {
+          "compare": "sweep_g2.clean",
+          "to": "yes",
+          "out": "f2"
+        },
+        {
+          "any": ["f1", "f2"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

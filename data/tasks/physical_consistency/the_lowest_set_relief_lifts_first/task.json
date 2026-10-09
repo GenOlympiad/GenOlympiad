@@ -1,0 +1,84 @@
+{
+  "id": "the_lowest_set_relief_lifts_first",
+  "axis": "physical_consistency",
+  "prompt": "The inspector has to sign this receiver off for another year, so the vessel is photographed from the platform at the moment the compressor drives it up to the setting of the relief that guards it.\n\nThree spring loaded relief valves stand in a row on the crown of an upright air receiver. Each valve carries its own tag plate on the cap, stamped with the pressure that valve has been set to lift at, and each valve seat is cast with a letter of its own. The gauge on the shell is a graduated dial whose red sector begins at the design pressure of the vessel, and the certificate lying at the foot of the vessel states that the design pressure is above every setting the three valves carry. The inspector's acceptance sheet is spread open beside the certificate.\n\nWhich valve is doing the work, and where the needle has come to rest, are what the acceptance sheet does not record.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph look across the crown of an upright air receiver carrying three relief valves with a dial gauge on the shell below them? Answer yes or no only.",
+  "reference": {
+    "part1": "one_valve_blowing",
+    "part2": "below_the_red_sector"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the three relief valves on the crown of the receiver and say how they stand. Answer with one of: a single valve is blowing off and the other two sit quiet; all three valves are blowing off together; the three valves all sit quiet.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the graduated dial on the shell of the receiver and say what part of its scale the needle has come to rest on. Answer with one of: below the start of the red sector; inside the red sector; hard against the stop at the end of the scale.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

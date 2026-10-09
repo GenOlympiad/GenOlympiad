@@ -1,0 +1,117 @@
+{
+  "id": "shelf_label_unitprice",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed SHELF-EDGE PRICE LABEL WALL for 'NORTHGATE MARKET': a grid of 48 small price tags (4 across, 12 down). Each tag shows the product name and number, a 'Pack:' price, a 'Size:' (items per pack -- DIFFERENT on each tag), and a highlighted 'UNIT:' price which MUST equal the pack price divided by that tag's own pack size (the unit price per item). Print exactly these 48 tags with these values:\n  1. Rice       pack $22.96  size 8 each  unit $2.87/each\n  2. Pasta      pack $20.40  size 8 each  unit $2.55/each\n  3. Beans      pack $14.50  size 10 each  unit $1.45/each\n  4. Sugar      pack $6.85  size 5 each  unit $1.37/each\n  5. Flour      pack $16.40  size 8 each  unit $2.05/each\n  6. Oats       pack $12.68  size 4 each  unit $3.17/each\n  7. Salt       pack $19.90  size 10 each  unit $1.99/each\n  8. Tea        pack $2.37  size 3 each  unit $0.79/each\n  9. Coffee     pack $3.42  size 2 each  unit $1.71/each\n  10. Cocoa      pack $15.15  size 5 each  unit $3.03/each\n  11. Lentils    pack $11.12  size 8 each  unit $1.39/each\n  12. Barley     pack $9.12  size 4 each  unit $2.28/each\n  13. Millet     pack $8.58  size 3 each  unit $2.86/each\n  14. Quinoa     pack $10.40  size 5 each  unit $2.08/each\n  15. Raisins    pack $15.80  size 5 each  unit $3.16/each\n  16. Almonds    pack $7.52  size 4 each  unit $1.88/each\n  17. Cashews    pack $1.08  size 2 each  unit $0.54/each\n  18. Walnuts    pack $19.76  size 8 each  unit $2.47/each\n  19. Honey      pack $11.20  size 8 each  unit $1.40/each\n  20. Jam        pack $5.44  size 4 each  unit $1.36/each\n  21. Sauce      pack $3.95  size 5 each  unit $0.79/each\n  22. Oil        pack $24.88  size 8 each  unit $3.11/each\n  23. Vinegar    pack $1.58  size 2 each  unit $0.79/each\n  24. Syrup      pack $8.55  size 5 each  unit $1.71/each\n  25. Juice      pack $1.94  size 2 each  unit $0.97/each\n  26. Water      pack $2.94  size 2 each  unit $1.47/each\n  27. Soda       pack $9.00  size 3 each  unit $3.00/each\n  28. Milk       pack $12.78  size 6 each  unit $2.13/each\n  29. Cream      pack $2.82  size 2 each  unit $1.41/each\n  30. Butter     pack $2.82  size 3 each  unit $0.94/each\n  31. Cheese     pack $12.90  size 10 each  unit $1.29/each\n  32. Yogurt     pack $16.68  size 6 each  unit $2.78/each\n  33. Bread      pack $5.22  size 3 each  unit $1.74/each\n  34. Buns       pack $6.88  size 4 each  unit $1.72/each\n  35. Crackers   pack $1.48  size 2 each  unit $0.74/each\n  36. Biscuits   pack $23.90  size 10 each  unit $2.39/each\n  37. Cereal     pack $14.82  size 6 each  unit $2.47/each\n  38. Muesli     pack $4.30  size 5 each  unit $0.86/each\n  39. Granola    pack $10.96  size 8 each  unit $1.37/each\n  40. Chips      pack $11.92  size 4 each  unit $2.98/each\n  41. Nuts       pack $2.48  size 2 each  unit $1.24/each\n  42. Seeds      pack $8.07  size 3 each  unit $2.69/each\n  43. Spice      pack $9.35  size 5 each  unit $1.87/each\n  44. Herbs      pack $24.10  size 10 each  unit $2.41/each\n  45. Stock      pack $20.20  size 10 each  unit $2.02/each\n  46. Broth      pack $8.28  size 3 each  unit $2.76/each\n  47. Soup       pack $2.55  size 5 each  unit $0.51/each\n  48. Custard    pack $9.52  size 4 each  unit $2.38/each\nEvery UNIT price must be the pack price divided by that same tag's size, to the cent. Print all 48 tags. Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a printed supermarket shelf-label wall of a number of price tags, each showing a pack price, a pack size and a unit price. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 48,
+    "read_tag": 28,
+    "pack_c": 1278,
+    "size": 6,
+    "unit_c": 213,
+    "q_count": "How many price tags are printed on this shelf wall in total? Count every boxed tag. Whole number only.",
+    "q_pack": "Find tag number 28 (Milk). Read its 'Pack:' price (the money amount after 'Pack:'). Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give the amount, e.g. 4.80.",
+    "q_size": "Find tag number 28 (Milk). Read its 'Size:' number (the count of items per pack). Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only.",
+    "q_unit": "Find tag number 28 (Milk). Read its highlighted 'UNIT:' price (the per-item amount after 'UNIT:'). Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give the amount, e.g. 0.96."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "unitprice_division_law",
+      "weight": 1.0,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read_crop": "reference.q_pack",
+          "out": "a_pack"
+        },
+        {
+          "fail_if": ["a_pack.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_size",
+          "out": "a_size"
+        },
+        {
+          "fail_if": ["a_size.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_unit",
+          "out": "a_unit"
+        },
+        {
+          "fail_if": ["a_unit.unreadable"]
+        },
+        {
+          "run": "unit_price_check",
+          "args": [
+            "a_pack",
+            "a_size",
+            "a_unit",
+            "reference.pack_c",
+            "reference.size",
+            "reference.unit_c"
+          ],
+          "out": "law"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one small price tag on the shelf-label wall, with its product name and its printed price lines",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole price tag carrying its own product name and its printed price lines, rather than bare board between tags, a shelf edge, or only part of a tag? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 1.9,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

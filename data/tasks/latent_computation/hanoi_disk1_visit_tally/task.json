@@ -1,0 +1,270 @@
+{
+  "id": "hanoi_disk1_visit_tally",
+  "axis": "latent_computation",
+  "prompt": "A crisp studio photograph, taken level with the base, of a classroom demonstration board with three counting trays under the pegs: a flat base with THREE upright pegs marked A (left), B (middle) and C (right), and one shallow empty tray sitting under each peg.\n\nIt carries 5 round disks of clearly different widths -- disk 1 (the narrowest) is red, disk 2 is yellow, disk 3 is green, disk 4 is blue, disk 5 is purple (the widest) -- each with its own size number printed large on its face. The stacking rule is the usual one -- a disk rests either on the base or on a disk wider than itself, never on a narrower one.\n\nAll 5 disks start stacked on peg A, widest at the bottom, and are moved to peg C in the FEWEST possible moves (exactly 31 moves), one disk at a time, never a wider disk onto a narrower one.\n\nEvery time the NARROWEST disk (disk 1) is set down on a peg during that solution, one bead is dropped into the tray under THAT peg. (Its position at the start does not count -- only landings during the solution.) Beads are never taken out again.\n\nShow the finished puzzle -- all 5 disks stacked on peg C -- with the three trays holding the beads they collected: the tray under each peg must contain exactly as many beads as the number of times disk 1 landed on that peg. Draw the beads as separate round beads lying in the tray, countable at a glance.\n\nKeep the picture clean: no move list, no annotations, no captions. The only characters in the image are the letters on the base and the number printed on each disk.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a classroom stacking board with three counting trays under the pegs: a base with three upright pegs carrying round stacking disks of graduated widths? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_disks": 5,
+    "n_pegs": 3,
+    "q_total": "Counting the disks on every peg together, how many disks are threaded on the pegs in this picture in total? The board the pegs stand on is NOT a disk. Reply with a single number and nothing else.",
+    "s_A": "none",
+    "c_A": 0,
+    "q_s_A": "Look at the stacking board. Each disk has its size number printed on its face (1 = the narrowest). List the size numbers of the disks on the LEFT peg (A), reading from the bottom disk upward, separated by commas. If a printed number is not legible, use that disk's width rank instead (1 = the narrowest disk in the picture). If that peg carries no disks at all, answer exactly: none . Answer with the list only, no other words.",
+    "q_c_A": "Look at the stacking board. Count the disks threaded on the LEFT peg (A): HOW MANY disks does that one peg carry right now? Do NOT answer with the number printed on a disk, and do not count the board the pegs stand on -- answer how many disks are stacked on that peg (0 if it is empty). Reply with a single digit and nothing else.",
+    "s_B": "none",
+    "c_B": 0,
+    "q_s_B": "Look at the stacking board. Each disk has its size number printed on its face (1 = the narrowest). List the size numbers of the disks on the MIDDLE peg (B), reading from the bottom disk upward, separated by commas. If a printed number is not legible, use that disk's width rank instead (1 = the narrowest disk in the picture). If that peg carries no disks at all, answer exactly: none . Answer with the list only, no other words.",
+    "q_c_B": "Look at the stacking board. Count the disks threaded on the MIDDLE peg (B): HOW MANY disks does that one peg carry right now? Do NOT answer with the number printed on a disk, and do not count the board the pegs stand on -- answer how many disks are stacked on that peg (0 if it is empty). Reply with a single digit and nothing else.",
+    "s_C": "5,4,3,2,1",
+    "c_C": 5,
+    "q_s_C": "Look at the stacking board. Each disk has its size number printed on its face (1 = the narrowest). List the size numbers of the disks on the RIGHT peg (C), reading from the bottom disk upward, separated by commas. If a printed number is not legible, use that disk's width rank instead (1 = the narrowest disk in the picture). If that peg carries no disks at all, answer exactly: none . Answer with the list only, no other words.",
+    "q_c_C": "Look at the stacking board. Count the disks threaded on the RIGHT peg (C): HOW MANY disks does that one peg carry right now? Do NOT answer with the number printed on a disk, and do not count the board the pegs stand on -- answer how many disks are stacked on that peg (0 if it is empty). Reply with a single digit and nothing else.",
+    "t_A": 5,
+    "q_t_A": "Look at the shallow tray directly below the LEFT peg (A). How many round beads are lying in that one tray? Count only the beads in that one tray. Reply with a single digit and nothing else.",
+    "t_B": 5,
+    "q_t_B": "Look at the shallow tray directly below the MIDDLE peg (B). How many round beads are lying in that one tray? Count only the beads in that one tray. Reply with a single digit and nothing else.",
+    "t_C": 6,
+    "q_t_C": "Look at the shallow tray directly below the RIGHT peg (C). How many round beads are lying in that one tray? Count only the beads in that one tray. Reply with a single digit and nothing else.",
+    "t_total": 16,
+    "q_t_total": "Counting all three trays below the pegs together, how many beads are lying in the trays in total? Answer with a whole number only.",
+    "enforce_notext": true,
+    "q_notext": "The peg letters on the base and the size number printed on each disk do not count. Apart from those, is there a separate line of text or numbers that states a bead count or lists moves? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bead_tally_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one round bead lying in the tray directly below the LEFT peg",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "trayA_box"
+        },
+        {
+          "fail_if": ["trayA_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole round bead lying in a tray, rather than bare tray, a peg, a stacking disk, or only part of a bead? Answer yes or no only.",
+          "boxes": "trayA_box",
+          "out": "trayA_chk"
+        },
+        {
+          "fail_if": ["trayA_chk.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["trayA_chk"],
+          "out": "cntA"
+        },
+        {
+          "compare_band": "cntA.n",
+          "to": "reference.t_A",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "uA"
+        },
+        {
+          "read": "boxes",
+          "target": "one round bead lying in the tray directly below the MIDDLE peg",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "trayB_box"
+        },
+        {
+          "fail_if": ["trayB_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole round bead lying in a tray, rather than bare tray, a peg, a stacking disk, or only part of a bead? Answer yes or no only.",
+          "boxes": "trayB_box",
+          "out": "trayB_chk"
+        },
+        {
+          "fail_if": ["trayB_chk.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["trayB_chk"],
+          "out": "cntB"
+        },
+        {
+          "compare_band": "cntB.n",
+          "to": "reference.t_B",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "uB"
+        },
+        {
+          "read": "boxes",
+          "target": "one round bead lying in the tray directly below the RIGHT peg",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "trayC_box"
+        },
+        {
+          "fail_if": ["trayC_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole round bead lying in a tray, rather than bare tray, a peg, a stacking disk, or only part of a bead? Answer yes or no only.",
+          "boxes": "trayC_box",
+          "out": "trayC_chk"
+        },
+        {
+          "fail_if": ["trayC_chk.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["trayC_chk"],
+          "out": "cntC"
+        },
+        {
+          "compare_band": "cntC.n",
+          "to": "reference.t_C",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "uC"
+        },
+        {
+          "all": ["uA", "uB", "uC"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bead_total",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one round bead lying in the tray directly below the LEFT peg",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "btA"
+        },
+        {
+          "fail_if": ["btA.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole round bead lying in a tray, rather than bare tray, a peg, a stacking disk, or only part of a bead? Answer yes or no only.",
+          "boxes": "btA",
+          "out": "bcA"
+        },
+        {
+          "fail_if": ["bcA.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one round bead lying in the tray directly below the MIDDLE peg",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "btB"
+        },
+        {
+          "fail_if": ["btB.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole round bead lying in a tray, rather than bare tray, a peg, a stacking disk, or only part of a bead? Answer yes or no only.",
+          "boxes": "btB",
+          "out": "bcB"
+        },
+        {
+          "fail_if": ["bcB.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one round bead lying in the tray directly below the RIGHT peg",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "btC"
+        },
+        {
+          "fail_if": ["btC.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole round bead lying in a tray, rather than bare tray, a peg, a stacking disk, or only part of a bead? Answer yes or no only.",
+          "boxes": "btC",
+          "out": "bcC"
+        },
+        {
+          "fail_if": ["bcC.unreadable"]
+        },
+        {
+          "run": "count_beads_all_trays",
+          "args": ["bcA", "bcB", "bcC"],
+          "out": "cnt_beads"
+        },
+        {
+          "compare_band": "cnt_beads.n",
+          "to": "reference.t_total",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "solved_tower",
+      "weight": 0.5,
+      "steps": [
+        {
+          "ask": "reference.q_s_C",
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.unreadable"]
+        },
+        {
+          "compare_set": "rc",
+          "to": "reference.s_C",
+          "out": "fc_raw"
+        },
+        {
+          "compare_tolerance": "fc_raw",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

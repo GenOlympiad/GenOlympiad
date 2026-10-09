@@ -1,0 +1,238 @@
+{
+  "id": "sorter_inverted_reject_three_stage",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "End of shift on the gantry walkway at a courier hub, with the parcel sorting line lying open below: from up there the whole line is in one view, its count boards and the run sheet clipped to the rail included.\n\nThe line runs through three sorting stages one after another. At each stage a parcel meets that stage's own condition and then takes one of the two branch arrows painted on the deck: one arrow is tagged PASS and the other FAIL, and each is coded with its stage, so the deck carries S1 PASS, S1 FAIL, S2 PASS, S2 FAIL, S3 PASS and S3 FAIL. Stage S1 asks whether the parcel is over 10 kg, stage S2 whether it is over 6 kg, stage S3 whether it is over 3 kg.\n\nThis hub has a standing arrangement the trade would not expect, and the line was built to it: here a parcel that PASSES a stage is the one sent out of that stage's reject chute at the side, and a parcel that FAILS carries on along the line to the next stage. Whatever gets past the third stage reaches the despatch bay.\n\nThe run sheet lists the six parcels of this batch by weight: 2.0, 7.5, 12.0, 4.0, 9.0 and 15.0 kg. A count board stands at each of the three reject chutes and at the despatch bay, each board headed with its own name -- CHUTE 1, CHUTE 2, CHUTE 3, DESPATCH -- and carrying the number of parcels that finished there.\n\nThe gantry photograph is what the shift hands over on, so the deck and the boards have to be this line and not the standard one. Work out for yourself where each arrow goes and what each board comes to -- I am deliberately not telling you either. A line whose arrows are painted the usual way sorts a whole shift into the wrong bay.\n\nEvery arrow code, board name and count must be large and sharp. Nothing may appear on the deck or the boards beyond the six coded arrows, the board names and the counts: no working, no notes, no arrows other than the six.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a conveyor line with branch arrows painted on the deck beside it and headed boards carrying numbers? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "route": "s1fail:onward s1pass:reject s2fail:onward s2pass:reject s3fail:onward s3pass:reject",
+    "counts": "chute1:2 chute2:2 chute3:1 despatch:1",
+    "n_arrows": 6,
+    "q_arrow_cert": "Answer yes only if this cut-out shows ONE complete coded branch arrow painted on the deck, with the whole arrow inside the picture. Answer no if it shows two or more arrows, or only part of an arrow, or a count board instead of an arrow. Answer yes or no only.",
+    "parcel_weights": "2.0 7.5 12.0 4.0 9.0 15.0",
+    "stage_limits": "10 6 3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_arrow_tagged_pass_turns_to_the_chute_at_every_stage",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a coded branch arrow painted on the deck of the sorting line",
+          "sweep": true,
+          "out": "arr_box"
+        },
+        {
+          "fail_if": ["arr_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the code painted beside this arrow. Write the code only.",
+          "boxes": "arr_box",
+          "pad": 0.2,
+          "out": "code_txt"
+        },
+        {
+          "fail_if": ["code_txt.unreadable"]
+        },
+        {
+          "read_crop": "Does this arrow turn aside towards a chute at the edge of the line, or does it carry on along the line? Answer with one word: reject or onward.",
+          "boxes": "arr_box",
+          "pad": 0.2,
+          "out": "dir_txt"
+        },
+        {
+          "fail_if": ["dir_txt.unreadable"]
+        },
+        {
+          "run": "read_route_deck",
+          "args": ["code_txt", "dir_txt"],
+          "out": "deck"
+        },
+        {
+          "fail_if": ["deck.unreadable"]
+        },
+        {
+          "compare": "deck.canon",
+          "to": "reference.route",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_boards_carry_what_that_routing_leaves_them",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a coded branch arrow painted on the deck of the sorting line",
+          "sweep": true,
+          "out": "barr_box"
+        },
+        {
+          "fail_if": ["barr_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the code painted beside this arrow. Write the code only.",
+          "boxes": "barr_box",
+          "pad": 0.2,
+          "out": "bcode_txt"
+        },
+        {
+          "fail_if": ["bcode_txt.unreadable"]
+        },
+        {
+          "read_crop": "Does this arrow turn aside towards a chute at the edge of the line, or does it carry on along the line? Answer with one word: reject or onward.",
+          "boxes": "barr_box",
+          "pad": 0.2,
+          "out": "bdir_txt"
+        },
+        {
+          "fail_if": ["bdir_txt.unreadable"]
+        },
+        {
+          "run": "read_route_deck",
+          "args": ["bcode_txt", "bdir_txt"],
+          "out": "bdeck"
+        },
+        {
+          "fail_if": ["bdeck.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "a headed count board standing at the line",
+          "sweep": true,
+          "out": "brd_box"
+        },
+        {
+          "fail_if": ["brd_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the name printed at the head of this board. Write the name only.",
+          "boxes": "brd_box",
+          "pad": 0.2,
+          "out": "bname_txt"
+        },
+        {
+          "fail_if": ["bname_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the number shown on this board. Write the number only.",
+          "boxes": "brd_box",
+          "pad": 0.2,
+          "out": "bnum_txt"
+        },
+        {
+          "fail_if": ["bnum_txt.unreadable"]
+        },
+        {
+          "run": "read_count_boards",
+          "args": ["bname_txt", "bnum_txt"],
+          "out": "tally"
+        },
+        {
+          "fail_if": ["tally.unreadable"]
+        },
+        {
+          "run": "boards_match_routing",
+          "args": [
+            "bdeck",
+            "tally",
+            "reference.parcel_weights",
+            "reference.stage_limits",
+            "reference.counts"
+          ],
+          "out": "agr"
+        },
+        {
+          "fail_if": ["agr.unreadable"]
+        },
+        {
+          "compare": "agr.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "six_coded_arrows_stand_on_the_deck",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a coded branch arrow painted on the deck of the sorting line",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_arrow_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_arrows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_or_seventh_arrow_is_added_to_the_deck",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, a note or a seventh arrow added beyond the six coded ones",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

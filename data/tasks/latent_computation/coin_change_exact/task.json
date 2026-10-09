@@ -1,0 +1,278 @@
+{
+  "id": "coin_change_exact",
+  "axis": "latent_computation",
+  "prompt": "A sharp top-down photograph of United States coins that a customer has just counted out onto the dark walnut wooden counter of a grocery-store checkout. Show EXACTLY 14 coins that together total EXACTLY $2.18. Use only quarters (25 cents, largest and silver), dimes (10 cents, smallest and silver), nickels (5 cents, mid-size and silver) and pennies (1 cent, copper-brown). The coins must be spread out and non-overlapping so each is fully visible, drawn at their real relative sizes and colours. The total value of all coins shown must be $2.18 and the number of coins must be 14. No text, labels, price tags or numbers anywhere in the image.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show US coins a shopper has counted out on a grocery-store checkout's dark walnut counter, photographed straight down? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cents": 218,
+    "n": 14,
+    "combo": {
+      "quarter": 7,
+      "dime": 4,
+      "nickel": 0,
+      "penny": 3
+    },
+    "n_quarter": 7,
+    "n_penny": 3,
+    "enforce_notext": true,
+    "q_notext": "The words and numbers minted on the coin faces themselves do not count. Apart from those, is there a separate printed number or caption that states a total or a count? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "total_cents",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "coin on the wooden counter (a round metal disc)",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This small picture should show one coin lying on a wooden counter. What colour is that coin? Answer with exactly one word: copper if it is copper-brown, silver if it is silver-grey, or none if there is no coin in this picture.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "coin_value_cents",
+          "args": ["bx", "cr", "image"],
+          "out": "t"
+        },
+        {
+          "fail_if": ["t.degenerate"]
+        },
+        {
+          "compare_band": "t.cents",
+          "to": "reference.cents",
+          "core": 3.0,
+          "margin": 22.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "coin_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "coin on the wooden counter (a round metal disc)",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This small picture should show one coin lying on a wooden counter. What colour is that coin? Answer with exactly one word: copper if it is copper-brown, silver if it is silver-grey, or none if there is no coin in this picture.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "coin_value_cents",
+          "args": ["bx", "cr", "image"],
+          "out": "t"
+        },
+        {
+          "fail_if": ["t.degenerate"]
+        },
+        {
+          "compare_band": "t.n",
+          "to": "reference.n",
+          "core": 0.5,
+          "margin": 3.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_total_coins",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coin on the wooden counter (a round metal disc)",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This small picture should show one coin lying on a wooden counter. What colour is that coin? Answer with exactly one word: copper if it is copper-brown, silver if it is silver-grey, or none if there is no coin in this picture.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "coin_value_cents",
+          "args": ["bx", "cr", "image"],
+          "out": "t"
+        },
+        {
+          "fail_if": ["t.degenerate"]
+        },
+        {
+          "compare_band": "t.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 2.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_quarter_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coin on the wooden counter (a round metal disc)",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This small picture should show one coin lying on a wooden counter. What colour is that coin? Answer with exactly one word: copper if it is copper-brown, silver if it is silver-grey, or none if there is no coin in this picture.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "coin_value_cents",
+          "args": ["bx", "cr", "image"],
+          "out": "t"
+        },
+        {
+          "fail_if": ["t.degenerate"]
+        },
+        {
+          "compare_band": "t.n_quarter",
+          "to": "reference.n_quarter",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_penny_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coin on the wooden counter (a round metal disc)",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This small picture should show one coin lying on a wooden counter. What colour is that coin? Answer with exactly one word: copper if it is copper-brown, silver if it is silver-grey, or none if there is no coin in this picture.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "coin_value_cents",
+          "args": ["bx", "cr", "image"],
+          "out": "t"
+        },
+        {
+          "fail_if": ["t.degenerate"]
+        },
+        {
+          "compare_band": "t.n_penny",
+          "to": "reference.n_penny",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_overlap",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a coin that is partly hidden underneath another coin or partly cut off by the edge of the photo",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

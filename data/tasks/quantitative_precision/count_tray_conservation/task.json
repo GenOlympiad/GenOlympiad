@@ -1,0 +1,181 @@
+{
+  "id": "count_tray_conservation",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic overhead photograph of a plain grey bakery bench holding TWO identical pale baking trays side by side, a LEFT tray and a RIGHT tray. Together the two trays hold EXACTLY 23 round cookies in total, and the LEFT tray holds EXACTLY 5 MORE cookies than the RIGHT tray. The LEFT tray's cookies are all GOLDEN (plain pale-golden biscuits); the RIGHT tray's cookies are all RED (bright red-velvet biscuits). On each tray the cookies are scattered irregularly and well separated so every cookie is fully visible and none touch or overlap (never tidy rows). The counts must satisfy BOTH conditions exactly: 23 cookies altogether AND the left tray with exactly 5 more than the right. Photorealistic, sharp focus, no text, no numerals anywhere.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict two baking trays of cookies (a left tray and a right tray) on a bench. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "total": 23,
+    "diff": 5,
+    "n_left": 14,
+    "n_right": 9,
+    "q_left": "Look ONLY at the LEFT tray. Write down every golden (pale) cookie on that tray, each with a few plain words saying where on the tray it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If the left tray holds no golden cookie, write the single word NONE.",
+    "q_right": "Look ONLY at the RIGHT tray. Write down every red (red-velvet) cookie on that tray, each with a few plain words saying where on the tray it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If the right tray holds no red cookie, write the single word NONE.",
+    "enforce_notext": true,
+    "q_notext": "Is there a printed number or caption anywhere in this image stating how many cookies there are? Answer yes or no.",
+    "tray_form": "Does this image show TWO separate baking trays side by side, one holding golden cookies and the other holding red cookies, all scattered (not in tidy rows)? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "left_count",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the LEFT baking tray on the bench",
+          "expected_n": 1,
+          "out": "tb"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_left",
+          "boxes": "tb",
+          "pad": 0.02,
+          "out": "tc"
+        },
+        {
+          "fail_if": ["tc.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["tc", "empty_as='0'"],
+          "out": "tc__std"
+        },
+        {
+          "fail_if": ["tc__std.refused"]
+        },
+        {
+          "run": "count_left_tray",
+          "args": ["tc__std"],
+          "out": "bln"
+        },
+        {
+          "fail_if": ["bln.no_read"]
+        },
+        {
+          "compare_band": "bln.n",
+          "to": "reference.n_left",
+          "core": 0,
+          "margin": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "right_count",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the RIGHT baking tray on the bench",
+          "expected_n": 1,
+          "out": "tb"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_right",
+          "boxes": "tb",
+          "pad": 0.02,
+          "out": "tc"
+        },
+        {
+          "fail_if": ["tc.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["tc", "empty_as='0'"],
+          "out": "tc__std"
+        },
+        {
+          "fail_if": ["tc__std.refused"]
+        },
+        {
+          "run": "count_right_tray",
+          "args": ["tc__std"],
+          "out": "brn"
+        },
+        {
+          "fail_if": ["brn.no_read"]
+        },
+        {
+          "compare_band": "brn.n",
+          "to": "reference.n_right",
+          "core": 0,
+          "margin": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tray_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.tray_form",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a cookie"
+}

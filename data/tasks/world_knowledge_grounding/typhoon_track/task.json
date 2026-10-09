@@ -1,0 +1,114 @@
+{
+  "id": "typhoon_track",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photorealistic weather-service HURRICANE TRACKER map, like a TV news graphic, showing the named storm that is active in the NHC advisory of 2026-07-17. On an ocean map with nearby coastlines, draw the storm as a red cyclone symbol at its current position, a past-track line leading up to it, its NAME printed clearly on a banner beside it, and a yellow HEADING ARROW from the storm pointing in the direction it is currently moving (North up, East right). Use the real active storm: its actual name and its actual heading direction as reported by the hurricane centre in that advisory. Clean broadcast-style map, one storm, name and heading arrow clearly readable.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show broadcast-style hurricane tracker map of the currently active named storm with its name banner and heading arrow? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "src_url": "https://www.nhc.noaa.gov/CurrentStorms.json",
+    "q_name": "This is a hurricane/typhoon tracker map. The currently-active storm's NAME is printed on a banner near the storm symbol. Read ONLY the storm name printed on the map. Answer with just the single storm name word as printed. Do not name any other storm -- just read the one printed here.",
+    "q_head": "This is a hurricane tracker map. There is a yellow HEADING arrow drawn from the storm's current position showing the direction it is moving. North is up and East is to the right. Toward which single compass direction does the heading arrow point -- N, NE, E, SE, S, SW, W or NW? Answer with just the compass abbreviation."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "storm_name",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "banner beside the storm symbol on this weather map with the storm's name printed on it -- ONE box on that name banner alone, covering it from the first letter of the printed name to the last and from its top edge to its bottom edge; do not include the red cyclone symbol, the past-track line, the coastlines, or any other label printed on the map.",
+          "expected_n": 1,
+          "out": "a_box"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a weather map. A storm's name is printed on a banner in it. Copy just that name, as it is printed, and write nothing else.",
+          "boxes": "a_box",
+          "pad": 0.2,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare": "a",
+          "to": "reference.storm.name_lower",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "storm_heading",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "yellow arrow drawn on this weather map, starting at the storm symbol and pointing away from it",
+          "expected_n": 1,
+          "out": "a_box"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a weather map, kept the same way up as the map itself, so north is up and east is to the right. A yellow arrow is drawn in it. Which single compass direction does the arrow point toward -- N, NE, E, SE, S, SW, W or NW? Answer with just that compass abbreviation and nothing else.",
+          "boxes": "a_box",
+          "pad": 0.3,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare": "a",
+          "to": "reference.storm.head8",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "fetch": "https://www.nhc.noaa.gov/archive/2026/ep05/ep052026.public.011.shtml",
+      "out": "raw"
+    },
+    {
+      "run": "parse_advisory",
+      "args": ["raw"],
+      "out": "storm"
+    }
+  ],
+  "grounding": "live",
+  "aspect_ratio": "4:3"
+}

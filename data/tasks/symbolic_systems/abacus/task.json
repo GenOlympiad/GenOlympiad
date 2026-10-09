@@ -1,0 +1,656 @@
+{
+  "id": "abacus",
+  "axis": "symbolic_systems",
+  "prompt": "A photograph of a museum exhibition panel, shot square on so the panel fills the frame: a large high-contrast graphic of a counting frame with two decks, matte panel surface, strong flat colour, no glare, no visitors.\n\nThe graphic shows exactly 11 vertical rods crossed by a single horizontal counting bar, with 2 beads on each rod above the bar and 5 on each rod below it. Only a bead driven right up to the bar is counted; a bead standing off at the end of its rod is worth nothing at all. Every counted bead above the bar carries the value 5 and every counted bead below it carries the value 1, so one rod alone can carry any quantity between 0 and 15.\n\nTaken together the rods spell out a quantity written with the sixteen symbols 0 1 2 3 4 5 6 7 8 9 A B C D E F, one symbol to a rod, the final symbol on the rightmost rod. Put the beads where they must go for the frame to stand at:\n\nC0A0E7\n\nIf a symbol admits more than one arrangement of beads, use the greatest number of upper-deck beads that symbol allows. Each bead is drawn either hard against the bar or hard against the outer end of its rod, separated by a plainly visible empty run, and no bead touches its neighbour or the surrounding frame. Not one digit, letter, symbol, arrow, tick or caption may be printed anywhere on the panel.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a large graphic of a bead frame: a single long horizontal bar, a row of vertical rods crossing it, and round beads on those rods, part of them gathered against the bar and part of them out at the far ends. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a bare panel, a wall of text, a photograph of people, or an unrelated image. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "hex_value": "C0A0E7",
+    "n_rods": 11,
+    "rods_from_right": [
+      [1, 2],
+      [2, 4],
+      [0, 0],
+      [2, 0],
+      [0, 0],
+      [2, 2],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0]
+    ],
+    "n_nonzero_rods": 4,
+    "decoy_min_upper_beads": [
+      [1, 2],
+      [2, 4],
+      [0, 0],
+      [1, 5],
+      [0, 0],
+      [2, 2],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0]
+    ],
+    "high_symbol_rods": [1, 3, 5],
+    "decoy_decimal_soroban_prior": [
+      [1, 2],
+      [1, 4],
+      [0, 0],
+      [1, 4],
+      [0, 0],
+      [1, 4],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0]
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "board_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "read_abacus",
+          "args": ["image", "reference.n_rods"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "full_score",
+          "args": ["m.n_beads"],
+          "code": {
+            "inline": "f_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rod_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "score_rod_count",
+          "args": ["image", "reference.n_rods"],
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.no_read"]
+        },
+        {
+          "run": "abacus_overlay_marked",
+          "args": ["image", "reference.rods_from_right", "reference.n_rods"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "polylines": "ov.mk_reckoning_beam.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [255, 170, 80],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "circles": "ov.mk_bead_rod_matched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "circles": "ov.mk_bead_rod_unmatched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "run": "bead_marker_squares",
+          "args": ["ov"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovm3.path",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovb_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovb_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovb_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovb_frame"
+        },
+        {
+          "run": "as_score",
+          "args": ["rc.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rod_construction",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "score_construction",
+          "args": ["image", "reference.n_rods"],
+          "out": "cn"
+        },
+        {
+          "fail_if": ["cn.no_read"]
+        },
+        {
+          "run": "abacus_overlay_marked",
+          "args": ["image", "reference.rods_from_right", "reference.n_rods"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "polylines": "ov.mk_reckoning_beam.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [255, 170, 80],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "circles": "ov.mk_bead_rod_matched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "circles": "ov.mk_bead_rod_unmatched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "run": "bead_marker_squares",
+          "args": ["ov"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovm3.path",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovb_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovb_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovb_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovb_frame"
+        },
+        {
+          "run": "as_score",
+          "args": ["cn.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cleared_rods",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "score_zero_rods",
+          "args": ["image", "reference.rods_from_right", "reference.n_rods"],
+          "out": "zr"
+        },
+        {
+          "fail_if": ["zr.no_read"]
+        },
+        {
+          "run": "abacus_overlay_marked",
+          "args": ["image", "reference.rods_from_right", "reference.n_rods"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "polylines": "ov.mk_reckoning_beam.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [255, 170, 80],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "circles": "ov.mk_bead_rod_matched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "circles": "ov.mk_bead_rod_unmatched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "run": "bead_marker_squares",
+          "args": ["ov"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovm3.path",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovb_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovb_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovb_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovb_frame"
+        },
+        {
+          "run": "as_score",
+          "args": ["zr.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "high_symbol_rods",
+      "weight": 5.0,
+      "steps": [
+        {
+          "run": "score_high_symbols",
+          "args": ["image", "reference.rods_from_right", "reference.n_rods"],
+          "out": "hs"
+        },
+        {
+          "fail_if": ["hs.no_read"]
+        },
+        {
+          "run": "abacus_overlay_marked",
+          "args": ["image", "reference.rods_from_right", "reference.n_rods"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "polylines": "ov.mk_reckoning_beam.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [255, 170, 80],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "circles": "ov.mk_bead_rod_matched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "circles": "ov.mk_bead_rod_unmatched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "run": "bead_marker_squares",
+          "args": ["ov"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovm3.path",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovb_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovb_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovb_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovb_frame"
+        },
+        {
+          "run": "as_score",
+          "args": ["hs.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bead_positions",
+      "weight": 12.0,
+      "steps": [
+        {
+          "run": "score_bead_positions",
+          "args": ["image", "reference.rods_from_right", "reference.n_rods"],
+          "out": "bp"
+        },
+        {
+          "fail_if": ["bp.no_read"]
+        },
+        {
+          "run": "abacus_overlay_marked",
+          "args": ["image", "reference.rods_from_right", "reference.n_rods"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "polylines": "ov.mk_reckoning_beam.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [255, 170, 80],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "circles": "ov.mk_bead_rod_matched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "circles": "ov.mk_bead_rod_unmatched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "run": "bead_marker_squares",
+          "args": ["ov"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovm3.path",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovb_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovb_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovb_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovb_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovb_frame"
+        },
+        {
+          "run": "as_score",
+          "args": ["bp.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_abacus_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "abacus_overlay_marked",
+          "args": ["image", "reference.rods_from_right", "reference.n_rods"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "polylines": "ov.mk_reckoning_beam.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [255, 170, 80],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "circles": "ov.mk_bead_rod_matched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "circles": "ov.mk_bead_rod_unmatched.circles",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "fail_if": ["ov.no_read"]
+        },
+        {
+          "run": "as_score",
+          "args": ["ov.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_appearance_board_form",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "check_abacus_form",
+          "args": ["image", "reference.n_rods"],
+          "out": "ap"
+        },
+        {
+          "fail_if": ["ap.no_read"]
+        },
+        {
+          "run": "as_score",
+          "args": ["ap.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

@@ -1,0 +1,67 @@
+{
+  "id": "candle_burn_remaining",
+  "axis": "quantitative_precision",
+  "prompt": "A clean, sharp studio photograph of two garden citronella candles on a patio ledge, standing upright side by side on the same surface, both fully in frame and seen from the same distance. The candle on the LEFT is a brand-new, unlit candle at its full original height. Both candles are the same kind, rated to burn for a total of 12 hours. The candle on the RIGHT is the same candle after it has already been burning for 4 hours: draw it at its correct remaining height for having burned 4 of its 12 hours, so its height is the right fraction of the full fresh candle beside it. Keep both candles the same width and standing on the same base line so their heights compare directly. Plain background, even light, no text, no numbers, no rulers or measuring marks.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict two identical candles side by side -- a fresh full one and one that has burned for part of its rated life, the burned one drawn at its correct remaining fraction of the full height. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "T": 12,
+    "t": 4,
+    "n": 2,
+    "remaining": 0.6667,
+    "q_frac": "This image shows two candles of the same width standing side by side on the same base. One is taller (full) and one is shorter (partly burned). Divide the height of the SHORTER candle by the height of the TALLER candle. Answer with that fraction as a single plain decimal between 0 and 1 only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "remaining_fraction",
+      "weight": 3.0,
+      "pass_at": 0.7,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "upright candle standing on the surface -- box the candle body itself, from the base line it stands on (the top of its holder if it sits in one) up to the top rim of its wax, NOT including any wick or flame above the wax",
+          "expected_n": "reference.n",
+          "retries": 4,
+          "out": "cb"
+        },
+        {
+          "fail_if": ["cb.unreadable"]
+        },
+        {
+          "run": "candle_height_ratio",
+          "args": ["cb"],
+          "out": "hr"
+        },
+        {
+          "fail_if": ["hr.degenerate"]
+        },
+        {
+          "compare_band": "hr.ratio",
+          "to": "reference.remaining",
+          "core_abs": 0.05,
+          "margin_abs": 0.16,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

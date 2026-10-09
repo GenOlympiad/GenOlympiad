@@ -1,0 +1,216 @@
+{
+  "id": "fbd_third_law_pairs",
+  "axis": "physical_consistency",
+  "prompt": "Sheet 14 of the temporary works file for a bridge bearing replacement, lying flat on the temporary works engineer's desk, photographed from above and large enough for every arrow and every letter to be read.\n\nThe deck is being carried on a flat jack while the old bearing comes out, the jack stands on a temporary concrete stool, and the stool is built off the pile cap. This sheet is the load transfer record, which every party to the lift signs before the deck is taken up. It is ruled into three panels side by side, headed JACK, STOOL and PILE CAP, in that order. Each panel holds that one part on its own, cut away from the two next to it, with its contact faces at the top and at the bottom of the part. The file gives these figures and no others: the deck brings 480 kN down onto the jack, and the temporary stool itself weighs 90 kN.\n\nDraw each part the way the record is kept. Every force arrow has its letter beside its tail, and on the arrow at the underside of the stool and on the arrow at the top of the pile cap the figure in kilonewtons stands beside the letter. Work the arrows out for yourself. I am not telling you which way any arrow points, I am not telling you what the pile cap gives back, and I am not telling you which letter belongs to which contact. No working, no formula and no answer sentence may appear anywhere on the sheet outside the three panels.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a sheet with three panels of force arrows side by side on it? A photograph of a document, a scan, a schematic or a plain line drawing ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no arrows in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cut_key": "opposite up|opposite up",
+    "panel_heads": ["jack", "stool", "pilecap"],
+    "ground_reaction": "570",
+    "n_panels": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_shared_arrow_turns_round_at_each_cut",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a panel of the load transfer record ruled across the sheet",
+          "sweep": true,
+          "out": "pan"
+        },
+        {
+          "fail_if": ["pan.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one panel of a diagram. Copy the heading printed at the TOP of that panel -- the wording nearest its top edge. Ignore any heading belonging to a panel beside it. If no heading is printed here, answer the single word blank. Write nothing else.",
+          "boxes": "pan",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "pan_head"
+        },
+        {
+          "fail_if": ["pan_head.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, does the arrow at the top face of the part point towards the top of the cut-out or towards the bottom of it? Answer up or down. If no arrow is drawn at the top face of the part, answer the single word blank.",
+          "boxes": "pan",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "pan_top"
+        },
+        {
+          "fail_if": ["pan_top.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, does the arrow at the underside of the part point towards the top of the cut-out or towards the bottom of it? Answer up or down. If no arrow is drawn at the underside of the part, answer the single word blank.",
+          "boxes": "pan",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "pan_bot"
+        },
+        {
+          "fail_if": ["pan_bot.unreadable"]
+        },
+        {
+          "run": "read_cut_pairs",
+          "args": ["pan_head", "pan_top", "pan_bot", "reference.panel_heads"],
+          "out": "cuts"
+        },
+        {
+          "compare": "cuts.key",
+          "to": "reference.cut_key",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_pile_cap_gives_back_both_weights_together",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a panel of the load transfer record ruled across the sheet",
+          "sweep": true,
+          "out": "fan"
+        },
+        {
+          "fail_if": ["fan.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one panel of a diagram. Copy the heading printed at the TOP of that panel -- the wording nearest its top edge. Ignore any heading belonging to a panel beside it. If no heading is printed here, answer the single word blank. Write nothing else.",
+          "boxes": "fan",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "fan_head"
+        },
+        {
+          "fail_if": ["fan_head.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure printed beside the arrow at the top face of the part in this cut-out, writing the digits only and leaving out the unit and any letter standing beside it. If no figure is printed there, answer the single word blank.",
+          "boxes": "fan",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "fan_top"
+        },
+        {
+          "fail_if": ["fan_top.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure printed beside the arrow at the underside of the part in this cut-out, writing the digits only and leaving out the unit and any letter standing beside it. If no figure is printed there, answer the single word blank.",
+          "boxes": "fan",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "fan_bot"
+        },
+        {
+          "fail_if": ["fan_bot.unreadable"]
+        },
+        {
+          "run": "cut_figures_match",
+          "args": [
+            "fan_head",
+            "fan_top",
+            "fan_bot",
+            "reference.panel_heads",
+            "reference.ground_reaction"
+          ],
+          "out": "fig"
+        },
+        {
+          "compare": "fig.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_panel_has_an_arrow_drawn_on_its_part",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a panel of the load transfer record ruled across the sheet",
+          "sweep": true,
+          "out": "pres"
+        },
+        {
+          "fail_if": ["pres.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is any arrow drawn on the part? Answer yes or no only.",
+          "boxes": "pres",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "pres_rd"
+        },
+        {
+          "fail_if": ["pres_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["pres_rd"],
+          "out": "presn"
+        },
+        {
+          "compare_band": "presn.n",
+          "to": "reference.n_panels",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_shown_outside_the_panels",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, a formula or an answer sentence written outside the three panels",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

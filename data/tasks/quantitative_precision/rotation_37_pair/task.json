@@ -1,0 +1,227 @@
+{
+  "id": "rotation_37_pair",
+  "axis": "quantitative_precision",
+  "prompt": "A flat top-down photograph of a graphic designer's rotation spec sheet on a desk: a sheet of pale paper showing TWO identical equilateral triangles outlined in thin grey, one in the upper half and one in the lower half, each with a small round black dot at each of its three corners (six black dots in total). The two triangles are the SAME size and shape. The lower triangle must be the upper triangle rotated by EXACTLY 37 degrees about its own centre -- not 30, not 45, not a right angle, but precisely 37 degrees of rotation. Point the upper triangle with one vertex straight up, and rotate the lower one 37 degrees from that orientation. Keep the triangle outlines faint and pale; the six SOLID black corner dots are the important marks. Only the two faint pale triangle outlines and the six solid black corner dots; no protractor, no angle labels, no numbers, no text, evenly lit, dots clearly and solidly darker than the paper.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn, and never mind whether the details on it are right or wrong. Does this picture show a paper spec sheet with two triangles drawn on it, each triangle having a small dot at each of its corners? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_marks": 6,
+    "target_deg": 37.0,
+    "d2_q_feature": "This image was supposed to depict: a designer's rotation spec sheet with two identical triangles (six corner dots) where the lower one is the upper rotated by exactly 37 degrees. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This picture should show: a paper spec sheet with two triangles drawn on it, each triangle having a small dot at each of its corners. Never mind whether the details on it are right or wrong. Is there a sheet with two triangles marked by corner dots in the picture, rather than a different object or a plain blank stand-in? Answer with the single word yes or no only.",
+    "d2_q_single": "This picture should show: a paper spec sheet with two triangles drawn on it, each triangle having a small dot at each of its corners, and nothing else. Never mind whether the details on it are right or wrong. Apart from a sheet with two triangles marked by corner dots and the things that belong with it, is the picture free of extra eye-catching objects, clutter or duplicate copies? Answer yes if there is nothing extra, no if there is clutter or extra objects. Answer with the single word yes or no only.",
+    "d2_q_precise": "Look at the lines and the scale marks in this picture. Are the straight lines straight, and are the scale marks sharp and clearly separated from each other, rather than wobbly, smudged or run together? Answer yes if the lines and marks are clean and sharp, no if they look wobbly or hand-drawn. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "mark_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a small solid black round corner dot printed on the sheet",
+          "expected_n": "reference.n_marks",
+          "context": "the pale paper spec sheet carrying the two faint triangle outlines and their black corner dots",
+          "out": "dots"
+        },
+        {
+          "fail_if": ["dots.unreadable"]
+        },
+        {
+          "read_crop": "Does this crop contain a small SOLID BLACK round dot printed on pale paper (a filled dark disc, not a faint outline and not a stray speck of texture)? Answer yes or no only.",
+          "boxes": "dots.geometry",
+          "out": "dv"
+        },
+        {
+          "fail_if": ["dv.unreadable"]
+        },
+        {
+          "run": "count_confirmed_dots",
+          "args": ["dv"],
+          "out": "nd"
+        },
+        {
+          "compare_band": "nd",
+          "to": 6,
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "weight": 2.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a small solid black round corner dot printed on the sheet",
+          "expected_n": "reference.n_marks",
+          "context": "the pale paper spec sheet carrying the two faint triangle outlines and their black corner dots",
+          "out": "dots"
+        },
+        {
+          "fail_if": ["dots.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "im"
+        },
+        {
+          "run": "dot_centers",
+          "args": ["dots", "im"],
+          "out": "cen"
+        },
+        {
+          "run": "rotation_error",
+          "args": ["cen['centers']", "reference['target_deg']"],
+          "out": "err"
+        },
+        {
+          "compare_band": "err",
+          "to": 0.0,
+          "core": 2.5,
+          "margin": 5.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_single_subject",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_single",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static",
+  "count_noun": "a corner dot"
+}

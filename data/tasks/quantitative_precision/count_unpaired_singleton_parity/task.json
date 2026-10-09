@@ -1,0 +1,217 @@
+{
+  "id": "count_unpaired_singleton_parity",
+  "axis": "quantitative_precision",
+  "prompt": "A photograph taken from directly above the counting table in the lost-property office of a ski resort, on the morning of the monthly clear-out. This month's ski gloves are already spread out across the table, palm upwards, none of them touching or overlapping any other, and every one of them has the office's own claim tag hanging from its cuff with the number it was booked in under, turned so that the number faces the camera. Each glove was booked in on its own line of the book, so each one carries its own number and no two of them carry the same number.\n\nThe office works the table in the usual way: anything that could be matched into a pair has been matched already, and this month's table has been left with exactly one glove that still has nothing to go with it. The gloves are the plain single colours the office enters in the book, and the book allows only these five: red, blue, green, black and yellow. Nothing patterned. It is a light month, with no more than nine gloves on the table altogether.\n\nHow many came in and what they look like is for you to settle from the clear-out itself -- I am deliberately not telling you either, and I am not telling you which one is the odd one out. Do not write any tally, any total or any note about the count anywhere in the picture: the only writing in the frame is the numbers on the claim tags. Each glove and its own tag must be big and sharp enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show gloves laid out on a table with a small numbered tag hanging from each of them? A photograph, an illustration, a diagram or a rendering ALL count as yes. Answer NO only if the image instead shows an empty table with no gloves on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_unpaired": 1,
+    "tags_ok": "yes",
+    "tally_ok": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "exactly_one_glove_left_unpaired",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole ski glove lying flat on the counting table",
+          "out": "box_g",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one glove. Is it a left-hand glove or a right-hand glove? Answer with one word: left or right.",
+          "boxes": "box_g",
+          "out": "hands"
+        },
+        {
+          "fail_if": ["hands.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one glove. What single colour is the glove itself? Answer with one word: red, blue, green, black, or yellow.",
+          "boxes": "box_g",
+          "out": "cols"
+        },
+        {
+          "fail_if": ["cols.unreadable"]
+        },
+        {
+          "run": "count_unpaired_gloves",
+          "args": ["hands", "cols"],
+          "out": "pr"
+        },
+        {
+          "compare_band": "pr.n",
+          "to": "reference.n_unpaired",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "goods_and_register_tally",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole ski glove lying flat on the counting table",
+          "out": "box_ga",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_ga.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole ski glove, rather than bare table top or only part of a glove? Answer yes or no only.",
+          "boxes": "box_ga",
+          "out": "conf_g"
+        },
+        {
+          "fail_if": ["conf_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["conf_g"],
+          "out": "cnt_g"
+        },
+        {
+          "read": "boxes",
+          "target": "one whole claim tag hanging from the cuff of a glove",
+          "out": "box_ta",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_ta.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole claim tag with a number on it, rather than glove fabric or only part of a tag? Answer yes or no only.",
+          "boxes": "box_ta",
+          "out": "conf_t"
+        },
+        {
+          "fail_if": ["conf_t.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["conf_t"],
+          "out": "cnt_t"
+        },
+        {
+          "run": "counts_agree",
+          "args": ["cnt_g", "cnt_t"],
+          "out": "tl"
+        },
+        {
+          "compare": "tl.v",
+          "to": "reference.tally_ok",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_claim_number_distinct",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole claim tag hanging from the cuff of a glove",
+          "out": "box_t",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_t.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one claim tag. Copy the number written on it. Write nothing else.",
+          "boxes": "box_t",
+          "out": "tagtxt"
+        },
+        {
+          "fail_if": ["tagtxt.unreadable"]
+        },
+        {
+          "run": "tags_are_unique",
+          "args": ["tagtxt"],
+          "out": "tu"
+        },
+        {
+          "compare": "tu.v",
+          "to": "reference.tags_ok",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_tally",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a tally, a total, or a written note about how many gloves there are",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_glove_covers_another",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one ski glove lying on top of, or overlapping, another ski glove, not counting a claim tag on a cuff",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

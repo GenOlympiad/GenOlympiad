@@ -1,0 +1,309 @@
+{
+  "id": "brannock_shoe_device",
+  "axis": "quantitative_precision",
+  "prompt": "A clear top-down photograph of the classic blue metal Brannock shoe-measuring device lying on a shop counter. It has a printed size scale along it with numbered whole sizes and half-size tick marks between them. The orange sliding heel-width piece has been moved so that its straight leading edge lines up EXACTLY with the 9.5 size mark on the printed scale — halfway between the printed 9 and 10, not snapped to a whole size. A small printed readout window on the device shows 'SIZE 9.5', matching where the slider's edge sits. So the slider edge and the printed size agree exactly at nine-and-a-half. A genuine shop photograph: real painted metal, printed numerals, the orange slider, even lighting. No feet, no shoes, no other numbers.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a top-down photo of a Brannock foot-measuring device with a sliding heel cup pointing to a size on the printed scale, and a printed size readout. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "size": 9.5,
+    "hsv_lo": [8, 120, 120],
+    "hsv_hi": [25, 255, 255],
+    "eqcode": {
+      "program": "eqcode"
+    },
+    "q_label": "The Brannock device in the image has a small printed readout window showing a shoe SIZE. What size number does that readout print? Answer the number only.",
+    "d2_q_feature": "This image was supposed to depict: a Brannock shoe-measuring device with a printed size scale and a sliding piece. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This image should depict: a Brannock foot-measuring device. Is what is shown actually the KIND of thing described (a shoe-sizing measuring device with a scale and slider), rather than a different object or a generic placeholder? Answer with the single word yes or no only.",
+    "d2_q_precise": "Does this image look like a PRECISE, deliberately constructed measuring instrument -- crisp printed numerals, clean scale marks, a straight slider edge -- as opposed to a rough, wobbly, sketchy or clearly-approximate rendering? Answer yes if it looks precisely constructed, no if it looks rough or freehand. Answer with the single word yes or no only.",
+    "d2_q_units": "This image should depict: a Brannock device with a graduated size scale. Does it actually show a numbered measuring scale with visible tick marks and numbers that a reading could be taken from, rather than the scale being missing or blank? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "edge_label_consistency",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the orange sliding piece on this measuring device",
+          "expected_n": 1,
+          "propose_boxes": "vlm",
+          "out": "sl"
+        },
+        {
+          "fail_if": ["sl.unreadable"]
+        },
+        {
+          "run": "scale_window_edge_label",
+          "args": ["sl"],
+          "out": "swin"
+        },
+        {
+          "fail_if": ["swin.degenerate"]
+        },
+        {
+          "crop": "swin.bbox",
+          "out": "sc"
+        },
+        {
+          "read_crop": "Does the printed measuring scale in this picture have size NUMBERS printed next to its tick marks, so that a reading could be taken off the scale itself? Answer yes or no only.",
+          "image": "sc",
+          "pad": 0.0,
+          "out": "pm"
+        },
+        {
+          "fail_if": ["pm.unreadable"]
+        },
+        {
+          "run": "scale_is_numbered",
+          "args": ["pm"],
+          "out": "pg"
+        },
+        {
+          "fail_if": ["pg.bad"]
+        },
+        {
+          "read_crop": "This picture shows the printed size scale of a shoe-measuring device, and an ORANGE sliding piece sits across that scale. Look at the straight edge of the ORANGE piece that faces the SMALL-number end of the scale, and follow that edge straight down to the printed scale: which size does it land on? The scale prints a number at every whole size with a smaller tick halfway between, so the answer may be a half size such as 9.5. Take the reading from the SCALE ITSELF. If this scale carries no printed numbers to read the edge against, answer exactly: none. Otherwise answer with the number only.",
+          "image": "sc",
+          "pad": 0.0,
+          "out": "er"
+        },
+        {
+          "fail_if": ["er.unreadable"]
+        },
+        {
+          "read_crop": "This picture shows a shoe-measuring device that has a small printed readout stating a shoe SIZE. What size number does that printed readout state? Answer with the number only, for example 9.5.",
+          "out": "lr"
+        },
+        {
+          "fail_if": ["lr.unreadable"]
+        },
+        {
+          "run": "edge_and_label_numbers",
+          "args": ["er", "lr"],
+          "out": "pv"
+        },
+        {
+          "fail_if": ["pv.bad"]
+        },
+        {
+          "run": "edge_label_err",
+          "args": ["pv.edge", "pv.label"],
+          "code": "eqcode",
+          "out": "err"
+        },
+        {
+          "compare_band": "err",
+          "to": 0.0,
+          "core": 0.35,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "slider_edge_diag",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the orange sliding piece on this measuring device",
+          "expected_n": 1,
+          "propose_boxes": "vlm",
+          "out": "sl"
+        },
+        {
+          "fail_if": ["sl.unreadable"]
+        },
+        {
+          "run": "scale_window_edge_only",
+          "args": ["sl"],
+          "out": "swin"
+        },
+        {
+          "fail_if": ["swin.degenerate"]
+        },
+        {
+          "crop": "swin.bbox",
+          "out": "sc"
+        },
+        {
+          "read_crop": "Does the printed measuring scale in this picture have size NUMBERS printed next to its tick marks, so that a reading could be taken off the scale itself? Answer yes or no only.",
+          "image": "sc",
+          "pad": 0.0,
+          "out": "pm"
+        },
+        {
+          "fail_if": ["pm.unreadable"]
+        },
+        {
+          "run": "scale_is_numbered",
+          "args": ["pm"],
+          "out": "pg"
+        },
+        {
+          "fail_if": ["pg.bad"]
+        },
+        {
+          "read_crop": "This picture shows the printed size scale of a shoe-measuring device, and an ORANGE sliding piece sits across that scale. Look at the straight edge of the ORANGE piece that faces the SMALL-number end of the scale, and follow that edge straight down to the printed scale: which size does it land on? The scale prints a number at every whole size with a smaller tick halfway between, so the answer may be a half size such as 9.5. Take the reading from the SCALE ITSELF. If this scale carries no printed numbers to read the edge against, answer exactly: none. Otherwise answer with the number only.",
+          "image": "sc",
+          "pad": 0.0,
+          "out": "er"
+        },
+        {
+          "fail_if": ["er.unreadable"]
+        },
+        {
+          "run": "edge_and_label_numbers",
+          "args": ["er", "er"],
+          "out": "pv"
+        },
+        {
+          "fail_if": ["pv.bad"]
+        },
+        {
+          "compare_band": "pv.edge",
+          "to": "reference.size",
+          "core": 0.35,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_units_ref",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_units",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

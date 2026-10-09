@@ -1,0 +1,181 @@
+{
+  "id": "vgm_correction_restow",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of the bay plan sheet for one deck slot lying on the planner's desk beside the mate's correction note, both square to the camera and readable in the one picture.\n\nThe sheet has one vertical stack of four cells, one box to a cell, with the tier figure at the left of each cell: 82 at the bottom, then 84, then 86, then 88 at the top. Each cell carries the four letters of the owner code the box is marked with, and the box's mass in tonnes.\n\nThe four boxes booked into this stack were declared as TGHU at 18.4 t, MSCU at 9.6 t, CMAU at 22.1 t and OOLU at 12.7 t. The correction note lying beside the sheet reads, word for word: VERIFIED GROSS MASS CORRECTION -- MSCU IS 24.8 t, NOT 9.6 t -- APPLIES TO THIS SAILING. Stowage on this ship follows the ordinary rule that no box may stand on top of a heavier one.\n\nThe sheet goes down to the terminal as the loading list, so it has to be the corrected stow and not the booked one. Work out for yourself which box belongs at which tier and what mass stands against it -- I am deliberately not telling you the order. A stack that puts a heavy box on a light one is turned away at the crane and the sailing waits.\n\nEvery tier figure, owner code and mass must be large and sharp. Nothing may appear on the sheet beyond the four cells with their tier figures, owner codes and masses: no working, no notes, no arrows.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed plan with a column of cells stacked one above another, each cell carrying letters and a figure, and a separate note beside it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "stack": "82:mscu 84:cmau 86:tghu 88:oolu",
+    "masses": "82:248 84:221 86:184 88:127",
+    "n_cells": 4,
+    "q_cell_cert": "Does this cut-out show ONE whole cell of the stack, rather than the correction note or only part of a cell? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_corrected_box_sits_where_its_new_mass_sends_it",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a cell of the stack drawn on the bay plan sheet",
+          "sweep": true,
+          "out": "cell_box"
+        },
+        {
+          "fail_if": ["cell_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the tier figure printed at the left of this cell. Write the number only.",
+          "boxes": "cell_box",
+          "pad": 0.15,
+          "out": "tier_txt"
+        },
+        {
+          "fail_if": ["tier_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the four letters of the owner code printed in this cell. Write the four letters only.",
+          "boxes": "cell_box",
+          "pad": 0.15,
+          "out": "own_txt"
+        },
+        {
+          "fail_if": ["own_txt.unreadable"]
+        },
+        {
+          "run": "read_stow_pairs",
+          "args": ["tier_txt", "own_txt"],
+          "out": "stow"
+        },
+        {
+          "compare": "stow.canon",
+          "to": "reference.stack",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_masses_fall_away_from_the_deck_upwards",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a cell of the stack drawn on the bay plan sheet",
+          "sweep": true,
+          "out": "mass_box"
+        },
+        {
+          "fail_if": ["mass_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the tier figure printed at the left of this cell. Write the number only.",
+          "boxes": "mass_box",
+          "pad": 0.15,
+          "out": "mtier_txt"
+        },
+        {
+          "fail_if": ["mtier_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the mass in tonnes printed in this cell. Write the figure only.",
+          "boxes": "mass_box",
+          "pad": 0.15,
+          "out": "mass_txt"
+        },
+        {
+          "fail_if": ["mass_txt.unreadable"]
+        },
+        {
+          "run": "read_tier_weights",
+          "args": ["mtier_txt", "mass_txt"],
+          "out": "weights"
+        },
+        {
+          "compare": "weights.canon",
+          "to": "reference.masses",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "four_cells_stand_in_the_stack",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a cell of the stack drawn on the bay plan sheet",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_cell_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_cells",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_added_to_the_plan",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, a note or an arrow added beyond the four cells and the correction note",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

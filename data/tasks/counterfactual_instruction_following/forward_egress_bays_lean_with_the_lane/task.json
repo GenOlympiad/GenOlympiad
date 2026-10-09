@@ -1,0 +1,84 @@
+{
+  "id": "forward_egress_bays_lean_with_the_lane",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The site cannot be handed over until the marking has been checked against the operator's rules, so the finished car park is photographed from the lift head straight down over the deck.\n\nA surface car park has just been marked out: bay lines in white, an aisle running the length of the deck with painted arrows in it, an entry and an exit sign at the two ends. Twenty-four bays are marked, numbered 1 to 24. A board on a post at the corner of the deck carries the operator's rules in two lines: no vehicle may reverse out of a bay, and the aisle is one-way. Setting-out nails are still in the surface along the bay ends, and a kerb runs parallel to the frame edge down one side.\n\nHow the bays and the arrows have been set out is what the rules board does not draw.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph look straight down on a newly marked car park deck with an aisle, painted arrows and a rules board on a corner post? Answer yes or no only.",
+  "reference": {
+    "part1": "bays_lean_with_the_arrows",
+    "part2": "rows_lean_opposite_hands"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the bays along one side of the aisle and say how they lean against the painted aisle arrows. Answer with one of: the bays lean the way the arrows point, meeting the aisle at a sharp corner ahead; the bays lean back against the arrows, meeting the aisle at a sharp corner behind; the bays stand square to the aisle.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the bays on the two sides of the aisle and say how the two rows stand against one another. Answer with one of: the two rows lean to opposite hands across the aisle; the two rows lean to the same hand; one row leans and the other stands square to the aisle.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

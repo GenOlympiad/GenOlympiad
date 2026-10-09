@@ -1,0 +1,433 @@
+{
+  "id": "volta",
+  "axis": "symbolic_systems",
+  "prompt": "A printed choir rehearsal part, matte off-white stock, heavy black engraving, photographed square on and filling the frame. On it is one system of exactly eight bars, and the page carries nothing besides that system.\n\nThere is one whole note per bar and, printed large and bold straight above the centre of each bar, that bar's number from 1 to 8.\n\nMark this system with repeat barlines and numbered ending brackets so that a singer working through it from the start, obeying every sign, sings the bars in exactly this succession:\n\n1, 2, 3, 4, 2, 3, 5, 2, 3, 6, 7, 8\n\nThree separate numbered endings are needed. Engrave them the standard way: a repeat barline is a thick rule beside a thin rule bearing two stacked round dots on the side it faces, and every ending is a horizontal bracket above the staff hooked downwards at both ends with its numeral printed beneath the left hook, numbered from the leftmost bracket rightwards. The performance succession must not be printed anywhere on the part, and no words, letters, navigation instructions or extra signs may appear.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show one horizontal line of music printed on a page: a five-line staff cut by vertical barlines into a row of bars, a large printed number above every bar, and horizontal brackets drawn above the staff. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a bare page, a page of prose, a picture of singers, or an unrelated image. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "n_bars": 8,
+    "repeat_start_bar": 2,
+    "endings": [
+      [4, 4],
+      [5, 5],
+      [6, 6]
+    ],
+    "play_order": [1, 2, 3, 4, 2, 3, 5, 2, 3, 6, 7, 8],
+    "decoy_repeat_from_top_order": [1, 2, 3, 4, 1, 2, 3, 5, 1, 2, 3, 6, 7, 8],
+    "decoy_no_marks_order": [1, 2, 3, 4, 5, 6, 7, 8]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "system_readable",
+      "weight": 1.0,
+      "gate": true,
+      "score": "rd.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the five-line staff",
+          "expected_n": 1,
+          "out": "staff"
+        },
+        {
+          "fail_if": ["staff.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "one bar of the music system",
+          "out": "barx"
+        },
+        {
+          "fail_if": ["barx.unreadable"]
+        },
+        {
+          "run": "layout_for_system_readable",
+          "args": ["barx", "staff"],
+          "out": "lay"
+        },
+        {
+          "fail_if": ["lay.no_read"]
+        },
+        {
+          "read_crop": "This crop is centred on ONE vertical line that runs down through a five-line music staff. Look only at that middle line and ignore any other vertical line near the edge of this crop. Is that line a repeat sign -- a thick rule standing beside a thin one with two round dots stacked next to them -- and if it is, which side of the rules are the two dots on? Answer with one word: none if it is an ordinary plain line with no dots, left if the dots are on its left-hand side as you look at this crop, right if they are on its right-hand side, or both if there are dots on both sides.",
+          "boxes": "lay.boundary_boxes",
+          "pad": 0.1,
+          "out": "reps"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. Is there a horizontal bracket drawn in that space, running along above THIS bar? Judge only the space directly above this bar; ignore a bracket that belongs to a bar to the left or the right of it. Answer yes or no only.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "brs"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. A small numeral is sometimes printed just below the LEFT-HAND hook of a bracket that runs above the staff. Do not report the large bold bar number printed on the staff. Copy that small numeral in full, exactly as printed, including any digit that runs right up to the edge of this crop. Answer with the numeral alone, or with the word none if no numeral is printed under a bracket end here.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "endnum"
+        },
+        {
+          "run": "system_readable",
+          "args": ["lay", "reps", "brs", "endnum"],
+          "out": "rd"
+        }
+      ]
+    },
+    {
+      "name": "bar_count",
+      "weight": 1.0,
+      "score": "bc.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the five-line staff",
+          "expected_n": 1,
+          "out": "staff"
+        },
+        {
+          "fail_if": ["staff.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "one bar of the music system",
+          "out": "barx"
+        },
+        {
+          "fail_if": ["barx.unreadable"]
+        },
+        {
+          "run": "layout_for_bar_count",
+          "args": ["barx", "staff"],
+          "out": "lay"
+        },
+        {
+          "fail_if": ["lay.no_read"]
+        },
+        {
+          "read_crop": "This crop is centred on ONE vertical line that runs down through a five-line music staff. Look only at that middle line and ignore any other vertical line near the edge of this crop. Is that line a repeat sign -- a thick rule standing beside a thin one with two round dots stacked next to them -- and if it is, which side of the rules are the two dots on? Answer with one word: none if it is an ordinary plain line with no dots, left if the dots are on its left-hand side as you look at this crop, right if they are on its right-hand side, or both if there are dots on both sides.",
+          "boxes": "lay.boundary_boxes",
+          "pad": 0.1,
+          "out": "reps"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. Is there a horizontal bracket drawn in that space, running along above THIS bar? Judge only the space directly above this bar; ignore a bracket that belongs to a bar to the left or the right of it. Answer yes or no only.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "brs"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. A small numeral is sometimes printed just below the LEFT-HAND hook of a bracket that runs above the staff. Do not report the large bold bar number printed on the staff. Copy that small numeral in full, exactly as printed, including any digit that runs right up to the edge of this crop. Answer with the numeral alone, or with the word none if no numeral is printed under a bracket end here.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "endnum"
+        },
+        {
+          "run": "score_bar_count",
+          "args": ["lay", "reps", "brs", "endnum", "reference.n_bars"],
+          "out": "bc"
+        }
+      ]
+    },
+    {
+      "name": "repeat_start_bar",
+      "weight": 3.0,
+      "score": "rs.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the five-line staff",
+          "expected_n": 1,
+          "out": "staff"
+        },
+        {
+          "fail_if": ["staff.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "one bar of the music system",
+          "out": "barx"
+        },
+        {
+          "fail_if": ["barx.unreadable"]
+        },
+        {
+          "run": "layout_for_repeat_start",
+          "args": ["barx", "staff"],
+          "out": "lay"
+        },
+        {
+          "fail_if": ["lay.no_read"]
+        },
+        {
+          "read_crop": "This crop is centred on ONE vertical line that runs down through a five-line music staff. Look only at that middle line and ignore any other vertical line near the edge of this crop. Is that line a repeat sign -- a thick rule standing beside a thin one with two round dots stacked next to them -- and if it is, which side of the rules are the two dots on? Answer with one word: none if it is an ordinary plain line with no dots, left if the dots are on its left-hand side as you look at this crop, right if they are on its right-hand side, or both if there are dots on both sides.",
+          "boxes": "lay.boundary_boxes",
+          "pad": 0.1,
+          "out": "reps"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. Is there a horizontal bracket drawn in that space, running along above THIS bar? Judge only the space directly above this bar; ignore a bracket that belongs to a bar to the left or the right of it. Answer yes or no only.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "brs"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. A small numeral is sometimes printed just below the LEFT-HAND hook of a bracket that runs above the staff. Do not report the large bold bar number printed on the staff. Copy that small numeral in full, exactly as printed, including any digit that runs right up to the edge of this crop. Answer with the numeral alone, or with the word none if no numeral is printed under a bracket end here.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "endnum"
+        },
+        {
+          "run": "score_repeat_start",
+          "args": ["lay", "reps", "brs", "endnum", "reference.repeat_start_bar"],
+          "out": "rs"
+        }
+      ]
+    },
+    {
+      "name": "ending_spans",
+      "weight": 3.0,
+      "score": "es.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the five-line staff",
+          "expected_n": 1,
+          "out": "staff"
+        },
+        {
+          "fail_if": ["staff.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "one bar of the music system",
+          "out": "barx"
+        },
+        {
+          "fail_if": ["barx.unreadable"]
+        },
+        {
+          "run": "layout_for_ending_spans",
+          "args": ["barx", "staff"],
+          "out": "lay"
+        },
+        {
+          "fail_if": ["lay.no_read"]
+        },
+        {
+          "read_crop": "This crop is centred on ONE vertical line that runs down through a five-line music staff. Look only at that middle line and ignore any other vertical line near the edge of this crop. Is that line a repeat sign -- a thick rule standing beside a thin one with two round dots stacked next to them -- and if it is, which side of the rules are the two dots on? Answer with one word: none if it is an ordinary plain line with no dots, left if the dots are on its left-hand side as you look at this crop, right if they are on its right-hand side, or both if there are dots on both sides.",
+          "boxes": "lay.boundary_boxes",
+          "pad": 0.1,
+          "out": "reps"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. Is there a horizontal bracket drawn in that space, running along above THIS bar? Judge only the space directly above this bar; ignore a bracket that belongs to a bar to the left or the right of it. Answer yes or no only.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "brs"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. A small numeral is sometimes printed just below the LEFT-HAND hook of a bracket that runs above the staff. Do not report the large bold bar number printed on the staff. Copy that small numeral in full, exactly as printed, including any digit that runs right up to the edge of this crop. Answer with the numeral alone, or with the word none if no numeral is printed under a bracket end here.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "endnum"
+        },
+        {
+          "run": "score_endings",
+          "args": ["lay", "reps", "brs", "endnum", "reference.endings"],
+          "out": "es"
+        }
+      ]
+    },
+    {
+      "name": "play_order",
+      "weight": 10.0,
+      "score": "po.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the five-line staff",
+          "expected_n": 1,
+          "out": "staff"
+        },
+        {
+          "fail_if": ["staff.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "one bar of the music system",
+          "out": "barx"
+        },
+        {
+          "fail_if": ["barx.unreadable"]
+        },
+        {
+          "run": "layout_for_play_order",
+          "args": ["barx", "staff"],
+          "out": "lay"
+        },
+        {
+          "fail_if": ["lay.no_read"]
+        },
+        {
+          "read_crop": "This crop is centred on ONE vertical line that runs down through a five-line music staff. Look only at that middle line and ignore any other vertical line near the edge of this crop. Is that line a repeat sign -- a thick rule standing beside a thin one with two round dots stacked next to them -- and if it is, which side of the rules are the two dots on? Answer with one word: none if it is an ordinary plain line with no dots, left if the dots are on its left-hand side as you look at this crop, right if they are on its right-hand side, or both if there are dots on both sides.",
+          "boxes": "lay.boundary_boxes",
+          "pad": 0.1,
+          "out": "reps"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. Is there a horizontal bracket drawn in that space, running along above THIS bar? Judge only the space directly above this bar; ignore a bracket that belongs to a bar to the left or the right of it. Answer yes or no only.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "brs"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. A small numeral is sometimes printed just below the LEFT-HAND hook of a bracket that runs above the staff. Do not report the large bold bar number printed on the staff. Copy that small numeral in full, exactly as printed, including any digit that runs right up to the edge of this crop. Answer with the numeral alone, or with the word none if no numeral is printed under a bracket end here.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "endnum"
+        },
+        {
+          "run": "score_play_order",
+          "args": ["lay", "reps", "brs", "endnum", "reference.play_order"],
+          "out": "po"
+        }
+      ]
+    },
+    {
+      "name": "d1_volta_overlay",
+      "weight": 0.0,
+      "score": "ov.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the five-line staff",
+          "expected_n": 1,
+          "out": "staff"
+        },
+        {
+          "fail_if": ["staff.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one bar of the music system",
+          "out": "barx"
+        },
+        {
+          "fail_if": ["barx.unreadable"]
+        },
+        {
+          "run": "layout_for_volta_overlay",
+          "args": ["barx", "staff"],
+          "out": "lay"
+        },
+        {
+          "fail_if": ["lay.no_read"]
+        },
+        {
+          "read_crop": "This crop is centred on ONE vertical line that runs down through a five-line music staff. Look only at that middle line and ignore any other vertical line near the edge of this crop. Is that line a repeat sign -- a thick rule standing beside a thin one with two round dots stacked next to them -- and if it is, which side of the rules are the two dots on? Answer with one word: none if it is an ordinary plain line with no dots, left if the dots are on its left-hand side as you look at this crop, right if they are on its right-hand side, or both if there are dots on both sides.",
+          "boxes": "lay.boundary_boxes",
+          "pad": 0.1,
+          "out": "reps"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. Is there a horizontal bracket drawn in that space, running along above THIS bar? Judge only the space directly above this bar; ignore a bracket that belongs to a bar to the left or the right of it. Answer yes or no only.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "brs"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. A small numeral is sometimes printed just below the LEFT-HAND hook of a bracket that runs above the staff. Do not report the large bold bar number printed on the staff. Copy that small numeral in full, exactly as printed, including any digit that runs right up to the edge of this crop. Answer with the numeral alone, or with the word none if no numeral is printed under a bracket end here.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "endnum"
+        },
+        {
+          "run": "score_play_order",
+          "args": ["lay", "reps", "brs", "endnum", "reference.play_order"],
+          "out": "ov"
+        }
+      ]
+    },
+    {
+      "name": "d2_appearance_repeat_form",
+      "weight": 0.0,
+      "score": "ap.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the five-line staff",
+          "expected_n": 1,
+          "out": "staff"
+        },
+        {
+          "fail_if": ["staff.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one bar of the music system",
+          "out": "barx"
+        },
+        {
+          "fail_if": ["barx.unreadable"]
+        },
+        {
+          "run": "layout_for_repeat_form",
+          "args": ["barx", "staff"],
+          "out": "lay"
+        },
+        {
+          "fail_if": ["lay.no_read"]
+        },
+        {
+          "read_crop": "This crop is centred on ONE vertical line that runs down through a five-line music staff. Look only at that middle line and ignore any other vertical line near the edge of this crop. Is that line a repeat sign -- a thick rule standing beside a thin one with two round dots stacked next to them -- and if it is, which side of the rules are the two dots on? Answer with one word: none if it is an ordinary plain line with no dots, left if the dots are on its left-hand side as you look at this crop, right if they are on its right-hand side, or both if there are dots on both sides.",
+          "boxes": "lay.boundary_boxes",
+          "pad": 0.1,
+          "out": "reps"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. Is there a horizontal bracket drawn in that space, running along above THIS bar? Judge only the space directly above this bar; ignore a bracket that belongs to a bar to the left or the right of it. Answer yes or no only.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "brs"
+        },
+        {
+          "read_crop": "This crop shows one bar of a music system together with the space above the staff. A small numeral is sometimes printed just below the LEFT-HAND hook of a bracket that runs above the staff. Do not report the large bold bar number printed on the staff. Copy that small numeral in full, exactly as printed, including any digit that runs right up to the edge of this crop. Answer with the numeral alone, or with the word none if no numeral is printed under a bracket end here.",
+          "boxes": "lay.bar_boxes",
+          "pad": 0.05,
+          "out": "endnum"
+        },
+        {
+          "run": "repeat_marks_drawn",
+          "args": ["lay", "reps", "brs", "endnum", "reference.endings"],
+          "out": "ap"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

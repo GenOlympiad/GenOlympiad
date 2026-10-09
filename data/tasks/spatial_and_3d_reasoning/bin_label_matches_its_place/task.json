@@ -1,0 +1,84 @@
+{
+  "id": "bin_label_matches_its_place",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The aisle has just been re-racked and the location labels went on this morning, so the team leader photographs the face of the bay for the system check before any stock goes away.\n\nOne bay faces the camera, three levels of four bins, every bin with a printed label on the front edge of its beam. The aisle number is painted on the floor, with an arrow beside it showing the way the pickers walk. The instruction sheet pinned to the rack end gives the code and nothing else: a location is written as four groups divided by dashes, the aisle, then the column, then the level, then the cell; the level group counts upward from the ground; the column group counts upward the way the floor arrow points; and the aisle group is the number painted on the floor of the aisle the bay stands in.\n\nWhat is printed on any one label is not on the sheet.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show the front of a warehouse rack with bins in rows and a printed label on the front edge of each bin? Answer yes or no only.",
+  "reference": {
+    "part1": "grows_upward",
+    "part2": "matches_the_painted_aisle"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Each label carries four groups of characters divided by dashes. Read the third group on the labels down the left-hand column of bins, going from the bin at the ground upward. Answer with one of: that group grows larger as you go up; that group stays the same all the way up; that group grows smaller as you go up.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the number painted on the aisle floor, then read the first group on the labels. Answer with one of: every label's first group reads the same as the painted number; the labels' first groups read the same as each other but not as the painted number; the labels' first groups differ from one another.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

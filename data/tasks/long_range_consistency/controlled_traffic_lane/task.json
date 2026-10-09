@@ -1,0 +1,193 @@
+{
+  "id": "controlled_traffic_lane",
+  "axis": "long_range_consistency",
+  "prompt": "The tractor is halfway down the field and the agronomist wants this season's controlled-traffic record shot before the crop closes over. The picture is that record shot, taken from a mast at the headland looking down the length of the field, low and oblique, with the young crop rows running away from the camera and the machine at work in the middle distance.\n\nOne bout of the drill sowed this piece: 12 rows, evenly spaced, running dead straight from the headland to the far hedge. The headland end of every row is pegged, and the pegs are numbered 1 to 12 running from left to right across the near edge of the frame. The drill's own record card is stapled to a stake beside peg 1 and it reads: BOUT 12 ROWS - TRACTOR WHEELS 6 ROWS APART - DRILL CENTRED ON THE BOUT.\n\nThis farm runs permanent traffic lanes, which is the whole point of the record shot. Every machine that goes on the field puts its wheels in the same two gaps between rows, season after season, and no crop row is ever driven on. The inter-row cultivator is out there now, hoeing between the rows, and its own wheels are on those same two lanes.\n\nWhich two gaps the wheelings fall in is the part you have to work out -- I am deliberately not telling you, and there is no worked example anywhere in the picture. Keep the crop rows and the wheelings distinct enough at the headland end that a gap can be told from a row. Apart from the twelve peg numbers and the drill's record card, no further word, arrow or notice belongs in the field.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a field of crop growing in straight rows? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no field on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "track_gaps": "3,9",
+    "n_rows": 12,
+    "n_crushed": 0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_wheelings_fall_in_the_gaps_the_drill_setting_puts_them_in",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered peg at the headland end of a crop row",
+          "sweep": true,
+          "out": "peg_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["peg_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a peg with a number painted on it. Which number is painted on that peg? If more than one peg is visible in this cut-out, read the one nearest the middle of it. Answer with the number exactly as it is painted, and nothing else.",
+          "boxes": "peg_box",
+          "pad": 1.0,
+          "out": "pkey_rd"
+        },
+        {
+          "fail_if": ["pkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, find the peg, then look at the strip of bare ground lying immediately to the right of the crop row that starts at that peg. Ignore every other strip of bare ground here. Name what covers that one strip, using one word from this list: pressed (a smooth flattened band runs up it lengthwise) or loose (the ground on it carries no such band). Write that one word and nothing else.",
+          "boxes": "peg_box",
+          "pad": 1.4,
+          "out": "gap_rd"
+        },
+        {
+          "fail_if": ["gap_rd.unreadable"]
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["gap_rd", "[[['pressed'],'yes'],[['loose'],'no']]"],
+          "out": "gap_rd__mapped"
+        },
+        {
+          "run": "worst_wheeling_error",
+          "args": ["pkey_rd", "gap_rd__mapped", "reference.track_gaps"],
+          "out": "trackv"
+        },
+        {
+          "compare_tolerance": "trackv.err",
+          "to": 0,
+          "tol": 0.4,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "not_one_crop_row_has_been_driven_along",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered peg at the headland end of a crop row",
+          "sweep": true,
+          "out": "row_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["row_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a peg with a number painted on it. Which number is painted on that peg? If more than one peg is visible in this cut-out, read the one nearest the middle of it. Answer with the number exactly as it is painted, and nothing else.",
+          "boxes": "row_box",
+          "pad": 1.0,
+          "out": "rkey_rd"
+        },
+        {
+          "fail_if": ["rkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, find the peg, then look along the line of plants that starts at that peg. Name what lies on top of those plants, using one word from this list: pressed (a smooth flattened band runs along the plants themselves) or plants (nothing is pressed along them). Write that one word and nothing else.",
+          "boxes": "row_box",
+          "pad": 1.4,
+          "out": "over_rd"
+        },
+        {
+          "fail_if": ["over_rd.unreadable"]
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["over_rd", "[[['pressed'],'yes'],[['plants'],'no']]"],
+          "out": "over_rd__mapped"
+        },
+        {
+          "run": "count_crushed_rows",
+          "args": ["rkey_rd", "over_rd__mapped", "reference.n_rows"],
+          "out": "crushv"
+        },
+        {
+          "compare_band": "crushv.n",
+          "to": "reference.n_crushed",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_row_of_the_bout_is_pegged_and_numbered_at_the_headland",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a peg standing at the headland end of a crop row",
+          "sweep": true,
+          "out": "cnt_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cnt_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a number painted on the peg? Answer yes or no only.",
+          "boxes": "cnt_box",
+          "pad": 0.9,
+          "out": "cnt_rd"
+        },
+        {
+          "fail_if": ["cnt_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cnt_rd"],
+          "out": "cntn"
+        },
+        {
+          "compare_band": "cntn.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_extra_word_or_arrow_was_added_to_the_field",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word or arrow in the field beyond the peg numbers and the stapled record card",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "the_beach_flag_reads_the_rip_not_the_surf",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A beach patrol has to log the flag it flew and why, so the lifeguard station is photographed from the sand at the morning check and the frame goes into the day log.\n\nThe notice on the station wall sets out what the flags mean here: the flag colour grades the pull of the water away from the shore, and the size of the surf is shown separately on the wave board at the top of the ramp. The same notice grades that pull by the dyed drift floats the patrol puts out at every check, and it makes a run out past the far buoy inside a quarter of an hour its top grade. Beside the notice is the painted key of graded flags. This check logged the floats out past the far buoy in 12 minutes, and the wave board is showing its lowest grade.\n\nWhich flag went up the mast is what the log does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a lifeguard station with a flag on its mast, a wave board and dyed drift floats out on the water? Answer yes or no only.",
+  "reference": {
+    "part1": "top_grade_flag_flying",
+    "part2": "streaks_run_offshore"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the flag flying on the station mast and at the painted key of flags on the station wall, and say which of the graded flags is flying. Answer with one of: the top-grade flag on the wall key; the calm-water flag on the wall key; the mast is standing bare.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the dyed streaks trailing behind the floats on the water and say which way they run. Answer with one of: the streaks run straight out away from the beach; the streaks run along the beach past the station; the streaks curl back towards the beach.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

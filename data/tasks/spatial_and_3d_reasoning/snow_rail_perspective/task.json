@@ -1,0 +1,86 @@
+{
+  "id": "snow_rail_perspective",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A photorealistic architectural photograph of a long stone COLONNADE -- a straight row of identical columns EQUALLY SPACED in the real world -- receding toward a vanishing point set OFF-CENTRE toward the right of the frame, seen from an oblique eye-level viewpoint. Correct PERSPECTIVE must make the columns appear with SHRINKING gaps and shrinking height toward the vanishing point: the nearest column is large and its neighbour a big step away, and each column further down the row sits closer to the next, the along-floor gaps compressing harmonically toward the horizon. Do NOT space the columns evenly across the picture -- a receding equally-spaced colonnade must foreshorten. Warm stone, soft light, no text, no numerals.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a stone colonnade -- a row of equally-spaced columns receding toward a vanishing point along a floor. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "require_vp": false
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rails_converge",
+      "weight": 1.0,
+      "gate": true,
+      "only_if": "reference.require_vp",
+      "steps": [
+        {
+          "ask": "This picture shows a railway track running away from the camera. Look at the two steel rails. Going from the bottom of the picture towards the far distance, do the two rails come CLOSER together, stay the SAME distance apart, or get FURTHER apart? Answer with exactly one word: closer, same, or further.",
+          "out": "cvq"
+        },
+        {
+          "fail_if": ["cvq.unreadable"]
+        },
+        {
+          "compare": "cvq",
+          "to": "closer",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sleeper_recession",
+      "weight": 5.0,
+      "score": "rc.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the ten railway sleepers or colonnade columns nearest the camera",
+          "expected_n": 10,
+          "out": "bx1"
+        },
+        {
+          "read": "boxes",
+          "target": "the ten closest cross-ties or stone columns of the receding row",
+          "expected_n": 10,
+          "out": "bx2"
+        },
+        {
+          "read": "boxes",
+          "target": "the ten nearest repeated cross-pieces counting up from the bottom edge",
+          "expected_n": 10,
+          "out": "bx3"
+        },
+        {
+          "run": "median_recession",
+          "args": ["bx1", "bx2", "bx3", "reference"],
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.no_read"]
+        }
+      ]
+    }
+  ],
+  "grounding": "static",
+  "aspect_ratio": "3:4"
+}

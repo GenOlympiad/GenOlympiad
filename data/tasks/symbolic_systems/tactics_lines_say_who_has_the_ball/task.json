@@ -1,0 +1,84 @@
+{
+  "id": "tactics_lines_say_who_has_the_ball",
+  "axis": "symbolic_systems",
+  "prompt": "The session cannot start until the board is set for the first move, so the assistant sets the discs out and photographs the board before the squad comes in.\n\nSeven magnetic discs stand on the green pitch face, each with its own number on it: 2, 4, 6, 7, 9, 10 and 11. A small white ball is drawn beside the disc numbered 4 and beside no other disc. Four lines are still to be put on the board. The key taped to the board frame gives the styles and nothing more: a broken line stands for the ball played from one man to another; a continuous line stands for a man running while somebody else has the ball; a line drawn as a run of waves stands for a man carrying the ball forward at his own feet.\n\nWhich style each of the four lines is drawn in, and where each one runs to, is the whole of the move and the key does not set it out.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a green board with numbered round markers standing on it and lines drawn between them? Answer yes or no only.",
+  "reference": {
+    "part1": "short_dashes",
+    "part2": "ends_in_open_ground"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the line that starts at the disc numbered 4, the disc the white ball is drawn beside. Answer with one of: that line is drawn as a run of short dashes; that line is drawn as one continuous stroke; that line is drawn as a run of waves.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the line on the board that is drawn as a run of waves. Answer with one of: it starts at a disc and ends away from every disc, out in open ground; it starts at one disc and ends at a different disc.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

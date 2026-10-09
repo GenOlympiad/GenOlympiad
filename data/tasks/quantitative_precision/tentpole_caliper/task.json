@@ -1,0 +1,259 @@
+{
+  "id": "tentpole_caliper",
+  "axis": "quantitative_precision",
+  "prompt": "A sharp, evenly-lit close-up photograph, taken at a campsite, of a stainless steel vernier caliper (0.1 mm, 10-division vernier) measuring the diameter of an aluminium tent-pole ferrule. The caliper displays a reading of EXACTLY 67.3 mm -- the main scale and the vernier scale must be geometrically consistent with this exact reading. Every scale mark and number crisp and legible, straight-on viewing angle, no hands, no other tools, plain background.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict stainless vernier caliper measuring an aluminium tent-pole ferrule diameter at a campsite, its main and vernier scales geometrically consistent with the demanded reading, straight-on. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "reading": 67.3,
+    "main_mm": 67,
+    "vernier_div": 3,
+    "d2_q_feature": "This image was supposed to depict: a stainless vernier caliper measuring an aluminium tent-pole ferrule diameter at a campsite, its main and vernier scales geometrically consistent with the demanded reading, straight-on. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This image should depict: a stainless vernier caliper measuring an aluminium tent-pole ferrule diameter at a campsite, its main and vernier scales geometrically consistent with the demanded reading, straight-on. Is the object / instrument / worksheet actually shown the KIND of thing described (the right carrier for the measurement), rather than a different object or a generic placeholder? Answer with the single word yes or no only.",
+    "d2_q_single": "This image should depict: a stainless vernier caliper measuring an aluminium tent-pole ferrule diameter at a campsite, its main and vernier scales geometrically consistent with the demanded reading, straight-on, and only that. Is the measured object / construction shown cleanly on its own, WITHOUT extra distracting objects, clutter, or duplicate copies that are not part of the described scene? Answer yes if only the intended subject is present, no if there is distracting clutter or extra objects. Answer with the single word yes or no only.",
+    "d2_q_precise": "Does this image look like a PRECISE, deliberately constructed measurement or technical drawing -- crisp straight lines, sharp marks, cleanly drawn scale divisions, the look of something laid out with instruments -- as opposed to a rough, wobbly, freehand or sketchy rendering where the geometry is clearly approximate? Answer yes if it looks precisely / deliberately constructed, no if it looks rough or freehand. Answer with the single word yes or no only.",
+    "d2_q_units": "This image should depict: a stainless vernier caliper measuring an aluminium tent-pole ferrule diameter at a campsite, its main and vernier scales geometrically consistent with the demanded reading, straight-on. Does it show a graduated measuring scale -- a numbered ruler, dial, vernier, gauge, or marked graduations with visible tick marks or numbers -- that a reading could be taken from, rather than the scale being missing or blank? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "vernier_div",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the scale head of this steel caliper",
+          "expected_n": 1,
+          "out": "vb"
+        },
+        {
+          "fail_if": ["vb.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows a vernier caliper: the long MAIN millimetre scale, and beside it the short sliding VERNIER scale whose divisions are numbered 0 to 10. Take the vernier lines numbered 0, 1, 2, 3, 4, 5, 6, 7, 8 and 9 one at a time. For each one, compare it with the main-scale line closest to it: for nine of them the two lines are slightly offset, so there is a visible step between them; for exactly ONE of them the vernier line and a main-scale line continue each other as a single straight unbroken line with no step at all. Ignore how bold, long or dark any line is drawn -- some lines are emphasised only for styling and that means nothing here. Which numbered vernier division is the one with NO step? Answer with a single whole number from 0 to 9 only, digits only.",
+          "boxes": "vb",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "run": "take_vernier",
+          "args": ["rd"],
+          "out": "num"
+        },
+        {
+          "fail_if": ["num.no_read"]
+        },
+        {
+          "compare_band": "num.value",
+          "to": "reference.vernier_div",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_mm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the scale head of this steel caliper",
+          "expected_n": 1,
+          "out": "vb"
+        },
+        {
+          "fail_if": ["vb.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows the two scales of a vernier caliper lying alongside each other: the long MAIN millimetre scale, and the short sliding VERNIER scale. Find the vernier's own 0 mark -- the very first line of the sliding scale. Now read the MAIN scale there: what is the largest whole number of millimetres on the MAIN scale that the vernier's 0 mark has already passed, i.e. the main-scale millimetre line at or just before the vernier 0? Use the main scale's printed numbers and count its millimetre lines on from the nearest printed number. Answer with a whole number of millimetres only, digits only, no units.",
+          "boxes": "vb",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "run": "take_main",
+          "args": ["rd"],
+          "out": "num"
+        },
+        {
+          "fail_if": ["num.no_read"]
+        },
+        {
+          "compare_band": "num.value",
+          "to": "reference.main_mm",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_single_subject",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_single",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_units_ref",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_units",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

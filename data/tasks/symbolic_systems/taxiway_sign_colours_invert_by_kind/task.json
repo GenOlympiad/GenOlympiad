@@ -1,0 +1,86 @@
+{
+  "id": "taxiway_sign_colours_invert_by_kind",
+  "axis": "symbolic_systems",
+  "prompt": "The aerodrome's yearly check of its ground signs falls due this week, so the inspector walks the shoulder and shoots each junction as he finds it.\n\nAt this junction the pavement carries straight on and a link peels away to the left just past the boards. The boards on the shoulder carry, in the order a pilot meets them, the code of the taxiway he is standing on, the way through to the runway, and the holding position for that runway. The rule the aerodrome works to is printed in the inspector's book: a board that tells a pilot where he is standing is lettered dark on a light ground; a board that tells him where he may go through to is those same two the other way about; and a board he may not pass without a word from the tower is lettered light on a strong ground of its own.\n\nWhat each board comes out as is what the inspector's book does not settle for him.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a row of small lit sign boards standing on the shoulder of an airport taxiway with a painted holding line laid across the pavement beyond them? Answer yes or no only.",
+  "reference": {
+    "part1": "boards_each_different",
+    "part2": "3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the boards standing on the shoulder, at the ground of each board and at the lettering on it. Answer with one of: the boards are all made up alike as one another; the boards are made up in a different way from one another; two of the boards are made up alike and the other one is not.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "sign board standing on its legs at the edge of the taxiway shoulder",
+          "out": "r_part2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part2.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

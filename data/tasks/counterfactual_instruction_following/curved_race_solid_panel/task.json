@@ -1,0 +1,151 @@
+{
+  "id": "curved_race_solid_panel",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A stock-handling contractor is signing off a new race at a beef yard, and the animal welfare assessor wants the overhead view before any cattle go through it.\n\nThe race runs single file from the crowd pen gate to the foot of the loading ramp. The setting-out sheet fixes its shape once and for all: straight for the first six metres out of the crowd pen, then a half circle, then straight again for the last five metres into the ramp. Five numbered marker pegs stand outside the race, lettered with their distance in metres from the crowd pen gate:\n\n  peg 3     peg 10     peg 17     peg 24     peg 28\n\nThe design code the assessor works to is two sentences long. Cattle must not see out sideways while they are being turned, so the sides of the race are sheeted solid wherever it is on the curve. Along a straight length the handler has to see the animal, so those sides are open rail that can be seen through.\n\nWhich lengths finish up sheeted and which finish up railed is the thing the assessor came to look at, and I am not saying. The assessor stands on the walkway outside the race with the sheet in hand. Keep all five peg numbers legible from above. Nothing is painted on the yard surface: no dimension figure and no arrow.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a cattle handling yard from above, with a narrow single-file race running between a pen and a loading ramp? A photograph or a scan of one both count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "peg_plan": {
+      "3": "straight",
+      "10": "curved",
+      "17": "curved",
+      "24": "curved",
+      "28": "straight"
+    },
+    "peg_labels": ["3", "10", "17", "24", "28"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_peg_has_the_planned_shape_of_race_beside_it_and_the_side_that_goes_with_it",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered marker peg standing outside the race together with the stretch of race beside it",
+          "out": "rc_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rc_r.unreadable"]
+        },
+        {
+          "read_crop": "What number is lettered on the marker peg in this cut-out? Answer with that number only.",
+          "boxes": "rc_r",
+          "pad": 0.3,
+          "out": "rc_n",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rc_n.unreadable"]
+        },
+        {
+          "read_crop": "Beside the peg in this cut-out, is the side of the race a solid sheet you cannot see through, or open rail you can see through? Answer 'solid' or 'open'.",
+          "boxes": "rc_r",
+          "pad": 0.5,
+          "out": "rc_w",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rc_w.unreadable"]
+        },
+        {
+          "read_crop": "Beside the peg in this cut-out, does the race run straight or does it bend round? Answer 'straight' or 'curve'.",
+          "boxes": "rc_r",
+          "pad": 0.7,
+          "out": "rc_c",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rc_c.unreadable"]
+        },
+        {
+          "run": "check_race_sides",
+          "args": ["rc_n", "rc_w", "rc_c", "reference.peg_plan"],
+          "out": "rc_s"
+        },
+        {
+          "compare_category": "rc_s.miss",
+          "to": 0,
+          "max_steps": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_five_marker_pegs_carry_the_numbers_the_setting_out_sheet_lists",
+      "weight": 0.7,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered marker peg standing outside the race",
+          "out": "pg_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pg_r.unreadable"]
+        },
+        {
+          "read_crop": "What number is lettered on the marker peg in this cut-out? Answer with that number only.",
+          "boxes": "pg_r",
+          "pad": 0.3,
+          "out": "pg_n",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pg_n.unreadable"]
+        },
+        {
+          "run": "read_peg_numbers",
+          "args": ["pg_n"],
+          "out": "pg_s"
+        },
+        {
+          "compare_set": "pg_s.seen",
+          "to": "reference.peg_labels",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_dimension_figure_or_arrow_was_painted_on_the_yard_surface",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a dimension figure or an arrow painted on the yard surface",
+          "out": "ya_r",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["ya_r.unreadable"]
+        },
+        {
+          "compare": "ya_r.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

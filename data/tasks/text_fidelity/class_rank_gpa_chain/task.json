@@ -1,0 +1,108 @@
+{
+  "id": "class_rank_gpa_chain",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed UNIVERSITY TRANSCRIPT for 'R. Haddad' (HARBOUR COLLEGE - Academic Record). Print a table with columns Code / Course / Mark / Grade / Credits / Points. For each course, the LETTER GRADE comes from the mark using these bands: 90+ = A (4.0); 80+ = B (3.0); 70+ = C (2.0); 60+ = D (1.0) (and below 60 = F, 0.0). The 'Points' column is that letter's grade point. Courses:\n  ECO201   Microeconomics     mark 79, credits 1\n  STA210   Statistics         mark 91, credits 5\n  LAW220   Contract Law       mark 65, credits 1\n  MKT230   Marketing          mark 88, credits 4\n  FIN240   Corp Finance       mark 72, credits 1\n  MGT250   Management         mark 83, credits 4\n  PSY260   Psychology         mark 90, credits 5\n  PHI270   Ethics             mark 77, credits 1\nAt the foot print the credit-weighted GPA = (sum of credits*points across all courses) divided by (total credits), rounded to 2 decimals. Print the full table and the GPA row. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed university transcript listing courses with marks, letter grades, credits and a credit-weighted GPA at the foot. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 8,
+    "read_course": 3,
+    "read_code": "LAW220",
+    "read_letter": "D",
+    "read_mark": 65,
+    "gpa": 3.23,
+    "q_count": "How many course rows are in this transcript table (not the header, not the GPA row)? Whole number only.",
+    "q_letter": "Find the course with code 'LAW220'. Read the LETTER GRADE printed in its 'Grade' column (a single letter A-F). Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. One letter only.",
+    "q_gpa": "Read the credit-weighted GPA number printed in the GPA row at the foot of the table. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give the number with 2 decimals."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "gpa_chain_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_letter",
+          "out": "letter"
+        },
+        {
+          "fail_if": ["letter.unreadable"]
+        },
+        {
+          "read_number": "reference.q_gpa",
+          "out": "gpa"
+        },
+        {
+          "fail_if": ["gpa.unreadable"]
+        },
+        {
+          "run": "letter_and_gpa_match",
+          "args": [
+            "letter",
+            "gpa",
+            "reference.read_letter",
+            "reference.gpa",
+            "reference.read_mark"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed course row of the transcript table, listing one course and its mark",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole printed table row naming a single course, rather than the column headings or a summary line? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 1.5,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

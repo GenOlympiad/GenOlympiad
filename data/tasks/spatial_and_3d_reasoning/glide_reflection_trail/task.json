@@ -1,0 +1,128 @@
+{
+  "id": "glide_reflection_trail",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A field card for a tracking school's instructor pack: a straight-down overhead photograph of one person's walking trail crossing smooth, wet estuary mud, the line of prints running from the left edge of the picture to the right edge. There are exactly eight boot prints in the line, evenly paced about seventy centimetres apart, all left by the same walker in the same pair of boots. The boot sole is strongly one-sided, the way real boots are: a deep curved arch gap on the INNER edge of each boot, a broad straight lug band along the outer edge, and the toe wider than the heel.\n\nWhich way each print's arch gap must face, print by print along the line, is for you to work out from how people actually walk -- I am deliberately not telling you, and a field card that shows an impossible trail is useless to the school. Unmarked mud everywhere else, soft even daylight, no feet or people in the picture, and no lettering, scale bar or arrows anywhere on the card.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a line of footprints or boot prints pressed into a muddy or sandy surface, seen from above? A realistic photo, an illustration or a plain drawing ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with nothing of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "flip_split_expected": "flips:7|of:7",
+    "n_prints": 8
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "arch_sides_alternate_print_by_print",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one boot print pressed into the mud",
+          "sweep": true,
+          "out": "bp"
+        },
+        {
+          "fail_if": ["bp.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one boot print. Is the print's curved arch gap on the upper edge of the print or on the lower edge? Answer with one word: upper or lower.",
+          "boxes": "bp",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "ar"
+        },
+        {
+          "fail_if": ["ar.unreadable"]
+        },
+        {
+          "run": "count_side_flips",
+          "args": ["ar"],
+          "out": "ft"
+        },
+        {
+          "compare": "ft.split",
+          "to": "reference.flip_split_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "prints_certificate",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one boot print pressed into the mud",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_pr"
+        },
+        {
+          "fail_if": ["box_pr.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole boot print in the mud, rather than a smear, an overlap of two prints, or plain mud? Answer yes or no only.",
+          "boxes": "box_pr",
+          "pad": 0.3,
+          "out": "cert"
+        },
+        {
+          "fail_if": ["cert.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cert"],
+          "out": "n_pr"
+        },
+        {
+          "compare_band": "n_pr.n",
+          "to": "reference.n_prints",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_added_marks",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "lettering, a scale bar or an arrow drawn on the card",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

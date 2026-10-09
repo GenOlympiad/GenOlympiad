@@ -1,0 +1,222 @@
+{
+  "id": "hx_counterflow_approach",
+  "axis": "physical_consistency",
+  "prompt": "Commissioning day beside a shell-and-tube heat exchanger skid: the technician's hand holds the ACCEPTANCE TEST sheet on its clipboard in the foreground, the lagged skid behind. Buyer and process engineer both sign this sheet -- it settles the purchase, so its four temperatures and its little chart must tell one story.\n\nBoth sides run plain water in true counterflow. The sheet's printed lines carry the test facts: HOT IN 90 C, HOT OUT 34 C, COLD IN 20 C, hot side flow 1.5 kg per second, cold side flow 2.8 kg per second. One line is left for the technician and is filled in ink: COLD OUT, the temperature the cold stream actually left at. Below the lines the sheet carries the TEMPERATURE-RUN chart the analyzer prints: distance along the exchanger on the horizontal, the hot stream entering at the left end and the cold stream entering at the right end, both runs drawn full length. Fill the inked figure and draw both runs yourself -- I am deliberately not telling you the cold outlet, and I am not telling you how the two runs may lie against each other: the heat one stream gives up is the heat the other carries away, and an engineer rejects a sheet whose chart contradicts its own figures.\n\nDo not print any formula, working or extra caption on the sheet: the only text is the sheet heading, the printed test lines, the inked COLD OUT line and the chart's axis labels, all large and sharp enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a clipboard test sheet with labelled temperature lines and a small chart, near industrial pipework? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "ports_expected": "ci:20|co:50|hi:90|ho:34",
+    "crossing_word": "yes",
+    "touch_word": "no",
+    "pinch_word": "right",
+    "n_port_lines": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "port_lines_close_the_energy_account",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one temperature line of the acceptance sheet, its port label with its figure",
+          "sweep": true,
+          "out": "pt"
+        },
+        {
+          "fail_if": ["pt.unreadable"]
+        },
+        {
+          "read_crop": "Copy this sheet line as written. Write the port label and the temperature figure only.",
+          "boxes": "pt",
+          "pad": 0.3,
+          "out": "pt_t"
+        },
+        {
+          "fail_if": ["pt_t.unreadable"]
+        },
+        {
+          "run": "port_temperatures",
+          "args": ["pt_t"],
+          "out": "pl"
+        },
+        {
+          "compare": "pl.pairs",
+          "to": "reference.ports_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cold_leaves_hotter_than_the_hot_stream",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one temperature line of the acceptance sheet, its port label with its figure",
+          "sweep": true,
+          "out": "pt"
+        },
+        {
+          "fail_if": ["pt.unreadable"]
+        },
+        {
+          "read_crop": "Copy this sheet line as written. Write the port label and the temperature figure only.",
+          "boxes": "pt",
+          "pad": 0.3,
+          "out": "pt_t"
+        },
+        {
+          "fail_if": ["pt_t.unreadable"]
+        },
+        {
+          "run": "port_temperatures",
+          "args": ["pt_t"],
+          "out": "pl"
+        },
+        {
+          "compare": "pl.crossing",
+          "to": "reference.crossing_word",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "runs_never_touch",
+      "weight": 0.75,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the temperature-run chart panel printed on the sheet",
+          "sweep": true,
+          "out": "ch"
+        },
+        {
+          "fail_if": ["ch.unreadable"]
+        },
+        {
+          "read_crop": "Do the two temperature lines touch or cross anywhere on this chart? Answer yes or no only.",
+          "boxes": "ch",
+          "pad": 0.2,
+          "out": "ch_t"
+        },
+        {
+          "fail_if": ["ch_t.unreadable"]
+        },
+        {
+          "compare": "ch_t.answers.0",
+          "to": "reference.touch_word",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "gap_pinches_at_the_cold_inlet_end",
+      "weight": 0.75,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the temperature-run chart panel printed on the sheet",
+          "sweep": true,
+          "out": "ch"
+        },
+        {
+          "fail_if": ["ch.unreadable"]
+        },
+        {
+          "read_crop": "Is the vertical gap between the two lines narrower at the right-hand end or the left-hand end of this chart? Answer right or left only.",
+          "boxes": "ch",
+          "pad": 0.2,
+          "out": "pg_t"
+        },
+        {
+          "fail_if": ["pg_t.unreadable"]
+        },
+        {
+          "compare": "pg_t.answers.0",
+          "to": "reference.pinch_word",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "four_port_lines_certificate",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one temperature line of the acceptance sheet, its port label with its figure",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_l"
+        },
+        {
+          "fail_if": ["box_l.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE sheet line holding a port label and a temperature, rather than a flow line or only part of a line? Answer yes or no only.",
+          "boxes": "box_l",
+          "pad": 0.3,
+          "out": "cert"
+        },
+        {
+          "fail_if": ["cert.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cert"],
+          "out": "n_l"
+        },
+        {
+          "compare_band": "n_l.n",
+          "to": "reference.n_port_lines",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_on_sheet",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a formula, an equation or a worked calculation printed on the sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,183 @@
+{
+  "id": "three_starts_share_the_thread",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A close photograph on the inspection bench of a packaging plant, taken square on with a low light raking across the work so that raised detail stands out.\n\nA clear plastic drink bottle stands on the bench with its closure unscrewed and lying on its side next to it, open end toward the camera, so that the raised thread on the outside of the bottle neck and the raised thread inside the closure can both be seen. A vernier caliper lies on the bench beside them for scale. The neck fills enough of the frame that the raised thread on it can be followed with the eye.\n\nThis is the mould approval photograph for a filling line, and on that line the operator turns the closure only a third of a turn to take it off. What that means for the thread cut into this neck, how many raised ridges there are on it and how they are arranged round it, are for you to get right from the way such a neck is made. The closure has to match the neck it came off. I am deliberately not telling you any of it.\n\nNothing else belongs in the picture: no arrow, no ring drawn round the neck, no note about the thread, no figure written anywhere and no writing apart from what is moulded into the plastic itself.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is lit. Does this picture show the neck of a bottle with its closure lying beside it? A photograph, a scan or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no bottle at all. Answer yes or no only.",
+  "reference": {
+    "start_tag": "yes",
+    "cross_state": "no",
+    "cap_tag": "yes",
+    "clean_frame": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "three_separate_ridges_begin_at_the_rim_of_the_neck",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the threaded part of the bottle neck facing the camera",
+          "out": "nk"
+        },
+        {
+          "fail_if": ["nk.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. How many separate raised ridges begin at the top rim of the neck and run away downward from it? Write the number only.",
+          "boxes": "nk",
+          "pad": 0.08,
+          "out": "nkv"
+        },
+        {
+          "run": "three_thread_starts",
+          "args": ["nkv"],
+          "out": "nks"
+        },
+        {
+          "fail_if": ["nks.refused"]
+        },
+        {
+          "compare": "nks.tag",
+          "to": "reference.start_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "none_of_the_ridges_ever_runs_into_another",
+      "weight": 2.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the threaded part of the bottle neck facing the camera",
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Do any two of the raised ridges in it cross over one another or run together into one ridge? Answer yes or no.",
+          "boxes": "sp",
+          "pad": 0.08,
+          "out": "spv"
+        },
+        {
+          "run": "ridges_cross",
+          "args": ["spv"],
+          "out": "sps"
+        },
+        {
+          "fail_if": ["sps.refused"]
+        },
+        {
+          "compare": "sps.tag",
+          "to": "reference.cross_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_closure_carries_the_same_number_of_ridges_inside_it",
+      "weight": 1.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the inside of the unscrewed closure lying on the bench",
+          "out": "cp"
+        },
+        {
+          "fail_if": ["cp.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. How many separate raised ridges begin at the open rim inside this closure? Write the number only.",
+          "boxes": "cp",
+          "pad": 0.08,
+          "out": "cpv"
+        },
+        {
+          "run": "three_starts_inside_closure",
+          "args": ["cpv"],
+          "out": "cps"
+        },
+        {
+          "fail_if": ["cps.refused"]
+        },
+        {
+          "compare": "cps.tag",
+          "to": "reference.cap_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_in_the_picture_counts_the_ridges_for_the_reader",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, a ring drawn round the neck, a figure written anywhere, or a note about the thread",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: an arrow, a ring drawn round something, a figure written on the bench or on the glass, or a written note about the thread? Answer yes or no. Answer no if the cut-out shows the bottle, the neck, a raised ridge on it, the closure, the caliper, moulded lettering in the plastic itself or the bench top.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as an arrow, a ring drawn round something, a figure written on the bench or on the glass, or a written note about the thread? Answer yes or no. Answer no if it belongs there -- the bottle, the neck, a raised ridge on it, the closure, the caliper, moulded lettering in the plastic itself or the bench top.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_frame",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

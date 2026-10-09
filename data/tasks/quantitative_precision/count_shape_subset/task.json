@@ -1,0 +1,131 @@
+{
+  "id": "count_shape_subset",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic photograph looking straight down on a plain white tablecloth strewn with red paper confetti, all exactly the same shade of red and all about the same width, but in TWO shapes: EXACTLY 27 perfectly ROUND pieces and 18 STAR-SHAPED (five-pointed) pieces mixed in among them. There must be EXACTLY 27 round red pieces -- not 26, not 28. Scatter them irregularly with uneven gaps -- never in rows, never in a grid, never arranged as a ring or a decorative border. Even light, sharp focus. No text, no numerals, no labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a white tablecloth strewn with red paper confetti, some round and some star-shaped. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q": "Count only the ROUND red confetti pieces; ignore the star-shaped ones. Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This image should show the countable objects described as: a white tablecloth strewn with red paper confetti, some round and some star-shaped. Look at the individual objects being counted. Are they clearly the correct KIND of object (the right thing, of the right colour where a colour was specified) rather than some other object, blobs, or a mix that does not match the description? Answer with the single word yes or no only.",
+    "n": 27
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "red item whose outline is a perfect CIRCLE (a plain round disc), not one of the five-pointed star-shaped red items",
+          "propose_boxes": "vlm",
+          "out": "b"
+        },
+        {
+          "fail_if": ["b.unreadable"]
+        },
+        {
+          "read_crop": "Is the red shape in this picture a round circle (rather than a pointed star)? Answer yes or no only.",
+          "boxes": "b",
+          "out": "c"
+        },
+        {
+          "fail_if": ["c.unreadable"]
+        },
+        {
+          "count_yes": "c",
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one piece of paper confetti lying on the white tablecloth, round or star-shaped",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_g"
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole piece of red paper confetti, either round or five-pointed, rather than a piece of some other colour, bare tablecloth, a shapeless blob, or only part of a piece? Answer yes or no only.",
+          "boxes": "box_g",
+          "out": "crop_g"
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a red-glazed biscuit",
+    "s2": "a red foam shape",
+    "s3": "a piece of red paper confetti"
+  }
+}

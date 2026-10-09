@@ -1,0 +1,162 @@
+{
+  "id": "binomial_nomenclature_italics",
+  "axis": "text_fidelity",
+  "prompt": "Four intercepted insects have been identified at a plant health laboratory, and the identification report that goes back to the importer is lying on the bench under the lamp, photographed square on with the four stoppered sample tubes standing beside it.\n\nThe report carries one typed line for each specimen, in this order, and each line carries the genus word, the species word, the describer's surname and the year of description, as follows:\n\nTrogoderma granarium, described by Everts in 1898, and Everts described it in Trogoderma itself.\nRhagoletis pomonella, described by Walsh in 1867, though Walsh described it in the genus Trypeta and it was moved to Rhagoletis afterwards.\nBactrocera dorsalis, described by Hendel in 1912, though Hendel described it in the genus Dacus and it was moved to Bactrocera afterwards.\nPopillia japonica, described by Newman in 1841, and Newman described it in Popillia itself.\n\nThe report is typed large enough to be read across the bench. It goes out under the laboratory's own accreditation, so the four lines are given in the standard form that identification reports use for scientific names and their authorities -- the form a plant health inspector at the other end will check the consignment against. Work that form out yourself: I am deliberately not telling you which parts of a line are treated differently from the rest, and I am deliberately not telling you what the moves between genera do to a line. Nothing else goes on the report: no note of the naming conventions, no key, no common names, no annotations in the margin.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a typed report carrying lines of scientific names with people's surnames and years beside them? A photograph of a report, a scan, a flat artwork or a screen grab ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer, or shows something with no typed lines of text in it. Answer yes or no only.",
+  "reference": {
+    "n_lines": 4,
+    "bracket_by_genus": {
+      "trogoderma": "no",
+      "rhagoletis": "yes",
+      "bactrocera": "yes",
+      "popillia": "no"
+    },
+    "name_face": "slanted",
+    "author_face": "upright"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_letterform_changes_where_the_name_ends",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a typed line of the identification report",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "line_box"
+        },
+        {
+          "fail_if": ["line_box.unreadable"]
+        },
+        {
+          "read_crop": "Are the first two words of this line printed slanted or upright? Answer slanted or upright.",
+          "boxes": "line_box",
+          "pad": 0.2,
+          "out": "name_rd"
+        },
+        {
+          "fail_if": ["name_rd.unreadable"]
+        },
+        {
+          "read_crop": "Is the person's surname on this line printed slanted or upright? Answer slanted or upright.",
+          "boxes": "line_box",
+          "pad": 0.2,
+          "out": "auth_rd"
+        },
+        {
+          "fail_if": ["auth_rd.unreadable"]
+        },
+        {
+          "read_crop": "Copy the person's surname printed on this line, and write nothing else. If no surname is printed, answer the single word blank.",
+          "boxes": "line_box",
+          "pad": 0.2,
+          "out": "sur_rd"
+        },
+        {
+          "fail_if": ["sur_rd.unreadable"]
+        },
+        {
+          "run": "face_switch",
+          "args": ["name_rd", "auth_rd", "sur_rd", "reference.name_face", "reference.author_face"],
+          "out": "faces"
+        },
+        {
+          "compare_band": "faces.ok",
+          "to": "reference.n_lines",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_authority_is_bracketed_on_the_lines_that_changed_genus",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a typed line of the identification report",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "line_box2"
+        },
+        {
+          "fail_if": ["line_box2.unreadable"]
+        },
+        {
+          "read_crop": "Copy the first word of this line, and write nothing else.",
+          "boxes": "line_box2",
+          "pad": 0.2,
+          "out": "genus_rd"
+        },
+        {
+          "fail_if": ["genus_rd.unreadable"]
+        },
+        {
+          "read_crop": "Is the person's surname on this line inside round brackets? Answer yes or no only.",
+          "boxes": "line_box2",
+          "pad": 0.2,
+          "out": "brack_rd"
+        },
+        {
+          "fail_if": ["brack_rd.unreadable"]
+        },
+        {
+          "run": "brackets_by_genus",
+          "args": ["genus_rd", "brack_rd", "reference.bracket_by_genus"],
+          "out": "brackets"
+        },
+        {
+          "compare_band": "brackets.ok",
+          "to": "reference.n_lines",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_else_stands_on_the_report",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a note of naming conventions, a key or a common name added to the report",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "extras"
+        },
+        {
+          "fail_if": ["extras.unreadable"]
+        },
+        {
+          "compare": "extras.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

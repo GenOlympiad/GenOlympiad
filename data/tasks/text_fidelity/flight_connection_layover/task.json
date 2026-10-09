@@ -1,0 +1,121 @@
+{
+  "id": "flight_connection_layover",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed FLIGHT ITINERARY for 'Booking HR-40881' (HARBOUR WINGS - Travel plan). All times are local on a 24-hour clock. Print 4 flight segments in order, each as a row with Flight / Route / Depart / Arrive / Duration, where ARRIVE = DEPART + DURATION (clock addition, may pass midnight). Between consecutive segments print a LAYOVER = (next flight's depart) - (this flight's arrive). At the foot print the TOTAL JOURNEY = (last arrive) - (first depart). Segments (depart + duration given; you compute each arrive):\n  HR22: GRU->BOG, depart 09:40, duration 6h20m\n  HR67: BOG->MEX, depart 17:45, duration 5h35m\n  HR90: MEX->LAX, depart 01:50, duration 4h15m\n  HR14: LAX->NRT, depart 08:10, duration 11h30m\nLayovers to print: after HR22: 1h45m; after HR67: 2h30m; after HR90: 2h05m. Print the segment rows, the layover boxes between them, and the total journey row. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed multi-leg flight itinerary with segment depart/arrive times, layovers between segments and a total journey time. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 4,
+    "read_seg": 3,
+    "read_conn": 3,
+    "seg_dep": 1550,
+    "seg_arr": 1805,
+    "seg_dur": 255,
+    "lay_val": 125,
+    "total": 2040,
+    "q_count": "How many flight SEGMENT rows are in this itinerary (rows with a flight number and a route, not layover boxes, not the total row)? Whole number only.",
+    "q_arr": "Read the ARRIVE time printed for flight segment number 3 (the 3-th segment row from the top). Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give it as HH:MM in 24-hour form.",
+    "q_lay": "Read the LAYOVER duration printed in the 3-th layover box (the layover after the 3-th segment). Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give it as the printed hours-and-minutes string: the hours as digits, then the letter h, then the minutes as digits, then the letter m, and nothing else.",
+    "q_total": "Read the TOTAL JOURNEY duration printed in the row at the very foot of the itinerary. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give it as the printed hours-and-minutes string: the hours as digits, then the letter h, then the minutes as digits, then the letter m, and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "layover_chain_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_arr",
+          "out": "arr"
+        },
+        {
+          "fail_if": ["arr.unreadable"]
+        },
+        {
+          "ask": "reference.q_lay",
+          "out": "lay"
+        },
+        {
+          "fail_if": ["lay.unreadable"]
+        },
+        {
+          "ask": "reference.q_total",
+          "out": "total"
+        },
+        {
+          "fail_if": ["total.unreadable"]
+        },
+        {
+          "run": "arrival_layover_total_match",
+          "args": [
+            "arr",
+            "lay",
+            "total",
+            "reference.seg_arr",
+            "reference.seg_dep",
+            "reference.seg_dur",
+            "reference.lay_val",
+            "reference.total"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed itinerary row that carries a flight number and its airport route",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed table row carrying a flight number and an airport route, rather than blank paper or only part of a row? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 0.9,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

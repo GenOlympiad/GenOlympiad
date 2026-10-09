@@ -1,0 +1,132 @@
+{
+  "id": "2048_spawn_bookkeeping",
+  "axis": "latent_computation",
+  "prompt": "A classroom magnetic whiteboard grid with square magnet tiles, each magnet printed with a number in thick black marker. It shows one 4x4 sliding-number puzzle board of the 2048 kind. This is a long ledger of presses and declared new tiles; the board has to be carried through every one of them. Rows are numbered 1 to 4 from the top, columns 1 to 4 from the left. The starting board is: row 1: a 4 tile at column 1, a 4 tile at column 3; row 2: a 4 tile at column 2; row 3: a 2 tile at column 3; every other cell is empty. 2048 rules apply exactly: on each press EVERY tile slides as far as it can in that direction; two tiles of the SAME value that collide merge into ONE tile of double that value; a tile can take part in at most one merge per press, so a tile just formed by a merge cannot merge again in the same press; when three equal tiles are in line, the pair nearest the direction of travel merges and the third tile stays unmerged; after the sliding and merging is finished, the declared new tile appears at the declared cell. Step 1: press LEFT; then a new 2 tile appears at row 3, column 4. Step 2: press DOWN; then a new 2 tile appears at row 3, column 3. Step 3: press DOWN; then a new 2 tile appears at row 3, column 2. Step 4: press UP; then a new 4 tile appears at row 2, column 3. Step 5: press RIGHT; then a new 2 tile appears at row 2, column 2. Step 6: press RIGHT; then a new 2 tile appears at row 3, column 1. Step 7: press UP; then a new 4 tile appears at row 4, column 1. Step 8: press RIGHT; then a new 2 tile appears at row 1, column 1. Step 9: press UP; then a new 2 tile appears at row 3, column 1. Step 10: press UP; then a new 4 tile appears at row 2, column 3. Step 11: press LEFT; then a new 2 tile appears at row 3, column 4. Step 12: press LEFT; then a new 2 tile appears at row 4, column 2. Step 13: press LEFT; then a new 2 tile appears at row 4, column 2. Step 14: press UP; then a new 2 tile appears at row 3, column 2. Draw ONLY the board as it stands after the last step: a 4 by 4 grid of equal square cells with even gaps, every non-empty cell showing its number centred in large bold digits, every empty cell left blank. Render it as that magnetic whiteboard grid, photographed flat and filling the frame. The board fills the picture. Do not draw any score panel, title, caption, arrow, label, coordinate or any other number or text anywhere in the image.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a classroom magnetic whiteboard grid with square magnet tiles, each magnet printed with a number in thick black marker showing a 4x4 grid of number tiles. Never mind how well it is drawn. Does the picture show a grid of square number cells on the described medium? A photo, a screenshot, an illustration or a clean diagram of it ALL count as yes. Answer NO only if the image shows something unrelated, or a blank panel with no number grid at all. Answer yes or no only.",
+  "reference": {
+    "rows": 4,
+    "cols": 4,
+    "grid": [
+      [8, 4, 8, 16],
+      [4, 4, 0, 0],
+      [2, 2, 0, 0],
+      [0, 0, 0, 0]
+    ],
+    "n_tiles": 8,
+    "max_tile": 16,
+    "n_steps": 14
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "final_board_cells",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the whole square puzzle board itself, including its blank cells, but not the page or wall around it",
+          "expected_n": 1,
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "run": "plan_board_strips",
+          "args": ["image", "bd", "reference.rows", "reference.cols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "rects": "pl.rects",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 200, 0],
+          "out": "ov"
+        },
+        {
+          "read_crop": "This is a board divided into a grid of equal square cells. Take one row of the board and work across it from left to right. Write down every cell you pass, each with a few plain words saying what is printed in that cell or that it is blank. Take the blank cells too. Separate one item from the next with a semicolon; write no running total and nothing else.",
+          "boxes": "pl.board_box",
+          "pad": 0.02,
+          "out": "sz_across"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["sz_across", "empty_as='0'"],
+          "out": "sz_across__std"
+        },
+        {
+          "fail_if": ["sz_across__std.refused"]
+        },
+        {
+          "read_crop": "This is a board divided into a grid of equal square cells. Take one column of the board and work down it from top to bottom. Write down every cell you pass, each with a few plain words saying what is printed in that cell or that it is blank. Take the blank cells too. Separate one item from the next with a semicolon; write no running total and nothing else.",
+          "boxes": "pl.board_box",
+          "pad": 0.02,
+          "out": "sz_down"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["sz_down", "empty_as='0'"],
+          "out": "sz_down__std"
+        },
+        {
+          "fail_if": ["sz_down__std.refused"]
+        },
+        {
+          "run": "merge_board_size",
+          "args": ["sz_across__std", "sz_down__std"],
+          "out": "sz"
+        },
+        {
+          "read_crop": "This is one horizontal strip cut out of a puzzle board. {pl.m} square cells sit side by side in it and each one has a thin green outline drawn on it. Reading strictly left to right, write down the number printed inside each green outline. If there is no number inside an outline, write 0 for that one. Answer with the {pl.m} numbers separated by commas and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.chunks",
+          "pad": 0.02,
+          "out": "rd"
+        },
+        {
+          "run": "assemble_board_grid",
+          "args": ["rd", "sz", "pl", "reference.rows", "reference.cols"],
+          "out": "bo"
+        },
+        {
+          "fail_if": ["bo.no_read"]
+        },
+        {
+          "compare_grid": "bo.grid",
+          "to": "reference.grid",
+          "ignore": "0",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

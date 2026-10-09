@@ -1,0 +1,84 @@
+{
+  "id": "corner_carousel_swings_clear",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The fitters come back on Thursday to hand the kitchen over, so the foreman opens the corner unit, turns the carousel once by hand and takes one straight-on photograph.\n\nThe corner cabinet stands at the end of the run, its door off the latch. Inside it a carousel of two fan shaped shelves is fixed on an upright post. The unit next along has been left as found, its door not opened, and it carries a bar handle screwed to the face. Taped inside the cabinet is the fitting card: carousel shelves 700 millimetres across, the post set 300 millimetres back from the front line of the cabinet, the door leaf 500 millimetres wide, and the bar handle on the next door standing 40 millimetres proud of its face. Under that, one line: the shelves must go all the way round by hand with nothing else moved.\n\nWhat has to happen to the door for that is what the card does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show an open corner kitchen cabinet with a round rotating shelf unit standing inside it? Answer yes or no only.",
+  "reference": {
+    "part1": "flat_back",
+    "part2": "handle_aside"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the door of the corner cabinet. Answer with one of: the door stands right back, flat against the cabinet fronts beside it; the door stands part way out across the opening; the door is shut against its frame.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the bar handle on the door of the unit next along, and at the mouth of the corner cabinet. Answer with one of: the handle stands off to the side of the mouth of the cabinet; the handle stands out in front of the mouth of the cabinet; the next door is a plain slab with a finger groove instead of a handle.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

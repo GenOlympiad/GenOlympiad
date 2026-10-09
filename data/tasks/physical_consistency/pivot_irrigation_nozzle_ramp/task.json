@@ -1,0 +1,236 @@
+{
+  "id": "pivot_irrigation_nozzle_ramp",
+  "axis": "physical_consistency",
+  "prompt": "A sprinkler package configuration drawing for a centre pivot -- the sheet the irrigation dealer issues to the installer with the machine. One long elevation of the machine runs left to right across the sheet: the pivot point at the left, the pipeline out on its towers, the end gun off the right-hand end, a title block at the bottom right and the nozzle catalogue in the corner.\n\nThe machine, off the dealer's order: the pipeline is 360 m long from the pivot point and carries 120 outlets spaced 3.0 m apart. The package is banded -- the outlets are taken in twelve bands of ten consecutive outlets each, band 1 nearest the pivot and band 12 at the far end, and every outlet in a band carries the same nozzle. Each band has one leader line down to the pipe with its own label at the end of it, written as the band number and the nozzle number, in the style B7 N19. The title block carries the line SYSTEM FLOW 240 m3/h. This machine is being made up to lay down one even depth of water over the whole circle it waters.\n\nThe nozzle catalogue in the corner of the sheet, nozzle number against the flow one nozzle passes in m3/h:\n05 0.18 / 07 0.34 / 09 0.51 / 11 0.70 / 13 0.90 / 15 1.17 / 17 1.50 / 19 1.83 / 21 2.16 / 23 2.49 / 25 2.82 / 27 3.15 / 29 3.48 / 31 3.81\n\nWhich nozzle belongs in which band is for you to work out -- I am deliberately not telling you a single one of the twelve, and I am not telling you how the flow has to change along the pipe. Do not print a flow figure, an application depth, or any working beside the bands on the pipe: the only lettering on the pipe itself is the twelve band labels, and the only two tables on the sheet are the title block and the catalogue.\n\nAll twelve band labels, the title block and the catalogue must be large enough on the sheet to be read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a long side-on engineering drawing of a centre pivot irrigation machine with labels along its pipeline, a title block and a small table of numbers in a corner? A photograph, an illustration or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank sheet or a plain panel with none of that, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_bands": 12,
+    "outlets_per_band": 10,
+    "duty_m3h": 240.0,
+    "duty_tol_rel": 0.03,
+    "step_ratio_max": 3.0,
+    "pipeline_m": 360,
+    "outlet_spacing_m": 3.0,
+    "nozzle_flow": {
+      "5": 0.18,
+      "7": 0.34,
+      "9": 0.51,
+      "11": 0.7,
+      "13": 0.9,
+      "15": 1.17,
+      "17": 1.5,
+      "19": 1.83,
+      "21": 2.16,
+      "23": 2.49,
+      "25": 2.82,
+      "27": 3.15,
+      "29": 3.48,
+      "31": 3.81
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nozzle_flow_ramps_with_radius",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a band label printed at a leader line on the pivot drawing",
+          "out": "lb_box",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["lb_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one printed band label on the drawing. Copy the label exactly. Write nothing else.",
+          "boxes": "lb_box",
+          "out": "lb_txt"
+        },
+        {
+          "fail_if": ["lb_txt.unreadable"]
+        },
+        {
+          "run": "flow_ramp",
+          "args": ["lb_txt", "reference.nozzle_flow", "reference.step_ratio_max"],
+          "out": "rp"
+        },
+        {
+          "compare": "rp.verdict",
+          "to": "ramp",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "package_total_matches_the_duty",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a band label printed at a leader line on the pivot drawing",
+          "out": "tb_box",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["tb_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one printed band label on the drawing. Copy the label exactly. Write nothing else.",
+          "boxes": "tb_box",
+          "out": "tb_txt"
+        },
+        {
+          "fail_if": ["tb_txt.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the title block panel printed on the pivot drawing",
+          "out": "ti_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["ti_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is a drawing title block. Copy the number printed on the line that says SYSTEM FLOW. Write the number only.",
+          "boxes": "ti_box",
+          "out": "ti_val"
+        },
+        {
+          "fail_if": ["ti_val.unreadable"]
+        },
+        {
+          "run": "flow_total_matches",
+          "args": [
+            "tb_txt",
+            "reference.nozzle_flow",
+            "ti_val",
+            "reference.outlets_per_band",
+            "reference.duty_tol_rel"
+          ],
+          "out": "lg"
+        },
+        {
+          "compare": "lg.verdict",
+          "to": "balanced",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_label_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a band label printed at a leader line on the pivot drawing",
+          "out": "box_read",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole printed band label, rather than bare pipe or only part of a label? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_bands",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_catalogue_present",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the nozzle catalogue table printed on the pivot drawing",
+          "out": "cat_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["cat_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show a small table of numbers? Answer yes or no only.",
+          "boxes": "cat_box",
+          "out": "cat"
+        },
+        {
+          "fail_if": ["cat.unreadable"]
+        },
+        {
+          "compare": "cat.answers.0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_written_flow",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a flow figure or a watering depth written beside a band label on the pipeline",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

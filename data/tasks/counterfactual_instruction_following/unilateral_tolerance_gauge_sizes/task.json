@@ -1,0 +1,174 @@
+{
+  "id": "unilateral_tolerance_gauge_sizes",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph on the bench of a works metrology room, taken from straight above. A double-ended plug gauge lies on a lint-free mat with both of its engraved end plates uppermost. Beside it are the drawing extract for the part and the gauge card that will go into the file with the gauge.\n\nThe part is a bored bush. The drawing extract gives the bore as 25.00 with a tolerance of plus or minus 0.03 millimetres. This works keeps one standing rule about its own sheets, and it holds for every plus-and-minus tolerance the drawing office issues: the band opens upward from the stated size only, and never downward.\n\nEach end plate carries the name of its end and the size that end is cut to. The gauge card carries two small check sketches, one for each end, with the name of the end printed under its own sketch; each sketch is the end brought up to the bore of the bush as it behaves when the inspector uses it.\n\nWork out for yourself what belongs on each plate and what each sketch has to look like -- I am deliberately not telling you either size, nor which end goes into the bore. The engraving and the sketch captions must be large and sharp. Nothing may appear beyond the gauge, the drawing extract and the card: no working, no table of limits, no note about the standing rule.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a metal gauge with engraved plates on it and, beside it, a printed card carrying small sketches? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "plate_map": "go:25.00 nogo:25.03",
+    "fit_map": "go:inside nogo:outside",
+    "n_plates": 2,
+    "q_plate_cert": "Does this cut-out show ONE whole engraved plate from an end of the gauge, rather than the body of the gauge or only part of a plate? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_end_plate_carries_the_limit_the_house_reading_gives_it",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an engraved plate on an end of the plug gauge",
+          "sweep": true,
+          "out": "plate_ring"
+        },
+        {
+          "fail_if": ["plate_ring.unreadable"]
+        },
+        {
+          "read_crop": "Copy the words and the figure engraved on this plate. Write them only.",
+          "boxes": "plate_ring",
+          "pad": 0.2,
+          "out": "plate_txt"
+        },
+        {
+          "fail_if": ["plate_txt.unreadable"]
+        },
+        {
+          "run": "read_plate_sizes",
+          "args": ["plate_txt"],
+          "out": "plates"
+        },
+        {
+          "compare": "plates.seq",
+          "to": "reference.plate_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_entering_end_is_the_one_the_house_reading_moved",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a small check sketch on the card showing a gauge end at the bore",
+          "sweep": true,
+          "out": "sk_ring"
+        },
+        {
+          "fail_if": ["sk_ring.unreadable"]
+        },
+        {
+          "read_crop": "Copy the words printed under this sketch. Write them only.",
+          "boxes": "sk_ring",
+          "pad": 0.25,
+          "out": "sk_name"
+        },
+        {
+          "fail_if": ["sk_name.unreadable"]
+        },
+        {
+          "read_crop": "In this sketch, is the gauge end sitting inside the hole or resting outside it? Answer with one word: inside or outside.",
+          "boxes": "sk_ring",
+          "pad": 0.2,
+          "out": "sk_state"
+        },
+        {
+          "fail_if": ["sk_state.unreadable"]
+        },
+        {
+          "run": "labelled_pairs",
+          "args": ["sk_name", "sk_state"],
+          "out": "fits"
+        },
+        {
+          "compare": "fits.canon",
+          "to": "reference.fit_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_two_engraved_plates_stand_on_the_gauge",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an engraved plate on an end of the plug gauge",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_plate_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_plates",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_limits_table_was_added_to_the_bench",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a table of limits, a line of arithmetic or a note added beyond the gauge, the drawing extract and the card",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

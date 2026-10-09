@@ -1,0 +1,180 @@
+{
+  "id": "medgas_pin_index_valve",
+  "axis": "world_knowledge_grounding",
+  "prompt": "Stocktaking day in a hospital's medical engineering department has reached the cylinder store, and the bench by the door is where every cylinder is checked before it is signed for. The picture is that bench, taken from in front at bench height so that the face of every valve block is turned towards the camera.\n\n4 small cylinders stand in a row on the bench with their body labels facing out, and the labels do not move: OXYGEN, NITROUS OXIDE, MEDICAL AIR and CARBON DIOXIDE, in that order from the left. Each cylinder is finished in the shoulder colour the international code gives its own gas. A regulator yoke has been offered up to the valve block of each one, and every yoke has the gas it belongs to stamped across its back in the same lettering.\n\nThis is the round the porter has just made, and it is what the photograph has to show: the OXYGEN yoke offered up to the OXYGEN cylinder, the MEDICAL AIR yoke to the NITROUS OXIDE cylinder, the NITROUS OXIDE yoke to the MEDICAL AIR cylinder, and the CARBON DIOXIDE yoke to the CARBON DIOXIDE cylinder. Every one of them has been pushed home as hard as it will go and its clamp screw wound up behind it.\n\nWhich of the 4 yokes end up sitting flat against their valve blocks, and which are held off with an open gap under them, is the part you have to work out -- I am deliberately not telling you. Take it close enough that the gap under a yoke, where there is one, is plain at a glance. Other than the 4 body labels and the lettering already stamped on the yokes, no written note or tag belongs on the bench.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show gas cylinders standing on a bench with their valve blocks facing the camera? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no cylinders on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "seats": "OXYGEN=flat,NITROUS OXIDE=gap,MEDICAL AIR=gap,CARBON DIOXIDE=flat",
+    "shoulders": "OXYGEN=white,NITROUS OXIDE=blue,MEDICAL AIR=black and white,CARBON DIOXIDE=grey",
+    "n_cylinders": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_yoke_sits_home_or_stands_off_according_to_the_gas_it_is_offered_to",
+      "weight": 3.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a gas cylinder standing on the bench with its valve block facing the camera",
+          "sweep": true,
+          "out": "cyl_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cyl_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which gas name is printed on the cylinder's body label? Answer with the words exactly as they are printed.",
+          "boxes": "cyl_box",
+          "pad": 0.9,
+          "out": "gkey_rd"
+        },
+        {
+          "fail_if": ["gkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the yoke pulled flat against the valve block with no gap under it, or is it standing off with an open gap under it? Answer with one word: flat or gap, or none if no yoke is held against this cylinder.",
+          "boxes": "cyl_box",
+          "pad": 0.9,
+          "out": "seat_rd"
+        },
+        {
+          "fail_if": ["seat_rd.unreadable"]
+        },
+        {
+          "run": "check_yoke_seats",
+          "args": ["gkey_rd", "seat_rd", "reference.seats"],
+          "out": "yokev"
+        },
+        {
+          "compare": "yokev.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_shoulder_finish_of_each_cylinder_is_the_one_its_gas_is_coded",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a gas cylinder standing on the bench with its valve block facing the camera",
+          "sweep": true,
+          "out": "col_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["col_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which gas name is printed on the cylinder's body label? Answer with the words exactly as they are printed.",
+          "boxes": "col_box",
+          "pad": 0.9,
+          "out": "ckey_rd"
+        },
+        {
+          "fail_if": ["ckey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what colour is the shoulder of the cylinder painted? Answer with one of: white, blue, grey, green, brown, or black and white if the shoulder carries two colours.",
+          "boxes": "col_box",
+          "pad": 0.9,
+          "out": "col_rd"
+        },
+        {
+          "fail_if": ["col_rd.unreadable"]
+        },
+        {
+          "run": "check_shoulder_colours",
+          "args": ["ckey_rd", "col_rd", "reference.shoulders"],
+          "out": "shov"
+        },
+        {
+          "compare": "shov.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_cylinder_on_the_bench_has_a_yoke_held_up_to_it",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a gas cylinder standing on the bench with its valve block facing the camera",
+          "sweep": true,
+          "out": "cen_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a regulator yoke held up against the cylinder's valve block? Answer yes or no only.",
+          "boxes": "cen_box",
+          "pad": 0.9,
+          "out": "cen_rd"
+        },
+        {
+          "fail_if": ["cen_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_rd"],
+          "out": "cenn"
+        },
+        {
+          "compare_band": "cenn.n",
+          "to": "reference.n_cylinders",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_written_note_or_tag_is_added_to_the_bench",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written note or tag on the bench other than the printed body labels and the lettering stamped on the yokes",
+          "sweep": true,
+          "out": "sweep_s",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

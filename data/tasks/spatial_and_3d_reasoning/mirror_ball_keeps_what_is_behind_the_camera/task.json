@@ -1,0 +1,199 @@
+{
+  "id": "mirror_ball_keeps_what_is_behind_the_camera",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A photograph taken on location by a visual-effects crew's camera assistant, of the kind shot to record what the light was doing on set.\n\nThe assistant is holding a chromed steel sphere up on a short grip stick, at about the height of the actor's head and at the same spot the actor will stand. The sphere is the subject of the picture and fills most of the frame, shot from the camera's own position and in focus, its surface polished so that the yard around it comes back off it.\n\nThe yard is laid out like this, and these are the positions to use. Directly in front of the camera, on the far side of the sphere, is a red brick wall that runs the whole width of the yard. Square out to the camera's left stands a yellow lattice tower crane. Square out to the camera's right stands a white marquee. Directly behind the camera, so that the crew are standing between it and the sphere, is parked a blue box van.\n\nWork out for yourself how the yard comes back off that sphere -- I am deliberately telling you where the four things stand and deliberately not telling you where any of them ends up in the reflection, or how big it ends up.\n\nThe whole of the sphere must be in frame with its outline clear all the way round, and each of the four things must be picked out well enough in its surface that a supervisor could name it. Nothing else is in the shot: no marker, no arrow and no writing on or beside the sphere that names what is reflected in it.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a shiny metal ball with the surroundings coming back off it? A photograph, a render or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no ball at all. Answer yes or no only.",
+  "reference": {
+    "van_where": "middle",
+    "wall_where": "rim",
+    "crane_side": "left",
+    "marquee_side": "right",
+    "present_tag": "yes",
+    "radii_tag": "yes",
+    "sides_tag": "yes",
+    "clean_page": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_van_parked_behind_the_camera_is_in_the_ball_at_all",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the chromed sphere with the whole of the yard coming back off its surface",
+          "out": "bp"
+        },
+        {
+          "fail_if": ["bp.unreadable"]
+        },
+        {
+          "read_crop": "Look only at what comes back off this ball. Is there a box van in it anywhere? Answer yes or no.",
+          "boxes": "bp",
+          "pad": 0.05,
+          "out": "bp1"
+        },
+        {
+          "read_crop": "Look only at what comes back off this ball. Name in two or three plain words the largest vehicle you can pick out in it. If you can pick out no vehicle at all, answer none.",
+          "boxes": "bp",
+          "pad": 0.05,
+          "out": "bp2"
+        },
+        {
+          "run": "reflection_shows_van",
+          "args": ["bp1", "bp2"],
+          "out": "pv"
+        },
+        {
+          "fail_if": ["pv.refused"]
+        },
+        {
+          "compare": "pv.tag",
+          "to": "reference.present_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_ball_is_turned_inside_out_middle_for_rim",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the chromed sphere with its outline and the reflected yard inside it",
+          "out": "br"
+        },
+        {
+          "fail_if": ["br.unreadable"]
+        },
+        {
+          "read_crop": "Look only at what comes back off this ball. Whereabouts in it does the box van appear? Answer with one of: middle, halfway out, rim.",
+          "boxes": "br",
+          "pad": 0.05,
+          "out": "br1"
+        },
+        {
+          "read_crop": "Look only at what comes back off this ball. Whereabouts in it does the brick wall appear? Answer with one of: middle, halfway out, rim.",
+          "boxes": "br",
+          "pad": 0.05,
+          "out": "br2"
+        },
+        {
+          "run": "check_reflection_radii",
+          "args": ["br1", "br2"],
+          "out": "rv"
+        },
+        {
+          "fail_if": ["rv.refused"]
+        },
+        {
+          "compare": "rv.tag",
+          "to": "reference.radii_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_things_out_to_the_sides_keep_their_own_sides",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the chromed sphere with the reflected yard filling its surface",
+          "out": "bs"
+        },
+        {
+          "fail_if": ["bs.unreadable"]
+        },
+        {
+          "read_crop": "Look only at what comes back off this ball. Is the lattice tower crane in the left half of the ball or the right half? Answer with one word: left or right.",
+          "boxes": "bs",
+          "pad": 0.05,
+          "out": "bs1"
+        },
+        {
+          "read_crop": "Look only at what comes back off this ball. Is the marquee in the left half of the ball or the right half? Answer with one word: left or right.",
+          "boxes": "bs",
+          "pad": 0.05,
+          "out": "bs2"
+        },
+        {
+          "run": "check_reflection_sides",
+          "args": ["bs1", "bs2"],
+          "out": "sv"
+        },
+        {
+          "fail_if": ["sv.refused"]
+        },
+        {
+          "compare": "sv.tag",
+          "to": "reference.sides_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_beside_the_ball_names_what_is_in_it",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a marker, an arrow, or writing on or beside the ball naming what is reflected in it",
+          "out": "zg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["zg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "zg",
+          "pad": 0.15,
+          "out": "zgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a marker, an arrow, or writing on or beside the ball that names what is reflected in it? Answer yes or no. Answer no if the cut-out shows the ball itself, the reflections in its surface, the grip stick or the hand holding it, or the crane, the marquee, the wall and the van standing in the yard.",
+          "boxes": "zg",
+          "pad": 0.15,
+          "out": "zgy"
+        },
+        {
+          "run": "scan_for_forbidden_content",
+          "args": ["zg", "zgw", "zgy"],
+          "out": "zgc"
+        },
+        {
+          "fail_if": ["zgc.refused"]
+        },
+        {
+          "compare": "zgc.clean",
+          "to": "reference.clean_page",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

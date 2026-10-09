@@ -1,0 +1,181 @@
+{
+  "id": "protocol_deviation_dose_hold",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of a research nurse's folder lying open on the source-document desk at a clinical research site, taken from above with both facing pages readable.\n\nThe left page is the drug administration page of the case report form for participant 07-114. It is laid out as one block per visit, and these four blocks are on it, each headed with its visit number and the toxicity grade recorded at that visit:\nV1  toxicity grade 1\nV2  toxicity grade 3\nV3  toxicity grade 3\nV4  toxicity grade 1\nInside every block sit two empty boxes, each with its own label beside it so that a block can be read on its own: one labelled PROTOCOL DOSE and one labelled DOSE GIVEN, both in milligrams.\n\nThe right page is the protocol deviation log for the same participant. Four numbered entry lines are on it and all four are blank; an entry line takes the visit number it is about.\n\nTwo documents pinned inside the folder cover are quoted on the pages, and both quotations belong in the picture. From the protocol: \"The starting dose is 60 mg. Dose levels step down by 15 mg. Where a grade 3 toxicity is recorded at a visit, the dose at the visit after it is one level lower.\" From the investigator's approval: \"The participant went on at the starting dose at every visit. Every visit at which the dose given differs from the dose the protocol calls for is written up as a deviation.\"\n\nA monitor reads these two pages against each other, so a visit that quietly loses its deviation entry is a finding and this participant's data comes out of the analysis.\n\nWork both boxes and the log out from the grades yourself -- I am deliberately not telling you what either box comes to at any visit, and I am not telling you how many entry lines end up filled in. Keep the reasoning off the paper: no arrows between the pages, no ticks, no note beyond the two quotations.\n\nBoth pages, all four visit blocks with both boxes filled in, and all four entry lines must be in the same picture, and the writing must be large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an open folder with a case report form page laid out as visit blocks, each block headed by a visit number and holding two labelled boxes, lying beside a deviation log page with numbered entry lines? A photo, an illustration or a plain printed sheet all count as yes. Answer no only if it shows something unrelated, or just a blank sheet with an answer written on it. Answer yes or no only.",
+  "reference": {
+    "dose_rows": "v1=60|60,v2=60|60,v3=45|60,v4=30|60",
+    "deviation_visits": "v3,v4",
+    "n_visit_blocks": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_dose_boxes_carry_their_own_value",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one visit block printed on the drug administration page",
+          "sweep": true,
+          "out": "box_blk"
+        },
+        {
+          "fail_if": ["box_blk.unreadable"]
+        },
+        {
+          "read_crop": "Copy the visit number printed at the top of this block. Write it and nothing else.",
+          "boxes": "box_blk",
+          "pad": 0.25,
+          "out": "vis"
+        },
+        {
+          "fail_if": ["vis.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written in the box labelled PROTOCOL DOSE in this block. Write the figure and nothing else, and write none when that box is empty.",
+          "boxes": "box_blk",
+          "pad": 0.25,
+          "out": "planned"
+        },
+        {
+          "fail_if": ["planned.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written in the box labelled DOSE GIVEN in this block. Write the figure and nothing else, and write none when that box is empty.",
+          "boxes": "box_blk",
+          "pad": 0.25,
+          "out": "given"
+        },
+        {
+          "fail_if": ["given.unreadable"]
+        },
+        {
+          "run": "visit_dose_rows",
+          "args": ["vis", "planned", "given", "'|'"],
+          "out": "dose_read"
+        },
+        {
+          "compare_set": "dose_read.seq",
+          "to": "reference.dose_rows",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "deviation_log_names_exactly_the_visits_that_diverged",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered entry line printed on the protocol deviation log",
+          "sweep": true,
+          "out": "box_line"
+        },
+        {
+          "fail_if": ["box_line.unreadable"]
+        },
+        {
+          "read_crop": "Copy the visit number written on this entry line. Write it and nothing else, and write none when the line is blank.",
+          "boxes": "box_line",
+          "pad": 0.3,
+          "out": "logged"
+        },
+        {
+          "fail_if": ["logged.unreadable"]
+        },
+        {
+          "run": "logged_visits",
+          "args": ["logged", "'none'"],
+          "out": "log_read"
+        },
+        {
+          "compare_set": "log_read.seq",
+          "to": "reference.deviation_visits",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_visit_block_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one visit block printed on the drug administration page",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole visit block of the form, rather than a page heading or only part of a block? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_visit_blocks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_working_added",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow drawn between the two pages, a tick or a margin note added by hand",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

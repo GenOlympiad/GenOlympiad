@@ -1,0 +1,231 @@
+{
+  "id": "air_quality",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A tall interactive AIR QUALITY exhibit pillar in a science-museum gallery, showing a live monitor for Tehran, photographed straight-on among the displays. Show Tehran's air quality as measured at 21:00 local time on 2026-07-16 (the pinned reading for this display). On the glowing screen: a large CURRENT US AQI number in the centre, a colour-coded category badge beneath it (Good / Moderate / Unhealthy for Sensitive Groups / Unhealthy / Very Unhealthy / Hazardous), the city name Tehran at the top, and a small pollutant breakdown (PM2.5, PM10, Ozone) each with its concentration in ug/m3. Tehran sits in a basin where the air swings between clean and heavily polluted, so print the exact AQI, the exact PM2.5 value, and the category that is genuinely true for that hour. Crisp, every number and label sharp and legible.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show science-museum air-quality exhibit pillar display for Tehran, photographed head-on in the gallery? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "lat": 35.6892,
+    "lon": 51.389,
+    "timezone": "Asia/Tehran",
+    "city": "Tehran"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "aqi_value",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big air-quality index number printed in the middle of the glowing screen -- draw ONE box on that one large number, from its first digit to its last and from the top of the digits to their bottom; do not box the small numbers of the pollutant list, the rating word on the coloured badge, the city name, or any unit or caption printed beside it.",
+          "expected_n": 1,
+          "out": "v_box"
+        },
+        {
+          "fail_if": ["v_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit-up display screen. One large number is printed in it. Write down just that number, digits only, and nothing else.",
+          "boxes": "v_box",
+          "pad": 0.3,
+          "out": "v_cr"
+        },
+        {
+          "fail_if": ["v_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "v_cr",
+          "out": "v"
+        },
+        {
+          "compare_band": "v",
+          "to": "reference.us_aqi",
+          "core": 8.0,
+          "margin": 8.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "category",
+      "weight": 0.75,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coloured badge on the glowing screen carrying the rating word for the air (one of good, moderate, unhealthy for sensitive groups, unhealthy, very unhealthy or hazardous) -- draw ONE box on the single badge giving this display's own rating: the block of colour with that word printed inside it; do not box the big index number, the city name, the pollutant list, or the swatches of a colour key.",
+          "expected_n": 1,
+          "out": "c_box"
+        },
+        {
+          "fail_if": ["c_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit-up display screen. A word or short phrase rating the air is printed in it. Which of these is printed here? Answer with exactly one of: good, moderate, usg, unhealthy, very unhealthy, hazardous.",
+          "boxes": "c_box",
+          "pad": 0.3,
+          "out": "c_cr"
+        },
+        {
+          "fail_if": ["c_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "c_cr",
+          "out": "c"
+        },
+        {
+          "compare_category": "c",
+          "to": "reference.category",
+          "scale": ["good", "moderate", "usg", "unhealthy", "very unhealthy", "hazardous"],
+          "max_steps": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pm2_5",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "PM2.5 line of the small pollutant list on the glowing screen -- its label and the concentration number printed beside it",
+          "expected_n": 1,
+          "out": "v_box"
+        },
+        {
+          "fail_if": ["v_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit-up display screen showing one line of a pollutant list. A concentration number is printed on that line. Write down just that number and nothing else.",
+          "boxes": "v_box",
+          "pad": 0.25,
+          "out": "v_cr"
+        },
+        {
+          "fail_if": ["v_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "v_cr",
+          "out": "v"
+        },
+        {
+          "compare_band": "v",
+          "to": "reference.pm2_5",
+          "core_rel": 0.2,
+          "core_abs": 2.0,
+          "margin_rel": 0.2,
+          "margin_abs": 2.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "category_consistency",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big air-quality index number printed in the middle of the glowing screen -- draw ONE box on that one large number, from its first digit to its last and from the top of the digits to their bottom; do not box the small numbers of the pollutant list, the rating word on the coloured badge, the city name, or any unit or caption printed beside it.",
+          "expected_n": 1,
+          "out": "pair_area"
+        },
+        {
+          "fail_if": ["pair_area.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit-up display screen. One large number is printed in it. Write down just that number, digits only, and nothing else.",
+          "boxes": "pair_area",
+          "pad": 0.3,
+          "out": "pair_cr"
+        },
+        {
+          "fail_if": ["pair_cr.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "coloured badge on the glowing screen carrying the rating word for the air (one of good, moderate, unhealthy for sensitive groups, unhealthy, very unhealthy or hazardous) -- draw ONE box on the single badge giving this display's own rating: the block of colour with that word printed inside it; do not box the big index number, the city name, the pollutant list, or the swatches of a colour key.",
+          "expected_n": 1,
+          "out": "pair_cat_box"
+        },
+        {
+          "fail_if": ["pair_cat_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit-up display screen. A word or short phrase rating the air is printed in it. Which of these is printed here? Answer with exactly one of: good, moderate, usg, unhealthy, very unhealthy, hazardous.",
+          "boxes": "pair_cat_box",
+          "pad": 0.3,
+          "out": "pair_cat_cr"
+        },
+        {
+          "fail_if": ["pair_cat_cr.unreadable"]
+        },
+        {
+          "run": "join_number_and_category",
+          "args": ["pair_cr.answers[0]", "pair_cat_cr.answers[0]"],
+          "out": "pair"
+        },
+        {
+          "check_air_quality": "pair",
+          "live_aqi": "reference.us_aqi",
+          "live_category": "reference.category",
+          "aqi_band": 8.0,
+          "internal_adjacent": 1,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "run": "build_query_url",
+      "args": ["reference.lat", "reference.lon"],
+      "out": "url"
+    },
+    {
+      "fetch": "url",
+      "out": "raw"
+    },
+    {
+      "run": "reading_at_nine_pm",
+      "value": "raw",
+      "out": "cur"
+    },
+    {
+      "get": "$.us_aqi",
+      "value": "cur",
+      "out": "us_aqi"
+    },
+    {
+      "get": "$.pm2_5",
+      "value": "cur",
+      "out": "pm2_5"
+    },
+    {
+      "run": "aqi_category",
+      "value": "us_aqi",
+      "out": "category"
+    }
+  ],
+  "grounding": "live"
+}

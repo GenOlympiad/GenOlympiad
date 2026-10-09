@@ -1,0 +1,228 @@
+{
+  "id": "split_bill_tip",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photo of a restaurant bill split worked out in pen on a paper NAPKIN on a cafe table, plain handwriting-style print on a white napkin. Three friends split ONE bill unequally by agreed shares of the food subtotal, then a group discount, a service charge and a tip are applied in order. Food subtotal: 186.40 pounds. Agreed shares of the subtotal: Amir 40%, Beth 35%, Cal 25%. On EACH person's share these are applied in this order: first take off a 10 percent group DISCOUNT, then add a 12.5 percent SERVICE charge, then add a 15 percent TIP. The napkin lists three bold lines, one per person, 'Amir pays:', 'Beth pays:', 'Cal pays:', each followed by the final amount that person owes, to two decimals. Work out each person's amount (share = percent of subtotal; then multiply by one-minus-the-discount, then by one-plus-the-service, then by one-plus-the-tip) and print the three amounts. Print only these numbers; make the three 'pays' amounts legible. No working, no formula on the napkin.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show paper-napkin unequal three-way bill split where each share then takes its own tip? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "subtotal": 186.4,
+    "tip": 0.15,
+    "amir": 86.82,
+    "beth": 75.96,
+    "cal": 54.26,
+    "equal": 72.35,
+    "q_amir": "This is a split-bill napkin with three lines: 'Amir pays', 'Beth pays', 'Cal pays'. Read the amount printed on the 'Amir pays' line (pounds). Answer with ONLY that number, digits and decimal point only, no currency sign.",
+    "q_beth": "This is a split-bill napkin with three lines: 'Amir pays', 'Beth pays', 'Cal pays'. Read the amount printed on the 'Beth pays' line (pounds). Answer with ONLY that number, digits and decimal point only, no currency sign.",
+    "q_cal": "This is a split-bill napkin with three lines: 'Amir pays', 'Beth pays', 'Cal pays'. Read the amount printed on the 'Cal pays' line (pounds). Answer with ONLY that number, digits and decimal point only, no currency sign.",
+    "amir_pct": 40,
+    "n_people": 3,
+    "third_name": "Cal"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "amir_pays",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_amir",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_band": "rd",
+          "to": "reference.amir",
+          "core": 0.02,
+          "margin": 1.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "beth_pays",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_beth",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_band": "rd",
+          "to": "reference.beth",
+          "core": 0.02,
+          "margin": 1.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cal_pays",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_cal",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_band": "rd",
+          "to": "reference.cal",
+          "core": 0.02,
+          "margin": 1.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_subtotal",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the food subtotal amount in pounds printed on the napkin. Report just the number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.subtotal",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_amir_pct",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the percentage share of the subtotal listed for Amir on the napkin (shown as '<value>%'). Report just the number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.amir_pct",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pays_lines",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one bold handwritten line giving a person's name and the amount that person pays",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole handwritten line with a person's name and a money amount beside it, rather than bare napkin or only part of a line? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_people",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "third_name",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the name printed on the THIRD 'pays:' line on the napkin. Report just the name.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.third_name",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_extra_working",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of worked-out arithmetic or a written formula showing how an amount was reached",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

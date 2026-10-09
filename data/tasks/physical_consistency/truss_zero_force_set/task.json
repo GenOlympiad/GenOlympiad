@@ -1,0 +1,185 @@
+{
+  "id": "truss_zero_force_set",
+  "axis": "physical_consistency",
+  "prompt": "A clean structural-engineering drawing on a white sheet, in flat technical line style: a side-on diagram of a small steel roof truss with every one of its members labelled.\n\nThe truss has six joints, given as metres across and metres up from the left-hand support:\n  A at 0.0, 0.0 -- a pinned support, drawn as a triangle under the joint\n  B at 6.0, 0.0 -- a roller support, drawn as a triangle on rollers under the joint\n  C at 3.0, 0.0\n  D at 1.5, 2.0\n  E at 3.0, 4.0\n  F at 4.5, 2.0\nNine straight members join those joints, and each member has its own label printed in a small white box sitting on the middle of that member:\n  M1 joins C to D\n  M2 joins A to D\n  M3 joins C to E\n  M4 joins E to F\n  M5 joins A to C\n  M6 joins C to F\n  M7 joins D to E\n  M8 joins C to B\n  M9 joins F to B\nOne single load acts on the whole truss: a 10 kilonewton force pulling straight DOWN at joint E, drawn as a bold downward arrow labelled 10 kN. No other load acts anywhere, and no load acts at C, D or F.\n\nSome members of a truss carry no force at all under a given load -- work out which ones by balancing the forces at each joint in turn. Then colour the members accordingly: every member that carries NO force must be drawn as a thick RED line, and every member that does carry force must be drawn as a thick GREY line. Do not colour them by what looks balanced or pretty; the joint equilibrium decides it, and the answer is not obvious from the shape.\n\nAll nine member labels, the joint letters A to F, the two support symbols and the 10 kN arrow must be printed large and easy to read, and the red and grey members must be easy to tell apart. Plain white background, sharp flat line art, no shading.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a triangulated truss or framework diagram whose straight members carry small printed labels such as M1, M2, M3? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_colours": "This picture shows a framework of straight members, and each member has a small printed label on it reading M1, M2, M3 and so on. Go through the labels in number order from M1 to M9. For each label, say what colour the straight member carrying that label is drawn in: answer RED if that member is red and GREY if it is grey or black. Answer with nine words separated by commas, in label-number order, and nothing else.",
+    "q_count": "This picture shows a framework of straight members drawn in two different colours, some red and the rest grey. Write down every member drawn RED, each with a few plain words saying where in the framework it runs. Separate one item from the next with a semicolon; write no running total and nothing else. If no member is drawn red, write the single word NONE.",
+    "member_labels": ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9"],
+    "want_red": ["M1", "M3", "M6"],
+    "want_red_total": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "red_set_is_exactly_the_zero_force_set",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read_sequence": "reference.q_colours",
+          "n": 9,
+          "delimiter": ",",
+          "out": "cols"
+        },
+        {
+          "fail_if": ["cols.illegible"]
+        },
+        {
+          "run": "red_set_exact",
+          "args": ["cols", "reference.member_labels", "reference.want_red"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "per_member_colour_agreement",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_sequence": "reference.q_colours",
+          "n": 9,
+          "delimiter": ",",
+          "out": "cols"
+        },
+        {
+          "fail_if": ["cols.illegible"]
+        },
+        {
+          "run": "member_colour_share",
+          "args": ["cols", "reference.member_labels", "reference.want_red"],
+          "code": {
+            "inline": "main_code_2"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "number_of_red_members",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_count",
+          "out": "nred"
+        },
+        {
+          "fail_if": ["nred.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["nred", "empty_as='0'"],
+          "out": "nred__std"
+        },
+        {
+          "fail_if": ["nred__std.refused"]
+        },
+        {
+          "ask": "This picture shows a framework of straight members, and each member carries a small printed label on it. Find the member labelled M1. What colour is that one member drawn in? Answer RED if it is red, GREY if it is grey or black. Answer with one word only.",
+          "out": "evm_m1"
+        },
+        {
+          "compare": "evm_m1",
+          "to": "red",
+          "out": "evok_m1"
+        },
+        {
+          "ask": "This picture shows a framework of straight members, and each member carries a small printed label on it. Find the member labelled M2. What colour is that one member drawn in? Answer RED if it is red, GREY if it is grey or black. Answer with one word only.",
+          "out": "evm_m2"
+        },
+        {
+          "compare": "evm_m2",
+          "to": "grey",
+          "out": "evok_m2"
+        },
+        {
+          "ask": "This picture shows a framework of straight members, and each member carries a small printed label on it. Find the member labelled M3. What colour is that one member drawn in? Answer RED if it is red, GREY if it is grey or black. Answer with one word only.",
+          "out": "evm_m3"
+        },
+        {
+          "compare": "evm_m3",
+          "to": "red",
+          "out": "evok_m3"
+        },
+        {
+          "ask": "This picture shows a framework of straight members, and each member carries a small printed label on it. Find the member labelled M4. What colour is that one member drawn in? Answer RED if it is red, GREY if it is grey or black. Answer with one word only.",
+          "out": "evm_m4"
+        },
+        {
+          "compare": "evm_m4",
+          "to": "grey",
+          "out": "evok_m4"
+        },
+        {
+          "ask": "This picture shows a framework of straight members, and each member carries a small printed label on it. Find the member labelled M5. What colour is that one member drawn in? Answer RED if it is red, GREY if it is grey or black. Answer with one word only.",
+          "out": "evm_m5"
+        },
+        {
+          "compare": "evm_m5",
+          "to": "grey",
+          "out": "evok_m5"
+        },
+        {
+          "ask": "This picture shows a framework of straight members, and each member carries a small printed label on it. Find the member labelled M6. What colour is that one member drawn in? Answer RED if it is red, GREY if it is grey or black. Answer with one word only.",
+          "out": "evm_m6"
+        },
+        {
+          "compare": "evm_m6",
+          "to": "red",
+          "out": "evok_m6"
+        },
+        {
+          "ask": "This picture shows a framework of straight members, and each member carries a small printed label on it. Find the member labelled M7. What colour is that one member drawn in? Answer RED if it is red, GREY if it is grey or black. Answer with one word only.",
+          "out": "evm_m7"
+        },
+        {
+          "compare": "evm_m7",
+          "to": "grey",
+          "out": "evok_m7"
+        },
+        {
+          "ask": "This picture shows a framework of straight members, and each member carries a small printed label on it. Find the member labelled M8. What colour is that one member drawn in? Answer RED if it is red, GREY if it is grey or black. Answer with one word only.",
+          "out": "evm_m8"
+        },
+        {
+          "compare": "evm_m8",
+          "to": "grey",
+          "out": "evok_m8"
+        },
+        {
+          "ask": "This picture shows a framework of straight members, and each member carries a small printed label on it. Find the member labelled M9. What colour is that one member drawn in? Answer RED if it is red, GREY if it is grey or black. Answer with one word only.",
+          "out": "evm_m9"
+        },
+        {
+          "compare": "evm_m9",
+          "to": "grey",
+          "out": "evok_m9"
+        },
+        {
+          "compare": "nred__std.n",
+          "to": "reference.want_red_total",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

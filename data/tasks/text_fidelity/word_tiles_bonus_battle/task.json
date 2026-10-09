@@ -1,0 +1,92 @@
+{
+  "id": "word_tiles_bonus_battle",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed WORD-TILE BATTLE board titled 'WORD CLASH  --  GAME 7'. Two players each play one word as a row of lettered tiles on a grid. Letter values: 1 point: A E I L N O R S T U; 2 points: D G; 3 points: B C M P; 4 points: F H V W Y; 5 points: K; 8 points: J X; 10 points: Q Z. A letter placed on a DOUBLE-letter square scores double, and on a TRIPLE-letter square scores triple (only that one letter's value is multiplied). \nPlayer Cara plays the word SILVER; the letter 'V' (position 4) is on a DOUBLE-letter (x2) square. \nPlayer Dev plays the word MARKET; the letter 'K' (position 4) is on a DOUBLE-letter (x2) square. \nDraw each word as a row of letter tiles (show each letter big, its base point value in the corner, and mark the x2 / x3 bonus squares in a different colour). Compute each player's SCORE = the sum over its letters of (letter value times that square's multiplier), and print each SCORE. Then print a RESULT box with the WINNER (the player and word with the higher score) and the MARGIN = the difference between the two scores. CRITICAL: the winner and margin must follow from the bonus-weighted scores. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a two-player word-tile battle board: each player's word drawn as lettered tiles on a grid with double/triple-letter BONUS squares, plus each score, a WINNER and a MARGIN. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "winner_word": "MARKET",
+    "winner_player": "Dev",
+    "margin": 4,
+    "q_winner": "In the RESULT box at the bottom, read the WINNER. Output only the winning WORD printed after 'WINNER:', in capital letters, exactly as printed, nothing else.",
+    "q_margin": "In the RESULT box at the bottom, read the MARGIN (the number of points printed after 'MARGIN:'). Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Digits only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bonus_battle_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "line printed just after the word WINNER inside the result panel at the bottom of this sheet",
+          "expected_n": 1,
+          "out": "ww_box"
+        },
+        {
+          "fail_if": ["ww_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed results panel, showing one line. The line names the player who won and the word that player spelled out with letter tiles. Write down just that spelled-out word, in capital letters, and nothing else. Do not write the player's name.",
+          "boxes": "ww_box",
+          "pad": 0.2,
+          "out": "ww_cr"
+        },
+        {
+          "fail_if": ["ww_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "ww_cr",
+          "out": "ww"
+        },
+        {
+          "read": "boxes",
+          "target": "line printed just after the word MARGIN inside the result panel at the bottom of this sheet -- ONE box covering that whole line, from the word MARGIN across to the end of the number of points printed on it, including any small sum in brackets under that number. Do not box the WINNER line and do not box the letter tiles.",
+          "expected_n": 1,
+          "out": "mg_box"
+        },
+        {
+          "fail_if": ["mg_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed results panel, showing one line. One big number of points is printed on it, and there may be a small sum in brackets under it. Write down just the big number, digits only, exactly as it is printed, even if it looks wrong. Do not correct it and write nothing else.",
+          "boxes": "mg_box",
+          "pad": 0.2,
+          "out": "mg_cr"
+        },
+        {
+          "fail_if": ["mg_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "mg_cr",
+          "out": "mg"
+        },
+        {
+          "run": "check_winner_margin",
+          "args": ["ww", "mg", "reference.winner_word", "reference.margin"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

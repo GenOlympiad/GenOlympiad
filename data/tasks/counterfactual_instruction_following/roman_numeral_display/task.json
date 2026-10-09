@@ -1,0 +1,252 @@
+{
+  "id": "roman_numeral_display",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Render a clean, straight-on image of an electronic lecture-hall room panel with several labelled numeric fields laid out in a grid. IMPORTANT NUMBER RULE: on this board EVERY number must be written as a ROMAN NUMERAL (like IV, VII, XII). Do NOT use any Arabic digits (0-9) anywhere on the board -- every numeric value must appear in Roman numerals only. Show these fields, each with its label and its value in Roman numerals: FLOOR = VI; ROOM = XXIV; SEATS = XC; ROW = XI; DESK = VIII; WING = V; BLOCK = L; UNIT = XVII; LAB = IX; AISLE = XIII. Print each label and its Roman-numeral value; print nothing else.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show an electronic information board / scoreboard with several labelled numeric fields. Never mind how well it is drawn. Does the picture show a board showing several labelled numbers? A photo, illustration or clean diagram all count as yes. Answer NO only if it shows a blank card, a plain panel printing an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "exp_0": "roman",
+    "exp_1": "roman",
+    "exp_2": "roman",
+    "exp_3": "roman",
+    "exp_4": "roman",
+    "exp_5": "roman",
+    "exp_6": "roman",
+    "exp_7": "roman",
+    "exp_8": "roman",
+    "exp_9": "roman",
+    "q0": "This is a small cropped panel from a display board. It shows a label ('FLOOR') and a number below it. Read the number EXACTLY as it is printed. Output ONLY the number's characters exactly as written and nothing else. Do not convert or translate it; copy the printed characters verbatim.",
+    "bb0": [0.044, 0.1439, 0.2, 0.5085],
+    "q1": "This is a small cropped panel from a display board. It shows a label ('ROOM') and a number below it. Read the number EXACTLY as it is printed. Output ONLY the number's characters exactly as written and nothing else. Do not convert or translate it; copy the printed characters verbatim.",
+    "bb1": [0.233, 0.1439, 0.389, 0.5085],
+    "q2": "This is a small cropped panel from a display board. It shows a label ('SEATS') and a number below it. Read the number EXACTLY as it is printed. Output ONLY the number's characters exactly as written and nothing else. Do not convert or translate it; copy the printed characters verbatim.",
+    "bb2": [0.422, 0.1439, 0.578, 0.5085],
+    "q3": "This is a small cropped panel from a display board. It shows a label ('ROW') and a number below it. Read the number EXACTLY as it is printed. Output ONLY the number's characters exactly as written and nothing else. Do not convert or translate it; copy the printed characters verbatim.",
+    "bb3": [0.611, 0.1439, 0.767, 0.5085],
+    "q4": "This is a small cropped panel from a display board. It shows a label ('DESK') and a number below it. Read the number EXACTLY as it is printed. Output ONLY the number's characters exactly as written and nothing else. Do not convert or translate it; copy the printed characters verbatim.",
+    "bb4": [0.8, 0.1439, 0.956, 0.5085],
+    "q5": "This is a small cropped panel from a display board. It shows a label ('WING') and a number below it. Read the number EXACTLY as it is printed. Output ONLY the number's characters exactly as written and nothing else. Do not convert or translate it; copy the printed characters verbatim.",
+    "bb5": [0.044, 0.5749, 0.2, 0.9394],
+    "q6": "This is a small cropped panel from a display board. It shows a label ('BLOCK') and a number below it. Read the number EXACTLY as it is printed. Output ONLY the number's characters exactly as written and nothing else. Do not convert or translate it; copy the printed characters verbatim.",
+    "bb6": [0.233, 0.5749, 0.389, 0.9394],
+    "q7": "This is a small cropped panel from a display board. It shows a label ('UNIT') and a number below it. Read the number EXACTLY as it is printed. Output ONLY the number's characters exactly as written and nothing else. Do not convert or translate it; copy the printed characters verbatim.",
+    "bb7": [0.422, 0.5749, 0.578, 0.9394],
+    "q8": "This is a small cropped panel from a display board. It shows a label ('LAB') and a number below it. Read the number EXACTLY as it is printed. Output ONLY the number's characters exactly as written and nothing else. Do not convert or translate it; copy the printed characters verbatim.",
+    "bb8": [0.611, 0.5749, 0.767, 0.9394],
+    "q9": "This is a small cropped panel from a display board. It shows a label ('AISLE') and a number below it. Read the number EXACTLY as it is printed. Output ONLY the number's characters exactly as written and nothing else. Do not convert or translate it; copy the printed characters verbatim.",
+    "bb9": [0.8, 0.5749, 0.956, 0.9394]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "roman_numeral_count",
+      "weight": 6.0,
+      "steps": [
+        {
+          "crop": "reference.bb0",
+          "out": "c0"
+        },
+        {
+          "ask": "reference.q0",
+          "image": "c0",
+          "out": "a0"
+        },
+        {
+          "crop": "reference.bb1",
+          "out": "c1"
+        },
+        {
+          "ask": "reference.q1",
+          "image": "c1",
+          "out": "a1"
+        },
+        {
+          "crop": "reference.bb2",
+          "out": "c2"
+        },
+        {
+          "ask": "reference.q2",
+          "image": "c2",
+          "out": "a2"
+        },
+        {
+          "crop": "reference.bb3",
+          "out": "c3"
+        },
+        {
+          "ask": "reference.q3",
+          "image": "c3",
+          "out": "a3"
+        },
+        {
+          "crop": "reference.bb4",
+          "out": "c4"
+        },
+        {
+          "ask": "reference.q4",
+          "image": "c4",
+          "out": "a4"
+        },
+        {
+          "crop": "reference.bb5",
+          "out": "c5"
+        },
+        {
+          "ask": "reference.q5",
+          "image": "c5",
+          "out": "a5"
+        },
+        {
+          "fail_if": [
+            "a0.unreadable",
+            "a1.unreadable",
+            "a2.unreadable",
+            "a3.unreadable",
+            "a4.unreadable",
+            "a5.unreadable"
+          ]
+        },
+        {
+          "run": "is_roman_numeral",
+          "args": ["a0", "reference.exp_0"],
+          "out": "s0"
+        },
+        {
+          "run": "is_roman_numeral",
+          "args": ["a1", "reference.exp_1"],
+          "out": "s1"
+        },
+        {
+          "run": "is_roman_numeral",
+          "args": ["a2", "reference.exp_2"],
+          "out": "s2"
+        },
+        {
+          "run": "is_roman_numeral",
+          "args": ["a3", "reference.exp_3"],
+          "out": "s3"
+        },
+        {
+          "run": "is_roman_numeral",
+          "args": ["a4", "reference.exp_4"],
+          "out": "s4"
+        },
+        {
+          "run": "is_roman_numeral",
+          "args": ["a5", "reference.exp_5"],
+          "out": "s5"
+        },
+        {
+          "product": ["s0", "s1", "s2", "s3", "s4", "s5"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "roman_numeral_count_pot6",
+      "weight": 1.0,
+      "gate": true,
+      "only_if": "reference.bb6",
+      "steps": [
+        {
+          "crop": "reference.bb6",
+          "out": "c6"
+        },
+        {
+          "ask": "reference.q6",
+          "image": "c6",
+          "out": "a6"
+        },
+        {
+          "run": "is_roman_numeral",
+          "args": ["a6", "reference.exp_6"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "roman_numeral_count_pot7",
+      "weight": 1.0,
+      "gate": true,
+      "only_if": "reference.bb7",
+      "steps": [
+        {
+          "crop": "reference.bb7",
+          "out": "c7"
+        },
+        {
+          "ask": "reference.q7",
+          "image": "c7",
+          "out": "a7"
+        },
+        {
+          "run": "is_roman_numeral",
+          "args": ["a7", "reference.exp_7"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "roman_numeral_count_pot8",
+      "weight": 1.0,
+      "gate": true,
+      "only_if": "reference.bb8",
+      "steps": [
+        {
+          "crop": "reference.bb8",
+          "out": "c8"
+        },
+        {
+          "ask": "reference.q8",
+          "image": "c8",
+          "out": "a8"
+        },
+        {
+          "run": "is_roman_numeral",
+          "args": ["a8", "reference.exp_8"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "roman_numeral_count_pot9",
+      "weight": 1.0,
+      "gate": true,
+      "only_if": "reference.bb9",
+      "steps": [
+        {
+          "crop": "reference.bb9",
+          "out": "c9"
+        },
+        {
+          "ask": "reference.q9",
+          "image": "c9",
+          "out": "a9"
+        },
+        {
+          "run": "is_roman_numeral",
+          "args": ["a9", "reference.exp_9"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

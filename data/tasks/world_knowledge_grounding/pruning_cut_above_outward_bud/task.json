@@ -1,0 +1,175 @@
+{
+  "id": "pruning_cut_above_outward_bud",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The training centre assesses this year's pruning class by the shoots themselves rather than by walking the rows, and this board goes into the file.\n\nThe board is ruled like a clock face, with the hours marked round its edge and the tree's centre marked at the middle. Three shoots cut from one young tree are laid on it in the positions they grew, each with its numbered tag, and photographed from directly above:\n\n  tag 1   lying out toward the 2 on the board\n  tag 2   lying out toward the 6\n  tag 3   lying out toward the 10\n\nThe regulation the class was taught is one sentence. A shoot is cut just above a bud that faces away from the centre of the tree, and the cut slopes down and away from that bud, so that water runs off the cut away from it and the new growth is thrown outward rather than back into the middle of the tree.\n\nWhich way each cut ended up facing is what the assessor is marking, and I am not saying. All three tags stay legible and the hour marks stay legible round the edge of the board. No arrow and no written note is drawn on the board.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show cut lengths of woody stem laid out on a board, seen from above? A photograph or a scan of one both count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "shoot_plan": {
+      "1": 2,
+      "2": 6,
+      "3": 10
+    },
+    "bud_plan": {
+      "1": ["below", "outward"],
+      "2": ["below", "outward"],
+      "3": ["below", "outward"]
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_high_edge_of_every_cut_faces_out_along_its_own_shoot_away_from_the_marked_centre",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a whole shoot laid out on the board together with its numbered tag",
+          "out": "pr_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pr_r.unreadable"]
+        },
+        {
+          "read_crop": "What number is on the tag in this cut-out? Answer with that number only.",
+          "boxes": "pr_r",
+          "pad": 0.3,
+          "out": "pr_0",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pr_0.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out as a clock face with 12 at the top. Toward which hour does the shoot in this cut-out lie out, from its thick base end toward its thin tip? Answer with that hour number only.",
+          "boxes": "pr_r",
+          "pad": 1.8,
+          "out": "pr_1",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pr_1.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out as a clock face with 12 at the top. Toward which hour does the high edge of the sloping cut at the tip of the shoot in this cut-out face? Answer with that hour number only.",
+          "boxes": "pr_r",
+          "pad": 1.8,
+          "out": "pr_2",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pr_2.unreadable"]
+        },
+        {
+          "run": "worst_cut_facing",
+          "args": ["pr_0", "pr_1", "pr_2", "reference.shoot_plan"],
+          "out": "pr_x"
+        },
+        {
+          "compare_compass": "pr_x.worst",
+          "to": 0,
+          "core": 35,
+          "margin": 25,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_cut_was_made_just_above_a_bud_on_the_outward_side_of_its_shoot",
+      "weight": 0.7,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a whole shoot laid out on the board together with its numbered tag",
+          "out": "bd_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bd_r.unreadable"]
+        },
+        {
+          "read_crop": "What number is on the tag in this cut-out? Answer with that number only.",
+          "boxes": "bd_r",
+          "pad": 0.3,
+          "out": "bd_0",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["bd_0.unreadable"]
+        },
+        {
+          "read_crop": "On the shoot in this cut-out, is there a bud just below the high edge of the sloping cut, or is the nearest bud somewhere else on the shoot? Answer 'below' or 'elsewhere'.",
+          "boxes": "bd_r",
+          "pad": 1.4,
+          "out": "bd_1",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["bd_1.unreadable"]
+        },
+        {
+          "read_crop": "Is that bud on the side of the shoot facing out toward the shoot's thin tip end, away from the thick base end that lay at the board's marked centre, or on the side facing back toward that base end? Answer 'outward' or 'inward'.",
+          "boxes": "bd_r",
+          "pad": 1.6,
+          "out": "bd_2",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["bd_2.unreadable"]
+        },
+        {
+          "run": "count_bud_misses",
+          "args": ["bd_0", "bd_1", "bd_2", "reference.bud_plan"],
+          "out": "bd_x"
+        },
+        {
+          "compare_category": "bd_x.miss",
+          "to": 0,
+          "max_steps": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_arrow_or_written_note_was_drawn_on_the_board",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow or a written note drawn on the inspection board",
+          "out": "aw_r",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["aw_r.unreadable"]
+        },
+        {
+          "compare": "aw_r.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

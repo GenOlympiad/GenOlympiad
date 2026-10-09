@@ -1,0 +1,84 @@
+{
+  "id": "peltier_polarity_frosts_the_other_face",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "An instrument maker's service bench has to record how a returned cooling module behaves before it goes back into a sample cabinet, so the module is photographed while it is running on the bench supply and the frame is filed with the repair docket.\n\nThe module has aluminium fins on one face and a bare flat plate on the other. An irreversible temperature strip is stuck on each face, and every strip has a row of windows that go dark and stay dark, stepping from 40 to 90 degrees Celsius. The repair docket lying beside it fixes the wiring for this test: the red lead goes to the negative terminal and the black lead to the positive terminal of the bench supply, which is set to 12 volts. The module has been running that way for several minutes.\n\nWhat the two faces look like by now is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Is this a photograph of a thermoelectric cooling module running on a service bench with a temperature strip stuck on each of its two faces? Answer yes or no only.",
+  "reference": {
+    "part1": "finned_face_frosted",
+    "part2": "flat_strip_darker"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Say which face of the module carries white frost on it. Answer with one of: the face with the aluminium fins carries the frost; the flat plate face carries the frost; both faces are dry with no frost on either.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the two temperature strips, one stuck on each face, and say which of them has more of its windows gone dark. Answer with one of: the strip on the finned face has more dark windows; the strip on the flat plate face has more dark windows; the two strips are dark to the same window.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

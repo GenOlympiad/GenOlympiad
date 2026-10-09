@@ -1,0 +1,177 @@
+{
+  "id": "eclipse_limb_progression",
+  "axis": "world_knowledge_grounding",
+  "prompt": "Our planetarium is printing its guide poster for the partial eclipse over Toledo on the afternoon of the twelfth, so let us have the artwork. Across the top of the poster stand three square panels of the Sun as the eyepiece projection will throw it, captioned FIRST CONTACT, MAXIMUM and LAST CONTACT; under them a round disc showing the Moon's phase on that date, and beside that the safe viewing notice.\n\nWhat the programme pins. The eclipse begins at 13:05, reaches its greatest at 14:20 and finishes at 15:40, all local time, and the whole of it is watched from the lawn outside the planetarium. Every panel is drawn with the zenith towards the top of the panel and with the letter W at the panel's left edge and the letter E at its right edge, and the Sun's disc comes out the same size in all three panels. The round phase disc under the panels is captioned with the date.\n\nWhich part of the Sun's edge the Moon has taken in each panel, and how much of the phase disc is lit, is the illustrator's own work and I am deliberately not telling you either. Apart from the three captions, the W and E letters at the panel edges, the date under the phase disc and the safe viewing notice, nothing else goes on the poster: no arrow inside a panel, no word such as west beside a bite, no working. Keep the edge of the Sun in each panel and the whole of the phase disc easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed poster carrying a row of round Sun discs, at least one of them with a bite cut out of its edge, and a further round disc lower down the sheet? An illustration, a printed poster or a photograph of one all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "panels": ["FIRST CONTACT", "MAXIMUM", "LAST CONTACT"],
+    "limb_deg": [270, -1, 90],
+    "n_panels": 3,
+    "moon_lit": "none of it",
+    "moon_state": "match"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_bite_walks_the_suns_limb_the_way_the_moons_own_motion_carries_it",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the captioned Sun panels across the top of the poster",
+          "out": "lb_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["lb_r.unreadable"]
+        },
+        {
+          "read_crop": "What caption is printed with the panel in this cut-out? Answer with that caption only.",
+          "boxes": "lb_r",
+          "pad": 0.35,
+          "out": "lb_cp",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["lb_cp.unreadable"]
+        },
+        {
+          "read_crop": "Take the top of this cut-out as north. The Sun's disc here has a bite cut out of one part of its edge. Which way from the centre of the disc does the middle of that bite lie? Answer with one of these eight words: north, northeast, east, southeast, south, southwest, west, northwest.",
+          "boxes": "lb_r",
+          "pad": 0.1,
+          "out": "lb_dr",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["lb_dr.unreadable"]
+        },
+        {
+          "run": "worst_bite_error",
+          "args": ["lb_cp", "lb_dr", "reference.panels", "reference.limb_deg"],
+          "out": "lb_s"
+        },
+        {
+          "compare_compass": "lb_s.obs",
+          "to": "lb_s.exp",
+          "core": 45.0,
+          "margin": 90.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_phase_disc_beside_the_panels_carries_no_lit_part",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the round phase disc printed under the panels on the poster",
+          "out": "mn_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mn_r.unreadable"]
+        },
+        {
+          "read_crop": "How much of the round disc in this cut-out is drawn lit? Answer with one of these five: none of it, a crescent, half of it, most of it, all of it.",
+          "boxes": "mn_r",
+          "pad": 0.1,
+          "out": "mn_a",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["mn_a.unreadable"]
+        },
+        {
+          "run": "phase_disc_match",
+          "args": ["mn_a", "reference.moon_lit"],
+          "out": "mn_s"
+        },
+        {
+          "compare": "mn_s.state",
+          "to": "reference.moon_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_poster_carries_its_three_captioned_sun_panels",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the captioned Sun panels across the top of the poster",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole square panel with a round Sun disc in it and a caption printed with it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.4,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_panels",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_arrow_or_direction_word_was_added_inside_a_panel",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow or a direction word added inside one of the Sun panels",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

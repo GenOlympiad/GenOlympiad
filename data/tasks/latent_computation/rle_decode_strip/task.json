@@ -1,0 +1,184 @@
+{
+  "id": "rle_decode_strip",
+  "axis": "latent_computation",
+  "prompt": "A primary-school ART CLASSROOM display card teaching PIXEL ART by run-length code. Decode this run-length string and paint the result into a fixed 4-row by 6-column grid of 24 equal square cells, filling the cells ROW BY ROW (left to right along the top row, then the next row down, and so on):\n    3R2U4G2R3B2U3R3G2U\n\nEach item is a COUNT followed by a COLOUR letter (R = red, U = blue, G = green, B = black). '3R' means the next THREE cells are red, '2U' means the next TWO cells blue, and so on, in the order given -- a run simply continues onto the next row when it reaches the end of a row. Draw the 4x6 grid with thin DARK (near-black) gridlines between the cells and a dark border around the whole grid, every cell an equal solid square filled with its exact decoded colour in reading order. The counts add up to exactly 24, filling the grid completely. Do not print the code, any digits, or any letters -- only the 4x6 grid of coloured cells.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show art-classroom pixel-art teaching card decoding a run-length colour string into a 4x6 grid of coloured cells filled row by row? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "encoding": "3R2U4G2R3B2U3R3G2U",
+    "n": 24,
+    "rows": 4,
+    "cols": 6,
+    "cells": [
+      ["red", "red", "red", "blue", "blue", "green"],
+      ["green", "green", "green", "red", "red", "black"],
+      ["black", "black", "blue", "blue", "red", "red"],
+      ["red", "green", "green", "green", "blue", "blue"]
+    ],
+    "palette": ["red", "blue", "green", "black"],
+    "q_form": "Look at this image. Is it a small rectangular grid (about 4 rows by 6 columns) of equal-size coloured square cells? Answer ONLY 'yes' or 'no'.",
+    "cell_00": "red",
+    "cell_last": "blue"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "decoded_cells",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the rectangular grid of coloured square cells",
+          "expected_n": 1,
+          "out": "grid"
+        },
+        {
+          "run": "row_bands",
+          "args": ["grid", "reference"],
+          "out": "bands"
+        },
+        {
+          "fail_if": ["bands.no_read"]
+        },
+        {
+          "read_crop": "This picture is one horizontal strip cut out of a grid of coloured squares, and it holds a single row of six coloured cells side by side. Reading from left to right, name the fill colour of each of its six cells. Use only these four words: red, blue, green, black. Answer with exactly six colour words separated by single spaces and nothing else.",
+          "boxes": "bands.boxes",
+          "pad": 0,
+          "out": "rows"
+        },
+        {
+          "fail_if": ["rows.unreadable"]
+        },
+        {
+          "run": "read_row_colours",
+          "args": ["rows", "reference.cols", "reference.palette"],
+          "out": "rg"
+        },
+        {
+          "compare_grid": "rg.grid",
+          "to": "reference.cells",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "grid_rows",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "How many rows of coloured cells does the pixel-art grid have? Give a whole number only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "grid_cols",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "How many columns of coloured cells does the pixel-art grid have? Give a whole number only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.cols",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "top_left_cell",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the fill colour of the TOP-LEFT cell of the grid (row 1, column 1). Answer with a single colour word: red, blue, green, or black.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.cell_00",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bottom_right_cell",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the fill colour of the BOTTOM-RIGHT cell of the grid (last row, last column). Answer with a single colour word: red, blue, green, or black.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.cell_last",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

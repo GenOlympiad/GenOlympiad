@@ -1,0 +1,147 @@
+{
+  "id": "pachinko_bin_counts",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on illustration of a PACHINKO board (a Galton board): a triangular lattice of pegs at the top, and 4 collecting BINS across the bottom numbered 1 to 4 from LEFT to RIGHT. Balls are dropped one at a time from a top slot (slots line up with the bins, numbered 1 to 4 left to right) and step exactly one bin-column Left or Right at each row, following a FIXED written path (this is NOT random).\n\nDrop these balls in order and follow each one's path exactly:\nBall 1: dropped into slot 1, then deflects Right, Left\nBall 2: dropped into slot 2, then deflects Left, Left\nBall 3: dropped into slot 2, then deflects Right, Right\nBall 4: dropped into slot 3, then deflects Left, Right\nBall 5: dropped into slot 2, then deflects Left, Left\nBall 6: dropped into slot 4, then deflects Right, Left\n\nEach 'Left' moves the ball one column left, each 'Right' one column right. If a ball would go past the leftmost column (1) or rightmost column (4), it rides the wall and stays in that end column (it cannot leave the board). After finishing its path, each ball lands in the numbered bin of its final column and stays there, stacking up.\n\nWork out how many balls end up in EACH bin, then draw each bin holding a vertical STACK of exactly that many balls (taller stack = more balls). Do NOT print the counts, the ball paths, or any words or numbers of working; the only thing that shows each bin's total is the HEIGHT of its stack of balls.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a pachinko / Galton board with a peg lattice and a row of numbered collecting bins along the bottom, each bin holding a stack of balls? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      [3],
+      [0],
+      [2],
+      [1]
+    ],
+    "counts": [3, 0, 2, 1],
+    "n_bins": 4,
+    "tallest_bin": "1",
+    "q_grid": "Count the balls stacked in each bin. Read the bins in order Bin 1 first (left-most) through to the last bin (right-most); top of the list = Bin 1. Judge purely by how many balls are physically stacked in each bin; do not do any sums. Give one whole number per bin (0 if a bin is empty).",
+    "q_nbins": "How many separate collecting bins are drawn along the bottom of the board? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bin_counts",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_grid": "the number of balls stacked in each bin, reading the bins in order Bin 1 first (left-most) down to the last bin (right-most); top of the list = Bin 1. Report 0 for an empty bin",
+          "rows": "reference.n_bins",
+          "cols": 1,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "compare_grid": "cells.values",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tallest_bin",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_grid": "the number of balls stacked in each bin, reading the bins in order Bin 1 first (left-most) down to the last bin (right-most); top of the list = Bin 1. Report 0 for an empty bin",
+          "rows": "reference.n_bins",
+          "cols": 1,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "run": "tallest_bin_matches",
+          "args": ["cells", "reference['tallest_bin']"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_bin_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one collecting bin along the bottom of the board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nt"
+        },
+        {
+          "fail_if": ["box_nt.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole collecting bin, rather than the bare board or only part of a bin? Answer yes or no only.",
+          "boxes": "box_nt",
+          "out": "crop_nt"
+        },
+        {
+          "fail_if": ["crop_nt.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nt"],
+          "out": "cnt_nt"
+        },
+        {
+          "compare_band": "cnt_nt.n",
+          "to": "reference.n_bins",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "board_form",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show a pachinko or Galton board with a peg lattice and a row of numbered bins along the bottom holding stacks of balls? Answer with the single word yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "id": "anamorph_polar",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A photograph taken straight down from a gallery balcony onto a pale limestone museum floor, the floor filling the frame with its big square slabs and thin joints. Painted across the slabs in matt charcoal is a large MIRROR-CYLINDER FLOOR PIECE: the flat distorted artwork that only turns into a normal picture when a mirrored cylinder is stood on the plain circle at its centre. There is no cylinder in the photograph, only the painted floor.\n\nAt the centre of the painted area mark a plain circle whose diameter is one sixth of the painted area's diameter -- this is where the mirror cylinder stands. Leave the whole inside of that circle completely bare stone: no paint of any kind inside it.\n\nThe hidden picture is the word HAWK, written in 4 capital letters side by side in one line, all the same height.\n\nWrap that hidden picture around the small circle by this exact rule, and by no other:\n- The BOTTOM edge of the hidden picture is wrapped onto the small circle you drew; the TOP edge of the hidden picture is wrapped onto a circle 5.5 times that diameter. So height in the hidden picture becomes DISTANCE OUT FROM THE CENTRE: the bottom of the hidden picture sits right against the small circle and its top reaches that outer circle.\n- The LEFT-to-RIGHT direction of the hidden picture becomes DIRECTION AROUND THE CENTRE. The hidden picture is fanned out over exactly 260 degrees of turn around the small circle, spread evenly, which leaves the remaining 100 degrees of the fan completely empty.\n- Every stroke therefore comes out bent: a stroke that runs across the hidden letters becomes an ARC curving round the centre, a stroke that runs up the hidden letters becomes a straight spoke pointing away from the centre, and every letter ends up far wider at its outer end than at the end near the small circle.\n\nBecause of this the word HAWK must NOT appear as ordinary readable lettering anywhere in the picture. Flat, it has to look like a fan of curved shapes and nothing on it may be readable as normal text. No caption, no title, no signature, no mirror or cylinder in the picture, no other marks.\n",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a pale stone floor seen from directly above, with a plain circle marked in the middle of it and dark painted markings spread around that circle. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- an empty floor, a page of ordinary text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "q_mark": "Is there a plain circular outline marked near the middle of the floor? Answer yes or no only.",
+    "q_unwrap": "What word is written across this picture? Give the word only, no explanation.",
+    "q_evidence": "In this picture, is the magenta circle drawn on top of the plain circle marked at the middle of the floor (rather than somewhere else on the floor)? Answer yes or no only.",
+    "payload_kind": "word",
+    "payload": "HAWK",
+    "span_deg": 260
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "mirror_mark_present",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "find_footprint",
+          "args": ["image"],
+          "out": "fp"
+        },
+        {
+          "read_fallback": "fp.circle_ok",
+          "primary_flags": ["fp.no_read", "fp.needs_second_opinion"],
+          "else": [
+            {
+              "ask": "reference.q_mark",
+              "out": "a"
+            },
+            {
+              "fail_if": ["a.unreadable"]
+            },
+            {
+              "compare": "a",
+              "to": "yes",
+              "out": "vok"
+            }
+          ],
+          "else_value": "vok",
+          "out": "ok"
+        },
+        {
+          "fail_if": ["ok.exhausted"]
+        },
+        {
+          "run": "pass_at_half",
+          "args": ["ok"],
+          "code": {
+            "inline": "_leafval_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "unwrapped_picture_is_the_payload",
+      "weight": 8.0,
+      "steps": [
+        {
+          "run": "decode_payload",
+          "args": ["image", "reference.payload_kind", "reference.payload", "reference.span_deg"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "read_fallback": "m.identity",
+          "primary_flags": ["m.reader_blind"],
+          "else": [
+            {
+              "ask": "reference.q_unwrap",
+              "image": "m.path",
+              "out": "a"
+            },
+            {
+              "fail_if": ["a.unreadable"]
+            },
+            {
+              "run": "answer_identity",
+              "args": ["a", "reference.payload_kind", "reference.payload"],
+              "out": "vi"
+            }
+          ],
+          "else_value": "vi",
+          "out": "ident"
+        },
+        {
+          "fail_if": ["ident.exhausted"]
+        },
+        {
+          "run": "combine_identity_span",
+          "args": ["ident", "m.span_score"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "payload_not_readable_on_the_flat_sheet",
+      "weight": 1.4,
+      "steps": [
+        {
+          "run": "flat_view_leak",
+          "args": ["image", "reference.payload_kind", "reference.payload"],
+          "out": "fl"
+        },
+        {
+          "fail_if": ["fl.no_read"]
+        },
+        {
+          "run": "as_score",
+          "args": ["fl.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "mirror_footprint_left_blank",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "footprint_blank",
+          "args": ["image"],
+          "out": "b"
+        },
+        {
+          "fail_if": ["b.no_read"]
+        },
+        {
+          "run": "as_score",
+          "args": ["b.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_footprint_and_unwrap_evidence",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "run": "draw_evidence",
+          "args": ["image", "reference.payload_kind", "reference.payload", "reference.span_deg"],
+          "out": "ev"
+        },
+        {
+          "ask": "reference.q_evidence",
+          "image": "ev.path",
+          "out": "q"
+        },
+        {
+          "fail_if": ["q.unreadable"]
+        },
+        {
+          "compare": "q",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

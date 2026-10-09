@@ -1,0 +1,157 @@
+{
+  "id": "mep_siphonic_roof_drain",
+  "axis": "physical_consistency",
+  "prompt": "An installation drawing is taped to the inside of the site office window for the pipework crew to work off, photographed from indoors so the whole sheet reads.\n\nThe building is a single-span warehouse and this roof drains siphonically, not by gravity. The condition information the design office issued is on the sheet already: three roof outlets along one gutter line, at 6 m, 24 m and 42 m from the gable, taking 210, 240 and 210 square metres of roof between them, and one place where the pipework leaves the building, at the gable end.\n\nThe sheet has two parts, a roof plan above and a long section below, and the section is drawn with the far end of the gutter at the left and the gable at the right. The crew installs off the section, so the section is the part that has to be complete: every stretch of the collector carries a tag with its invert level in metres and a tag with its pipe size, and each of the three branches down from an outlet carries a tag giving its equivalent length in metres.\n\nWork the pipework out for yourself. I am not telling you what any level is, I am not telling you what size any stretch of pipe is, and I am not telling you what any branch's equivalent length comes to. No note, no arrow and no calculation may be added to the sheet beyond those tags and the outlet numbers.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a drawing sheet with a run of pipework drawn in section on it? A photograph of a document, a scan, a schematic or a plain line drawing ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no pipework in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "level_ok": "yes",
+    "size_growth": "yes",
+    "eq_ok": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_collector_is_laid_dead_level_the_whole_way",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an invert level tag against the collector pipe on the long section",
+          "sweep": true,
+          "out": "lv_box"
+        },
+        {
+          "fail_if": ["lv_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the level figure in this tag. Write the number only, without the unit.",
+          "boxes": "lv_box",
+          "pad": 0.25,
+          "out": "lv_rd"
+        },
+        {
+          "fail_if": ["lv_rd.unreadable"]
+        },
+        {
+          "run": "collector_uniform",
+          "args": ["lv_rd"],
+          "out": "lv_chk"
+        },
+        {
+          "compare": "lv_chk.ok",
+          "to": "reference.level_ok",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_collector_grows_as_it_gathers_the_outlets",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a pipe size tag against a stretch of the collector on the long section",
+          "sweep": true,
+          "out": "sz_box"
+        },
+        {
+          "fail_if": ["sz_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one pipe tag. Copy the pipe size printed on that tag. If more than one tag is visible in this cut-out, read the one nearest the middle of it. Write digits only, without any letters.",
+          "boxes": "sz_box",
+          "pad": 0.25,
+          "out": "sz_rd"
+        },
+        {
+          "fail_if": ["sz_rd.unreadable"]
+        },
+        {
+          "run": "collector_grows_to_gable",
+          "args": ["sz_rd", "sz_box"],
+          "out": "sz_chk"
+        },
+        {
+          "compare": "sz_chk.ok",
+          "to": "reference.size_growth",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_three_branches_are_balanced_against_each_other",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an equivalent length tag against a branch pipe on the long section",
+          "sweep": true,
+          "out": "eq_box"
+        },
+        {
+          "fail_if": ["eq_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the equivalent length in this tag. Write the number only, without the unit.",
+          "boxes": "eq_box",
+          "pad": 0.25,
+          "out": "eq_rd"
+        },
+        {
+          "fail_if": ["eq_rd.unreadable"]
+        },
+        {
+          "run": "branches_balanced",
+          "args": ["eq_rd"],
+          "out": "eq_chk"
+        },
+        {
+          "compare": "eq_chk.ok",
+          "to": "reference.eq_ok",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_calculation_is_added_to_the_sheet",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a note, an arrow or a calculation added beyond the tags and the outlet numbers",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

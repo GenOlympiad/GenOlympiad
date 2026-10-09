@@ -1,0 +1,177 @@
+{
+  "id": "three_candles_burn_order",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photograph of a windowsill holding THREE unlit pillar candles standing in a row, labelled A, B, C from LEFT to RIGHT, all the SAME starting diameter, each a plain solid-colour wax pillar. The candles are SNUFFED OUT -- no flames, only a short dark wick stub on each. Every candle started at its own height and burned down at its own steady rate. All of them were lit at the same moment and have now been burning for 4 hours, EXCEPT where a candle is noted as snuffed early (it stopped getting shorter at that time):\n    Candle A: starting height 18 cm, burn rate 2.0 cm per hour\n    Candle B: starting height 15 cm, burn rate 2.5 cm per hour (this candle was SNUFFED OUT early, at 1 hour of burning, and stopped shrinking after that)\n    Candle C: starting height 20 cm, burn rate 3.0 cm per hour\nWork out how tall EACH candle is RIGHT NOW (current height = starting height minus its burn rate times the number of hours it actually stayed lit), then draw the three candles at those current heights, keeping them the same diameter and standing on the same sill, in the order A, B, C left to right. Do NOT just draw three candles of random different heights and do NOT draw them all the same -- the relative heights must match your computed current heights. No flames, no smoke, no numbers, labels, rulers or text anywhere in the image.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a windowsill or shelf with three pillar candles standing in a row on it. Ignoring artistic quality, and ignoring whether the candles look lit or unlit, new or burned, does the image actually DEPICT that? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "names": ["A", "B", "C"],
+    "n": 3,
+    "cur_heights_cm": [10.0, 12.5, 8.0],
+    "ratios": [0.8, 1.0, 0.64],
+    "tallest": "B",
+    "order_short_to_tall": ["C", "A", "B"],
+    "q_ratios": "Three pillar candles stand in a row, seen straight on. Compare each candle's height with the TALLEST of the three: the tallest counts as 1.0, and every other candle counts as its height divided by the tallest. Answer with exactly three decimal numbers separated by single spaces, for the LEFT, MIDDLE and RIGHT candle in that order, and nothing else.",
+    "q_order": "Three candles stand in a row; call the left one A, the middle one B and the right one C. Order them from the shortest current height to the tallest current height. Answer with the three letters only, shortest first, separated by single spaces.",
+    "q_count": "How many pillar candles are standing in the row? Whole number only.",
+    "q_flame": "Are any of the candles lit with a visible flame? Answer yes or no only.",
+    "enforce_notext": true,
+    "q_notext": "Is there any printed word or number anywhere in this image? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "length_ratios",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "pillar candle's wax body standing on the windowsill (exclude the wick)",
+          "expected_n": "reference.n",
+          "retries": 5,
+          "out": "cd"
+        },
+        {
+          "fail_if": ["cd.unreadable"]
+        },
+        {
+          "run": "candle_heights",
+          "args": ["cd", "reference.n"],
+          "out": "rr"
+        },
+        {
+          "fail_if": ["rr.degenerate"]
+        },
+        {
+          "compare_sequence": "rr.ratios",
+          "to": "reference.ratios",
+          "core": 0.06,
+          "margin": 0.14,
+          "shape_frac": 1.0,
+          "shape_delta": 0.08,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "order_short_to_tall",
+      "weight": 1.5,
+      "score": "s.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "pillar candle's wax body standing on the windowsill (exclude the wick)",
+          "expected_n": "reference.n",
+          "retries": 5,
+          "out": "cd"
+        },
+        {
+          "fail_if": ["cd.unreadable"]
+        },
+        {
+          "run": "order_score",
+          "args": ["cd", "reference.names", "reference.order_short_to_tall"],
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one pillar candle standing upright in the row on the windowsill",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_r"
+        },
+        {
+          "fail_if": ["box_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole pillar candle from its base up to its wick, rather than bare sill, a window frame, or only part of a candle? Answer yes or no only.",
+          "boxes": "box_r",
+          "out": "crop_r"
+        },
+        {
+          "fail_if": ["crop_r.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_r"],
+          "out": "cnt_r"
+        },
+        {
+          "compare_band": "cnt_r.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_unlit",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.q_flame",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

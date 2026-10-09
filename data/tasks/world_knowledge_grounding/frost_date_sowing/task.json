@@ -1,0 +1,228 @@
+{
+  "id": "frost_date_sowing",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photograph of the zone planting calendar that the county extension office pins up in a garden centre outside Minneapolis, Minnesota, shot square-on in the shop's ordinary light. The sheet is one long strip for a single year, ruled into months from January at the left to December at the right, with a felt-tip marker hanging beside it on a string.\n\nThree rows are already printed on the sheet, each with its own label and each waiting for one date to be filled in:\nAVERAGE LAST SPRING FROST\nAVERAGE FIRST FALL FROST\nLATEST SAFE SOWING DATE\n\nAlong the foot of the sheet runs this year's crop line:\nSWEET CORN -- 85 DAYS TO FIRST HARVEST\n\nThe office's house rule is to leave a further 14 days of margin before the first fall frost. Gardeners buy their seed off the back of this sheet, so the three dates have to be the ones that hold in this county. Write each date as the month's name and the day. Work the dates out for yourself -- I am deliberately not telling you when frost comes here and I am not telling you when the last safe sowing falls. Do not put a table of frost dates, a day count, an arithmetic working, or any writing at all on the sheet beyond the three row labels, the crop line above and the three dates themselves.\n\nAll three row labels, the crop line and all three written dates must be in the same frame and large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a long printed calendar strip with labelled rows and dates written on it in marker? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "want": [126, 281],
+    "back_days": 99,
+    "n_frost": 2,
+    "seed_line": "sweet corn 85 days to first harvest"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sowing_date_is_the_frost_date_less_the_crop",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the date written on the row labelled average last spring frost",
+          "expected_n": 1,
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date written on this row. Write the month and the day only.",
+          "boxes": "sp",
+          "out": "spr"
+        },
+        {
+          "fail_if": ["spr.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the date written on the row labelled average first fall frost",
+          "expected_n": 1,
+          "out": "fl"
+        },
+        {
+          "fail_if": ["fl.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date written on this row. Write the month and the day only.",
+          "boxes": "fl",
+          "out": "flr"
+        },
+        {
+          "fail_if": ["flr.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the date written on the row labelled latest safe sowing date",
+          "expected_n": 1,
+          "out": "sw"
+        },
+        {
+          "fail_if": ["sw.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date written on this row. Write the month and the day only.",
+          "boxes": "sw",
+          "out": "swr"
+        },
+        {
+          "fail_if": ["swr.unreadable"]
+        },
+        {
+          "run": "frost_dates_check",
+          "args": ["spr", "flr", "swr", "reference.want"],
+          "out": "dt"
+        },
+        {
+          "compare_band": "dt.gap",
+          "to": "reference.back_days",
+          "core_abs": 3.0,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_frost_dates_are_the_local_ones",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the date written on the row labelled average last spring frost",
+          "expected_n": 1,
+          "out": "sp2"
+        },
+        {
+          "fail_if": ["sp2.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date written on this row. Write the month and the day only.",
+          "boxes": "sp2",
+          "out": "spr2"
+        },
+        {
+          "fail_if": ["spr2.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the date written on the row labelled average first fall frost",
+          "expected_n": 1,
+          "out": "fl2"
+        },
+        {
+          "fail_if": ["fl2.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date written on this row. Write the month and the day only.",
+          "boxes": "fl2",
+          "out": "flr2"
+        },
+        {
+          "fail_if": ["flr2.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the date written on the row labelled latest safe sowing date",
+          "expected_n": 1,
+          "out": "sw2"
+        },
+        {
+          "fail_if": ["sw2.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date written on this row. Write the month and the day only.",
+          "boxes": "sw2",
+          "out": "swr2"
+        },
+        {
+          "fail_if": ["swr2.unreadable"]
+        },
+        {
+          "run": "frost_dates_check",
+          "args": ["spr2", "flr2", "swr2", "reference.want"],
+          "out": "dt2"
+        },
+        {
+          "compare_band": "dt2.n_ok",
+          "to": "reference.n_frost",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_seed_line",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the crop line printed along the foot of the calendar strip",
+          "expected_n": 1,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "read_crop": "Copy the line printed here. Write the words and figures only.",
+          "boxes": "cr",
+          "out": "crr"
+        },
+        {
+          "fail_if": ["crr.unreadable"]
+        },
+        {
+          "compare_text": "crr.answers.0",
+          "to": "reference.seed_line",
+          "core": 0.6,
+          "margin": 0.4,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_no_frost_table",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a table of frost dates, a day count or an arithmetic working on the sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_d2_n"
+        },
+        {
+          "fail_if": ["sweep_d2_n.unreadable"]
+        },
+        {
+          "compare": "sweep_d2_n.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

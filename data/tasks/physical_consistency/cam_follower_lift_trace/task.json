@@ -1,0 +1,84 @@
+{
+  "id": "cam_follower_lift_trace",
+  "axis": "physical_consistency",
+  "prompt": "The shop books a reground cam back in before it goes on the machine, so the part is photographed square down on the inspection table with the process card standing in the same frame.\n\nA disc cam lies flat and central on an inspection table whose rim ring is graduated every ten and carries four deeper index marks. A printed radial rule runs from the table centre out across the cam edge and is numbered in millimetres. The process card on its easel gives the base circle radius as 30 millimetres and then, against the four index marks in turn, the lift the follower must have there: 6 at the first, 14 at the second, 11 at the third and 0 at the fourth. The card gives no outline for the cam itself.\n\nWhat the cam edge has to reach at each index mark is what the process card does not draw.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph look straight down on a disc cam lying on a graduated inspection table with a process card in the frame? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "return_flank_hollowed_inward"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "The cam edge cuts across the printed radial rule at the second index mark on the rim ring. Read the number on the rule at that cut and write that number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "43", "45"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the run of the cam edge on the side that comes back down to the base circle. Answer with one of: that part of the edge is hollowed inward before it meets the base circle; that part of the edge bulges outward the whole way back; the cam is a plain round disc set off centre on the table.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

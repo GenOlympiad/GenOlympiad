@@ -1,0 +1,143 @@
+{
+  "id": "cloud_cover_okta",
+  "axis": "symbolic_systems",
+  "prompt": "Render a clean, straight-on image of a single WMO SURFACE STATION MODEL glyph that combines TWO standard elements, both of which you must draw correctly:\n\n1. SKY COVER: the station CIRCLE is shaded to show total cloud cover in OKTAS (eighths). Shade exactly 6 of the 8 eighths of the circle black (and leave the other 2 eighths white) to show 6 oktas of cover.\n\n2. WIND BARB: a straight shaft points out from the circle (up and to the right). On the shaft draw the wind speed using FULL feathers, where each full feather (a full-length barb) means 10 knots. For a 30-knot wind, draw exactly 3 full feathers hanging off the far end of the shaft.\n\nSo draw one circle shaded to 6/8 with a shaft carrying exactly 3 full feathers. Draw only this one station glyph; print no numbers or text inside or beside it. Make the shading fraction and the feathers clear.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a WMO station model glyph with a shaded sky-cover circle and a wind barb with feathers? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "hard_combo": true,
+    "oktas": 6,
+    "feathers": 3,
+    "q_fill": "This is a close-up of a circle that is partly filled in solid black. How much of the circle's area is filled solid black? Answer as a number of EIGHTHS from 0 to 8 (0 = none black, 4 = half black, 8 = all black). Answer with the single integer number of eighths (0 to 8) only.",
+    "q_feathers": "This is a close-up of a straight line (a shaft) with short strokes attached near one end. How many FULL-LENGTH strokes are drawn on it? Count only the long ones that run the full stroke length; do not count any half-length stubs. Answer with a single whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "okta_fill",
+      "weight": 4.0,
+      "only_if": "reference.active_base",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the station circle",
+          "expected_n": 1,
+          "out": "circ"
+        },
+        {
+          "fail_if": ["circ.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_fill",
+          "boxes": "circ",
+          "pad": 0.18,
+          "out": "fr"
+        },
+        {
+          "fail_if": ["fr.unreadable"]
+        },
+        {
+          "run": "to_eighths",
+          "args": ["fr"],
+          "out": "e"
+        },
+        {
+          "fail_if": ["e.no_read"]
+        },
+        {
+          "compare_band": "e.eighths",
+          "to": "reference.oktas",
+          "core_abs": 0.9,
+          "margin_abs": 2.1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "station_fill_and_barb",
+      "weight": 4.0,
+      "only_if": "reference.hard_combo",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the station circle",
+          "expected_n": 1,
+          "out": "circ"
+        },
+        {
+          "fail_if": ["circ.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_fill",
+          "boxes": "circ",
+          "pad": 0.18,
+          "out": "fr"
+        },
+        {
+          "fail_if": ["fr.unreadable"]
+        },
+        {
+          "run": "to_eighths",
+          "args": ["fr"],
+          "out": "e"
+        },
+        {
+          "fail_if": ["e.no_read"]
+        },
+        {
+          "compare_band": "e.eighths",
+          "to": "reference.oktas",
+          "core_abs": 0.9,
+          "margin_abs": 1.6,
+          "out": "f_fill"
+        },
+        {
+          "read": "boxes",
+          "target": "the wind barb shaft with its feathers -- draw ONE box holding the straight shaft together with the short strokes on its far end, running from where the shaft leaves the circle out to the shaft's far tip; the shaded station circle must stay OUTSIDE the rectangle, and do not box the circle on its own, a single feather on its own, or the blank paper.",
+          "expected_n": 1,
+          "out": "barb"
+        },
+        {
+          "fail_if": ["barb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_feathers",
+          "boxes": "barb",
+          "pad": 0.2,
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "run": "feather_count_score",
+          "args": ["fb", "reference.feathers"],
+          "out": "nb"
+        },
+        {
+          "run": "combined_score",
+          "args": ["f_fill", "nb.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

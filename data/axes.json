@@ -1,0 +1,47 @@
+{
+  "text_fidelity": {
+    "name": "text fidelity",
+    "short": "Text",
+    "tasks": 83
+  },
+  "counterfactual_instruction_following": {
+    "name": "counterfactual instruction following",
+    "short": "C-Fact",
+    "tasks": 95
+  },
+  "symbolic_systems": {
+    "name": "symbolic systems",
+    "short": "Symbol",
+    "tasks": 83
+  },
+  "world_knowledge_grounding": {
+    "name": "world-knowledge grounding",
+    "short": "World",
+    "tasks": 82
+  },
+  "physical_consistency": {
+    "name": "physical consistency",
+    "short": "Phys",
+    "tasks": 92
+  },
+  "quantitative_precision": {
+    "name": "quantitative precision",
+    "short": "Quant",
+    "tasks": 87
+  },
+  "spatial_and_3d_reasoning": {
+    "name": "spatial and 3-D reasoning",
+    "short": "Spatial",
+    "tasks": 83
+  },
+  "latent_computation": {
+    "name": "latent computation",
+    "short": "Latent",
+    "tasks": 109
+  },
+  "long_range_consistency": {
+    "name": "long-range consistency",
+    "short": "Long",
+    "tasks": 87
+  }
+}

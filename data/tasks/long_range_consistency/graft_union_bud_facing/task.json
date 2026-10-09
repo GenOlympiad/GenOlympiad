@@ -1,0 +1,184 @@
+{
+  "id": "graft_union_bud_facing",
+  "axis": "long_range_consistency",
+  "prompt": "Lifting starts on this row of maiden trees tomorrow, so the nursery wants its acceptance photograph today.\n\nAlready fixed and not yours to move: five maiden trees stand in one row, a numbered peg driven in beside each of them, 1 to 5 along the row; the barrow track runs down one side of the row; the grading board is pushed in at the head. The five came off different rootstocks and are plainly unlike one another in stem calibre and in overall height, and the grafting ties are still on.\n\nWhat the grading board carries:\nthe graft joint stands 120 mm above the soil on every tree in this batch;\nthe numbered pegs are driven so that the top of every peg stands at that same 120 mm, and the pegs are the only reference in the row;\nthe topmost fat bud on each scion turns away from the barrow track, so the new leader does not grow out over it.\n\nWhere the joint ends up on each stem, and which way each top bud ends up turned, is the part I am deliberately not telling you, and no tree in the row is a worked example for the others. Frame the row square enough that all five stems and all five peg tops are in it. Nothing is written on the ground or on a tree beyond the numbered pegs and that board.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a row of more than one young tree or woody stem standing in the ground? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no trees in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "union_line": "1=level with the peg top|2=level with the peg top|3=level with the peg top|4=level with the peg top|5=level with the peg top",
+    "bud_facing": "1=away from the barrow track|2=away from the barrow track|3=away from the barrow track|4=away from the barrow track|5=away from the barrow track",
+    "n_trees": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_graft_joint_comes_level_with_its_own_peg_top",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a young tree in the lifted row with the numbered peg beside it",
+          "sweep": true,
+          "out": "gu_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["gu_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what number is written on the peg beside the tree? Answer with the number exactly as it is written, or none if no number is written here.",
+          "boxes": "gu_box",
+          "pad": 0.5,
+          "out": "gu_key"
+        },
+        {
+          "fail_if": ["gu_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, where does the wrapped joint on the stem sit against the top of the peg? Answer with one of: level with the peg top, clearly above the peg top, clearly below the peg top, buried in the soil, or none if no wrapped joint can be made out.",
+          "boxes": "gu_box",
+          "pad": 0.5,
+          "out": "gu_val"
+        },
+        {
+          "fail_if": ["gu_val.unreadable"]
+        },
+        {
+          "run": "count_key_matches",
+          "args": ["gu_key", "gu_val", "reference.union_line"],
+          "out": "gu_v"
+        },
+        {
+          "compare_band": "gu_v.n",
+          "to": "reference.n_trees",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_top_bud_turns_away_from_the_side_the_board_names",
+      "weight": 1.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a young tree in the lifted row with the numbered peg beside it",
+          "sweep": true,
+          "out": "bd_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["bd_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what number is written on the peg beside the tree? Answer with the number exactly as it is written, or none if no number is written here.",
+          "boxes": "bd_box",
+          "pad": 0.5,
+          "out": "bd_key"
+        },
+        {
+          "fail_if": ["bd_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which way does the topmost fat bud on the stem point? Answer with one of: towards the barrow track, away from the barrow track, straight along the row, or none if no bud can be made out.",
+          "boxes": "bd_box",
+          "pad": 0.5,
+          "out": "bd_val"
+        },
+        {
+          "fail_if": ["bd_val.unreadable"]
+        },
+        {
+          "run": "count_key_matches",
+          "args": ["bd_key", "bd_val", "reference.bud_facing"],
+          "out": "bd_v"
+        },
+        {
+          "compare_band": "bd_v.n",
+          "to": "reference.n_trees",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_tree_in_the_row_has_its_numbered_peg",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a young tree in the lifted row with the numbered peg beside it",
+          "sweep": true,
+          "out": "pg_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["pg_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a peg with a number on it driven into the soil beside this tree? Answer yes or no only.",
+          "boxes": "pg_box",
+          "pad": 0.5,
+          "out": "pg_rd"
+        },
+        {
+          "fail_if": ["pg_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["pg_rd"],
+          "out": "pg_v"
+        },
+        {
+          "compare_band": "pg_v.n",
+          "to": "reference.n_trees",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_word_or_arrow_is_added_to_the_row",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written word or arrow on the ground or on a tree beyond the numbered pegs and board",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "pr_sw"
+        },
+        {
+          "fail_if": ["pr_sw.unreadable"]
+        },
+        {
+          "compare": "pr_sw.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

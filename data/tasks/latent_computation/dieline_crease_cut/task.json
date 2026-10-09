@@ -1,0 +1,134 @@
+{
+  "id": "dieline_crease_cut",
+  "axis": "latent_computation",
+  "prompt": "The pattern shop's new desk-tray design goes on sale this week, and the listing needs its lead photograph: the printed pattern sheet and the finished sample lying together on the workbench.\n\nThe design is the shop's tuck-corner tray, cut and folded from one piece of leather. The pattern sheet carries the flattened-out shape with its features named in small print -- BASE in the middle, FRONT WALL and BACK WALL above and below it, LEFT WALL and RIGHT WALL beside it, a TAB on each end of the front and back walls, and a SLOT for each tab -- and the shop's printed key in the corner: a solid line is cut with the knife, a dashed line is folded, never both. When the tray is made up, the walls stand, each tab turns the corner and tucks through the slot in the wall it meets, and the tray stands open-topped with nothing else holding it.\n\nThe photograph is taken flat-on, pattern and finished sample side by side in one frame, sharp enough to read the small print and every line on the sheet. Which lines on that sheet are drawn solid and which dashed, where the slots must sit, and what the made-up corners look like -- none of it is written anywhere; the way the tray folds decides all of it, and customers judge the pattern by exactly that.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed pattern sheet and a small handmade tray together. A photograph, a rendering or a scan of one all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "lines_key": "dashed/dashed/solid/side walls",
+    "sample_key": "tucked/yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_line_wears_the_identity_the_folding_forces",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed pattern sheet lying on the workbench",
+          "out": "ps"
+        },
+        {
+          "fail_if": ["ps.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a printed pattern sheet with named parts. Look at the four lines where the walls meet the part named BASE. How are they drawn? Answer dashed if all four are dashed, solid if all four are solid, mixed if some of each, missing if no such lines are drawn.",
+          "boxes": "ps",
+          "pad": 0.15,
+          "out": "bw"
+        },
+        {
+          "fail_if": ["bw.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a printed pattern sheet with named parts. Look at the lines where each part named TAB springs from its wall. How are they drawn? Answer dashed if all are dashed, solid if all are solid, mixed if some of each, missing if no such lines are drawn.",
+          "boxes": "ps",
+          "pad": 0.15,
+          "out": "tr"
+        },
+        {
+          "fail_if": ["tr.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a printed pattern sheet with named parts. Look at the short marks named SLOT. How are they drawn? Answer solid if all are solid, dashed if all are dashed, mixed if some of each, missing if no slot marks are drawn.",
+          "boxes": "ps",
+          "pad": 0.15,
+          "out": "sl"
+        },
+        {
+          "fail_if": ["sl.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a printed pattern sheet with named parts. On which parts do the marks named SLOT sit? Answer side walls if they sit inside the parts named LEFT WALL and RIGHT WALL, base if they sit on the BASE, tabs if they sit on the TABs, no slots if none are drawn.",
+          "boxes": "ps",
+          "pad": 0.15,
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "run": "read_sheet_lines",
+          "args": ["bw", "tr", "sl", "sp", "reference.lines_key"],
+          "out": "lv"
+        },
+        {
+          "compare": "lv.obs",
+          "to": "lv.exp",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sample_corners_are_tucked_not_pinched",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the small handmade tray standing beside the pattern sheet",
+          "out": "ty"
+        },
+        {
+          "fail_if": ["ty.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a small handmade tray. How are its corners held? Answer tucked if a strap of material passes through a slit in the neighbouring wall, pinched if the corners are pinched together and fastened, loose if nothing holds them, missing if no tray is shown.",
+          "boxes": "ty",
+          "pad": 0.25,
+          "out": "cn"
+        },
+        {
+          "fail_if": ["cn.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a small handmade tray. Is it open-topped with four upstanding walls? Answer yes, no, or missing if no tray is shown.",
+          "boxes": "ty",
+          "pad": 0.25,
+          "out": "op"
+        },
+        {
+          "fail_if": ["op.unreadable"]
+        },
+        {
+          "run": "read_tray_sample",
+          "args": ["cn", "op", "reference.sample_key"],
+          "out": "sv"
+        },
+        {
+          "compare": "sv.obs",
+          "to": "sv.exp",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

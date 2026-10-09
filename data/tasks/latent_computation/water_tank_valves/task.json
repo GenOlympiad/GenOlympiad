@@ -1,0 +1,122 @@
+{
+  "id": "water_tank_valves",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on technical diagram of a WATER-TANK MANIFOLD: a row of 3 clear cylindrical tanks standing side by side, labelled Tank 1 to Tank 3 from LEFT to RIGHT, each marked with a graduated measuring scale from 0 at the bottom to 10 at the top. Adjacent tanks are joined by a short pipe with a numbered VALVE on it (valve V1 between Tank 1 and Tank 2, valve V2 between Tank 2 and Tank 3, and so on). A pump feeds Tank 1.\n\nAt the start the tanks hold: Tank 1 = 5 units, Tank 2 = 1 units, Tank 3 = 0 units. Then this timed sequence of events happens, in this exact order: 1) PUMP; 2) open V1; 3) open V2; 4) open V1. Everything is measured in whole UNITS on each tank's 0-to-10 graduated scale. Apply these events strictly IN ORDER, one per step: a PUMP event adds exactly 4 units to Tank 1 (a tank never fills past 10; any overflow spills away). Opening valve Vk moves exactly 3 units from the tank on its LEFT into the tank on its RIGHT -- but if the left tank holds fewer than 3 units, only the units it actually has are moved, and a tank on the right never fills past 10. Nothing else moves on a step.\n\nWork out the FINAL water level in every tank after the whole sequence, then draw each tank filled with blue water up to its final level, with the water surface line sitting exactly at that many units on the tank's own 0-to-10 scale. Show the graduated tick marks so each level is readable. Do NOT print the starting levels, the event list, the final numbers, or any arithmetic anywhere on the diagram -- the only thing that shows each tank's amount is the height of the blue water against its printed scale.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a row of clear water tanks with graduated measuring scales, joined by pipes with numbered valves, each tank filled with blue water to some level? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      [3],
+      [4],
+      [3]
+    ],
+    "levels": [3, 4, 3],
+    "n_tanks": 3,
+    "highest_tank": "2",
+    "q_grid": "Read the blue water level shown in each tank, using the 0-to-10 graduated scale marked on the side of that tank (0 = empty at the bottom). Report the level for the tanks in order Tank 1 first, then Tank 2, and so on left to right (top of the list = Tank 1). Judge purely by where the blue water surface sits against each tank's own scale; do NOT do any sums. Give one whole number per tank.",
+    "q_ntanks": "How many separate water tanks are in the row in this diagram? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tank_levels",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_grid": "the water level shown in each tank, in the grid units marked on the side scale (0 = empty at the bottom), reading the tanks in order Tank 1 first down to the last tank (top of the list = Tank 1, left-most; bottom of the list = right-most)",
+          "rows": "reference.n_tanks",
+          "cols": 1,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "compare_grid": "cells.values",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "highest_tank",
+      "weight": 1.0,
+      "score": "s.frac",
+      "steps": [
+        {
+          "read_grid": "the water level shown in each tank, in the grid units marked on the side scale (0 = empty at the bottom), reading the tanks in order Tank 1 first down to the last tank (top of the list = Tank 1, left-most; bottom of the list = right-most)",
+          "rows": "reference.n_tanks",
+          "cols": 1,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "run": "extreme_tank_score",
+          "args": ["cells", "reference.highest_tank", "True"],
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_tank_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one clear cylindrical water tank standing in the row",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nt"
+        },
+        {
+          "fail_if": ["box_nt.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole water tank, rather than bare background or only part of a tank? Answer yes or no only.",
+          "boxes": "box_nt",
+          "out": "crop_nt"
+        },
+        {
+          "fail_if": ["crop_nt.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nt"],
+          "out": "cnt_nt"
+        },
+        {
+          "compare_band": "cnt_nt.n",
+          "to": "reference.n_tanks",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "id": "pachinko_deterministic",
+  "axis": "latent_computation",
+  "prompt": "A clean front-view illustration of a pachinko / Galton peg board. Draw a tall rectangular board with a triangular lattice of FIVE horizontal rows of round pegs (2 pegs in the top row, then 3, 4, 5, 6 going down), and along the bottom SIX equal collection slots separated by vertical dividers. A single ball is dropped into the top centre and bounces off one peg in each of the five rows. Its path is fixed: at row 1 it bounces to the RIGHT, at row 2 to the RIGHT, at row 3 to the LEFT, at row 4 to the RIGHT, and at row 5 to the LEFT. Each RIGHT bounce moves the ball one slot to the right of centre and each LEFT bounce one slot to the left; work out which of the six bottom slots (numbered 0 to 5 from the left) the ball ends in after those five bounces, and draw ONE red ball resting at the bottom inside THAT slot. Show the full peg lattice and the six slots. Draw the ball in exactly one slot, no text, no numbers, no path lines or arrows on the board.",
+  "difficulty": "s1",
+  "easy_question": "This picture was supposed to show a pachinko / Galton peg board -- a board with a triangular grid of round pegs and a row of collection slots at the bottom. Never mind how well it is drawn. Does the picture show a peg board with bottom slots? A realistic illustration or diagram of such a board counts as yes. Answer NO only if the image instead shows just a blank card, a plain panel, a text answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_slots": 6,
+    "gt_slot": 3,
+    "min_pegs": 12,
+    "q_slot_fb": "This is a pachinko board with SIX bottom collection slots, numbered 0 to 5 from LEFT to right. A single ball rests in exactly one slot. Which slot number (0,1,2,3,4 or 5) is the ball in? Answer with a single digit 0-5. If there is no ball or more than one ball, answer 'none'.",
+    "q_ball_present": "Look at the bottom collection slots of this pachinko board. Is there EXACTLY ONE ball (a small disc/marble) actually resting in one of the slots -- not zero balls, not several? Answer strictly with the single word yes (exactly one ball is present) or no (there is no ball, or more than one). Answer yes or no only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "peg_structure",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "Look at the main area of this board, above the row of collection slots at the bottom. Is that area covered with a lattice of round pegs -- a dozen or more separate small round pegs arranged in rows -- or is it essentially bare with no pegs on it? Answer yes if a lattice of a dozen or more round pegs is drawn, no if there are no pegs or only one or two. Answer yes or no only.",
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.unreadable"]
+        },
+        {
+          "compare": "pl",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "landing_slot",
+      "weight": 4.0,
+      "score": "sl.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the single round ball resting at the bottom of the board inside one of the collection slots",
+          "expected_n": 1,
+          "context": "the bottom strip of the pachinko board that holds the row of collection slots",
+          "out": "ball"
+        },
+        {
+          "fail_if": ["ball.unreadable"]
+        },
+        {
+          "ask": "reference.q_slot_fb",
+          "out": "sa"
+        },
+        {
+          "fail_if": ["sa.unreadable"]
+        },
+        {
+          "run": "slot_score",
+          "args": ["sa", "reference"],
+          "out": "sl"
+        },
+        {
+          "fail_if": ["sl.no_read"]
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:4"
+}

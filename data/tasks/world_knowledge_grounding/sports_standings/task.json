@@ -1,0 +1,125 @@
+{
+  "id": "sports_standings",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A broadcast STANDINGS graphic filling a sports-bar big screen mounted above the bar during a game night. Show the standings as they stood on 2026-07-16 (the pinned table for this broadcast). Draw a ranked table with columns Rank, Team, W (wins), L (losses), PCT for the MLB American League Central race. List these 5 teams in their standings order, best record at the top: Chicago White Sox, Cleveland Guardians, Detroit Tigers, Kansas City Royals, Minnesota Twins. Fill in each team's wins and losses. Bold title, crisp legible team names and numbers. Keep the ranking internally consistent -- the top team has the best record and records get progressively worse going down -- matching the real standings exactly.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show sports-bar big-screen MLB standings graphic on the wall above the bar during a game? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "league": "American League",
+    "roster": [
+      "Chicago White Sox",
+      "Cleveland Guardians",
+      "Detroit Tigers",
+      "Kansas City Royals",
+      "Minnesota Twins"
+    ],
+    "order": [
+      "Chicago White Sox",
+      "Cleveland Guardians",
+      "Minnesota Twins",
+      "Detroit Tigers",
+      "Kansas City Royals"
+    ],
+    "wins": [50, 51, 48, 44, 38],
+    "losses": [45, 46, 49, 52, 59]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rank_order",
+      "weight": 3.0,
+      "steps": [
+        {
+          "crop_full": true,
+          "out": "full"
+        },
+        {
+          "ask": "This image is an MLB STANDINGS table. Reading STRICTLY from the TOP row downward to the BOTTOM row, list the TEAM names in the exact top-to-bottom order they physically appear (do NOT re-sort), separated by commas. Use the team names as printed.",
+          "image": "full",
+          "out": "drawn_order"
+        },
+        {
+          "fail_if": ["drawn_order.no_read"]
+        },
+        {
+          "match_order": "drawn_order",
+          "to": "reference.order",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "wins_column",
+      "weight": 2.75,
+      "steps": [
+        {
+          "read_crop": "This image shows a sports STANDINGS table with a row per team (columns such as rank, team, W for wins, L for losses, PCT). Read the rows in the order they physically appear, from the top row down, and write one line per team in the form 'Team name | W | L' -- the team name as printed, then its wins number, then its losses number. Copy exactly what is printed: do not re-sort the rows, do not recompute anything, and do not add any other text.",
+          "out": "tr"
+        },
+        {
+          "run": "standings_column",
+          "args": ["tr", "reference.order", "'wins'"],
+          "out": "read_wins"
+        },
+        {
+          "fail_if": ["read_wins.no_read"]
+        },
+        {
+          "compare_sequence": "read_wins.per_team",
+          "to": "reference.wins",
+          "core": 0.0,
+          "margin": 1.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "losses_column",
+      "weight": 2.75,
+      "steps": [
+        {
+          "read_crop": "This image shows a sports STANDINGS table with a row per team (columns such as rank, team, W for wins, L for losses, PCT). Read the rows in the order they physically appear, from the top row down, and write one line per team in the form 'Team name | W | L' -- the team name as printed, then its wins number, then its losses number. Copy exactly what is printed: do not re-sort the rows, do not recompute anything, and do not add any other text.",
+          "out": "tr"
+        },
+        {
+          "run": "standings_column",
+          "args": ["tr", "reference.order", "'losses'"],
+          "out": "read_losses"
+        },
+        {
+          "fail_if": ["read_losses.no_read"]
+        },
+        {
+          "compare_sequence": "read_losses.per_team",
+          "to": "reference.losses",
+          "core": 0.0,
+          "margin": 1.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_extra": {
+    "source": "https://statsapi.mlb.com/api/v1/standings?leagueId=103&season=2026&date=2026-07-16&standingsTypes=regularSeason",
+    "as_of": "2026-07-16 (end of play)"
+  },
+  "grounding": "archival"
+}

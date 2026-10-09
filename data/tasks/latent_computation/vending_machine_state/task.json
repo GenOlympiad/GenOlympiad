@@ -1,0 +1,246 @@
+{
+  "id": "vending_machine_state",
+  "axis": "latent_computation",
+  "prompt": "A close-up photo of a convenience-store VENDING MACHINE front, showing its small digital BALANCE display (green digits, in cents), the product-collection FLAP at the bottom, and a COIN-RETURN TRAY beside it. A customer inserts these coins one after another: 25c, 25c, 10c, 50c, 10c, then presses the button for an item priced 85c. The machine adds up the inserted coins; because the inserted total is at least the price, it DISPENSES the item and returns the exact change using the fewest coins (from 50c, 25c, 10c, 5c pieces), and the balance display resets to 0.\n\nRender the machine's FINAL state after this transaction: (a) the BALANCE display reading exactly 0 (as '0c'); (b) the dispensed ITEM sitting in the collection flap; (c) the CHANGE coins lying in the coin-return tray, showing the correct fewest-coin change with each coin's value stamped on it. Show these three things clearly. Do not print the price, the coin list, or any arithmetic anywhere on the machine.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show convenience-store vending-machine front showing the post-transaction balance display, dispensed item, and coin-return change together? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "inserts": [25, 25, 10, 50, 10],
+    "price": 85,
+    "display": 0,
+    "change_total": 35,
+    "dispensed": true,
+    "q_form": "Look at this image. Is it a vending machine front with a small digital number display, a product collection flap, and a coin tray? Answer ONLY 'yes' or 'no'.",
+    "q_display": "Report ONLY what is actually shown on the screen in THIS image; do NOT do the balance yourself. Read the vending machine's digital BALANCE display (the small lit number panel, a value in cents). Output ONLY the number actually lit on the display.",
+    "q_dispensed": "Report ONLY what is actually drawn in THIS image; do NOT reason about whether the machine should have dispensed. Look at the machine's collection flap / dispense tray at the bottom (the slot labelled COLLECT or similar). Is there ANY distinct dispensed OBJECT sitting in it -- a can, bottle, snack pack, box or other product-like object? An empty dark slot means no. Answer ONLY 'yes' or 'no'.",
+    "q_change": "This is a close-up of ONE coin. A number is stamped on the coin's face (its value in cents). What number is stamped on it? Answer with that number only, digits, nothing else.",
+    "n_change_coins": 2,
+    "display_str": "0c"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "joint_state",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_display",
+          "out": "disp"
+        },
+        {
+          "ask": "reference.q_dispensed",
+          "out": "dsp"
+        },
+        {
+          "fail_if": ["disp.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "coin lying in the coin-return tray of the vending machine",
+          "retries": 5,
+          "out": "coins"
+        },
+        {
+          "fail_if": ["coins.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_change",
+          "boxes": "coins",
+          "out": "faces"
+        },
+        {
+          "fail_if": ["faces.unreadable"]
+        },
+        {
+          "run": "coin_total",
+          "args": ["coins", "faces"],
+          "out": "chg"
+        },
+        {
+          "fail_if": ["chg.unreadable"]
+        },
+        {
+          "run": "final_state_correct",
+          "args": ["disp", "dsp", "chg.total", "reference.display", "reference.change_total"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "change_value",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "coin lying in the coin-return tray of the vending machine",
+          "retries": 5,
+          "out": "coins"
+        },
+        {
+          "fail_if": ["coins.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_change",
+          "boxes": "coins",
+          "out": "faces"
+        },
+        {
+          "fail_if": ["faces.unreadable"]
+        },
+        {
+          "run": "coin_total",
+          "args": ["coins", "faces"],
+          "out": "chg"
+        },
+        {
+          "fail_if": ["chg.unreadable"]
+        },
+        {
+          "compare_tolerance": "chg.total",
+          "to": "reference.change_total",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count_change_coins",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one change coin lying in the coin-return tray",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole coin, rather than the bare tray or only part of a coin? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_change_coins",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_balance_zero",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the value on the BALANCE display of the vending machine. Answer with exactly what is shown.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.display_str",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_item_dispensed",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is there any distinct object (a can, bottle, snack pack or similar) sitting in the collection flap at the bottom of the machine? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_arithmetic",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a printed price, a coin-value list or a written sum on the machine, apart from the digital balance display",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

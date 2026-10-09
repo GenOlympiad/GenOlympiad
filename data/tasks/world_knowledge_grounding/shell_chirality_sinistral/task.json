@@ -1,0 +1,223 @@
+{
+  "id": "shell_chirality_sinistral",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The record photograph a natural history museum takes of a tray before it goes back into the cabinet, shot straight down from above.\n\nIn the tray are six shells of one sea snail species, laid out in a row. Every shell lies with its opening facing up at the camera and its pointed tip toward the top of the frame, so that the whole of the coil and the whole of the opening can be made out on each of them. Beside one of the six, and beside that one alone, lies a small printed determination slip: this specimen is the rare reversed individual the collection was given last year, and the slip is what tells a curator which of the six it is.\n\nThe rest of the tray is ordinary material. What a reversed individual looks like beside five ordinary ones is the museum's business and not mine -- I am deliberately not telling you which way round any of these shells goes, and I am deliberately not telling you what it is that makes the marked one different.\n\nNothing else may lie in the tray: no scale bar, no second slip, no labels beside the other shells, no arrows. The coil and the opening of every shell have to be easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a tray holding a row of snail shells seen from above, with a small printed slip lying in it? A photograph, an illustration or a document mock-up all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "aperture_state": "normal",
+    "mirror_state": "mirrored",
+    "slip_state": "marked",
+    "n_shells": 6,
+    "q_shell_cert": "Does this cut-out show ONE whole shell, rather than the printed slip or only part of a shell? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_marked_shell_is_a_mirror_and_not_a_shell_turned_round",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one shell lying in the tray",
+          "out": "mr_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mr_r.unreadable"]
+        },
+        {
+          "read_crop": "Is the opening of this shell on the left side of the shell or on the right side? Answer with one word: left or right.",
+          "boxes": "mr_r",
+          "pad": 0.25,
+          "out": "ma_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ma_q.unreadable"]
+        },
+        {
+          "read_crop": "Does the coil of this shell wind clockwise or anticlockwise as it runs outward from the tip? Answer with one word: clockwise or anticlockwise.",
+          "boxes": "mr_r",
+          "pad": 0.25,
+          "out": "mc_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["mc_q.unreadable"]
+        },
+        {
+          "run": "openings_mirror_coils",
+          "args": ["ma_q", "mc_q"],
+          "out": "mr_s"
+        },
+        {
+          "compare": "mr_s.state",
+          "to": "reference.mirror_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "five_shells_take_the_hand_the_species_almost_always_takes",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one shell lying in the tray",
+          "out": "ap_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["ap_r.unreadable"]
+        },
+        {
+          "read_crop": "Is the opening of this shell on the left side of the shell or on the right side? Answer with one word: left or right.",
+          "boxes": "ap_r",
+          "pad": 0.25,
+          "out": "ap_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ap_q.unreadable"]
+        },
+        {
+          "run": "read_opening_sides",
+          "args": ["ap_q"],
+          "out": "ap_s"
+        },
+        {
+          "compare": "ap_s.state",
+          "to": "reference.aperture_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_slip_lies_beside_the_shell_that_differs",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one shell lying in the tray",
+          "out": "sl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sl_r.unreadable"]
+        },
+        {
+          "read_crop": "Is the opening of this shell on the left side of the shell or on the right side? Answer with one word: left or right.",
+          "boxes": "sl_r",
+          "pad": 0.25,
+          "out": "sa_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sa_q.unreadable"]
+        },
+        {
+          "read_crop": "Is there a small printed slip lying beside the shell at the middle of this cut-out? Answer yes or no only.",
+          "boxes": "sl_r",
+          "pad": 0.8,
+          "out": "ss_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ss_q.unreadable"]
+        },
+        {
+          "run": "slip_beside_odd_shell",
+          "args": ["sa_q", "ss_q"],
+          "out": "sl_s"
+        },
+        {
+          "compare": "sl_s.state",
+          "to": "reference.slip_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "six_shells_lie_in_the_tray",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one shell lying in the tray",
+          "propose_boxes": "vlm",
+          "out": "box_read",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_shell_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_shells",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_second_slip_or_arrow_lies_in_the_tray",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a scale bar, an arrow or a further printed slip lying in the tray",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

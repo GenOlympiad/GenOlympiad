@@ -1,0 +1,137 @@
+{
+  "id": "steady_rest_count_slender",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Across the bed of a centre lathe in a jobbing machine shop, seen from the front: the whole length of the work lies in frame and the paint-pen numbers along it are big enough to read.\n\nThe setting is pinned, figure for figure. A steel shaft 40 mm in diameter is held in the chuck at one end and runs on the tailstock centre at the other, and there are 1200 mm of shaft between the chuck face and the centre point. Five short bands along it have already been turned bright and true so that a steady rest can run on them, and the turner has written a number beside each one in paint pen. Their distances from the chuck face are 200 mm at band 1, 430 mm at band 2, 690 mm at band 3, 900 mm at band 4 and 1060 mm at band 5. The shop rule for work this slender is that no unsupported span may be longer than twelve times the shaft diameter, with the chuck face and the tailstock centre counting as supports at the two ends; and because a rest costs setting time, the turner fits the fewest that satisfy the rule, and clamps every one of them on a bright band.\n\nWhat goes up on the board is a photograph of the job as the turner leaves it, with every band number still readable and every steady rest that is fitted standing on the lathe bed with its jaws closed round the shaft.\n\nHow many rests this job takes and which bands they go on, you work out for yourself -- I am deliberately telling you neither. Nothing else stands on the bed: no rest gripping the shaft anywhere but on a bright band, and no extra fixture.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a lathe with a long shaft held between a chuck and a tailstock? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "rest_bands": "2, 4",
+    "n_rests": 2,
+    "clean_rest_on_band": "yes",
+    "q_band_num": "Copy the number written beside the bright turned band in this cut-out. Write only the number.",
+    "q_band_rest": "Is a steady rest clamped round the shaft at the band in this cut-out? Answer yes or no only.",
+    "q_rest_cert": "Does this cut-out show ONE whole steady rest standing on the lathe bed, rather than the tailstock, another fixture, a second view of a rest already counted, or only part of one? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_rests_stand_on_the_only_pair_of_bands_that_holds_every_span",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a short bright turned band on the shaft with a number beside it",
+          "sweep": true,
+          "out": "band_box"
+        },
+        {
+          "fail_if": ["band_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_band_num",
+          "boxes": "band_box",
+          "pad": 0.45,
+          "out": "band_num"
+        },
+        {
+          "fail_if": ["band_num.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_band_rest",
+          "boxes": "band_box",
+          "pad": 0.45,
+          "out": "band_rest"
+        },
+        {
+          "fail_if": ["band_rest.unreadable"]
+        },
+        {
+          "run": "flagged_band_numbers",
+          "args": ["band_num", "band_rest"],
+          "out": "fitted"
+        },
+        {
+          "compare_set": "fitted.seq",
+          "to": "reference.rest_bands",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_job_carries_the_fewest_rests_the_rule_allows",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a steady rest standing on the lathe bed with its jaws round the shaft",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "rest_box"
+        },
+        {
+          "fail_if": ["rest_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_rest_cert",
+          "boxes": "rest_box",
+          "out": "rest_cert"
+        },
+        {
+          "fail_if": ["rest_cert.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["rest_cert"],
+          "out": "rest_cnt"
+        },
+        {
+          "compare_band": "rest_cnt.n",
+          "to": "reference.n_rests",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_rest_grips_the_shaft_off_a_band",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a steady rest gripping the shaft where there is no bright turned band",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "off_sweep"
+        },
+        {
+          "fail_if": ["off_sweep.unreadable"]
+        },
+        {
+          "compare": "off_sweep.clean",
+          "to": "reference.clean_rest_on_band",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

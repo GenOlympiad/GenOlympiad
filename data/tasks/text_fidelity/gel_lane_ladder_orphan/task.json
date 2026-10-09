@@ -1,0 +1,193 @@
+{
+  "id": "gel_lane_ladder_orphan",
+  "axis": "text_fidelity",
+  "prompt": "A figure plate being made up for a journal submission, photographed flat on the bench. The upper part of the plate is a photograph of an electrophoresis gel with six lanes running down it, a short label set above each lane; the lower part is the sample table that goes with it, ruled in three columns headed SAMPLE, TREATMENT and COLLECTED.\n\nFive samples were run. These are their particulars, exactly as the lab book has them:\n  CRUDE EXTRACT      none                 08:55\n  CLARIFIED LYSATE   spun twenty minutes  09:20\n  FLOW-THROUGH       column, thirty min   09:55\n  WASH TWO           twenty mM imidazole  10:20\n  ELUATE             two-fifty mM imidazole  10:45\n\nThe sixth lane is not a sample at all: it is the molecular weight ladder, and its label above the gel reads LADDER.\n\nWhich sample was loaded in which lane is yours to arrange -- I am deliberately not telling you the running order, and I am not telling you how the table has to be sorted. What the plate has to do is what every referee does with a plate like this: read across from a lane to the row that belongs to it, without hunting.\n\nEvery lane label and every row of the table has to be legible in the one frame. The plate carries no other wording: no figure caption, no arrows, no key, no marks on the gel image.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a grey banded image with short labels above it and a ruled table of text below it? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no table at all. Answer yes or no only.",
+  "reference": {
+    "sample_set": "clarified lysate,crude extract,eluate,flow-through,wash two",
+    "ladder_label": "LADDER",
+    "order_tag": "yes",
+    "orphan_tag": "yes",
+    "clean_no_key": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_table_rows_run_in_the_left_to_right_order_of_the_lanes",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one lane label printed above the gel image",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "ln"
+        },
+        {
+          "fail_if": ["ln.unreadable"]
+        },
+        {
+          "read_crop": "Copy the label printed in this cut-out. Write it only.",
+          "boxes": "ln",
+          "pad": 0.15,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "lnn"
+        },
+        {
+          "read": "boxes",
+          "target": "one row of the sample table under the gel image",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "column",
+          "out": "tr"
+        },
+        {
+          "fail_if": ["tr.unreadable"]
+        },
+        {
+          "read_crop": "Copy the sample name printed in the first column of this cut-out. Write the name only.",
+          "boxes": "tr",
+          "pad": 0.1,
+          "sort": "reading_order",
+          "layout": "column",
+          "out": "trn"
+        },
+        {
+          "run": "sample_order_matches",
+          "args": ["lnn", "trn", "reference.ladder_label"],
+          "out": "lo"
+        },
+        {
+          "fail_if": ["lo.refused"]
+        },
+        {
+          "compare": "lo.tag",
+          "to": "reference.order_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_ladder_lane_has_no_row_in_the_table",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one lane label printed above the gel image",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "ln"
+        },
+        {
+          "fail_if": ["ln.unreadable"]
+        },
+        {
+          "read_crop": "Copy the label printed in this cut-out. Write it only.",
+          "boxes": "ln",
+          "pad": 0.15,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "lnn"
+        },
+        {
+          "read": "boxes",
+          "target": "one row of the sample table under the gel image",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "column",
+          "out": "tr"
+        },
+        {
+          "fail_if": ["tr.unreadable"]
+        },
+        {
+          "read_crop": "Copy the sample name printed in the first column of this cut-out. Write the name only.",
+          "boxes": "tr",
+          "pad": 0.1,
+          "sort": "reading_order",
+          "layout": "column",
+          "out": "trn"
+        },
+        {
+          "run": "ladder_left_out_of_table",
+          "args": ["lnn", "trn", "reference.ladder_label", "reference.sample_set"],
+          "out": "or_"
+        },
+        {
+          "fail_if": ["or_.refused"]
+        },
+        {
+          "compare": "or_.tag",
+          "to": "reference.orphan_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_caption_key_or_arrow_on_the_plate",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a figure caption, a key, an arrow or a note added to the plate",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "xg"
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a figure caption, a key explaining symbols, an arrow, or a note added to the plate? Answer yes or no. Answer no if the cut-out shows a short label standing above a lane of the gel, a row or a column heading of the sample table, a band on the gel.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "run": "sweep_holds_nothing_banned",
+          "args": ["xg", "xgw", "xgy"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_no_key",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "id": "gearbox_ratio_pointer",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on engineering schematic of a MESHED GEAR TRAIN driving a round output DIAL. From left to right the meshed gears are: Gear A (8 teeth) which meshes with Gear B (24 teeth) which meshes with Gear C (12 teeth). Each gear's teeth mesh with the next gear's teeth, so turning one gear turns the next. The last gear (Gear C) carries a single POINTER (a needle) over a circular dial marked with 8 equally-spaced STOPS numbered 1 to 8 CLOCKWISE, with stop 1 at the top (the 12 o'clock position). The pointer starts pointing exactly at stop 1.\n\nNow the INPUT gear (Gear A) is turned CLOCKWISE by exactly 27 teeth of engagement (that is, 3.375 full turns of Gear A). Because meshed gears share teeth, the SAME number of teeth passes through every mesh, so each gear turns by that many teeth divided by its own tooth count, and the direction REVERSES at every mesh (Gear A clockwise, the next gear counter-clockwise, the next clockwise, and so on). Work out how far and in which direction the LAST gear -- and therefore the pointer -- rotates, and which numbered stop the pointer finally rests on.\n\nDraw the pointer resting exactly on that final numbered stop. Do NOT print the tooth counts as an answer, the number of turns, the stop number, or any words or numbers of working on the dial; the only thing that shows the final state is the ANGLE the pointer needle points, i.e. which numbered stop it rests on.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a meshed gear train driving a round output dial that is marked with numbered stops around its rim and has a single pointer needle resting on one of the numbered stops? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "stop_label": "3",
+    "direction": "clockwise",
+    "n_stops": 8,
+    "n_gears": 3,
+    "q_stop": "A circular dial is marked with 8 equally-spaced numbered stops, 1 to 8, numbered clockwise with stop 1 at the top (12 o'clock). A single pointer needle rests pointing at exactly one of them. Which numbered stop does the pointer point to? Judge purely by the direction the needle points; do not reason about gears. Answer with just the stop number.",
+    "q_dir": "Measuring from stop 1 at the top, is the pointer needle rotated CLOCKWISE or COUNTERCLOCKWISE away from the top? If it points to a stop in the right-hand half (stops just after 1 going clockwise) answer clockwise; if in the left-hand half answer counterclockwise. Answer with the single word clockwise or counterclockwise.",
+    "q_nstops": "How many equally-spaced numbered stops are marked around the rim of the output dial? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pointer_stop",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_stop",
+          "out": "v"
+        },
+        {
+          "fail_if": ["v.unreadable"]
+        },
+        {
+          "compare": "v",
+          "to": "reference.stop_label",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_pointer_dir_derived",
+      "weight": 0.3,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_stop",
+          "out": "v"
+        },
+        {
+          "fail_if": ["v.unreadable"]
+        },
+        {
+          "run": "pointer_side",
+          "args": ["v", "reference.n_stops"],
+          "out": "dir"
+        },
+        {
+          "compare": "dir",
+          "to": "reference.direction",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_stop_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered stop mark around the rim of the output dial",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nt"
+        },
+        {
+          "fail_if": ["box_nt.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole numbered stop mark on the dial rim, rather than blank dial face or only part of a mark? Answer yes or no only.",
+          "boxes": "box_nt",
+          "out": "crop_nt"
+        },
+        {
+          "fail_if": ["crop_nt.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nt"],
+          "out": "cnt_nt"
+        },
+        {
+          "compare_band": "cnt_nt.n",
+          "to": "reference.n_stops",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "dial_form",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show a gear train with a round dial that has numbered stops around its rim and a single pointer needle? Answer with the single word yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

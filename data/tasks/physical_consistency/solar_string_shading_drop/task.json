@@ -1,0 +1,218 @@
+{
+  "id": "solar_string_shading_drop",
+  "axis": "physical_consistency",
+  "prompt": "A rooftop solar array photographed for a module-level fault diagnosis job sheet. Two identical 450 W monocrystalline modules sit side by side on the same string, and the rating label is on each frame. Under each module its own optimiser box carries a small screen giving that module's live output in watts, and the module number is stencilled on the frame just above its own optimiser screen: M07 on the LEFT module, M08 on the RIGHT module.\n\nIt is clear noon and the whole array is in full sun, with one exception: the eave of the roof ridge throws a hard horizontal shadow band across the RIGHT module which covers the whole of its bottom row of cells and nothing else. The LEFT module is completely unshaded. These are ordinary modules of this type, with the usual bypass diodes and nothing else fitted.\n\nWhat the two screens say is for you to work out -- I am deliberately not telling you either number, and I am not telling you what that band of shade does to the module under it. Do not print any percentage, any loss figure, any arrow or any note of a diagnosis anywhere in the picture: the only numbers in the picture are the two optimiser screens, the two module numbers and the two rating labels.\n\nBoth screens face the camera and are large enough to read, and the shadow band is unmistakable against the cells.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two rooftop solar modules side by side with a small optimiser screen under each and a hard shadow band lying across one of them? A realistic photo, an illustration or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel with none of that, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "p_rated": 450.0,
+    "ratio_expect": 0.05,
+    "n_modules": 2,
+    "shadow_seen": "yes",
+    "unshaded_module": "M07",
+    "shaded_module": "M08"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shaded_output_ratio",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an optimiser screen with the module number stencilled on the frame above it",
+          "out": "disp",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["disp.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one optimiser screen with a module number stencilled on the frame above it. Copy that module number. Write it only.",
+          "boxes": "disp",
+          "out": "ids",
+          "layout": "row",
+          "sort": "reading_order"
+        },
+        {
+          "read_crop": "This cut-out shows one optimiser screen. Copy the number shown on the screen. Write the number only.",
+          "boxes": "disp",
+          "out": "reads",
+          "layout": "row",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["reads.unreadable"]
+        },
+        {
+          "run": "power_reads",
+          "args": ["ids", "reads", "reference.unshaded_module", "reference.shaded_module"],
+          "out": "rd"
+        },
+        {
+          "compare_band": "rd.ratio",
+          "to": "reference.ratio_expect",
+          "core_abs": 0.05,
+          "margin_abs": 0.15,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "unshaded_module_output",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an optimiser screen with the module number stencilled on the frame above it",
+          "out": "disp",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["disp.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one optimiser screen with a module number stencilled on the frame above it. Copy that module number. Write it only.",
+          "boxes": "disp",
+          "out": "ids",
+          "layout": "row",
+          "sort": "reading_order"
+        },
+        {
+          "read_crop": "This cut-out shows one optimiser screen. Copy the number shown on the screen. Write the number only.",
+          "boxes": "disp",
+          "out": "reads",
+          "layout": "row",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["reads.unreadable"]
+        },
+        {
+          "run": "power_reads",
+          "args": ["ids", "reads", "reference.unshaded_module", "reference.shaded_module"],
+          "out": "rd"
+        },
+        {
+          "compare_band": "rd.left",
+          "to": "reference.p_rated",
+          "core_rel": 0.15,
+          "margin_abs": 120.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "module_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a solar module mounted on the roof",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole solar module, rather than bare roof or only part of one? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_modules",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shadow_band_present",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the shadow band lying across the bottom row of the right-hand module",
+          "out": "box_obj",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_obj.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show a band of shade lying across a row of solar cells? Answer yes or no only.",
+          "boxes": "box_obj",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare": "rd.answers.0",
+          "to": "reference.shadow_seen",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_note",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a printed percentage, arrow or diagnosis note drawn onto the roof photograph",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

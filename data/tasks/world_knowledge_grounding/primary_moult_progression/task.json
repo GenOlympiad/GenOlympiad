@@ -1,0 +1,209 @@
+{
+  "id": "primary_moult_progression",
+  "axis": "world_knowledge_grounding",
+  "prompt": "Every bird a ringing station handles in the moulting months goes on a record card, and the plate that fronts this season's cards is what this picture shows, lying on the desk of the ringing hut.\n\nThree spread wings are mounted across it, all of them the same species, the common chaffinch Fringilla coelebs, and all of them one adult's right wing held open the same way, in the same light, against the same grey board. Under each wing runs a printed strip of ticks lettered P1 at the inner end through to P9 at the outer end, one tick under each primary, so that the ringer can call a feather by its number. Under each strip sits a score box of three cells, and the month of the photograph is lettered beside it. The three months are JULY, AUGUST and SEPTEMBER, all three in the first week.\n\nThe scoring convention on this card is the one Ginn and Melville set out in Moult in Birds, and the ringer fills each score box with three counts in this order: how many primaries are new, how many are still growing, how many are still old.\n\nWhat state each of the twenty-seven feathers is in on the day it was photographed is what the plate exists to record -- I am deliberately not telling you one of them, nor what the counts come to. Keep every primary separately visible along each wing, and keep the ticks and the score boxes large enough to read. Apart from the three tick strips, the three score boxes, the three months and the species line at the head of the plate, nothing is written on the plate, and nothing at all is written or drawn on the feathers themselves.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show one or more bird wings spread out on a board or a card? A photograph, an illustration or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no wing on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "months": ["JULY", "AUGUST", "SEPTEMBER"],
+    "score_expected": "JULY=2,2,5;AUGUST=4,2,3;SEPTEMBER=7,1,1",
+    "n_wings": 3,
+    "fresh_ticks": [2, 4, 7],
+    "grow_ticks": [4, 6, 8]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_wing_carries_one_unbroken_new_block_and_the_boundary_moves_outward_month_by_month",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the wings mounted on the record plate",
+          "sweep": true,
+          "out": "bd_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["bd_box.unreadable"]
+        },
+        {
+          "read_crop": "Which month is lettered beside the wing in this cut-out? Answer with that month only.",
+          "boxes": "bd_box",
+          "pad": 0.15,
+          "out": "bd_key"
+        },
+        {
+          "fail_if": ["bd_key.unreadable"]
+        },
+        {
+          "read_crop": "Reading outward from P1, the last feather that is full length and fresh sits over one of the printed ticks. Which tick is it? Answer with that tick number from 1 to 9, or none if no feather here is full length and fresh.",
+          "boxes": "bd_box",
+          "pad": 0.15,
+          "out": "bd_fresh"
+        },
+        {
+          "fail_if": ["bd_fresh.unreadable"]
+        },
+        {
+          "read_crop": "Reading outward from P1, the last feather that is short or still in its sheath sits over one of the printed ticks. Which tick is it? Answer with that tick number from 1 to 9, or none if no feather here is short.",
+          "boxes": "bd_box",
+          "pad": 0.15,
+          "out": "bd_grow"
+        },
+        {
+          "fail_if": ["bd_grow.unreadable"]
+        },
+        {
+          "read_crop": "Are the full length fresh feathers on this wing all together at the P1 end, or dotted along the wing with older ones between them? Answer together or scattered.",
+          "boxes": "bd_box",
+          "pad": 0.15,
+          "out": "bd_block"
+        },
+        {
+          "fail_if": ["bd_block.unreadable"]
+        },
+        {
+          "run": "moult_boundary_error",
+          "args": [
+            "bd_key",
+            "bd_fresh",
+            "bd_grow",
+            "bd_block",
+            "reference.months",
+            "reference.fresh_ticks",
+            "reference.grow_ticks"
+          ],
+          "out": "bdv"
+        },
+        {
+          "compare_category": "bdv.obs",
+          "to": "bdv.exp",
+          "max_steps": 3,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_score_box_holds_the_counts_that_month_of_the_moult_gives",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the wings mounted on the record plate",
+          "sweep": true,
+          "out": "sb_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["sb_box.unreadable"]
+        },
+        {
+          "read_crop": "Which month is lettered beside the wing in this cut-out? Answer with that month only.",
+          "boxes": "sb_box",
+          "pad": 0.25,
+          "out": "sb_key"
+        },
+        {
+          "fail_if": ["sb_key.unreadable"]
+        },
+        {
+          "read_crop": "What three numbers are written in the score box in this cut-out? Answer with them in the order printed, separated by commas, or none if the box is empty.",
+          "boxes": "sb_box",
+          "pad": 0.25,
+          "out": "sb_cells"
+        },
+        {
+          "fail_if": ["sb_cells.unreadable"]
+        },
+        {
+          "run": "read_score_boxes",
+          "args": ["sb_key", "sb_cells", "reference.months"],
+          "out": "sbv"
+        },
+        {
+          "compare": "sbv.s",
+          "to": "reference.score_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_plate_carries_its_three_wings_over_their_numbered_tick_strips",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the wings mounted on the record plate",
+          "sweep": true,
+          "out": "wc_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["wc_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE spread wing with a strip of numbered ticks under it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "wc_box",
+          "pad": 0.2,
+          "out": "wc_q"
+        },
+        {
+          "fail_if": ["wc_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["wc_q"],
+          "out": "wc_n"
+        },
+        {
+          "compare_band": "wc_n.n",
+          "to": "reference.n_wings",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_is_written_or_drawn_on_the_feathers_themselves",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word, arrow or figure drawn on the feathers themselves",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_ft"
+        },
+        {
+          "fail_if": ["sweep_ft.unreadable"]
+        },
+        {
+          "compare": "sweep_ft.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

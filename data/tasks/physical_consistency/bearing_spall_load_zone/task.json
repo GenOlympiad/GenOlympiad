@@ -1,0 +1,84 @@
+{
+  "id": "bearing_spall_load_zone",
+  "axis": "physical_consistency",
+  "prompt": "The reliability engineer has to close this pump out before the insurer's assessor calls, so the two rings come out of the wash tank and are shot side by side on the bench cloth with the strip-down card in the same frame.\n\nThe rings come off a 6314 bearing. The outer one lies face up on the left, and the analyst has chalked the 12 clock numbers round its rim, taking the stamped housing witness mark as 12. The inner ring stands on a block on the right, turned so that its track shows round the rim. The strip-down card records three things and nothing else: the shaft and the inner ring turned together in service, the outer ring was clamped in its housing and never moved, and the belt pull came down onto the housing towards the 6 o'clock chalk number and never changed in eleven years of running.\n\nWhere the flaked, dulled track sits on each of the two rings is what the card does not record.",
+  "difficulty": "s1",
+  "easy_question": "Does this bench plate show two close shots of bearing rings lying on a pale cloth with a record card at the foot? Answer yes or no only.",
+  "reference": {
+    "part1": "one_run_of_numbers",
+    "part2": "inner_whole_way_round"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the close shot of the outer ring on the left. Answer with one of: the dulled, flaked track takes in one run of neighbouring chalk numbers and the rest of the rim stays bright; the dulled, flaked track runs the whole way round the rim; the rim is bright the whole way round.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the close shot of the inner ring on the right. Answer with one of: the dulled track runs the whole way round its rim; the dulled track takes in only one stretch of its rim; its rim is bright the whole way round.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,184 @@
+{
+  "id": "mirrorcode_rot180_composite",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A clean, well-lit close-up photograph, taken from straight above, of a hand-cut rubber stamp lying on a wooden craft bench. The stamp is lying with its RUBBER PRINTING FACE turned UP towards the camera, so you are looking straight down at the printing face itself; the wooden handle is underneath, out of sight. The printing face is a pale square of rubber and it carries a neat 3 by 3 grid of NINE large round dots. Each dot is either SOLID (a completely filled-in disc) or HOLLOW (just an empty ring outline). Around the edge of the rubber square, cut small and neat, are the row letters a, b, c running down the LEFT edge (a beside the top row, b beside the middle row, c beside the bottom row) and the column numbers 1, 2, 3 running along the TOP edge (1 above the left column, 2 above the middle column, 3 above the right column).\nThis is a puzzle-club stamp, and the club's rule for reading one is this: DO NOT read the printing face as it lies. First turn the whole 3 by 3 pattern upside down (rotate it by 180 degrees), THEN flip that result over left-to-right (mirror it). Only the pattern you get after BOTH of those steps is the message, and you read it with this code table, where each row of three dots stands for one letter (S = a solid dot, H = a hollow dot, read left to right):\n  S S S = M\n  S S H = T\n  S H S = R\n  S H H = A\n  H S S = K\n  H S H = G\n  H H S = E\n  H H H = N\nCut the nine dots on the printing face so that, after the club's two steps have been carried out, the three rows spell the word TAG from top to bottom -- T from the top row, A from the middle row, G from the bottom row. It must be the pattern AFTER the turning and flipping that spells TAG; the pattern lying there on the printing face must NOT spell TAG by itself.\nMake the nine dots large, evenly spaced and unmistakably either solid or hollow. Apart from the nine dots and the small edge letters a, b, c and numbers 1, 2, 3, print nothing at all on the stamp: no code table, no word, no other writing anywhere in the picture.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a stamp face -- a square pad seen from straight above, carrying a 3 by 3 grid of nine round dots, some of them filled in solid and some of them empty rings, with small row letters and column numbers around the edge of the square. Ignoring artistic quality, does the image actually SHOW that -- a square pad or block bearing a 3 by 3 grid of nine round dots? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer, or shows something with no nine-dot grid on it at all. Answer yes or no only.",
+  "reference": {
+    "word": "TAG",
+    "table": {
+      "111": "M",
+      "110": "T",
+      "101": "R",
+      "100": "A",
+      "011": "K",
+      "010": "G",
+      "001": "E",
+      "000": "N"
+    },
+    "printed": [
+      [0, 1, 0],
+      [1, 0, 0],
+      [1, 1, 0]
+    ],
+    "n_solid": 4,
+    "q_gridok": "Look at the rubber printing face of the stamp -- the face turned up towards you. Does it carry a 3 by 3 grid of nine round dots, with small letters a, b, c down its left edge and small numbers 1, 2, 3 along its top edge? Answer yes or no only.",
+    "q_dots": "Look at the rubber printing face of the stamp -- the face turned up towards you, the one you are looking straight down at. It carries a 3 by 3 grid of nine round dots. The rows are labelled a, b, c down the left-hand edge (a is the top row, c is the bottom row) and the columns are labelled 1, 2, 3 along the top edge (1 is the left-hand column, 3 is the right-hand column). Each dot is either SOLID -- completely filled in -- or HOLLOW -- just an empty ring outline. Write 1 for a solid dot and 0 for a hollow dot. Report all nine: row a first (a1 a2 a3), then row b (b1 b2 b3), then row c (c1 c2 c3). Answer with only the nine numbers separated by single spaces and nothing else, for example: 1 0 1 0 1 1 0 0 1",
+    "q_nsolid": "Look at the rubber printing face of the stamp -- the face turned up towards you. Of the nine round dots on it, how many are SOLID (completely filled in) rather than hollow rings? Answer with the number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "premise_dot_grid_present",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.q_gridok",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "composite_state_spells_word",
+      "weight": 4.0,
+      "score": "S.composite_ok",
+      "steps": [
+        {
+          "read_sequence": "reference.q_dots",
+          "n": 9,
+          "digits_only": true,
+          "out": "sq"
+        },
+        {
+          "fail_if": ["sq.unreadable"]
+        },
+        {
+          "run": "decode_states",
+          "args": ["sq", "reference"],
+          "out": "S"
+        },
+        {
+          "fail_if": ["S.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "other_three_states_do_not",
+      "weight": 2.0,
+      "score": "S.exclusive",
+      "steps": [
+        {
+          "read_sequence": "reference.q_dots",
+          "n": 9,
+          "digits_only": true,
+          "out": "sq"
+        },
+        {
+          "fail_if": ["sq.unreadable"]
+        },
+        {
+          "run": "decode_states",
+          "args": ["sq", "reference"],
+          "out": "S"
+        },
+        {
+          "fail_if": ["S.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "dot_pattern_cells",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_sequence": "reference.q_dots",
+          "n": 9,
+          "digits_only": true,
+          "out": "sq"
+        },
+        {
+          "fail_if": ["sq.unreadable"]
+        },
+        {
+          "run": "decode_states",
+          "args": ["sq", "reference"],
+          "out": "S"
+        },
+        {
+          "fail_if": ["S.unreadable"]
+        },
+        {
+          "compare_grid": "S.matrix",
+          "to": "reference.printed",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_solid_count_crosscheck",
+      "weight": 0.0,
+      "score": "X.frac",
+      "steps": [
+        {
+          "read_sequence": "reference.q_dots",
+          "n": 9,
+          "digits_only": true,
+          "out": "sq"
+        },
+        {
+          "fail_if": ["sq.unreadable"]
+        },
+        {
+          "run": "decode_states",
+          "args": ["sq", "reference"],
+          "out": "S"
+        },
+        {
+          "fail_if": ["S.unreadable"]
+        },
+        {
+          "read_number": "reference.q_nsolid",
+          "out": "nn"
+        },
+        {
+          "run": "solid_count_agrees",
+          "args": ["nn", "S", "reference"],
+          "out": "X"
+        }
+      ]
+    }
+  ]
+}

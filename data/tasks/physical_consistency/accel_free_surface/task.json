@@ -1,0 +1,496 @@
+{
+  "id": "accel_free_surface",
+  "axis": "physical_consistency",
+  "prompt": "A cutaway technical illustration in the manner of an old railway maintenance manual, printed as clean line art with flat tints on buff paper: five open water carriages drawn in section, standing in a row across the plate, every carriage facing RIGHT on the same level track. Each holds a rectangular cistern fixed level to its floor; the cisterns are identical and each is half full of tinted blue water.\n\nAt the moment illustrated, taking the carriages from the left: the first is accelerating at 12 metres per second per second; the second is running at a CONSTANT speed, neither gaining nor losing; the third is BRAKING at 3.5; the fourth is accelerating at 1.8; the fifth is BRAKING at 7. Gravity is 10 metres per second per second.\n\nSet every surface by calculation. A free surface stands square to the total pull upon it: its slope equals that carriage's own acceleration divided by gravity, rising toward the REAR under acceleration and toward the FRONT under braking, and lying dead level when the carriage is neither gaining nor losing speed. The quantity of water is unchanged, so each surface turns about its own cistern's centre. One of these five must therefore come out exactly horizontal, and among the remaining four the steepest slope is more than six times the shallowest.\n\nThe cisterns, the carriage floors and the track all remain exactly horizontal and only the water tilts; each surface is one straight tinted plane with no ripple. Flat tints, crisp line work, plain background, items well separated, no text, no numerals, no arrows, no rulers, no scale marks, no labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show five open rectangular containers standing in a row across the picture, each one holding a body of coloured liquid. Ignoring styling and artistic quality, is that what the image shows? Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "q_look": "Ignore whether anything in this picture is physically correct. Judged only on craft -- is this a clean, competently made, artefact-free picture of its subject, the kind a professional would be happy to publish? Answer yes or no only.",
+    "dye": "blue",
+    "n_vessels": 5,
+    "accel": [12.0, 0.0, -3.5, 1.8, -7.0],
+    "gravity": 10.0,
+    "tilt_deg": [50.1944, 0.0, -19.29, 10.204, -34.992],
+    "spread": 4.9191,
+    "spread_idx": [0, 2, 3, 4],
+    "core_rel": 0.2,
+    "core_min_deg": 2.5,
+    "margin_rel": 0.1,
+    "margin_min_deg": 1.5,
+    "level_tol_deg": 2.5,
+    "body_gate_deg": 6.0,
+    "sign_dead_deg": 1.5,
+    "has_level_vessel": true,
+    "level_index": 1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "liquid_bodies_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "body of coloured liquid inside a tank",
+          "expected_n": "reference.n_vessels",
+          "out": "bod"
+        },
+        {
+          "fail_if": ["bod.unreadable"]
+        },
+        {
+          "read_crop": "Look at the flat top surface of the liquid in this picture. Is that surface higher at its LEFT end, higher at its RIGHT end, or dead level? Answer with one word: left, right, or level.",
+          "boxes": "bod",
+          "out": "sd"
+        },
+        {
+          "run": "count_liquid_bodies",
+          "args": ["image", "bod", "sd", "[None, None, None, None, None]", "reference.n_vessels"],
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "vessels_are_level",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one rectangular cistern standing on the floor of an open water carriage drawn in section",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_lv"
+        },
+        {
+          "fail_if": ["box_lv.unreadable"]
+        },
+        {
+          "read_crop": "Ignore the liquid inside and look only at the tank itself: is the tank in this cut-out sitting level, with its own base horizontal rather than tipped or rotated? Answer yes or no only.",
+          "boxes": "box_lv",
+          "out": "crop_lv"
+        },
+        {
+          "fail_if": ["crop_lv.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_lv"],
+          "out": "cnt_lv"
+        },
+        {
+          "compare": "cnt_lv.n",
+          "to": "cnt_lv.asked",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "surface_tilt_per_vessel",
+      "weight": 7.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "body of coloured liquid inside a tank",
+          "expected_n": "reference.n_vessels",
+          "out": "bod"
+        },
+        {
+          "fail_if": ["bod.unreadable"]
+        },
+        {
+          "read_crop": "Look at the flat top surface of the liquid in this picture. Is that surface higher at its LEFT end, higher at its RIGHT end, or dead level? Answer with one word: left, right, or level.",
+          "boxes": "bod",
+          "out": "sd"
+        },
+        {
+          "run": "container_phrases",
+          "args": ["bod"],
+          "out": "ord"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c0}",
+          "out": "s0"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c1}",
+          "out": "s1"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c2}",
+          "out": "s2"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c3}",
+          "out": "s3"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c4}",
+          "out": "s4"
+        },
+        {
+          "run": "score_surface_tilts",
+          "args": [
+            "image",
+            "bod",
+            "sd",
+            "[s0, s1, s2, s3, s4]",
+            "reference.tilt_deg",
+            "reference.core_rel",
+            "reference.core_min_deg",
+            "reference.margin_rel",
+            "reference.margin_min_deg"
+          ],
+          "code": {
+            "inline": "f_code_2"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "tilt_spread",
+      "weight": 2.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "body of coloured liquid inside a tank",
+          "expected_n": "reference.n_vessels",
+          "out": "bod"
+        },
+        {
+          "fail_if": ["bod.unreadable"]
+        },
+        {
+          "read_crop": "Look at the flat top surface of the liquid in this picture. Is that surface higher at its LEFT end, higher at its RIGHT end, or dead level? Answer with one word: left, right, or level.",
+          "boxes": "bod",
+          "out": "sd"
+        },
+        {
+          "run": "container_phrases",
+          "args": ["bod"],
+          "out": "ord"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c0}",
+          "out": "s0"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c1}",
+          "out": "s1"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c2}",
+          "out": "s2"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c3}",
+          "out": "s3"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c4}",
+          "out": "s4"
+        },
+        {
+          "run": "score_slope_ratio",
+          "args": [
+            "image",
+            "bod",
+            "sd",
+            "[s0, s1, s2, s3, s4]",
+            "reference.tilt_deg",
+            "reference.spread_idx",
+            "reference.spread"
+          ],
+          "code": {
+            "inline": "f_code_3"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "tilt_signs",
+      "weight": 0.5,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "body of coloured liquid inside a tank",
+          "expected_n": "reference.n_vessels",
+          "out": "bod"
+        },
+        {
+          "fail_if": ["bod.unreadable"]
+        },
+        {
+          "read_crop": "Look at the flat top surface of the liquid in this picture. Is that surface higher at its LEFT end, higher at its RIGHT end, or dead level? Answer with one word: left, right, or level.",
+          "boxes": "bod",
+          "out": "sd"
+        },
+        {
+          "run": "container_phrases",
+          "args": ["bod"],
+          "out": "ord"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c0}",
+          "out": "s0"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c1}",
+          "out": "s1"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c2}",
+          "out": "s2"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c3}",
+          "out": "s3"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c4}",
+          "out": "s4"
+        },
+        {
+          "run": "score_higher_ends",
+          "args": [
+            "image",
+            "bod",
+            "sd",
+            "[s0, s1, s2, s3, s4]",
+            "reference.tilt_deg",
+            "reference.sign_dead_deg"
+          ],
+          "code": {
+            "inline": "f_code_4"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "constant_speed_surface_is_level",
+      "weight": 0.5,
+      "only_if": "reference.has_level_vessel",
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "body of coloured liquid inside a tank",
+          "expected_n": "reference.n_vessels",
+          "out": "bod"
+        },
+        {
+          "fail_if": ["bod.unreadable"]
+        },
+        {
+          "read_crop": "Look at the flat top surface of the liquid in this picture. Is that surface higher at its LEFT end, higher at its RIGHT end, or dead level? Answer with one word: left, right, or level.",
+          "boxes": "bod",
+          "out": "sd"
+        },
+        {
+          "run": "container_phrases",
+          "args": ["bod"],
+          "out": "ord"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c0}",
+          "out": "s0"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c1}",
+          "out": "s1"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c2}",
+          "out": "s2"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c3}",
+          "out": "s3"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c4}",
+          "out": "s4"
+        },
+        {
+          "run": "score_one_level",
+          "args": [
+            "image",
+            "bod",
+            "sd",
+            "[s0, s1, s2, s3, s4]",
+            "reference.level_index",
+            "reference.level_tol_deg"
+          ],
+          "code": {
+            "inline": "f_code_5"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "d1_surface_overlay",
+      "weight": 0.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "body of coloured liquid inside a tank",
+          "expected_n": "reference.n_vessels",
+          "out": "bod"
+        },
+        {
+          "fail_if": ["bod.unreadable"]
+        },
+        {
+          "read_crop": "Look at the flat top surface of the liquid in this picture. Is that surface higher at its LEFT end, higher at its RIGHT end, or dead level? Answer with one word: left, right, or level.",
+          "boxes": "bod",
+          "out": "sd"
+        },
+        {
+          "run": "container_phrases",
+          "args": ["bod"],
+          "out": "ord"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c0}",
+          "out": "s0"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c1}",
+          "out": "s1"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c2}",
+          "out": "s2"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c3}",
+          "out": "s3"
+        },
+        {
+          "read": "line",
+          "target": "flat top surface of the coloured liquid",
+          "context": "{ord.c4}",
+          "out": "s4"
+        },
+        {
+          "run": "score_surface_tilts",
+          "args": [
+            "image",
+            "bod",
+            "sd",
+            "[s0, s1, s2, s3, s4]",
+            "reference.tilt_deg",
+            "reference.core_rel",
+            "reference.core_min_deg",
+            "reference.margin_rel",
+            "reference.margin_min_deg"
+          ],
+          "code": {
+            "inline": "f_code_6"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "d2_appearance_only",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "ask": "reference.q_look",
+          "retries": 2,
+          "out": "lk"
+        },
+        {
+          "fail_if": ["lk.unreadable"]
+        },
+        {
+          "compare": "lk",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

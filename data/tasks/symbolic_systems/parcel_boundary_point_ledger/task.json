@@ -1,0 +1,271 @@
+{
+  "id": "parcel_boundary_point_ledger",
+  "axis": "symbolic_systems",
+  "prompt": "A cadastral surveyor has closed off the external survey of two adjoining plots, and the results page is lying flat on the tailgate of the survey vehicle, photographed from directly above in flat daylight.\n\nThe page is in two halves. The upper half is the plot sketch, drawn with north up: two plots side by side, the western one numbered 12-3 and four sided, the eastern one numbered 12-4 and also four sided, with one boundary held in common between them running north to south. The two ends of that common boundary were fixed on the ground and already carry their numbers on the sketch, J3 at the north end and J4 at the south end. Every other corner of each plot carries a boundary point number of its own, one to a corner, and no number is used twice on the page.\n\nThe lower half is two boundary line tables, one headed PLOT 12-3 and one headed PLOT 12-4. In a table like this every boundary of that plot gets one line of its own, and a line is named by its two end points, the point the line starts from first and the point it ends at second, with a hyphen between them. Both tables are made up under the same regulation, which has the surveyor walk each plot clockwise.\n\nHow each table ends up writing the common boundary is for you to work out -- I am deliberately not telling you, and I am not telling you what the remaining corner numbers are. No direction arrow may be drawn anywhere on the plot sketch.\n\nThe point numbers on the sketch and every line in both tables must be large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a page with a sketch of plots of land on it and tables of lines printed underneath? A realistic photo, an illustration, a mockup or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_lines_west": 4,
+    "shared_edge_west": "J3-J4",
+    "shared_edge_east": "J4-J3",
+    "north_point": "J3",
+    "south_point": "J4",
+    "parcel_keys": {
+      "west": "J3-J4",
+      "east": "J4-J3",
+      "north": "J3",
+      "south": "J4"
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_tables_write_the_common_boundary_in_opposite_orders_off_the_ends_the_sketch_fixes",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the boundary held in common between the two plots on the plot sketch",
+          "sweep": true,
+          "out": "cb_box"
+        },
+        {
+          "fail_if": ["cb_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the point number printed at the UPPER end of the boundary in this cut-out, and write nothing else. If no number is printed there, answer the single word blank.",
+          "boxes": "cb_box",
+          "pad": 0.35,
+          "out": "cb_up"
+        },
+        {
+          "fail_if": ["cb_up.unreadable"]
+        },
+        {
+          "read_crop": "Copy the point number printed at the LOWER end of the boundary in this cut-out, and write nothing else. If no number is printed there, answer the single word blank.",
+          "boxes": "cb_box",
+          "pad": 0.35,
+          "out": "cb_low"
+        },
+        {
+          "fail_if": ["cb_low.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the boundary line table headed PLOT 12-3",
+          "sweep": true,
+          "out": "wt_box"
+        },
+        {
+          "fail_if": ["wt_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the heading printed above the table in this cut-out, and write nothing else. If no heading is printed in it, answer the single word blank.",
+          "boxes": "wt_box",
+          "pad": 0.25,
+          "out": "wt_head"
+        },
+        {
+          "fail_if": ["wt_head.unreadable"]
+        },
+        {
+          "read_crop": "Copy every line name printed in this cut-out, one after another with a space between them, and write nothing else. If no line name is printed in it, answer the single word blank.",
+          "boxes": "wt_box",
+          "pad": 0.25,
+          "out": "wt_lines"
+        },
+        {
+          "fail_if": ["wt_lines.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the boundary line table headed PLOT 12-4",
+          "sweep": true,
+          "out": "et_box"
+        },
+        {
+          "fail_if": ["et_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the heading printed above the table in this cut-out, and write nothing else. If no heading is printed in it, answer the single word blank.",
+          "boxes": "et_box",
+          "pad": 0.25,
+          "out": "et_head"
+        },
+        {
+          "fail_if": ["et_head.unreadable"]
+        },
+        {
+          "read_crop": "Copy every line name printed in this cut-out, one after another with a space between them, and write nothing else. If no line name is printed in it, answer the single word blank.",
+          "boxes": "et_box",
+          "pad": 0.25,
+          "out": "et_lines"
+        },
+        {
+          "fail_if": ["et_lines.unreadable"]
+        },
+        {
+          "run": "boundary_points_agree",
+          "args": [
+            "wt_head",
+            "wt_lines",
+            "et_head",
+            "et_lines",
+            "cb_up",
+            "cb_low",
+            "reference.parcel_keys"
+          ],
+          "out": "tab_v"
+        },
+        {
+          "compare": "tab_v.v",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_western_table_has_any_line_printed_in_it_at_all",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the boundary line table headed PLOT 12-3",
+          "sweep": true,
+          "out": "pl_box"
+        },
+        {
+          "fail_if": ["pl_box.unreadable"]
+        },
+        {
+          "read_crop": "Is there any boundary line name printed in this cut-out? Answer yes or no only.",
+          "boxes": "pl_box",
+          "pad": 0.25,
+          "out": "pl_rd"
+        },
+        {
+          "fail_if": ["pl_rd.unreadable"]
+        },
+        {
+          "run": "any_cutout_shows_line",
+          "args": ["pl_rd"],
+          "out": "pl_v"
+        },
+        {
+          "compare": "pl_v.v",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_western_table_has_one_line_for_each_boundary_of_its_own_plot",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of the boundary table headed PLOT 12-3",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole line of the table, rather than a heading or only part of a line? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.2,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_lines_west",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_direction_arrow_is_drawn_on_the_plot_sketch",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a direction arrow drawn on the plot sketch",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "const": {
+        "program": "code_edges"
+      },
+      "out": "code_edges"
+    },
+    {
+      "const": {
+        "program": "code_ends"
+      },
+      "out": "code_ends"
+    },
+    {
+      "const": {
+        "program": "code_any_line"
+      },
+      "out": "code_any_line"
+    },
+    {
+      "const": {
+        "program": "code_bearing"
+      },
+      "out": "code_bearing"
+    },
+    {
+      "const": {
+        "program": "code_any_line"
+      },
+      "out": "code_any_line"
+    }
+  ]
+}

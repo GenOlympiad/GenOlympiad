@@ -1,0 +1,183 @@
+{
+  "id": "hash_linear_probe_table",
+  "axis": "long_range_consistency",
+  "prompt": "A photograph of the bed board at a hospital ward nurses' station during the morning handover, taken square-on across the counter, with the ward's own clutter of folders and a hand-gel bottle at the edge of the frame.\n\nThe board covers the eleven beds of one medical team's block. Each bed has its own slot on the board with the bed number stencilled above the slot, 01 at the left through to 11 at the right. When a bed is occupied the slot holds a headcard carrying that patient's hospital number in large figures; a bed nobody is in has an empty slot.\n\nThe ward's allocation rule is reproduced on the header strip of the board: a patient goes into the bed named against them on the admission sheet; if that bed is already taken they go into the next higher-numbered free bed in the team's block, and the search carries on from bed 01 again once it runs past bed 11.\n\nThe block was empty at midnight. These are today's admissions in the order they arrived, each with the hospital number and the bed named against them on the sheet:\n4471 - bed 03\n4472 - bed 07\n4473 - bed 03\n4474 - bed 10\n4475 - bed 07\n4476 - bed 11\n4477 - bed 10\n4478 - bed 11\n\nThe picture is the board as it stands at handover. Work the allocation through yourself -- I am deliberately not telling you who ends up in which bed or which beds are still free. Nothing in the picture may carry an arrow between beds, a note of where anyone was moved from, or any explanation of the rule: the only writing in the picture is the stencilled bed numbers, one hospital number on each headcard, the admission sheet as given above and the header strip. Every bed number and every hospital number must be easy to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a ward bed board with a row of numbered slots, some of them holding a card with a number on it and some of them standing empty? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank panel that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "bed_order": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11"],
+    "bed_grid": [
+      ["4477", "4478", "4471", "4473", "EMPTY", "EMPTY", "4472", "4475", "EMPTY", "4474", "4476"]
+    ],
+    "n_cards": 8,
+    "clash_expected": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bed_board_at_handover",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one bed slot of the board with its bed number stencilled above it",
+          "sweep": true,
+          "out": "slots"
+        },
+        {
+          "fail_if": ["slots.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one bed slot. Copy the hospital number printed on the headcard in that slot. If more than one headcard is visible in this cut-out, read the one nearest the middle of it. If this slot has no card in it, write EMPTY instead. Write nothing else.",
+          "boxes": "slots",
+          "pad": 0.2,
+          "out": "hc"
+        },
+        {
+          "fail_if": ["hc.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one bed slot. Copy the bed number stencilled above that slot. If more than one stencilled bed number is visible in this cut-out, copy the one nearest the middle of it. Write nothing else.",
+          "boxes": "slots",
+          "pad": 0.2,
+          "out": "bn"
+        },
+        {
+          "fail_if": ["bn.unreadable"]
+        },
+        {
+          "run": "slots_by_bed_number",
+          "args": ["hc", "bn", "reference.bed_order"],
+          "out": "wd"
+        },
+        {
+          "compare_grid": "wd.grid",
+          "to": "reference.bed_grid",
+          "out": "frac",
+          "ignore": "EMPTY"
+        }
+      ]
+    },
+    {
+      "name": "every_admission_has_a_bed",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one headcard sitting in a slot of the bed board with a number on it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole headcard with a hospital number on it, rather than a stencilled bed number or only part of a card? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_cards",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_bed_holds_two_patients",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one bed slot of the board with its bed number stencilled above it",
+          "sweep": true,
+          "out": "slots"
+        },
+        {
+          "fail_if": ["slots.unreadable"]
+        },
+        {
+          "read_crop": "Write down every headcard sitting in this slot, each with a few plain words saying where in the slot it sits or what is written on it. Separate one item from the next with a semicolon; write no running total and nothing else. If no headcard is sitting in this slot, write the single word NONE.",
+          "boxes": "slots",
+          "pad": 0.2,
+          "out": "hc"
+        },
+        {
+          "fail_if": ["hc.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["hc", "empty_as='0'"],
+          "out": "hc__std"
+        },
+        {
+          "fail_if": ["hc__std.refused"]
+        },
+        {
+          "run": "count_double_slots",
+          "args": ["hc__std"],
+          "out": "cl"
+        },
+        {
+          "compare": "cl.clean",
+          "to": "reference.clash_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_move_arrows",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow between bed slots or a note of where a patient was moved from",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

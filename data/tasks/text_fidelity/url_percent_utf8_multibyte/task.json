@@ -1,0 +1,137 @@
+{
+  "id": "url_percent_utf8_multibyte",
+  "axis": "text_fidelity",
+  "prompt": "A small online shop keeps getting support mail about one search link that opens an empty results page, and the developer on duty has the browser's network panel open on her second screen while she reproduces it. This is that screen.\n\nOne request is selected, and two things are in view: the request address across the top of the panel, and under it the query-string section, in which the browser lays out the parameter as the shopper actually typed it.\n\nWhat is fixed. The shop's search page is at /search, the one parameter is called q, and the shopper typed exactly this into the search box: Zürich & Co. The query-string section therefore shows q on the left and Zürich & Co on the right, character for character as typed.\n\nThe address across the top cannot carry it that way. In an address, every character outside the plain letters, digits, hyphen, full stop, underscore and tilde is carried as a percent sign followed by two hexadecimal figures for each byte that character is made of, with the hexadecimal figures as capitals, and a space in this shop's links is never carried as a plus sign. What the value comes out looking like once it has been through that is deliberately being kept from you -- that is the whole of the bug.\n\nGive me the screen square to the camera with the request address and the query-string section both in one frame, in a monospaced face big enough that every character of the address is unmistakable. No second, readable copy of the address anywhere on the screen, no console output, no comments and no highlighting.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a browser developer panel with a request address and a query-string section under it? A realistic screenshot, a mockup or an illustration ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "encoded": "Z%C3%BCrich%20%26%20Co",
+    "n_percent": 5,
+    "typed_value": "Zürich & Co"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_address_carries_the_value_in_escaped_form",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the request address printed across the top of the network panel",
+          "sweep": true,
+          "out": "ad"
+        },
+        {
+          "fail_if": ["ad.unreadable"]
+        },
+        {
+          "read_crop": "Copy everything printed after q= in the address in this cut-out. Write it exactly as it is printed and write nothing else.",
+          "boxes": "ad",
+          "pad": 0.15,
+          "out": "adr"
+        },
+        {
+          "fail_if": ["adr.unreadable"]
+        },
+        {
+          "run": "tidy_read_text",
+          "args": ["adr"],
+          "out": "adt"
+        },
+        {
+          "compare": "adt.txt",
+          "to": "reference.encoded",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_accented_letter_costs_two_escape_groups",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the request address printed across the top of the network panel",
+          "sweep": true,
+          "out": "pc"
+        },
+        {
+          "fail_if": ["pc.unreadable"]
+        },
+        {
+          "read_crop": "Copy everything printed after q= in the address in this cut-out. Write it exactly as it is printed and write nothing else.",
+          "boxes": "pc",
+          "pad": 0.15,
+          "out": "pcr"
+        },
+        {
+          "fail_if": ["pcr.unreadable"]
+        },
+        {
+          "run": "tidy_read_text",
+          "args": ["pcr"],
+          "out": "pct"
+        },
+        {
+          "compare_band": "pct.n",
+          "to": "reference.n_percent",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_panel_shows_what_the_shopper_typed",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the query-string row under the address showing the parameter and its value",
+          "sweep": true,
+          "out": "qs"
+        },
+        {
+          "fail_if": ["qs.unreadable"]
+        },
+        {
+          "read_crop": "Copy the value printed on the right-hand side of the row in this cut-out. Write it exactly as it is printed and write nothing else.",
+          "boxes": "qs",
+          "pad": 0.2,
+          "out": "qsr"
+        },
+        {
+          "fail_if": ["qsr.unreadable"]
+        },
+        {
+          "run": "tidy_read_text",
+          "args": ["qsr"],
+          "out": "qst"
+        },
+        {
+          "compare": "qst.txt",
+          "to": "reference.typed_value",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

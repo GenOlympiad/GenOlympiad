@@ -1,0 +1,218 @@
+{
+  "id": "dose_per_kg_tablets",
+  "axis": "long_range_consistency",
+  "prompt": "A close photograph of the dispensing bench in a children's outpatient pharmacy under the bench lamp, taken from above, with the pharmacist's hands out of shot.\n\nTwo things lie side by side on the bench and both have to be readable in the picture. First, the prescription for one child: it carries the child's name ROWAN KEELEY, the child's weight 30 kg, and the medicine LEVACIL 15 mg scored tablets, to be taken twice a day at 1.25 mg for each kilogram of the child's weight at each dose. Second, ONE dose sachet that has been made up from that prescription and opened out flat, its contents lying on the open sachet side by side and not touching one another, with its printed label carrying the child's name and the medicine name.\n\nThe bench card screwed to the wall behind carries the dispensary's standing rule: a scored tablet may be broken along its score into halves and no smaller, and a half tablet is dispensed as a visibly broken half with a straight snapped edge -- never as a whole tablet, and never as a smaller piece.\n\nThe sachet in the picture is the one dose the prescription calls for. Work the dose out from the child's weight yourself -- I am deliberately not telling you how much medicine one dose comes to, how many tablets that is, or what is in the sachet. Nothing in the picture may carry a milligram sum, a dose calculation or a working-out note: the only writing in the picture is the prescription as given above, the sachet label carrying the child's name and the medicine name and how the medicine is to be taken, and the bench card. The tablets on the opened sachet must be large enough and separate enough that each one can be seen on its own, and both the label and the prescription must be easy to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed prescription lying on a bench beside an opened paper sachet with tablets on it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "expected_pieces": "whole:2|part:1",
+    "n_part": 1,
+    "n_whole": 2,
+    "same_child_expected": "yes",
+    "child_weight": "30"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sachet_holds_the_expected_pieces",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one tablet or piece of a tablet lying on the opened dose sachet",
+          "sweep": true,
+          "out": "pieces"
+        },
+        {
+          "fail_if": ["pieces.unreadable"]
+        },
+        {
+          "read_crop": "Is the tablet in this picture a whole round tablet or a piece smaller than a whole tablet? Answer with one word: whole or part.",
+          "boxes": "pieces",
+          "pad": 0.35,
+          "out": "sh"
+        },
+        {
+          "fail_if": ["sh.unreadable"]
+        },
+        {
+          "run": "count_tablet_pieces",
+          "args": ["sh"],
+          "out": "sp"
+        },
+        {
+          "compare": "sp.pieces",
+          "to": "reference.expected_pieces",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "half_tablet_is_snapped",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one tablet or piece of a tablet lying on the opened dose sachet",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does the tablet in this picture have a straight snapped edge where it was broken off a bigger tablet? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.35,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_part",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "label_and_prescription_name_the_same_child",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed label on the opened dose sachet",
+          "expected_n": 1,
+          "out": "lab"
+        },
+        {
+          "fail_if": ["lab.unreadable"]
+        },
+        {
+          "read_crop": "Copy the person's name printed on the label in this cut-out. Write nothing else.",
+          "boxes": "lab",
+          "pad": 0.3,
+          "out": "ln"
+        },
+        {
+          "fail_if": ["ln.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the child's name printed at the head of the prescription",
+          "expected_n": 1,
+          "out": "scr"
+        },
+        {
+          "fail_if": ["scr.unreadable"]
+        },
+        {
+          "read_crop": "Copy the person's name printed in this cut-out. Write nothing else.",
+          "boxes": "scr",
+          "pad": 0.3,
+          "out": "sn"
+        },
+        {
+          "fail_if": ["sn.unreadable"]
+        },
+        {
+          "run": "same_child_name",
+          "args": ["ln", "sn"],
+          "out": "nm"
+        },
+        {
+          "compare": "nm.same",
+          "to": "reference.same_child_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_weight_on_the_prescription",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the child's weight printed on the prescription",
+          "expected_n": 1,
+          "out": "wt"
+        },
+        {
+          "fail_if": ["wt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the weight in kilograms printed in this cut-out. Write the number only.",
+          "boxes": "wt",
+          "pad": 0.35,
+          "out": "wn"
+        },
+        {
+          "fail_if": ["wn.unreadable"]
+        },
+        {
+          "extract": "(\\d+)",
+          "value": "wn.answers.0",
+          "out": "wv"
+        },
+        {
+          "compare": "wv",
+          "to": "reference.child_weight",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_dose_working",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a milligram sum or a dose calculation written on the prescription or sachet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

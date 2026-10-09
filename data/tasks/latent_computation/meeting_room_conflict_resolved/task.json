@@ -1,0 +1,118 @@
+{
+  "id": "meeting_room_conflict_resolved",
+  "axis": "latent_computation",
+  "prompt": "A clean CONFERENCE-ROOM booking timetable for one room across six one-hour slots starting at 09:00, 10:00, 11:00, 12:00, 13:00 and 14:00. Show a single row of six slot cells; in each cell print which meeting is CONFIRMED for that hour as 'Mtg <letter>', or 'FREE' if none. Five booking requests came in for the room, each with a time range and a PRIORITY number (higher number = higher priority): Meeting A wants 09:00 to 12:00 at priority 3; Meeting B wants 10:00 to 13:00 at priority 5; Meeting C wants 09:00 to 11:00 at priority 2; Meeting D wants 12:00 to 15:00 at priority 4; Meeting E wants 13:00 to 15:00 at priority 1. Resolve conflicts slot by slot: in each hour the request with the HIGHEST priority that covers that hour is confirmed. IMPORTANT EXCEPTION: Meeting B has been CANCELLED (organiser is out sick) and must NOT be scheduled at all -- every hour B would have won instead goes to the next-highest-priority request that covers it. Work out the confirmed meeting for each of the six hours and print it in that slot. Do NOT show the priority numbers, the requested ranges, or Meeting B anywhere -- only the six confirmed slots.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a conference-room booking timetable: a row of hourly slots each showing a confirmed meeting or FREE? A photo, illustration, schematic or clean diagram ALL count as yes. Answer NO only if it shows just a blank card with none of that shown, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "slot10": "A",
+    "slot11": "A",
+    "slot12": "D",
+    "q_slot10": "On the room timetable, which meeting is confirmed in the 10:00 slot? Answer with just the single meeting letter printed there, or FREE. Nothing else.",
+    "q_slot11": "On the room timetable, which meeting is confirmed in the 11:00 slot? Answer with just the single meeting letter printed there, or FREE. Nothing else.",
+    "q_slot12": "On the room timetable, which meeting is confirmed in the 12:00 slot? Answer with just the single meeting letter printed there, or FREE. Nothing else.",
+    "q_nslots": "How many hourly slot cells are shown in the timetable row? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "flip_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_slot10",
+          "out": "a"
+        },
+        {
+          "ask": "reference.q_slot11",
+          "out": "b"
+        },
+        {
+          "ask": "reference.q_slot12",
+          "out": "c12"
+        },
+        {
+          "fail_if": ["a.unreadable", "b.unreadable", "c12.unreadable"]
+        },
+        {
+          "compare": "a",
+          "to": "reference.slot10",
+          "out": "fa"
+        },
+        {
+          "compare": "b",
+          "to": "reference.slot11",
+          "out": "fb"
+        },
+        {
+          "compare": "c12",
+          "to": "reference.slot12",
+          "out": "fc"
+        },
+        {
+          "all": ["fa", "fb", "fc"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d_slot12",
+      "weight": 0.8,
+      "steps": [
+        {
+          "ask": "reference.q_slot12",
+          "out": "c"
+        },
+        {
+          "fail_if": ["c.unreadable"]
+        },
+        {
+          "compare": "c",
+          "to": "reference.slot12",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "slot_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "reference.q_nslots",
+          "out": "nc"
+        },
+        {
+          "fail_if": ["nc.unreadable"]
+        },
+        {
+          "compare_band": "nc",
+          "to": 6,
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

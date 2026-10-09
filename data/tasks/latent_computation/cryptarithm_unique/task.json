@@ -1,0 +1,154 @@
+{
+  "id": "cryptarithm_unique",
+  "axis": "latent_computation",
+  "prompt": "A close-up photograph of a spiral-bound puzzle notebook lying open on a wooden cafe table, with a letters-for-digits addition puzzle written in pen on the lined page. Written as a vertical sum in neat handwritten capitals it reads: E A T, plus E A T underneath, a ruled line, then G A T E as the four-letter total. In this puzzle every different letter stands for a different single digit 0-9, the same letter is always the same digit, and no number starts with 0. There is exactly one way to solve it. Below the puzzle, on a line labelled ANSWER, write the fully solved sum with the letters replaced by their digits, as three numbers in the form '### + ### = ####'. Write the solved digit sum clearly on the ANSWER line; leave the lettered puzzle above unchanged and add no other writing on the page.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show spiral-bound puzzle notebook lying open on a wooden cafe table, a hand-written letters-for-digits sum EAT + EAT = GATE penned on the lined page with an ANSWER line below for the solved digit equation? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "words": ["EAT", "EAT", "GATE"],
+    "n1": 874,
+    "n2": 874,
+    "n3": 1748
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "solved_equation",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or fill in the puzzle yourself. On the line labelled ANSWER there is a digit sum written in the form 'number + number = number'. Report exactly the three numbers written there, as 'A + B = C' using digits only. Transcribe the printed digits; do not solve the lettered puzzle yourself.",
+          "out": "ans"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "three_numbers_match",
+          "args": ["ans", "reference.n1", "reference.n2", "reference.n3"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_puzzle_addend",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "On the puzzle page ABOVE the ANSWER line, read the three-letter word being added to itself (the top addend of the lettered vertical sum). Answer with the letters only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.words.0",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_puzzle_total",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "On the puzzle page, read the four-letter word written on the answer line of the lettered vertical sum (below the ruled line). Answer with the letters only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.words.2",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_answer_addend",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the ANSWER line, read the first three-digit number in the solved sum '### + ### = ####'. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.n1",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_puzzle_unchanged",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is the lettered puzzle above the ANSWER line still shown in capital letters (unchanged), with the digit solution written only on the ANSWER line? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_first_word",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "This is a hand-written letters-for-digits addition puzzle. Read the TOP word of the vertical sum (the first three-letter word written above the plus). Answer with just the letters.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.words.0",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

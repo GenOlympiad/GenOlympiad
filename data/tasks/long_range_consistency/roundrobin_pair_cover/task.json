@@ -1,0 +1,227 @@
+{
+  "id": "roundrobin_pair_cover",
+  "axis": "long_range_consistency",
+  "prompt": "Seven clubs share one municipal ground through the summer, and the handbook that hangs on the clubhouse noticeboard falls open at its fixture pages. This picture is that opening, photographed straight on so every line on it can be read.\n\nThe seven clubs are DALE, ECCLES, FORTH, GARNOCK, HOLT, IVEL and KELDA. They play a single round of the league: over the season each club meets each of the others once and once only, and because there are seven of them one club is left without a match each week.\n\nThe pages carry seven round blocks, one under another, headed ROUND 1 down to ROUND 7. Under each heading go three match lines, and under those a single line naming the club with no match that week. A match line reads across as the pitch, the kick-off, the two clubs and the referee: the ground has three pitches lettered A, B and C, the kick-offs are 10:00, 11:30 and 13:00, and the referees on the panel are MERRICK, OSGOOD and PARRY.\n\nWho meets whom in which round, and who sits out which week, are the secretary's own work and the whole reason the handbook is printed -- I am deliberately not telling you one fixture of it. Set the club names in capitals and leave enough space between the blocks for each round to be read on its own. Apart from the seven round blocks with their lines, nothing else belongs on the opening: no table of standings, no results and no scores.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed page with lines of names grouped under numbered headings? A photograph, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no printed lines on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "teams": ["DALE", "ECCLES", "FORTH", "GARNOCK", "HOLT", "IVEL", "KELDA"],
+    "round_keys": ["1", "2", "3", "4", "5", "6", "7"],
+    "cover_expected": "cover=complete,DALE=6,ECCLES=6,FORTH=6,GARNOCK=6,HOLT=6,IVEL=6,KELDA=6",
+    "clash_state": "clean",
+    "bye_state": "match",
+    "n_rounds": 7
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_seven_rounds_together_use_every_one_of_the_twenty_one_pairings",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a round block printed on the fixture opening",
+          "sweep": true,
+          "out": "cv_area",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cv_area.unreadable"]
+        },
+        {
+          "read_crop": "What round number is printed at the head of this cut-out? Answer with that number only.",
+          "boxes": "cv_area",
+          "pad": 0.1,
+          "out": "cv_key"
+        },
+        {
+          "fail_if": ["cv_key.unreadable"]
+        },
+        {
+          "read_crop": "Write out the club names on the match lines in this cut-out, in the order they are printed, separated by commas.",
+          "boxes": "cv_area",
+          "pad": 0.1,
+          "out": "cv_names"
+        },
+        {
+          "fail_if": ["cv_names.unreadable"]
+        },
+        {
+          "run": "pairings_cover_all",
+          "args": ["cv_key", "cv_names", "reference.round_keys", "reference.teams"],
+          "out": "cvv"
+        },
+        {
+          "compare": "cvv.s",
+          "to": "reference.cover_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_pairing_is_played_twice_and_no_club_appears_twice_in_one_round",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a round block printed on the fixture opening",
+          "sweep": true,
+          "out": "cl_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cl_box.unreadable"]
+        },
+        {
+          "read_crop": "What round number is printed at the head of this cut-out? Answer with that number only.",
+          "boxes": "cl_box",
+          "pad": 0.1,
+          "out": "cl_key"
+        },
+        {
+          "fail_if": ["cl_key.unreadable"]
+        },
+        {
+          "read_crop": "Write out the club names on the match lines in this cut-out, in the order they are printed, separated by commas.",
+          "boxes": "cl_box",
+          "pad": 0.1,
+          "out": "cl_names"
+        },
+        {
+          "fail_if": ["cl_names.unreadable"]
+        },
+        {
+          "run": "pairings_clash",
+          "args": ["cl_key", "cl_names", "reference.round_keys", "reference.teams"],
+          "out": "clv"
+        },
+        {
+          "compare": "clv.state",
+          "to": "reference.clash_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_club_sits_out_exactly_one_of_the_seven_weeks",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a round block printed on the fixture opening",
+          "sweep": true,
+          "out": "by_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["by_box.unreadable"]
+        },
+        {
+          "read_crop": "What round number is printed at the head of this cut-out? Answer with that number only.",
+          "boxes": "by_box",
+          "pad": 0.1,
+          "out": "by_key"
+        },
+        {
+          "fail_if": ["by_key.unreadable"]
+        },
+        {
+          "read_crop": "Which club is printed in this cut-out as having no match that week? Answer with that club name only, or none if no such line is printed.",
+          "boxes": "by_box",
+          "pad": 0.1,
+          "out": "by_out"
+        },
+        {
+          "fail_if": ["by_out.unreadable"]
+        },
+        {
+          "run": "byes_cover_all_clubs",
+          "args": ["by_key", "by_out", "reference.round_keys", "reference.teams"],
+          "out": "byv"
+        },
+        {
+          "compare": "byv.state",
+          "to": "reference.bye_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_opening_carries_its_seven_round_blocks",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a round block printed on the fixture opening",
+          "sweep": true,
+          "out": "rc_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["rc_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE numbered round heading with match lines under it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "rc_box",
+          "pad": 0.1,
+          "out": "rc_q"
+        },
+        {
+          "fail_if": ["rc_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["rc_q"],
+          "out": "rc_n"
+        },
+        {
+          "compare_band": "rc_n.n",
+          "to": "reference.n_rounds",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_standings_table_or_result_is_printed_on_the_opening",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a table of standings or a match result printed on the opening",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_st"
+        },
+        {
+          "fail_if": ["sweep_st.unreadable"]
+        },
+        {
+          "compare": "sweep_st.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

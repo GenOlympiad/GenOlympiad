@@ -1,0 +1,221 @@
+{
+  "id": "chimney_below_ridge_downdraught",
+  "axis": "physical_consistency",
+  "prompt": "A photograph taken for a heating installer's acceptance file: three stone cottages standing\ntogether at the head of a village on a still winter afternoon, all three fires lit, seen from\nthe road below so that every roof ridge is against the sky.\n\nEach cottage has its name painted on its gate. The installer's file gives the heights that were\nmeasured on site, in metres above the road:\n\nMILL -- ridge 7.2, chimney top 7.8\nFORGE -- ridge 6.8, chimney top 6.5\nBAKERY -- ridge 8.0, chimney top 7.6\n\nA wind vane stands on a post at the roadside and there is a light breeze along the valley.\n\nWhat the smoke does at each of the three is what the installer is being signed off on, so it is\nyours: I am not telling you what any of the plumes does.\n\nThe three painted names, the three ridges, the three chimney tops and the smoke from each must\nbe legible in the one frame. Nothing in the photograph says which chimneys will smoke back.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show houses with chimneys and smoke coming from them? A photograph, a painting or a drawing ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no houses at all. Answer yes or no only.",
+  "reference": {
+    "smoke": "bakery=falls|forge=falls|mill=rises",
+    "heights": "bakery=no|forge=no|mill=yes",
+    "both": "falls,rises",
+    "page_is_clean": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_smoke_follows_each_chimney_own_height",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "each cottage in the row, taken with its chimney, its roof ridge and the name painted on its gate",
+          "out": "cb",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["cb.unreadable"]
+        },
+        {
+          "read_crop": "Is a name painted on this cottage's gate? Answer yes or no.",
+          "boxes": "cb",
+          "pad": 0.05,
+          "out": "cn",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "read_crop": "Copy the name painted on this cottage's gate. Write the name only.",
+          "boxes": "cb",
+          "pad": 0.05,
+          "out": "ck",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "read_crop": "What does the smoke from this chimney do? Answer with one of: rises, falls.",
+          "boxes": "cb",
+          "pad": 0.05,
+          "out": "cv",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "run": "read_key_texts",
+          "args": ["seen(cn, ck, '(no name)')", "cv"],
+          "out": "cm"
+        },
+        {
+          "fail_if": ["cm.refused"]
+        },
+        {
+          "compare": "cm.seq",
+          "to": "reference.smoke",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_chimney_tops_stand_where_the_file_puts_them",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "each cottage in the row, taken with its chimney, its roof ridge and the name painted on its gate",
+          "out": "hb",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["hb.unreadable"]
+        },
+        {
+          "read_crop": "Is a name painted on this cottage's gate? Answer yes or no.",
+          "boxes": "hb",
+          "pad": 0.05,
+          "out": "hn",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "read_crop": "Copy the name painted on this cottage's gate. Write the name only.",
+          "boxes": "hb",
+          "pad": 0.05,
+          "out": "hk",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "read_crop": "Is the top of this chimney higher than the ridge of its own roof? Answer yes or no.",
+          "boxes": "hb",
+          "pad": 0.05,
+          "out": "hv",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "run": "read_key_texts",
+          "args": ["seen(hn, hk, '(no name)')", "hv"],
+          "out": "hm"
+        },
+        {
+          "fail_if": ["hm.refused"]
+        },
+        {
+          "compare": "hm.seq",
+          "to": "reference.heights",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_behaviours_stand_in_the_one_photograph",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "each cottage in the row, taken with its chimney and the smoke leaving it",
+          "out": "bb",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["bb.unreadable"]
+        },
+        {
+          "read_crop": "What does the smoke from this chimney do? Answer with one of: rises, falls.",
+          "boxes": "bb",
+          "pad": 0.05,
+          "out": "bv",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "run": "sorted_distinct_reads",
+          "args": ["bv"],
+          "out": "bm"
+        },
+        {
+          "fail_if": ["bm.refused"]
+        },
+        {
+          "compare": "bm.seq",
+          "to": "reference.both",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_note_says_which_chimneys_smoke_back",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a note or arrow in the frame that says which chimneys will smoke back",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is this a note or arrow saying which chimneys will smoke back? Answer yes or no. Answer no if the cut-out shows a painted name on a gate, a chimney pot, a roof ridge, the wind vane, or smoke.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "run": "sweep_holds_nothing_banned",
+          "args": ["xg", "xgw", "xgy"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.page_is_clean",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

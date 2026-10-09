@@ -1,0 +1,147 @@
+{
+  "id": "spectacle_blind_flip_set",
+  "axis": "long_range_consistency",
+  "prompt": "A shift is about to hand this exchanger over to the maintenance contractor and the area authority wants the blinding photographed before the permit is signed, so the picture takes in the whole ring of flanges with the scaffold alongside.\n\nIn place and not yours to move: the exchanger; five flanged joints around it, each with a spectacle blind already fitted between the faces and its handle standing out beyond the bolts with a number stamped on it; the scaffold; and the isolation certificate taped to the column, on which there is one row per blind and a box beside each row.\n\nWhat the line list says, and the list is what the authority works from: SB-1 sits in the shell inlet, which comes from the unit's process header; SB-2 sits in the vent, which is open to atmosphere and connects to nothing else; SB-3 sits in the tube inlet, which comes from the cooling water main; SB-4 sits in the tube outlet, which runs back to the same cooling water main; SB-5 sits in a steam tracing loop that runs along the rack and does not enter the exchanger at all.\n\nHow the work is done, and it is trade practice rather than an instruction: a spectacle blind is one plate with a solid disc at one end and an open ring at the other, and it is turned so that whichever end is between the flange faces decides whether that line is blanked or open. A vessel is isolated by blanking every line that can bring anything to it; a line that reaches nothing must be left open, and the vent above all, because a vessel blanked and left to cool with no vent will pull itself in.\n\nWhich way each blind ends up turned, and which boxes on the certificate are ticked, is the part you have to work out -- I am not telling you, and no blind in the picture has been left as an example. Take it so every handle and its stamped number can be seen and the certificate can be read. No chalk mark is to be put on the pipework.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show industrial pipework with bolted flanges and a paper form fixed nearby? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no drawing on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "blind_expected": "SB-1=solid|SB-2=open|SB-3=solid|SB-4=solid|SB-5=open",
+    "cert_expected": "SB-1=ticked|SB-2=blank|SB-3=ticked|SB-4=ticked|SB-5=blank",
+    "n_blinds": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_line_that_can_reach_the_exchanger_is_the_one_turned_solid",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a spectacle blind handle standing out beyond the bolts of a flange",
+          "sweep": true,
+          "out": "bl_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["bl_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which number is stamped on the handle of the blind? Answer with the number exactly as it is stamped.",
+          "boxes": "bl_box",
+          "pad": 0.5,
+          "out": "hkey"
+        },
+        {
+          "fail_if": ["hkey.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which end of the spectacle blind is between the flange faces? Answer with one of: solid, open, cannot tell.",
+          "boxes": "bl_box",
+          "pad": 0.5,
+          "out": "hset"
+        },
+        {
+          "fail_if": ["hset.unreadable"]
+        },
+        {
+          "run": "count_blinds_set_right",
+          "args": ["hkey", "hset", "reference.blind_expected"],
+          "out": "bf"
+        },
+        {
+          "compare_band": "bf.n",
+          "to": "reference.n_blinds",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_certificate_ticks_the_same_lines_the_steel_blanks",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a printed row of the isolation certificate taped to the column",
+          "sweep": true,
+          "out": "ce_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["ce_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which blind number is printed on this row of the certificate? Answer with the number exactly as printed.",
+          "boxes": "ce_box",
+          "pad": 0.3,
+          "out": "ckey"
+        },
+        {
+          "fail_if": ["ckey.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the box beside this row ticked or left blank? Answer with one of: ticked, blank.",
+          "boxes": "ce_box",
+          "pad": 0.3,
+          "out": "cbox"
+        },
+        {
+          "fail_if": ["cbox.unreadable"]
+        },
+        {
+          "run": "count_certificate_matches",
+          "args": ["ckey", "cbox", "reference.cert_expected"],
+          "out": "cf"
+        },
+        {
+          "compare_band": "cf.n",
+          "to": "reference.n_blinds",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_chalk_mark_is_put_on_the_pipework",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a chalk mark on the pipework around the exchanger",
+          "sweep": true,
+          "out": "swp",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "id": "dental_fdi_quadrant_mirror",
+  "axis": "long_range_consistency",
+  "prompt": "Before the technician can start, the practice has to send the laboratory a chart of this patient's mouth marked up from this morning's notes. The picture is that chart form, filled in and lying on the bench beside the notes, seen square on.\n\nThe form is pre-printed and its furniture does not move: a vertical centre line down the middle of the chart, the row label UPPER at the left-hand end of the top row, the row label LOWER at the left-hand end of the bottom row, and the practice name across the head of the sheet. The teeth themselves are drawn in by hand, 16 symbols to a row for one full adult set, each with its own number written under it in the two-digit international tooth notation.\n\nThis is the note that has come through from the surgery, word for word: crowns to be prepared on 17 and 46; every other tooth sound and to be left alone.\n\nWhereabouts on the form each number belongs, and therefore which 2 symbols get shaded in, is the part you have to work out -- I am deliberately not telling you, and there is no worked example printed on the form. The numbers want to be large enough to read and the 2 prepared teeth want to be solid enough to pick out at a glance. Other than the two row labels, the practice name and the tooth numbers themselves, no further word, letter or arrow belongs on the chart.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a dental chart form with rows of tooth symbols drawn on it? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no chart on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "ends": "UPPER=18|11|21,LOWER=48|41|31",
+    "marked": "UPPER=17,LOWER=46",
+    "n_rows": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_tooth_numbers_turn_round_at_the_centre_line_of_the_chart",
+      "weight": 3.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of tooth symbols drawn across the chart form between its row labels",
+          "sweep": true,
+          "out": "row_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["row_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which word is printed as the row label at the left-hand edge? Answer with the word exactly as it is printed.",
+          "boxes": "row_box",
+          "pad": 0.9,
+          "out": "rkey_rd"
+        },
+        {
+          "fail_if": ["rkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which number is written under the tooth at the far left-hand end of the row? Answer with the number exactly as it is written, or none if no number is written there.",
+          "boxes": "row_box",
+          "pad": 0.9,
+          "out": "endl_rd"
+        },
+        {
+          "fail_if": ["endl_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which number is written under the tooth that touches the vertical centre line on its left-hand side? Answer with the number exactly as it is written, or none if no number is written there.",
+          "boxes": "row_box",
+          "pad": 0.9,
+          "out": "midl_rd"
+        },
+        {
+          "fail_if": ["midl_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which number is written under the tooth that touches the vertical centre line on its right-hand side? Answer with the number exactly as it is written, or none if no number is written there.",
+          "boxes": "row_box",
+          "pad": 0.9,
+          "out": "midr_rd"
+        },
+        {
+          "fail_if": ["midr_rd.unreadable"]
+        },
+        {
+          "run": "check_row_end_numbers",
+          "args": ["rkey_rd", "endl_rd", "midl_rd", "midr_rd", "reference.ends"],
+          "out": "turnv"
+        },
+        {
+          "compare": "turnv.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_teeth_the_surgery_note_names_are_the_ones_shaded_on_the_chart",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of tooth symbols drawn across the chart form between its row labels",
+          "sweep": true,
+          "out": "mk_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["mk_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which word is printed as the row label at the left-hand edge? Answer with the word exactly as it is printed.",
+          "boxes": "mk_box",
+          "pad": 0.9,
+          "out": "mkey_rd"
+        },
+        {
+          "fail_if": ["mkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which number is written under the tooth that is shaded in? Answer with the number exactly as it is written, or none if no tooth in this cut-out is shaded.",
+          "boxes": "mk_box",
+          "pad": 0.9,
+          "out": "shade_rd"
+        },
+        {
+          "fail_if": ["shade_rd.unreadable"]
+        },
+        {
+          "run": "check_marked_teeth",
+          "args": ["mkey_rd", "shade_rd", "reference.marked"],
+          "out": "markv"
+        },
+        {
+          "compare": "markv.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_chart_carries_its_two_rows_of_teeth",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of tooth symbols drawn across the chart form between its row labels",
+          "sweep": true,
+          "out": "cen_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a word printed as a row label at the left-hand edge? Answer yes or no only.",
+          "boxes": "cen_box",
+          "pad": 0.9,
+          "out": "cen_rd"
+        },
+        {
+          "fail_if": ["cen_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_rd"],
+          "out": "cenn"
+        },
+        {
+          "compare_band": "cenn.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_word_letter_or_arrow_is_added_to_the_chart",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word, letter or arrow on the chart other than the two row labels, the practice name and the tooth numbers",
+          "sweep": true,
+          "out": "sweep_s",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

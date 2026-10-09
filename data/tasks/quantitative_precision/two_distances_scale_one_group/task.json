@@ -1,0 +1,84 @@
+{
+  "id": "two_distances_scale_one_group",
+  "axis": "quantitative_precision",
+  "prompt": "The club armourer has to leave a record of the zeroing before the rifle goes back to the athlete, so both faces are clipped up together and photographed square on with the lane boards and the log book in the frame.\n\nTwo standard air-rifle faces are clipped side by side on the target frame, each printed with the usual set of scoring rings and ring figures. A small lane board is pinned under each face: the left board is printed 10 metres, the right board 25 metres. Three pellet holes have been punched through each face. The log book hanging at the left of the frame is headed: same rifle, same pellet, one sighting session, sights untouched between the two cards. Nothing on the boards or in the log book says anything about the rifle's grouping.\n\nHow the two sets of holes have come out is what the log book does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show two air-rifle target faces clipped side by side with a small printed lane board under each? Answer yes or no only.",
+  "reference": {
+    "part1": "far_set_spread_more",
+    "part2": "both_off_the_same_side"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Compare the three holes on the face over the 25 metre board with the three on the face over the 10 metre board, and say how the two sets sit against the printed rings. Answer with one of: the 25 metre set reaches across more rings than the 10 metre set; the two sets reach across the same rings as each other; the 10 metre set reaches across more rings than the 25 metre set.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at where the three holes sit against the middle of each printed face, and say how the two sets stand. Answer with one of: both sets sit off the middle towards the same side of their own face; the two sets sit off the middle towards opposite sides of their own faces; both sets sit squarely on the middle of their own face.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

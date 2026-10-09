@@ -1,0 +1,96 @@
+{
+  "id": "backlit_rim_light",
+  "axis": "physical_consistency",
+  "prompt": "A moody wildlife portrait: a single red fox in profile standing on a dark ridge at dusk, photographed against a deep shadowed hillside. There is EXACTLY ONE light source, the low sun, positioned BEHIND-AND-TO-THE-RIGHT of the fox (a back-light from the RIGHT). Because the light comes from behind and to the RIGHT, a bright warm RIM OF LIGHT must outline the fur along the fox's RIGHT-hand edge ONLY (its right contour and ear-tips glow), while its LEFT-hand edge remains in deep shadow with no highlight. The guard hairs and whiskers on the LIT (right) side must read as thin glowing filaments. Do NOT add a rim on the left edge and do NOT light the fox evenly -- the near (left) side must stay dark. Golden back-light, high contrast, dark surroundings. No text, no numbers, no labels.",
+  "difficulty": "s2r",
+  "easy_question": "This picture was supposed to show a single fox against a dark dusk hillside. Never mind how well it is drawn. Does the picture show a fox / animal against a dark background? A realistic photo, an illustration or a clean render ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel printing an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "light_side": "right",
+    "q_side": "This is a backlit animal photographed against a dark background. ONE edge of the animal's fur catches a bright rim of light (a glowing outline) while the other edge stays dark. Which side of the animal carries that bright rim glow? Look at the animal's fur contour and answer with exactly one word: LEFT or RIGHT. If BOTH edges glow equally, answer BOTH. If neither edge glows, answer NEITHER. Judge the picture as-is; do not assume standard studio lighting.",
+    "q_far_dark": "This is a photograph of an animal against a dark background. Look ONLY at the animal's LEFT-hand edge (the left-hand side of its outline, as you look at the picture). Is that LEFT edge dark, with no bright rim of light running along it? Answer yes if the left edge is dark; answer no if a bright rim of light is drawn along the left edge. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rim_side",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "reference.q_side",
+          "out": "sd"
+        },
+        {
+          "fail_if": ["sd.unreadable"]
+        },
+        {
+          "run": "norm_side",
+          "value": "sd",
+          "out": "sdn"
+        },
+        {
+          "compare": "sdn",
+          "to": "reference.light_side",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_far_dark",
+      "weight": 0.6,
+      "not_scored": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a bright rim of light glowing along one fur edge of the animal",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_fd"
+        },
+        {
+          "fail_if": ["sweep_fd.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the animal standing against the dark background",
+          "out": "an_fd"
+        },
+        {
+          "fail_if": ["an_fd.unreadable"]
+        },
+        {
+          "run": "rim_light_side",
+          "args": ["sweep_fd", "an_fd"],
+          "out": "fd"
+        },
+        {
+          "fail_if": ["fd.no_read"]
+        },
+        {
+          "compare": "fd.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "4:3"
+}

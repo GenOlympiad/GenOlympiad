@@ -1,0 +1,84 @@
+{
+  "id": "a_collation_marks_step_down_the_spine_in_signature_order",
+  "axis": "long_range_consistency",
+  "prompt": "Ashmoor Bindery gathers its sections by eye before they go to the sewing machine, and the foreman wants a plain record photograph of the gathering rack for the job file, camera square to the rack so that the whole row of spines and the slip in front of each section sit inside the frame. The sections stand upright in the rack, folds outwards to the camera, head uppermost. Reading along the rack from the left they are the section whose first page is 49, then 17, then 65, then 33, and a printed slip in front of each gives that number. The trade rule the bindery works to is the collation mark: a small black block printed on the spine, the earliest section by first page taking its block hard against the head of the spine, and every later section taking its block a block-height further down than the section before it.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph show a row of folded printed sections standing upright with their spines facing the camera, and a printed slip in front of each section, with the whole row inside the frame? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "4"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the leftmost section in the row of spines. Its spine carries a small black block. Counting steps of one block-height down from the head of that spine, which step is the block sitting in? Write the number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "read_step_number",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Find the section whose printed slip reads 65. Its spine carries a small black block. Counting steps of one block-height down from the head of that spine, which step is the block sitting in? Write the number only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "read_step_number",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

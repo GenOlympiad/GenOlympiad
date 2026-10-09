@@ -1,0 +1,84 @@
+{
+  "id": "the_altimeter_owes_the_apron_its_setting",
+  "axis": "quantitative_precision",
+  "prompt": "The maintenance hand files one photograph with the pre flight altimeter check, so the panel is shot from the doorway with the stand board in frame through the side window.\n\nA light aeroplane stands on a parking stand with its panel open. Two altimeters sit side by side, each with a drum for the thousands and a single pointer for the hundreds, and each with a small window showing its pressure setting. The left window is set to 1002 and the right window is set to 1013. Through the side window a stand board is lettered with the stand number and an elevation of 640 feet. A check sheet clipped to the panel prints 27 feet per hectopascal. The tower board seen past the nose gives the field pressure as 1002.\n\nWhat each of those two altimeters is showing is what the check sheet leaves blank.",
+  "difficulty": "s1",
+  "easy_question": "Are two altimeters with pressure setting windows shown side by side on an open aircraft panel in this photograph? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "the_1013_one_reads_greater"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the left hand altimeter, the one whose pressure window shows 1002. Give the height its drum and pointer are showing, in feet.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "580", "700"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the two altimeters side by side on the panel. Answer with one of: the one whose pressure window shows 1013 is reading the greater height; the one whose pressure window shows 1002 is reading the greater height; the two are reading the same height.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "ullage_not_contents_dip",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The fuel-bay hand files one photograph a week when the board goes up, so the tank is shot from the side with the board in frame.\n\nA horizontal diesel tank stands in a farm fuel bay. A float gauge is set into the crown of the tank and its printed dial is graduated in litres, running from nothing at the start of the sweep to 1200 litres, with a figure at every 200 litres. The board bolted to the tank saddle is headed ULLAGE, the empty space above the oil, and this week's row is written up as 900 litres. Along the foot of the board runs a printed status strip lettered LOW, MID and FULL, with a magnet the hand slides along it. The bay rule painted beside it puts the LOW lettering below 400 litres of oil left in the tank.\n\nWhere the needle sits, and where the magnet sits, is what the board does not write down.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a horizontal fuel tank with a float gauge in its crown and a written board bolted alongside it? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "magnet_on_the_low_lettering"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the float gauge in the crown of the tank and give, in litres, the figure the needle stands at on its printed dial.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "250", "350"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the magnet on the printed status strip along the foot of the board. Answer with one of: the magnet sits on the LOW lettering; the magnet sits on the MID lettering; the magnet sits on the FULL lettering.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

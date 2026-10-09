@@ -1,0 +1,84 @@
+{
+  "id": "each_carriageway_paints_its_legend_the_way_its_own_traffic_reads_it",
+  "axis": "text_fidelity",
+  "prompt": "Site record for the pavement-marking contractor at St. Elmo's Regional Medical Center, shot straight down from the parapet of the ward tower after the thermoplastic had cured. Below is the two-way ambulance approach drive: the left-hand roadway carries traffic away from the gatehouse toward the top of the picture, the right-hand roadway brings it back down to the gatehouse at the bottom, and the lane arrows and the crews' parked units stand nose-on with the flow so the direction of each is plain. The work order calls for the same word message painted on each roadway, in the words AMBULANCE, ACCESS, ONLY, laid out to the state highway agency's standard for word message pavement markings. Both roadways curb to curb, both messages complete end to end, and the arrows beside them are to sit inside the one frame, shot square down in flat afternoon light with no vehicle standing on the lettering.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph look straight down on a two-way access road whose roadways each carry a painted word message on the pavement, with the full length of the messages and the lane arrows inside the frame? Answer yes or no only.",
+  "reference": {
+    "part1": "9",
+    "part2": "4"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 5.0,
+      "steps": [
+        {
+          "ask": "Look at the whole picture. How many painted letters are in the big word nearest the bottom edge of the picture on the left-hand roadway?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 2.0,
+      "steps": [
+        {
+          "ask": "Look at the whole picture. How many painted letters are in the big word nearest the bottom edge of the picture on the right-hand roadway?",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

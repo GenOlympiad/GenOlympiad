@@ -1,0 +1,300 @@
+{
+  "id": "hanoi_move_index",
+  "axis": "latent_computation",
+  "prompt": "A sharp close-up photograph, camera level with the base, of a machined aluminium exhibition puzzle on a dark bench: a flat base with THREE upright pegs standing on it, marked A (left), B (middle) and C (right), and a small blank engraving plate screwed to the front of the base.\n\nIt carries 6 round disks of clearly different widths -- disk 1 (the narrowest) is teal, disk 2 is amber, disk 3 is burnt orange, disk 4 is indigo, disk 5 is violet, disk 6 is dark teal (the widest) -- each with its own size number printed large on its face. The stacking rule is the usual one -- a disk rests either on the base or on a disk wider than itself, never on a narrower one.\n\nAll 6 disks start stacked on peg A, widest at the bottom, and are moved to peg C in the FEWEST possible moves (exactly 63 moves), one disk at a time, never a wider disk onto a narrower one. Count the moves of that shortest solution 1, 2, 3, ...\n\nConsider the moment immediately after disk 3 has been set down on a peg for the 5th time in that solution (where it lies at the very start does not count -- only the times it is actually moved). Show the puzzle EXACTLY as it stands at that moment, and engrave on the plate the NUMBER of that move -- one whole number, nothing else. The picture and the engraved number must agree with each other.\n\nKeep the picture clean: no move list, no annotations, no captions. The only characters in the image are the letters on the base and the number printed on each disk (plus the single number on the engraving plate).",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a machined metal puzzle with a small engraved plate on its base: a base with three upright pegs carrying round stacking disks of graduated widths? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_disks": 6,
+    "n_pegs": 3,
+    "s_A": "2,1",
+    "c_A": 2,
+    "s_B": "5,4",
+    "c_B": 2,
+    "s_C": "6,3",
+    "c_C": 2,
+    "step_idx": 36
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "peg_contents_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "printed capital letter on the front of the base",
+          "sweep": true,
+          "votes": 3,
+          "out": "pb"
+        },
+        {
+          "fail_if": ["pb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking puzzle. Does this cut-out show ONE printed capital letter on the base, rather than a peg, a disk, the engraving plate, or bare background? Answer yes or no only.",
+          "boxes": "pb",
+          "pad": 0.25,
+          "out": "pc"
+        },
+        {
+          "fail_if": ["pc.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "round disk threaded on one of the upright pegs",
+          "sweep": true,
+          "votes": 3,
+          "out": "db"
+        },
+        {
+          "fail_if": ["db.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking puzzle. Does this cut-out show exactly ONE whole round disk threaded on a peg -- one single disk, not two of them stacked on top of each other, not a bare peg, and not just the flat base or the background? Answer yes or no only.",
+          "boxes": "db",
+          "pad": 0.06,
+          "out": "dc"
+        },
+        {
+          "fail_if": ["dc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one round flat disk from a stacking toy, and a size number is printed large on the face of that disk. What number is printed on it? Answer with that single number and nothing else. If you cannot see any number printed on it, answer 0.",
+          "boxes": "db",
+          "pad": 0.04,
+          "out": "dn"
+        },
+        {
+          "fail_if": ["dn.unreadable"]
+        },
+        {
+          "run": "read_peg_stacks",
+          "args": ["pb", "pc", "db", "dc", "dn", "reference"],
+          "out": "st"
+        },
+        {
+          "compare_set": "st.A",
+          "to": "reference.s_A",
+          "out": "fA_raw"
+        },
+        {
+          "compare_tolerance": "fA_raw",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "fA"
+        },
+        {
+          "compare_set": "st.B",
+          "to": "reference.s_B",
+          "out": "fB_raw"
+        },
+        {
+          "compare_tolerance": "fB_raw",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "fB"
+        },
+        {
+          "compare_set": "st.C",
+          "to": "reference.s_C",
+          "out": "fC_raw"
+        },
+        {
+          "compare_tolerance": "fC_raw",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "fC"
+        },
+        {
+          "all": ["fA", "fB", "fC"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "stack_heights_joint",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "printed capital letter on the front of the base",
+          "sweep": true,
+          "votes": 3,
+          "out": "pb2"
+        },
+        {
+          "fail_if": ["pb2.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking puzzle. Does this cut-out show ONE printed capital letter on the base, rather than a peg, a disk, the engraving plate, or bare background? Answer yes or no only.",
+          "boxes": "pb2",
+          "pad": 0.25,
+          "out": "pc2"
+        },
+        {
+          "fail_if": ["pc2.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "round disk threaded on one of the upright pegs",
+          "sweep": true,
+          "votes": 3,
+          "out": "db2"
+        },
+        {
+          "fail_if": ["db2.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking puzzle. Does this cut-out show exactly ONE whole round disk threaded on a peg -- one single disk, not two of them stacked on top of each other, not a bare peg, and not just the flat base or the background? Answer yes or no only.",
+          "boxes": "db2",
+          "pad": 0.06,
+          "out": "dc2"
+        },
+        {
+          "fail_if": ["dc2.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one round flat disk from a stacking toy, and a size number is printed large on the face of that disk. What number is printed on it? Answer with that single number and nothing else. If you cannot see any number printed on it, answer 0.",
+          "boxes": "db2",
+          "pad": 0.04,
+          "out": "dn2"
+        },
+        {
+          "fail_if": ["dn2.unreadable"]
+        },
+        {
+          "run": "read_peg_stacks",
+          "args": ["pb2", "pc2", "db2", "dc2", "dn2", "reference"],
+          "out": "st2"
+        },
+        {
+          "compare_band": "st2.h_A",
+          "to": "reference.c_A",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "gA"
+        },
+        {
+          "compare_band": "st2.h_B",
+          "to": "reference.c_B",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "gB"
+        },
+        {
+          "compare_band": "st2.h_C",
+          "to": "reference.c_C",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "gC"
+        },
+        {
+          "all": ["gA", "gB", "gC"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "disk_conservation",
+      "weight": 0.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "round disk threaded on one of the upright pegs -- count a rectangle only if exactly one whole disk lies inside it, with the size number printed on that disk's face visible; box each disk separately, and two disks resting one on top of the other are still two disks, so box each on its own; do not box a bare peg, the flat base, the engraving plate, the table, or two stacked disks in one rectangle",
+          "sweep": true,
+          "votes": 3,
+          "out": "db3"
+        },
+        {
+          "fail_if": ["db3.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking puzzle. Does this cut-out show exactly ONE whole round disk threaded on a peg -- one single disk, not two of them stacked on top of each other, not a bare peg, and not just the flat base or the background? Answer yes or no only.",
+          "boxes": "db3",
+          "pad": 0.06,
+          "out": "dc3"
+        },
+        {
+          "fail_if": ["dc3.unreadable"]
+        },
+        {
+          "run": "count_confirmed_disks",
+          "args": ["db3", "dc3", "reference"],
+          "out": "tot"
+        },
+        {
+          "compare_band": "tot.n",
+          "to": "reference.n_disks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "engraved_step_index",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "small engraved plate fixed to the front of the base",
+          "sweep": true,
+          "votes": 3,
+          "out": "plb"
+        },
+        {
+          "fail_if": ["plb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a wooden stacking puzzle. Does this cut-out show the small flat engraving plate fixed to the front of the base -- the little metal or plastic plate with something engraved on it? Answer yes or no only.",
+          "boxes": "plb",
+          "pad": 0.1,
+          "out": "plc"
+        },
+        {
+          "fail_if": ["plc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows a small engraved plate fixed to the base of a stacking puzzle. What number is engraved on this plate? Answer with the number only. If nothing is engraved on it, answer 0.",
+          "boxes": "plb",
+          "pad": 0.06,
+          "out": "pln"
+        },
+        {
+          "fail_if": ["pln.unreadable"]
+        },
+        {
+          "run": "plate_number",
+          "args": ["plb", "plc", "pln", "reference"],
+          "out": "pv"
+        },
+        {
+          "compare_band": "pv.n",
+          "to": "reference.step_idx",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

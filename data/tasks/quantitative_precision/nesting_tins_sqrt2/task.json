@@ -1,0 +1,96 @@
+{
+  "id": "nesting_tins_sqrt2",
+  "axis": "quantitative_precision",
+  "prompt": "A clean overhead studio photograph, looking straight down, of SIX round metal nesting mixing bowls of the same design placed in a single row on a dark matte kitchen counter, largest on the LEFT down to smallest on the RIGHT, each bowl sitting separately with a clear gap so none overlap. Because they are a true nesting set, each bowl's RIM DIAMETER is smaller than the bowl to its left by the SAME RATIO: every bowl's diameter is exactly 1 divided by the square root of 2 (about 0.707) times the diameter of the bowl on its left. So across the whole row the largest bowl's diameter is the square root of 2 to the fifth power — about 5.66 times — the diameter of the smallest bowl on the right. Draw them true to that scale: a smooth, steadily shrinking run of circles, none equal, none out of order, and NOT an even evenly-spaced-size staircase. Plain unlabelled metal bowls, even soft studio light, no text, no numbers, no rulers, no size labels.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict an overhead row of six round nesting metal mixing bowls on a dark counter, largest-left, rim diameters in a 1/sqrt2 chain. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 6,
+    "fracs": [1.0, 0.7071, 0.5, 0.3536, 0.25, 0.1768],
+    "span": 5.6569,
+    "q_seq": "This image shows a row of round bowls seen from directly above, largest on the left to smallest on the right. Measure the DIAMETER of each bowl's rim. Report the six diameters left to right, each as a fraction of the LARGEST bowl's diameter (so the largest is 1.00). Answer with six decimal numbers between 0 and 1, separated by spaces, largest first, and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_sqrt2_chain",
+      "weight": 4.0,
+      "pass_at": 0.7,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "round metal bowl seen from directly above",
+          "sweep": true,
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "bowls"
+        },
+        {
+          "fail_if": ["bowls.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show one whole round metal bowl seen from above? Answer yes or no only.",
+          "boxes": "bowls",
+          "out": "bowl_ok"
+        },
+        {
+          "fail_if": ["bowl_ok.unreadable"]
+        },
+        {
+          "run": "confirmed_bowls",
+          "args": ["bowls", "bowl_ok"],
+          "out": "row"
+        },
+        {
+          "fail_if": ["row.degenerate"]
+        },
+        {
+          "run": "bowl_size_chain",
+          "args": ["row", "reference.n"],
+          "out": "ch"
+        },
+        {
+          "fail_if": ["ch.bad"]
+        },
+        {
+          "compare_sequence": "ch.seq",
+          "to": "reference.fracs",
+          "core": 0.04,
+          "margin": 0.085,
+          "shape_frac": 0.8,
+          "shape_delta": 0.05,
+          "out": "seqf"
+        },
+        {
+          "compare_band": "ch.span",
+          "to": "reference.span",
+          "core_abs": 0.45,
+          "margin_abs": 1.2,
+          "out": "spanf"
+        },
+        {
+          "all": ["seqf", "spanf"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

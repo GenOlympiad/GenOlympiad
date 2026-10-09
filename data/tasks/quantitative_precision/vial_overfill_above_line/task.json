@@ -1,0 +1,207 @@
+{
+  "id": "vial_overfill_above_line",
+  "axis": "quantitative_precision",
+  "prompt": "A photograph taken level with the bench at the first-article check station of an aseptic filling line, a few minutes after the line changed over to a new product. Three injection vials from the first article stand on the black and white inspection screen, one of them with the first-article tag tied round its neck, and the liquid in each of them stands out well against the screen behind.\n\nThe vial labels are the ones printed for this product and declare a volume of 10 mL. Every vial of this product also carries one moulded graduation ring at its declared volume, which is what the operator sights against. Lying open on the bench is the PROCESS SPECIFICATION, which carries this house rule word for word:\nEVERY VIAL OF A MOBILE AQUEOUS INJECTION IS FILLED WITH AN EXCESS OF 5 PER CENT OF THE DECLARED VOLUME, ROUNDED UP TO THE NEAREST 0.1 mL, SO THAT THE DECLARED VOLUME CAN STILL BE WITHDRAWN IN FULL.\n\nBeside it lies the BATCH RECORD for the changeover, on which the operator has already completed two boxes, one headed DECLARED VOLUME and one headed ACTUAL FILL. This bench is where a batch is released or held, so the paperwork and the vial standing in front of the inspector have to tell the same story.\n\nWork out for yourself what actually went into the vial -- I am deliberately not telling you that figure, and I am not telling you where the liquid finishes up against the moulded ring. Do not write the excess, any arithmetic or any working anywhere in the picture. The tagged vial's ring and its liquid surface, and both boxes of the batch record, must all be in the one frame and big enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show injection vials standing in front of an inspection screen together with an open specification sheet and a filled-in record sheet? A photograph, an illustration, a diagram or a rendering ALL count as yes. Answer NO only if the image instead shows paperwork alone with no vials in the frame, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "declared": "10",
+    "actual": "10.5",
+    "excess_token": "plus0.5",
+    "level_dir": "above",
+    "n_vials": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "liquid_stands_above_the_ring",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the injection vial with the first-article tag round its neck",
+          "expected_n": 1,
+          "out": "box_v"
+        },
+        {
+          "fail_if": ["box_v.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one vial with a moulded ring round it. Is the liquid surface above that ring, level with it, or below it? Answer with one word: above, level or below.",
+          "boxes": "box_v",
+          "out": "lv"
+        },
+        {
+          "fail_if": ["lv.unreadable"]
+        },
+        {
+          "compare": "lv.answers.0",
+          "to": "reference.level_dir",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "actual_fill_booked",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the box headed ACTUAL FILL on the batch record",
+          "expected_n": 1,
+          "out": "box_af"
+        },
+        {
+          "fail_if": ["box_af.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one filled box on a record sheet. Copy the figure written inside it. Write nothing else.",
+          "boxes": "box_af",
+          "out": "af"
+        },
+        {
+          "fail_if": ["af.unreadable"]
+        },
+        {
+          "extract": "\\d+(?:\\.\\d+)?",
+          "value": "af.answers.0",
+          "out": "afn"
+        },
+        {
+          "compare": "afn",
+          "to": "reference.actual",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "record_pair_differs_by_the_excess",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the box headed DECLARED VOLUME on the batch record",
+          "expected_n": 1,
+          "out": "box_dv"
+        },
+        {
+          "fail_if": ["box_dv.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one filled box on a record sheet. Copy the figure written inside it. Write nothing else.",
+          "boxes": "box_dv",
+          "out": "dv"
+        },
+        {
+          "fail_if": ["dv.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the box headed ACTUAL FILL on the batch record",
+          "expected_n": 1,
+          "out": "box_af2"
+        },
+        {
+          "fail_if": ["box_af2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one filled box on a record sheet. Copy the figure written inside it. Write nothing else.",
+          "boxes": "box_af2",
+          "out": "af2"
+        },
+        {
+          "fail_if": ["af2.unreadable"]
+        },
+        {
+          "run": "excess_token",
+          "args": ["dv", "af2"],
+          "out": "ex"
+        },
+        {
+          "compare": "ex.tok",
+          "to": "reference.excess_token",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "vial_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole injection vial standing on the inspection screen",
+          "out": "box_read",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole injection vial, rather than the bare screen or only part of a vial? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_vials",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "written arithmetic, or a note giving the excess volume, anywhere in the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

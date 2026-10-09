@@ -1,0 +1,84 @@
+{
+  "id": "camera_fov_wedge_asserts_view",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The point layout goes to the client with proof that each camera sees what the drawing says it sees, so the plan and the camera's own frame are mounted on one sheet.\n\nThe upper half of the sheet is the plan of a banking hall. A camera symbol stands hard beside one of the doors, looking away from it down the hall, with a shaded fan drawn out from it at the lens angle specified. Every door and every column on the plan carries a printed number, and the real doors and columns in the hall carry matching plates hung at head height. The lower half of the sheet is the frame this camera returns, printed straight from the recorder. The note beside the plan gives the rule the job is signed off to: the fan is a claim about that frame, and a column stops this camera as surely as it stops the eye.\n\nWhich numbers turn up in that frame is what the sheet does not state.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a sheet with a floor plan drawn across its upper half and a photograph across its lower half, with a shaded fan drawn out from a camera symbol on the plan? Answer yes or no only.",
+  "reference": {
+    "part1": "sets_agree",
+    "part2": "absent_from_frame"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the numbers on the plates in the lower photograph, then read the numbers printed on the items the fan drawn from the camera symbol passes over on the plan. Answer with one of: the same numbers appear in both places; the photograph carries a number that the fan does not pass over; the fan passes over a number that the photograph does not carry.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the number printed beside the door that the camera symbol on the plan stands next to, then look for that same number in the photograph below. Answer with one of: that number is not among the plates readable in the photograph, though other plates are; that number is on a plate in the photograph; the photograph carries no readable plate at all.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,212 @@
+{
+  "id": "stopwatch_split_sum",
+  "axis": "quantitative_precision",
+  "prompt": "A clear photograph of a handheld sports lap-timer's LCD screen showing seven recorded lap split times and their combined total, each printed as dark digits on a pale grey-green LCD. The seven laps are labelled Lap 1 to Lap 7 and read, from top to bottom: 00:38.74, 00:41.56, 00:47.19, 00:35.88, 00:52.63, 00:44.07, and 00:49.35 (in minutes:seconds.hundredths). Below them, a row labelled TOTAL must show the correct SUM of those seven lap times added together, carrying the seconds over into minutes properly. Print each lap time exactly as given, and print the TOTAL row as the true sum of the seven laps in MM:SS.CS format. The digits must be crisp and legible; a realistic stopwatch LCD, no other numbers, no stray text besides the Lap and TOTAL labels.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn, and never mind whether the details are right or wrong. Does this picture show a handheld sports lap-timer LCD showing seven MM:SS.CS lap splits and a TOTAL row? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_laps": "This is a photo of a digital stopwatch / lap-timer LCD. Read ONLY the seven printed lap split times, exactly as printed, in order from Lap 1 to Lap 7, each in MM:SS.CS format. Do NOT read the total row and do NOT do any sums or add anything. Answer with the seven times separated by single spaces, nothing else.",
+    "q_total": "This is a photo of a digital stopwatch / lap-timer LCD. Read ONLY the printed TOTAL time shown in the row labelled TOTAL, exactly as printed in MM:SS.CS format. Do NOT do any sums or add anything. Answer with just that one time, nothing else.",
+    "d2_q_feature": "This image was supposed to depict: a handheld sports lap-timer LCD showing seven MM:SS.CS lap splits and a TOTAL row that must equal their base-60 sum. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This picture should show: a handheld sports lap-timer LCD showing seven MM:SS.CS lap splits and a TOTAL row. Ignoring whether any of the numbers shown are right or wrong: is there a handheld lap-timer with an LCD display of lap times in the picture, rather than a different object or a plain blank stand-in? Answer with the single word yes or no only.",
+    "d2_q_single": "This picture should show: a handheld sports lap-timer LCD showing seven MM:SS.CS lap splits and a TOTAL row, and nothing else. Ignoring whether any of the numbers shown are right or wrong: apart from a handheld lap-timer with an LCD display of lap times and the things that belong with it, is the picture free of extra eye-catching objects, clutter or duplicate copies? Answer yes if there is nothing extra, no if there is clutter or extra objects. Answer with the single word yes or no only.",
+    "d2_q_precise": "Look at the lines and the scale marks in this picture. Are the straight lines straight, and are the scale marks sharp and clearly separated from each other, rather than wobbly, smudged or run together? Answer yes if the lines and marks are clean and sharp, no if they look wobbly or hand-drawn. Answer with the single word yes or no only.",
+    "d2_q_units": "This image should depict: a handheld sports lap-timer LCD showing seven MM:SS.CS lap splits and a TOTAL row. Ignoring whether any of the numbers shown are right or wrong: does the picture show a row of measuring marks you could read a number off -- tick marks or printed numbers along a ruler, a dial or a gauge -- rather than the scale being missing or blank? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sum_consistency",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_laps",
+          "out": "laps"
+        },
+        {
+          "ask": "reference.q_total",
+          "out": "tot"
+        },
+        {
+          "fail_if": ["laps.unreadable", "tot.unreadable"]
+        },
+        {
+          "run": "split_sum_error",
+          "args": ["laps", "tot"],
+          "out": "err"
+        },
+        {
+          "compare_band": "err",
+          "to": 0.0,
+          "core": 0.1,
+          "margin": 1.2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_single_subject",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_single",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_units_ref",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_units",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

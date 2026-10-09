@@ -1,0 +1,302 @@
+{
+  "id": "cross_number",
+  "axis": "latent_computation",
+  "prompt": "A magazine cross-number puzzle, shown completely solved. It is a 3 by 3 grid of single-digit cells; each row read left to right is a 3-digit number (the ACROSS answers) and each column read top to bottom is a 3-digit number (the DOWN answers), and no answer may start with 0. The printed clues are: 1 ACROSS (top row) is a three-digit prime number; 2 ACROSS (middle row) is a multiple of 111; 3 ACROSS (bottom row) is a palindrome (reads the same forwards and backwards); 1 DOWN (left column) is a multiple of 9; 3 DOWN (right column) is a three-digit prime; and 2 DOWN (middle column) equals the 1 ACROSS number minus the 3 ACROSS number. Exactly one filling of the grid satisfies every clue at once. Draw the fully solved grid with one digit centred in each of the nine cells so all six clues hold; add no other writing beyond the grid.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show magazine cross-number puzzle: a 3x3 grid with numbered across and down clues about primes, multiples and palindromes, shown completely filled in? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 3,
+    "solution": [
+      [3, 1, 7],
+      [5, 5, 5],
+      [1, 6, 1]
+    ],
+    "across": [317, 555, 161],
+    "down": [351, 156, 751],
+    "across_top": 317,
+    "across_bottom": 161,
+    "down_right": 751
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "grid_cells",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_grid": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or calculate the puzzle yourself. the 3x3 grid of single digits, read row by row (left-to-right, top-to-bottom); report the nine digits filled in the cells.",
+          "rows": 3,
+          "cols": 3,
+          "retries": 3,
+          "out": "rg"
+        },
+        {
+          "fail_if": ["rg.no_matrix", "rg.wrong_shape", "rg.illegible"]
+        },
+        {
+          "ask": "Look at the 3x3 grid of single digits. Rows are counted top to bottom (row 1 is the top row) and columns are counted left to right (column 1 is the leftmost column). What single digit is printed in the cell at row 1, column 1? Answer with that one digit only.",
+          "out": "evc_r1c1"
+        },
+        {
+          "compare": "evc_r1c1",
+          "to": "reference.solution.0.0",
+          "out": "evok_r1c1"
+        },
+        {
+          "ask": "Look at the 3x3 grid of single digits. Rows are counted top to bottom (row 1 is the top row) and columns are counted left to right (column 1 is the leftmost column). What single digit is printed in the cell at row 1, column 2? Answer with that one digit only.",
+          "out": "evc_r1c2"
+        },
+        {
+          "compare": "evc_r1c2",
+          "to": "reference.solution.0.1",
+          "out": "evok_r1c2"
+        },
+        {
+          "ask": "Look at the 3x3 grid of single digits. Rows are counted top to bottom (row 1 is the top row) and columns are counted left to right (column 1 is the leftmost column). What single digit is printed in the cell at row 1, column 3? Answer with that one digit only.",
+          "out": "evc_r1c3"
+        },
+        {
+          "compare": "evc_r1c3",
+          "to": "reference.solution.0.2",
+          "out": "evok_r1c3"
+        },
+        {
+          "ask": "Look at the 3x3 grid of single digits. Rows are counted top to bottom (row 1 is the top row) and columns are counted left to right (column 1 is the leftmost column). What single digit is printed in the cell at row 2, column 1? Answer with that one digit only.",
+          "out": "evc_r2c1"
+        },
+        {
+          "compare": "evc_r2c1",
+          "to": "reference.solution.1.0",
+          "out": "evok_r2c1"
+        },
+        {
+          "ask": "Look at the 3x3 grid of single digits. Rows are counted top to bottom (row 1 is the top row) and columns are counted left to right (column 1 is the leftmost column). What single digit is printed in the cell at row 2, column 2? Answer with that one digit only.",
+          "out": "evc_r2c2"
+        },
+        {
+          "compare": "evc_r2c2",
+          "to": "reference.solution.1.1",
+          "out": "evok_r2c2"
+        },
+        {
+          "ask": "Look at the 3x3 grid of single digits. Rows are counted top to bottom (row 1 is the top row) and columns are counted left to right (column 1 is the leftmost column). What single digit is printed in the cell at row 2, column 3? Answer with that one digit only.",
+          "out": "evc_r2c3"
+        },
+        {
+          "compare": "evc_r2c3",
+          "to": "reference.solution.1.2",
+          "out": "evok_r2c3"
+        },
+        {
+          "ask": "Look at the 3x3 grid of single digits. Rows are counted top to bottom (row 1 is the top row) and columns are counted left to right (column 1 is the leftmost column). What single digit is printed in the cell at row 3, column 1? Answer with that one digit only.",
+          "out": "evc_r3c1"
+        },
+        {
+          "compare": "evc_r3c1",
+          "to": "reference.solution.2.0",
+          "out": "evok_r3c1"
+        },
+        {
+          "ask": "Look at the 3x3 grid of single digits. Rows are counted top to bottom (row 1 is the top row) and columns are counted left to right (column 1 is the leftmost column). What single digit is printed in the cell at row 3, column 2? Answer with that one digit only.",
+          "out": "evc_r3c2"
+        },
+        {
+          "compare": "evc_r3c2",
+          "to": "reference.solution.2.1",
+          "out": "evok_r3c2"
+        },
+        {
+          "ask": "Look at the 3x3 grid of single digits. Rows are counted top to bottom (row 1 is the top row) and columns are counted left to right (column 1 is the leftmost column). What single digit is printed in the cell at row 3, column 3? Answer with that one digit only.",
+          "out": "evc_r3c3"
+        },
+        {
+          "compare": "evc_r3c3",
+          "to": "reference.solution.2.2",
+          "out": "evok_r3c3"
+        },
+        {
+          "ask": "Read the three digits in the TOP row of the 3x3 grid, left to right, as a single three-digit number (this is the 1 ACROSS answer). Read only the digits printed in those three cells.",
+          "out": "evline_top"
+        },
+        {
+          "compare": "evline_top",
+          "to": "reference.across_top",
+          "out": "evok_top"
+        },
+        {
+          "ask": "Read the three digits in the BOTTOM row of the 3x3 grid, left to right, as a single three-digit number (this is the 3 ACROSS answer). Read only the digits printed in those three cells.",
+          "out": "evline_bottom"
+        },
+        {
+          "compare": "evline_bottom",
+          "to": "reference.across_bottom",
+          "out": "evok_bottom"
+        },
+        {
+          "ask": "Read the three digits in the RIGHT column of the 3x3 grid, top to bottom, as a single three-digit number (this is the 3 DOWN answer). Read only the digits printed in those three cells.",
+          "out": "evline_right"
+        },
+        {
+          "compare": "evline_right",
+          "to": "reference.down_right",
+          "out": "evok_right"
+        },
+        {
+          "compare_grid": "rg.values",
+          "to": "reference.solution",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "all_clues_hold",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_grid": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or calculate the puzzle yourself. the 3x3 grid of single digits, read row by row; report the nine digits filled in the cells.",
+          "rows": 3,
+          "cols": 3,
+          "retries": 3,
+          "out": "rg"
+        },
+        {
+          "fail_if": ["rg.no_matrix", "rg.wrong_shape", "rg.illegible"]
+        },
+        {
+          "run": "clues_hold",
+          "args": ["rg"],
+          "out": "rgv"
+        },
+        {
+          "compare_token": "rgv",
+          "to": "holds",
+          "keep": "alpha",
+          "mode": "equals",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_across_top",
+      "weight": 0.75,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the three digits in the TOP row of the 3x3 grid, left to right, as a single three-digit number (this is the 1 ACROSS answer). Read only the digits printed in those three cells.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.across_top",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_across_bottom",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the three digits in the BOTTOM row of the 3x3 grid, left to right, as a single three-digit number (this is the 3 ACROSS answer). Read only the digits printed in those three cells.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.across_bottom",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_down_right",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the three digits in the RIGHT column of the 3x3 grid, top to bottom, as a single three-digit number (this is the 3 DOWN answer). Read only the digits printed in those three cells.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.down_right",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_grid_dim",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square cell in the top row of the puzzle grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole square cell of the puzzle grid holding a single printed digit, rather than bare paper or only part of a cell? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

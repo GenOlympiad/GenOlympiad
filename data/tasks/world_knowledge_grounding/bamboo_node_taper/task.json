@@ -1,0 +1,179 @@
+{
+  "id": "bamboo_node_taper",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A clean botanical illustration of a harvested bamboo pole lying on a bench, drawn next to a horizontal tape measure laid along the pole so each joint's position can be read off the ruler. Depict the real growth law of bamboo: the internode segments (the smooth lengths between the joint rings, called nodes) are LONGEST near the base and get PROGRESSIVELY SHORTER toward the tip -- the spacing between joints DECREASES as you go up the stalk. Do NOT draw the cane as evenly segmented with equal spacing; the gaps must shrink monotonically from base to tip. Place the joints so the internode lengths, read off the ruler from base to tip, are about 9, 6, 3.5 units. Keep the ruler numbers readable; no other text on the stalk.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a bamboo stalk (culm/pole) drawn beside a neutral numbered ruler or tape measure? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "gaps": "9, 6, 3.5",
+    "node_axis": "horizontal",
+    "q_node_confirm": "This is a close-up cut out of a bigger picture of a bamboo stalk. Does this cut-out show exactly ONE whole joint ring on the stalk -- one single raised ring right round the stalk, not two rings at once and not just a smooth length of stalk with no ring on it? Answer yes or no only.",
+    "q_mark_confirm": "This is a close-up cut out of a bigger picture. It should show one printed number on horizontal tape measure. Does this cut-out show exactly ONE whole printed number on that ruler -- one single number, not two numbers at once and not just bare tick marks? Answer yes or no only.",
+    "q_mark_value": "This is a close-up cut out of a bigger picture. It shows one printed number on a measuring ruler. What number is printed here? Answer with that number and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "internode_taper",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "raised joint ring round the bamboo stalk",
+          "votes": 3,
+          "out": "ndb",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["ndb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_node_confirm",
+          "boxes": "ndb",
+          "pad": 0.05,
+          "out": "ndc"
+        },
+        {
+          "fail_if": ["ndc.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "printed number on the measuring ruler",
+          "votes": 3,
+          "out": "rlb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rlb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_mark_confirm",
+          "boxes": "rlb",
+          "pad": 0.1,
+          "out": "rlc"
+        },
+        {
+          "fail_if": ["rlc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_mark_value",
+          "boxes": "rlb",
+          "pad": 0.1,
+          "out": "rlv"
+        },
+        {
+          "fail_if": ["rlv.unreadable"]
+        },
+        {
+          "run": "internodes",
+          "args": ["ndb", "ndc", "rlb", "rlc", "rlv", "reference"],
+          "out": "ib"
+        },
+        {
+          "fail_if": ["ib.unread"]
+        },
+        {
+          "compare_sequence": "ib.gaps",
+          "to": "reference.gaps",
+          "core": 0.6,
+          "margin": 1.6,
+          "shape_frac": 0.75,
+          "shape_delta": 0.4,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "internode_taper_confirm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "raised joint ring round the bamboo stalk",
+          "votes": 3,
+          "out": "ndb",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["ndb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_node_confirm",
+          "boxes": "ndb",
+          "pad": 0.05,
+          "out": "ndc"
+        },
+        {
+          "fail_if": ["ndc.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "printed number on the measuring ruler",
+          "votes": 3,
+          "out": "rlb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rlb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_mark_confirm",
+          "boxes": "rlb",
+          "pad": 0.1,
+          "out": "rlc"
+        },
+        {
+          "fail_if": ["rlc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_mark_value",
+          "boxes": "rlb",
+          "pad": 0.1,
+          "out": "rlv"
+        },
+        {
+          "fail_if": ["rlv.unreadable"]
+        },
+        {
+          "run": "internodes",
+          "args": ["ndb", "ndc", "rlb", "rlc", "rlv", "reference"],
+          "out": "ib"
+        },
+        {
+          "fail_if": ["ib.unread"]
+        },
+        {
+          "compare_sequence": "ib.gaps",
+          "to": "reference.gaps",
+          "core": 0.6,
+          "margin": 1.6,
+          "shape_frac": 0.75,
+          "shape_delta": 0.4,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "source": "Bamboo stems: the segments between nodes are longest in the lower middle of the stem and get shorter toward the top, so the nodes sit close together near the tip.",
+  "grounding": "static"
+}

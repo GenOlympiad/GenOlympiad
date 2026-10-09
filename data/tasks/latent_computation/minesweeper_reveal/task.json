@@ -1,0 +1,170 @@
+{
+  "id": "minesweeper_reveal",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on diagram of a 4-by-4 MINESWEEPER board. Columns are labelled A, B, C ... from LEFT to right; rows are numbered 1, 2, 3 ... from the TOP downward, so each cell has a label like B3 (column B, row 3). Every cell starts COVERED (a plain grey raised tile).\n\nThe board has mines hidden in exactly these cells: A4, B2, D1. A cell's COUNT is how many of its up to eight touching neighbour cells (including diagonals) contain a mine.\n\nNow perform these REVEAL clicks, one after another in this order: click D4, B1. Minesweeper reveal rule (flood fill): when you reveal a cell, uncover it; if its neighbour-mine count is 0, the reveal automatically SPREADS to all eight touching cells, and keeps spreading outward through every 0-count cell, stopping at cells whose count is 1 or more (those are shown uncovered but do not spread further). Cells that are never reached stay COVERED grey. Mines are never clicked and stay covered.\n\nWork out the FINAL board after all the clicks and their flood-fills finish, then draw it: every UNCOVERED cell shown as a FLAT PALE opened tile carrying its neighbour-mine count as that many small round DOTS (pips) -- one dot per neighbouring mine, and a completely BLANK flat tile if the count is 0; every still-COVERED cell shown as a plain grey RAISED tile. Do NOT print the mine list, the click list, any legend, or any numerals or words on the board (the border row numbers and column letters are the only labels) -- the only thing that shows the result is WHICH cells are opened versus still grey-covered, and the number of dots on each opened cell.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a minesweeper grid board where some cells are opened flat pale tiles (blank or carrying a few small dots) and other cells are still covered as plain grey raised tiles? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      ["C"],
+      [1],
+      ["C"],
+      ["C"],
+      ["C"],
+      ["C"],
+      [2],
+      [1],
+      ["C"],
+      [2],
+      [1],
+      [0],
+      ["C"],
+      [1],
+      [0],
+      [0]
+    ],
+    "grid2d": [
+      ["C", 1, "C", "C"],
+      ["C", "C", 2, 1],
+      ["C", 2, 1, 0],
+      ["C", 1, 0, 0]
+    ],
+    "n_rows": 4,
+    "n_cols": 4,
+    "n_cells": 16,
+    "n_uncovered": 9,
+    "q_grid": "This is a minesweeper board of 4 rows and 4 columns. Read it cell by cell, row by row from the TOP row down, and within each row from LEFT to right. For each cell answer a single token: 'C' if the cell is still COVERED (a plain grey raised tile), or, if the cell is an opened flat pale tile, the NUMBER of small round DOTS drawn on it ('0' for an opened blank tile with no dots). Judge purely by each cell's appearance; do NOT recompute the mines. Answer with exactly 16 tokens separated by single spaces and nothing else.",
+    "q_nunc": "This picture shows a minesweeper board. Count the cells that are UNCOVERED -- the opened flat pale tiles, whether blank or carrying a few small dots. Plain raised grey covered tiles do NOT count. Go along the board one row at a time, left to right, so that no cell is counted twice. Do NOT list or name individual cells, do NOT explain, do NOT show any working. Your entire reply must be a single whole number and nothing else.",
+    "q_nrows": "How many rows of cells does this minesweeper board have? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "reveal_grid",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_sequence": "reference.q_grid",
+          "n": "reference.n_cells",
+          "digits_only": false,
+          "as_column": true,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.unreadable"]
+        },
+        {
+          "compare_grid": "cells",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d_nuncovered",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "reference.q_nunc",
+          "out": "nt"
+        },
+        {
+          "fail_if": ["nt.unreadable"]
+        },
+        {
+          "compare_band": "nt",
+          "to": "reference.n_uncovered",
+          "core_abs": 2.0,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_row_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square board tile in the left-hand column of the minesweeper board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nt"
+        },
+        {
+          "fail_if": ["box_nt.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole square board tile rather than a printed edge label or only part of a tile? Answer yes or no only.",
+          "boxes": "box_nt",
+          "out": "crop_nt"
+        },
+        {
+          "fail_if": ["crop_nt.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nt"],
+          "out": "cnt_nt"
+        },
+        {
+          "compare_band": "cnt_nt.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "board_form",
+      "weight": 0.6,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show a minesweeper grid in which some cells are opened -- flat pale tiles, blank or carrying a few small dots -- while others are still plain raised grey covered tiles? Answer yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

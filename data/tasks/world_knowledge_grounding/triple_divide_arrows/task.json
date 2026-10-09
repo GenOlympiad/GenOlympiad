@@ -1,0 +1,213 @@
+{
+  "id": "triple_divide_arrows",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The interpretive marker a park sign shop makes up for a divide, photographed square on in the shop before it goes out for installation.\n\nThe marker is for Triple Divide Peak in Glacier National Park, Montana, and its whole job is to tell a walker where the rain that falls on that one spot ends up. At the middle of the panel is a raindrop. Three arrows leave the raindrop, each one running out to its own small block of lettering. Every block carries two lines: on the upper line the river system that the water joins, and on the lower line the body of water it finally reaches.\n\nNothing about that watershed is mine to give -- I am deliberately not telling you which three river systems meet at this peak, and I am deliberately not telling you which waters they end in. The three arrows have to leave the raindrop the way the ground really falls away from that point, so no two of them may run the same way.\n\nNothing else may go on the panel: no map, no key, no note about the divide, no height above sea level. The lettering has to be readable from a couple of paces.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a sign panel with arrows running out from the middle of it to small blocks of lettering? A photograph, an illustration or a document mock-up all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "sea_set": "hudson|mexico|pacific",
+    "pair_state": "paired",
+    "spread_state": "apart",
+    "n_panels": 3,
+    "q_block_cert": "Does this cut-out show ONE whole block of lettering with both of its lines, rather than an arrow alone or only part of a block? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_three_waters_named_are_the_three_this_peak_sends_water_to",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one block of lettering at the end of an arrow on the marker",
+          "out": "sw_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sw_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the water printed on the lower line in this cut-out. Write the name only.",
+          "boxes": "sw_r",
+          "pad": 0.3,
+          "out": "sw_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sw_q.unreadable"]
+        },
+        {
+          "run": "named_waters",
+          "args": ["sw_q"],
+          "out": "sw_s"
+        },
+        {
+          "compare": "sw_s.seq",
+          "to": "reference.sea_set",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_water_stands_under_the_system_that_carries_it_there",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one block of lettering at the end of an arrow on the marker",
+          "out": "pr_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pr_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the river system printed on the upper line in this cut-out. Write the name only.",
+          "boxes": "pr_r",
+          "pad": 0.3,
+          "out": "rv_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["rv_q.unreadable"]
+        },
+        {
+          "read_crop": "Copy the water printed on the lower line in this cut-out. Write the name only.",
+          "boxes": "pr_r",
+          "pad": 0.3,
+          "out": "sv_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sv_q.unreadable"]
+        },
+        {
+          "run": "pair_rivers_to_seas",
+          "args": ["rv_q", "sv_q"],
+          "out": "pr_s"
+        },
+        {
+          "compare": "pr_s.state",
+          "to": "reference.pair_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_three_arrows_leave_the_raindrop_three_different_ways",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one block of lettering at the end of an arrow on the marker",
+          "out": "ar_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["ar_r.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, does the arrow that reaches this block point up, down, left or right? Answer with one word: up, down, left or right.",
+          "boxes": "ar_r",
+          "pad": 0.9,
+          "out": "ar_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ar_q.unreadable"]
+        },
+        {
+          "run": "arrows_apart",
+          "args": ["ar_q"],
+          "out": "ar_s"
+        },
+        {
+          "compare": "ar_s.state",
+          "to": "reference.spread_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_three_blocks_of_lettering_stand_on_the_panel",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one block of lettering at the end of an arrow on the marker",
+          "propose_boxes": "vlm",
+          "out": "box_read",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_block_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_panels",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_map_or_note_was_added_to_the_panel",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a map or a written note added to the panel beyond the raindrop, the arrows and the lettering blocks",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

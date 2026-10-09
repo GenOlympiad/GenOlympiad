@@ -1,0 +1,186 @@
+{
+  "id": "mirror_clock",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A clean, front-on photograph of a plain round white WALL CLOCK on a plain wall, dial facing the camera, showing all twelve hour numbers 1 to 12. Place the 12 at the very TOP, but arrange the other numbers so that going CLOCKWISE around the dial from the 12 the numbers count DOWN: 12, 11, 10, 9, ... down to 1 (the hours increase going COUNTER-CLOCKWISE). So the 3 sits on the LEFT of the dial and the 9 sits on the RIGHT. Draw the hour numerals clearly in their correct places, evenly spaced. Plain black numerals on a white face, a small centre hub, no hands, no brand name, no other text or writing on the clock.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a round wall clock whose hour numerals run around the dial in a specified order? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "three_side": "left",
+    "nine_side": "right",
+    "q_three": "On this clock dial, find the numeral 3. Is the 3 drawn on the LEFT half or the RIGHT half of the dial? Answer with the single word left or right only.",
+    "q_nine": "On this clock dial, find the numeral 9. Is the 9 drawn on the LEFT half or the RIGHT half of the dial? Answer with the single word left or right only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "three_on_left",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the round clock face itself -- the circular dial that carries the printed hour numbers around its rim, counting the whole dial as one shape; not one numeral on its own, and not the wall or frame around the clock",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_dial_sectors",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is a small piece cut from the rim of a round clock face. Is a number printed inside this piece? If exactly one number is printed here, answer with just that number. If more than one number is printed here, answer with the one closest to the middle of this piece. If no number is printed here, answer the single word none.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "numeral_side",
+          "args": ["rd", "pl", "3"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "compare": "res.v",
+          "to": "reference.three_side",
+          "out": "frac"
+        },
+        {
+          "run": "paint_sector_marks",
+          "args": ["pl", "[res.idx]", "[s3_verdict(frac)]", "res.blanks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "nine_on_right",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the round clock face itself -- the circular dial that carries the printed hour numbers around its rim, counting the whole dial as one shape; not one numeral on its own, and not the wall or frame around the clock",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_dial_sectors",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is a small piece cut from the rim of a round clock face. Is a number printed inside this piece? If exactly one number is printed here, answer with just that number. If more than one number is printed here, answer with the one closest to the middle of this piece. If no number is printed here, answer the single word none.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "numeral_side",
+          "args": ["rd", "pl", "9"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "compare": "res.v",
+          "to": "reference.nine_side",
+          "out": "frac"
+        },
+        {
+          "run": "paint_sector_marks",
+          "args": ["pl", "[res.idx]", "[s3_verdict(frac)]", "res.blanks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ]
+}

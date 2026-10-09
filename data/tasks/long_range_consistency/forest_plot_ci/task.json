@@ -1,0 +1,187 @@
+{
+  "id": "forest_plot_ci",
+  "axis": "long_range_consistency",
+  "prompt": "A clean scientific forest plot summarising four randomised trials of a post-operative painkiller, effect measured as pain-score reduction in points. The four studies, their effect estimates, standard errors and fixed-effect weights are: Aldana 2019, estimate 3.47, SE 0.62, weight 25%; Bellucci 2020, estimate 1.92, SE 0.41, weight 30%; Csorba 2021, estimate 4.08, SE 0.87, weight 15%; Duarte 2023, estimate 2.61, SE 0.55, weight 30%. Each study row shows a square marker at its estimate with a horizontal 95% confidence-interval line, and in a right-hand text column the entry 'estimate [lower, upper]' where lower and upper are the 95% CI bounds computed as the estimate minus and plus 1.96 times that study's SE, rounded to two decimals (round halves up). Below the four rows, a filled pooled diamond centred at the fixed-effect pooled estimate, computed as the weighted average of the four estimates using the weights given, rounded to two decimals; print that pooled value in the text column of the pooled row (no CI for the pooled row). Also print each study's label and weight on its row. No other numbers except a simple 0-6 axis scale. White background.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a meta-analysis forest plot with study rows, confidence-interval lines and a pooled diamond? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "ci1_lo": 2.25,
+    "ci1_hi": 4.69,
+    "ci2_lo": 1.12,
+    "ci2_hi": 2.72,
+    "ci3_lo": 2.37,
+    "ci4_hi": 3.69,
+    "pooled": 2.84,
+    "q_ci1_lo": "In the right-hand text column of this forest plot, the row for 'Aldana 2019' shows an entry written as the estimate followed by the lower and upper bounds inside square brackets. What is the FIRST (lower) number INSIDE the square brackets? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_ci1_hi": "In the right-hand text column of this forest plot, the row for 'Aldana 2019' shows an entry written as the estimate followed by the lower and upper bounds inside square brackets. What is the SECOND (upper) number INSIDE the square brackets? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_ci2_hi": "In the right-hand text column of this forest plot, the row for 'Bellucci 2020' shows an entry written as the estimate followed by the lower and upper bounds inside square brackets. What is the SECOND (upper) number INSIDE the square brackets? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_ci3_lo": "In the right-hand text column of this forest plot, the row for 'Csorba 2021' shows an entry written as the estimate followed by the lower and upper bounds inside square brackets. What is the FIRST (lower) number INSIDE the square brackets? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_ci4_hi": "In the right-hand text column of this forest plot, the row for 'Duarte 2023' shows an entry written as the estimate followed by the lower and upper bounds inside square brackets. What is the SECOND (upper) number INSIDE the square brackets? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_ci2_lo": "In the right-hand text column of this forest plot, the row for 'Bellucci 2020' shows an entry written as the estimate followed by the lower and upper bounds inside square brackets. What is the FIRST (lower) number INSIDE the square brackets? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_pooled": "In the text column of the POOLED row (the bottom row with the filled diamond), what number is printed? Read what is PRINTED, do not do any sums. Respond with the number only, as digits, and nothing else.",
+    "q_nrows": "How many individual STUDY rows (rows with a square marker and a horizontal confidence-interval line, not counting the pooled diamond row) does this forest plot contain? Respond with a single digit and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ci_pooled_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_ci1_lo",
+          "out": "a"
+        },
+        {
+          "read_number": "reference.q_ci1_hi",
+          "out": "b"
+        },
+        {
+          "read_number": "reference.q_ci2_hi",
+          "out": "c"
+        },
+        {
+          "read_number": "reference.q_ci3_lo",
+          "out": "d"
+        },
+        {
+          "read_number": "reference.q_pooled",
+          "out": "p"
+        },
+        {
+          "fail_if": [
+            "a.unreadable",
+            "b.unreadable",
+            "c.unreadable",
+            "d.unreadable",
+            "p.unreadable"
+          ]
+        },
+        {
+          "compare_tolerance": "a",
+          "to": "reference.ci1_lo",
+          "tol": 0.011,
+          "out": "fa"
+        },
+        {
+          "compare_tolerance": "b",
+          "to": "reference.ci1_hi",
+          "tol": 0.011,
+          "out": "fb"
+        },
+        {
+          "compare_tolerance": "c",
+          "to": "reference.ci2_hi",
+          "tol": 0.011,
+          "out": "fc"
+        },
+        {
+          "compare_tolerance": "d",
+          "to": "reference.ci3_lo",
+          "tol": 0.011,
+          "out": "fd"
+        },
+        {
+          "compare_tolerance": "p",
+          "to": "reference.pooled",
+          "tol": 0.011,
+          "out": "fp"
+        },
+        {
+          "all": ["fa", "fb", "fc", "fd", "fp"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_duarte_upper",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read_number": "reference.q_ci4_hi",
+          "out": "u"
+        },
+        {
+          "fail_if": ["u.unreadable"]
+        },
+        {
+          "compare_tolerance": "u",
+          "to": "reference.ci4_hi",
+          "tol": 0.011,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_row_count",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one study row with a square marker on a horizontal line, not the pooled diamond row",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nr"
+        },
+        {
+          "fail_if": ["box_nr.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show a small square marker sitting on a horizontal line rather than a diamond shape or bare chart background? Answer yes or no only.",
+          "boxes": "box_nr",
+          "out": "crop_nr"
+        },
+        {
+          "fail_if": ["crop_nr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nr"],
+          "out": "cnt_nr"
+        },
+        {
+          "compare_tolerance": "cnt_nr.n",
+          "to": 4,
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_bellucci_lower",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read_number": "reference.q_ci2_lo",
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "compare_tolerance": "bl",
+          "to": "reference.ci2_lo",
+          "tol": 0.011,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

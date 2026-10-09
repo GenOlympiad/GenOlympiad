@@ -1,0 +1,199 @@
+{
+  "id": "matrix_worked",
+  "axis": "latent_computation",
+  "prompt": "A printed MATHS EXAM worksheet figure, scanned flat: the worked-out matrix multiplication A x B = C laid out in a single horizontal line. Matrix A has rows [4 -7 3 8; 6 2 -5 1; -9 4 7 -3; 2 8 -1 5] and matrix B has rows [7 -2 5 4; 3 6 -8 1; -5 9 2 -6; 8 -3 4 7], each drawn as a 4-by-4 block of integers inside tall square brackets (keep every minus sign). To the right of the equals sign draw the RESULT matrix C as a 4-by-4 block in square brackets, and fill every one of its 16 cells with the CORRECT product entry -- each entry is the dot product of a row of A with a column of B, a single signed integer (track the signs carefully through the four-term sums). Crisp black print on white exam paper, neat aligned columns, accurate figures in every cell of C, no worked steps, no captions or annotations besides the A x B = C line.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show scanned printed maths-exam worksheet figure showing a worked 4x4 signed matrix multiplication A x B = C? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 4,
+    "A": [
+      [4, -7, 3, 8],
+      [6, 2, -5, 1],
+      [-9, 4, 7, -3],
+      [2, 8, -1, 5]
+    ],
+    "B": [
+      [7, -2, 5, 4],
+      [3, 6, -8, 1],
+      [-5, 9, 2, -6],
+      [8, -3, 4, 7]
+    ],
+    "C": [
+      [56, -47, 114, 47],
+      [81, -48, 8, 63],
+      [-110, 114, -75, -95],
+      [83, 20, -36, 57]
+    ],
+    "a00": 4,
+    "a01": -7,
+    "b00": 7
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "product_matrix_exact",
+      "weight": 9.0,
+      "steps": [
+        {
+          "read_grid": "the RESULT matrix C -- the matrix immediately to the RIGHT of the '=' sign (the last / rightmost bracketed matrix). Do NOT read matrix A or matrix B on the left of the equals sign",
+          "shape": "reference.n",
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "compare_grid": "cells.values",
+          "to": "reference.C",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_a_00",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "In the LEFT matrix A, read the integer in the top-left cell (row 1, column 1). Read only that printed integer, keeping its sign.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.a00",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_a_01",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "In the LEFT matrix A, read the integer in row 1, column 2 (second cell of the top row). Read only that printed integer, keeping its sign.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.a01",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_b_00",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "In the MIDDLE matrix B, read the integer in the top-left cell (row 1, column 1). Read only that printed integer, keeping its sign.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.b00",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_matrix_dim",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one number printed in the leftmost column of the matrix to the right of the equals sign",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole printed number rather than blank paper, a bracket, or only part of a number? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_extra_working",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of worked-out arithmetic, a written formula or a written explanation, outside the bracketed number blocks",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

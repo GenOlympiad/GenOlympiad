@@ -1,0 +1,207 @@
+{
+  "id": "the_lone_square_takes_the_rate_around_it",
+  "axis": "quantitative_precision",
+  "prompt": "A photograph of a variable rate phosphate prescription map, printed on A3 and lying on the cab desk of a spreader tractor with the agronomist's soil report clipped beside it, both square-on to the camera.\n\nThe map covers one field drawn as a working grid, five columns across and four rows down. The column numbers 1 to 5 run along the top edge and the row letters A to D down the left edge, and every square carries its own soil phosphorus reading inside it in mg per kg. Those readings are, row by row:\nA: 14  16  21  9  19\nB: 13  15  20  22  18\nC: 12  8  17  27  25\nD: 16  14  13  31  28\n\nThe response table on the soil report beside the map reads, exactly:\nPHOSPHORUS 11 AND UNDER -- APPLY 60 KG PER HECTARE\nPHOSPHORUS 12 TO 17 -- APPLY 45 KG PER HECTARE\nPHOSPHORUS 18 TO 23 -- APPLY 30 KG PER HECTARE\nPHOSPHORUS 24 AND OVER -- APPLY 15 KG PER HECTARE\n\nA spreader cannot change rate over one square on its own, so the soil report carries a second line, exactly:\nANY SQUARE WHOSE RATE DIFFERS FROM EVERY SQUARE IT TOUCHES TAKES THE RATE OF THOSE SQUARES INSTEAD\n\nGive every square on the map the rate the spreader will actually lay down there, one flat even colour per rate, and run a legend down the right hand edge with one line for each rate the map actually uses, each line giving that rate in kg per hectare beside its own colour patch. Work the map out from the readings and the two printed lines yourself -- I am deliberately not telling you which rate goes where, and I am not telling you how many lines the legend ends up with.\n\nNothing else belongs in the picture: no arrow, no ring drawn round any square, no note about squares being merged, no working out and no total figure.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is lit. Does this picture show a map divided into coloured squares with a legend beside it? A photograph, a scan or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no map at all. Answer yes or no only.",
+  "reference": {
+    "legend_tag": "yes",
+    "absorb_tag": "yes",
+    "island_free": "yes",
+    "clean_frame": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_legend_carries_only_the_rates_the_finished_map_uses",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one line of the legend beside the prescription map",
+          "out": "lg",
+          "sweep": true
+        },
+        {
+          "fail_if": ["lg.unreadable"]
+        },
+        {
+          "read_crop": "Copy the rate in kilograms per hectare written on this legend line. Write the number only.",
+          "boxes": "lg",
+          "pad": 0.05,
+          "out": "lgv",
+          "sort": "reading_order",
+          "layout": "column"
+        },
+        {
+          "run": "check_legend_rates",
+          "args": ["lg", "lgv"],
+          "out": "lgs"
+        },
+        {
+          "fail_if": ["lgs.refused"]
+        },
+        {
+          "compare": "lgs.tag",
+          "to": "reference.legend_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_odd_square_was_given_the_colour_of_the_block_around_it",
+      "weight": 2.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the coloured grid of the prescription map",
+          "out": "mp"
+        },
+        {
+          "fail_if": ["mp.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the square with 9 printed in it the same colour as the square with 21 printed in it? Answer with one word: same or different.",
+          "boxes": "mp",
+          "pad": 0.1,
+          "out": "mp1"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the square with 8 printed in it the same colour as the square with 12 printed in it? Answer with one word: same or different.",
+          "boxes": "mp",
+          "pad": 0.1,
+          "out": "mp2"
+        },
+        {
+          "run": "odd_squares_absorbed",
+          "args": ["mp1", "mp2"],
+          "out": "mps"
+        },
+        {
+          "fail_if": ["mps.refused"]
+        },
+        {
+          "compare": "mps.tag",
+          "to": "reference.absorb_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_square_anywhere_on_the_map_stands_alone_in_its_own_colour",
+      "weight": 1.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a single grid square coloured differently from every square it touches",
+          "out": "il",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["il.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any figures printed inside it. If the cut-out is blank, answer none.",
+          "boxes": "il",
+          "pad": 0.25,
+          "out": "ilw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is the square in the middle of it a different colour from every square touching it? Answer yes or no. Answer no if that square shares its colour with any square beside, above or below it, or if the cut-out shows the legend, the row letters, the column numbers or the edge of the map.",
+          "boxes": "il",
+          "pad": 0.25,
+          "out": "ily"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. With the surroundings in view: Is the square in the middle of it a different colour from every square touching it? Answer yes or no. Answer no if that square shares its colour with any square beside, above or below it, or if the cut-out shows the legend, the row letters, the column numbers or the edge of the map.",
+          "boxes": "il",
+          "pad": 0.8,
+          "out": "ilz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["il", "ilw", "ily", "ilz"],
+          "out": "ilc"
+        },
+        {
+          "fail_if": ["ilc.refused"]
+        },
+        {
+          "compare": "ilc.clean",
+          "to": "reference.island_free",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_in_the_picture_works_the_answer_out_for_the_reader",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, a ring drawn round a square, a note about squares being merged, or a written working out",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: an arrow, a ring drawn round something, a note saying who is on the way out, a working out, or a summary line? Answer yes or no. Answer no if the cut-out shows a coloured square, a printed soil figure, a row letter, a column number, a legend line, the soil report, the cab desk or the edge of the sheet.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as an arrow, a ring drawn round something, a note saying who is on the way out, a working out, or a summary line? Answer yes or no. Answer no if it belongs there -- a coloured square, a printed soil figure, a row letter, a column number, a legend line, the soil report, the cab desk or the edge of the sheet.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_frame",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

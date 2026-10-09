@@ -1,0 +1,177 @@
+{
+  "id": "revealing_principal_view_rows",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The inspection drawing a machine shop puts in front of the gauge before a bracket is signed off.\n\nThe bracket carries six drilled holes. Their centres, in millimetres on the shop's own X, Y, Z axes, are:\nH1 10, 10, 5; H2 30, 20, 41; H3 50, 30, 17; H4 15, 40, 33; H5 35, 50, 9; H6 55, 60, 25.\nThe gauge that checks hole spacing is a straddle bar, so it can only be used on a view in which the six holes fall into two straight rows of three. There is one such view among the three principal views, the view looking straight down one of the three axes, and the drawing has to be that view. Every hole carries its own label beside it, and the title block along the foot carries the caption VIEW ALONG followed by the letter of the axis the view looks down. Whichever axis that is, the view is laid out so that, of the two axes left over, the earlier one in the order X, Y, Z runs to the right across the sheet and the later one runs up the sheet.\n\nThe inspector works from this sheet, so the holes have to sit where that view really puts them and the caption has to name the axis the view really looks down. Which axis that is, and where each labelled hole lands, is the draughtsman's work -- I am deliberately not telling you which view works and I am deliberately not telling you where any hole goes on the sheet. No coordinate figure is copied onto the view and no note is added: apart from the six hole labels and the caption in the title block, the drawing carries no text. The holes are drawn large enough that each label sits clear of its neighbours.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a flat plate or bracket with several drilled holes, each with a short label beside it, and a caption along the foot? A technical drawing, an inspection sheet or a diagram all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "label_order": "H4,H5,H6,H1,H2,H3",
+    "view_caption": "VIEW ALONG Z",
+    "n_holes": 6,
+    "row_map": "h1=lower sloping|h2=lower sloping|h3=lower sloping|h4=upper sloping|h5=upper sloping|h6=upper sloping"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_labelled_holes_land_where_that_view_puts_them",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a short label printed beside a drilled hole on the bracket",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "hl_r"
+        },
+        {
+          "fail_if": ["hl_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the label printed in this cut-out. Write the label only.",
+          "boxes": "hl_r",
+          "pad": 0.3,
+          "out": "hl_q"
+        },
+        {
+          "fail_if": ["hl_q.unreadable"]
+        },
+        {
+          "read_crop": "The holes on this bracket fall into two rows of three, one nearer the top of the sheet and one nearer the bottom. Which row is the labelled hole nearest the centre of this cut-out in. Answer upper or lower only.",
+          "boxes": "hl_r",
+          "pad": 1.6,
+          "out": "hl_w"
+        },
+        {
+          "read_crop": "Look at the row of three holes that the labelled hole nearest the centre of this cut-out belongs to. State whether that row runs level across the sheet or slopes. Answer level or sloping only.",
+          "boxes": "hl_r",
+          "pad": 1.6,
+          "out": "hl_p"
+        },
+        {
+          "run": "map_hole_rows",
+          "args": ["hl_q", "hl_w", "hl_p"],
+          "out": "hl_s"
+        },
+        {
+          "fail_if": ["hl_s.refused"]
+        },
+        {
+          "compare": "hl_s.seq",
+          "to": "reference.row_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_caption_names_the_axis_the_view_looks_down",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the caption printed in the title block along the foot of the drawing",
+          "sweep": true,
+          "out": "cp_r"
+        },
+        {
+          "fail_if": ["cp_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the caption printed in this cut-out. Write the words only.",
+          "boxes": "cp_r",
+          "pad": 0.3,
+          "out": "cp_q"
+        },
+        {
+          "fail_if": ["cp_q.unreadable"]
+        },
+        {
+          "run": "parting_label_matches",
+          "args": ["cp_q", "reference.view_caption"],
+          "out": "cp_s"
+        },
+        {
+          "compare": "cp_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "all_six_holes_are_drawn_and_labelled",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a short label printed beside a drilled hole on the bracket",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE label beside a hole, rather than part of one or more than one? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.3,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_holes",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_coordinate_figure_was_copied_onto_the_view",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a coordinate figure or a note copied onto the view of the bracket",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

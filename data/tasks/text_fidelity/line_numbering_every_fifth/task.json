@@ -1,0 +1,202 @@
+{
+  "id": "line_numbering_every_fifth",
+  "axis": "text_fidelity",
+  "prompt": "In the Public Bill Office a committee proof of one clause of a bill has been pulled, and beside it lies the amendment slip that will be tabled against that clause the same morning. Both lie on the green baize of the committee table inside the pool of the table lamp, square on to the camera.\n\nThe clause is already cast off at this measure, and its make-up is settled:\n  the clause heading 'Clause 2  Register of coastal moorings' occupies one line;\n  subsection (1) runs to four lines;\n  subsection (2) runs to three lines;\n  subsection (3) runs to six lines;\n  subsection (4) runs to two lines;\n  subsection (5) runs to five lines.\nNothing else stands inside the text area, and no line is left blank between subsections.\n\nThe office rule this proof is pulled under: a small line number stands in the left margin against every fifth line of the clause, the clause heading counting as line one. Those margin figures are the only reason the House can debate the clause at all, because an amendment has to say which line it bites on.\n\nTwo amendments go on the slip beside the proof:\n  Amendment 1  Clause 2, line ___ , leave out 'may' and insert 'must'  -- this one alters the opening line of subsection (4);\n  Amendment 2  Clause 2, line ___ , at the beginning insert 'Before making regulations under this section,'  -- this one alters the opening line of subsection (5).\nEach amendment must carry the line figure of the line it bites on, in place of the blank. Which lines those are is deliberately being kept from you: working them out from the make-up above is the whole of the office's job here.\n\nNo other numbering may stand on the proof.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed sheet of legal text with small numbers standing in its left margin, and a second smaller slip of paper beside it? A photograph, a scan or a document mockup ALL count as yes. Answer NO only if the image instead shows a blank card that just states an answer, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cited_lines": "15|17",
+    "fifth_line_numbers": "5, 10, 15, 20",
+    "ladder_at_subsections": "15 none",
+    "n_amendments": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_slip_cites_the_lines_the_make_up_produces",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one amendment entry printed on the amendment slip",
+          "sweep": true,
+          "out": "am"
+        },
+        {
+          "fail_if": ["am.unreadable"]
+        },
+        {
+          "read_crop": "Copy the amendment number printed at the start of this entry (the figure after the word Amendment). Write the number only.",
+          "boxes": "am",
+          "pad": 0.25,
+          "out": "amk",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["amk.unreadable"]
+        },
+        {
+          "read_crop": "Copy the line number printed in this amendment entry. Write the number only.",
+          "boxes": "am",
+          "pad": 0.25,
+          "out": "amr",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["amr.unreadable"]
+        },
+        {
+          "run": "amendment_line_refs",
+          "args": ["amk", "amr"],
+          "out": "amj"
+        },
+        {
+          "compare": "amj.seq",
+          "to": "reference.cited_lines",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_margin_ladder_stands_against_the_lines_the_make_up_produces",
+      "weight": 2.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the first line of subsection (4) of the clause on the proof",
+          "out": "s4"
+        },
+        {
+          "fail_if": ["s4.unreadable"]
+        },
+        {
+          "read_crop": "Copy the small figure standing in the left margin beside this line of the clause. If no figure stands beside it, write the word none. Write the figure or the word none only.",
+          "boxes": "s4",
+          "pad": 0.5,
+          "out": "s4f"
+        },
+        {
+          "fail_if": ["s4f.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the first line of subsection (5) of the clause on the proof",
+          "out": "s5"
+        },
+        {
+          "fail_if": ["s5.unreadable"]
+        },
+        {
+          "read_crop": "Copy the small figure standing in the left margin beside this line of the clause. If no figure stands beside it, write the word none. Write the figure or the word none only.",
+          "boxes": "s5",
+          "pad": 0.5,
+          "out": "s5f"
+        },
+        {
+          "fail_if": ["s5f.unreadable"]
+        },
+        {
+          "run": "two_margin_reads",
+          "args": ["s4f", "s5f"],
+          "out": "lad"
+        },
+        {
+          "compare": "lad.seq",
+          "to": "reference.ladder_at_subsections",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "margin_figures_fall_on_every_fifth_line",
+      "weight": 1.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one small line number printed in the left margin of the clause",
+          "sweep": true,
+          "out": "mg"
+        },
+        {
+          "fail_if": ["mg.unreadable"]
+        },
+        {
+          "read_crop": "Copy the number printed in this cut-out. Write the number only.",
+          "boxes": "mg",
+          "pad": 0.35,
+          "out": "mgr",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["mgr.unreadable"]
+        },
+        {
+          "run": "margin_numbers",
+          "args": ["mgr"],
+          "out": "mgj"
+        },
+        {
+          "compare_set": "mgj.csv",
+          "to": "reference.fifth_line_numbers",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_two_amendment_entries",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one amendment entry printed on the amendment slip",
+          "sweep": true,
+          "out": "ax"
+        },
+        {
+          "fail_if": ["ax.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole amendment entry, rather than part of one? Answer yes or no only.",
+          "boxes": "ax",
+          "pad": 0.3,
+          "out": "axc"
+        },
+        {
+          "fail_if": ["axc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["axc"],
+          "out": "axn"
+        },
+        {
+          "compare_band": "axn.n",
+          "to": "reference.n_amendments",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

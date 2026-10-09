@@ -1,0 +1,164 @@
+{
+  "id": "plaster_deduct_addback",
+  "axis": "long_range_consistency",
+  "prompt": "The measurement pack for one internal wall, pinned up in a quantity surveyor's site office: on the left the wall's elevation, on the right the plastering take-off sheet for that wall. The client's auditor checks this sheet line by line, so it is prepared exactly the way the measurement rules say.\n\nThe wall is 6.00 m long and 3.00 m high. Five openings sit in it, scattered, each drawn with its size and its code lettered beside it: W1 is 1.20 x 1.50 m, W2 is 0.80 x 0.60 m, W3 is 0.60 x 0.50 m, W4 is 0.50 x 0.50 m, W5 is 1.00 x 0.90 m. The take-off sheet quotes the measurement rule word for word: an opening is deducted from the plastered face only when its area is greater than 0.30 square metres; for every deducted opening the plastered reveals, 100 mm deep on all four sides, are added back. Below the rule the sheet carries a single line, NET PLASTER AREA, with its figure in square metres to two decimals.\n\nOn the elevation, every opening that the rule deducts must be tinted with the surveyor's highlight and carry a thin reveal border drawn around it; every opening the rule does not deduct stays untinted, with no border. Work out yourself which openings are deducted and what the net figure is -- I am deliberately not telling you which side of the threshold each opening falls, and one of them sits exactly on it. Do not print any per-opening deduction rows, any working, or any area figure other than the one net line; the elevation carries only the openings, their printed sizes and codes, and the tints and borders the rule earns.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a wall elevation drawing with several openings next to a printed measurement sheet? A realistic photo, a drawing or a plain mockup ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "deducted_seq": "W1|W2|W5",
+    "net_area": "16.02",
+    "n_openings": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tinted_set_is_the_deducted_set",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one tinted opening on the wall elevation",
+          "sweep": true,
+          "out": "topen"
+        },
+        {
+          "fail_if": ["topen.unreadable"]
+        },
+        {
+          "read_crop": "Copy the code lettered beside this tinted opening. Write the code only.",
+          "boxes": "topen",
+          "pad": 0.35,
+          "out": "tcode"
+        },
+        {
+          "fail_if": ["tcode.unreadable"]
+        },
+        {
+          "run": "opening_codes",
+          "args": ["tcode"],
+          "out": "ts"
+        },
+        {
+          "compare": "ts.seq",
+          "to": "reference.deducted_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "net_figure_closes_with_addback",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the net plaster area figure on the take-off sheet",
+          "sweep": true,
+          "out": "nline"
+        },
+        {
+          "fail_if": ["nline.unreadable"]
+        },
+        {
+          "read_crop": "Copy the number printed on this line of the sheet. Write the number only.",
+          "boxes": "nline",
+          "pad": 0.3,
+          "out": "nnum"
+        },
+        {
+          "fail_if": ["nnum.unreadable"]
+        },
+        {
+          "run": "net_area_text",
+          "args": ["nnum"],
+          "out": "nf"
+        },
+        {
+          "compare": "nf.txt",
+          "to": "reference.net_area",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "five_openings_on_elevation",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one drawn opening on the wall elevation",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "ov"
+        },
+        {
+          "fail_if": ["ov.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole drawn opening on the wall, rather than the sheet or only part of one? Answer yes or no only.",
+          "boxes": "ov",
+          "pad": 0.3,
+          "out": "oc"
+        },
+        {
+          "fail_if": ["oc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["oc"],
+          "out": "on"
+        },
+        {
+          "compare_band": "on.n",
+          "to": "reference.n_openings",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_rows",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a per-opening deduction row, a handwritten calculation or an extra area figure on the sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

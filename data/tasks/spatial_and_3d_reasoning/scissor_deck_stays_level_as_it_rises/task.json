@@ -1,0 +1,84 @@
+{
+  "id": "scissor_deck_stays_level_as_it_rises",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The hire company will not release either machine until the customer has seen it standing as the fitter left it, so the pre-delivery photograph is taken across the bay with both platforms still up.\n\nTwo lifts of one model stand side by side on a swept concrete floor whose sawn slab joints run away across the bay. The hire docket cable-tied to the nearer guardrail gives the machine on the left, plate H4, a working platform height of 3.2 metres, and the machine on the right, plate H9, a working platform height of 7.6 metres. Each carries the same two-stage scissor pack, each deck has its guardrail up, and a toolbox sits on each deck against the rail. The fitter has locked both control boxes off, so nothing has moved since those readings were written on the docket.\n\nHow each scissor pack has to stand to hold its own deck where the docket puts it is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a warehouse bay with two scissor lifts of the same model standing side by side with their working platforms at different heights? Answer yes or no only.",
+  "reference": {
+    "part1": "edge_runs_with_the_joints",
+    "part2": "h9_arms_stand_more_upright"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look along the top edge of the working platform on the machine at plate H9, and at the sawn joints in the concrete floor beneath it. Answer with one of: the platform edge runs the same way as the slab joints; the platform edge drops towards its left-hand end; the platform edge drops towards its right-hand end.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the crossed lifting arms under each of the two platforms. Answer with one of: the arms under H9 stand closer to upright than the arms under H4; the arms under H4 stand closer to upright than the arms under H9; the two sets of arms are opened out alike.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

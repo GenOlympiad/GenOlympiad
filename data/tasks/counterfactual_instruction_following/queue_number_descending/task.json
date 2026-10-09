@@ -1,0 +1,147 @@
+{
+  "id": "queue_number_descending",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph across the counter of an outpatient registration window at shift-handover, no people in shot.\n\nOn the counter stands a steel bill spike. The tickets already served today are impaled on it in serving order, each pushed down flat before the next went on, and fanned so that the big printed number on every ticket is fully readable -- at least three and no more than eight tickets. Behind the counter hangs the window's screen, carrying the printed heading NUMBERS REMAINING TODAY and one large figure under it. Beside the screen, the window's standing rule board is readable word for word: 'This window holds the day's 60 numbers. Numbers are called DOWNWARD: the first patient of the day takes number 60, the next 59, and so on with no gaps. Each served ticket goes onto the spike in serving order. The screen's figure is the count of numbers still to call, which is always the last served number less one.'\n\nThe picture is the handover record: the next clerk trusts the spike and the screen to agree. Decide for yourself how many patients have been served so far, what number each ticket on the spike carries and what figure the screen shows -- I am deliberately not telling you any of these, and the rule board deliberately gives only the starting number and the direction. The only numbers in the picture are the numbers on the tickets, the screen's one figure and the rule board's own text, and every ticket number and the screen figure must be readable in the same picture.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a counter with paper tickets on a spike or holder and a display screen behind or near it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "run_expected": "consecutive run from 60",
+    "link_expected": "screen continues the run",
+    "q_ticket_cert": "Does this cut-out show one paper ticket with a printed number on it? Answer yes or no only.",
+    "q_screen_cert": "Does this cut-out show the figure area of a display screen? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tickets_form_a_descending_run_from_60",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one paper ticket on the bill spike",
+          "sweep": true,
+          "out": "tk_box"
+        },
+        {
+          "fail_if": ["tk_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_ticket_cert",
+          "boxes": "tk_box",
+          "pad": 0.35,
+          "out": "tk_cert"
+        },
+        {
+          "fail_if": ["tk_cert.unreadable"]
+        },
+        {
+          "read_crop": "Copy the big printed number on this ticket. Write the number only.",
+          "boxes": "tk_box",
+          "pad": 0.35,
+          "out": "tk_txt"
+        },
+        {
+          "fail_if": ["tk_txt.unreadable"]
+        },
+        {
+          "run": "run_down_from_60",
+          "args": ["tk_cert", "tk_txt"],
+          "out": "rn"
+        },
+        {
+          "compare": "rn.canon",
+          "to": "reference.run_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "screen_figure_continues_the_run",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one paper ticket on the bill spike",
+          "sweep": true,
+          "out": "tk2_box"
+        },
+        {
+          "fail_if": ["tk2_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_ticket_cert",
+          "boxes": "tk2_box",
+          "pad": 0.35,
+          "out": "tk2_cert"
+        },
+        {
+          "fail_if": ["tk2_cert.unreadable"]
+        },
+        {
+          "read_crop": "Copy the big printed number on this ticket. Write the number only.",
+          "boxes": "tk2_box",
+          "pad": 0.35,
+          "out": "tk2_txt"
+        },
+        {
+          "fail_if": ["tk2_txt.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the large figure under the NUMBERS REMAINING TODAY heading on the screen",
+          "sweep": true,
+          "out": "scr_box"
+        },
+        {
+          "fail_if": ["scr_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_screen_cert",
+          "boxes": "scr_box",
+          "pad": 0.35,
+          "out": "scr_cert"
+        },
+        {
+          "fail_if": ["scr_cert.unreadable"]
+        },
+        {
+          "read_crop": "Copy the large figure shown on this screen area. Write the number only.",
+          "boxes": "scr_box",
+          "pad": 0.35,
+          "out": "scr_txt"
+        },
+        {
+          "fail_if": ["scr_txt.unreadable"]
+        },
+        {
+          "run": "screen_continues_run",
+          "args": ["tk2_cert", "tk2_txt", "scr_cert", "scr_txt"],
+          "out": "lk"
+        },
+        {
+          "compare": "lk.canon",
+          "to": "reference.link_expected",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

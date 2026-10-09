@@ -1,0 +1,161 @@
+{
+  "id": "draughts_board",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Render a clean, top-down image of an international-draughts game board (a checkers board), shown flat and square-on, filling most of the frame.\n\nAn international-draughts board is 12 squares wide by 12 squares tall -- a 12x12 checkered grid of 144 cells in total, with the cells coloured in the usual alternating light / dark pattern. Draw the board with EXACTLY 12 columns and 12 rows of squares (so exactly 12 squares run along each edge), alternating light and dark. Draw only the checkered board and its border; do NOT print any numbers, letters, or labels anywhere in the image.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a top-down international-draughts / checkers game board drawn as a square checkered grid of alternating light and dark cells. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 12,
+    "q_edge": "This image shows a square checkered game board made of alternating light and dark squares. Count how many squares there are along the TOP edge of the board -- that is, the number of squares in the top row, counting from the left corner to the right corner. Answer with a single whole number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed NUMBER, digit or numeral written on it as a caption or label that states the answer (for example a printed count or a printed measurement value)? Answer yes if you can see such a printed answer number, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "edge_squares",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the checkered board itself -- one box around the whole square of alternating light and dark squares, taken together as one shape including its border, and nothing of the table or the room around it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "count_edge_squares",
+          "args": ["image"],
+          "out": "cvo"
+        },
+        {
+          "run": "edge_count",
+          "args": ["cvo"],
+          "out": "cvn"
+        },
+        {
+          "read_fallback": "cvn",
+          "primary_flags": ["cvo.no_read"],
+          "else": [
+            {
+              "read_crop": "This is a checkered board cut out of a picture. How many squares run along the top edge of the board, counting from its left corner to its right corner? Answer with just a whole number and nothing else.",
+              "boxes": "anc",
+              "pad": 0.02,
+              "out": "vr"
+            }
+          ],
+          "else_value": "vr.answers.0",
+          "else_flags": ["vr.unreadable"],
+          "out": "ncnt"
+        },
+        {
+          "fail_if": ["ncnt.exhausted"]
+        },
+        {
+          "run": "count_matches_reference",
+          "args": ["ncnt", "reference.n"],
+          "out": "frac"
+        },
+        {
+          "run": "plan_board_squares",
+          "args": ["image", "anc", "ncnt"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "check_square_tones",
+          "args": ["image", "pl"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "paint_square_checks",
+          "args": ["pl", "res"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        }
+      ]
+    }
+  ]
+}

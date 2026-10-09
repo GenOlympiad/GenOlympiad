@@ -1,0 +1,201 @@
+{
+  "id": "bridge_dummy_layout",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Between rounds at a bridge club's teaching evening, one board has been left standing on the table so that the class can look at the deal again afterwards. The picture is that table seen from directly above, square to the frame, with the NORTH nameplate along the top edge of the frame and the SOUTH nameplate along the bottom edge.\n\nThe table furniture is already there and none of it moves: four wooden seat nameplates lettered NORTH, EAST, SOUTH and WEST, one at each side, and the club's board slip lying in the middle. The slip carries these two lines and nothing else:\nBOARD 7   CONTRACT 4 HEARTS\nDECLARER SOUTH\n\nEach of the four players holds 13 cards. At this club the declarer's partner always has their whole hand out on the table for everyone to read, in four columns with one suit to a column, and the column of the trump suit goes at that player's own right hand. The other three players hold on to theirs as they are. These are the 13 cards of the hand that goes out on the table: spades A 9 4, hearts K J 7 3, diamonds Q 8 6 2, clubs 5 3.\n\nWhich of the four seats has its hand out, and which side of that hand the trump column ends up on, are the parts you have to work out -- I am deliberately not telling you either, and there is no second table in shot to copy from. The cards want to be big enough that a suit symbol can be told at a glance. Other than the four nameplates and the board slip, no further word, arrow or marker belongs on the table top.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a card table with lettered nameplates round it and playing cards lying on it? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no table on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "dummy_seat": "NORTH",
+    "trump_dir_deg": 270,
+    "all_seats": "NORTH,EAST,SOUTH,WEST",
+    "n_backs": 3,
+    "n_seats": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_hand_on_the_table_is_the_declarers_partners_with_trumps_at_that_seats_right",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a group of playing cards on the table beside one of the four seat nameplates",
+          "sweep": true,
+          "out": "seat_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["seat_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which word is printed on the wooden nameplate? Answer with the word exactly as it is printed.",
+          "boxes": "seat_box",
+          "pad": 0.9,
+          "out": "seat_rd"
+        },
+        {
+          "fail_if": ["seat_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, are the playing cards showing their printed faces or their plain backs? Answer with one word: faces or backs.",
+          "boxes": "seat_box",
+          "pad": 0.9,
+          "out": "face_rd"
+        },
+        {
+          "fail_if": ["face_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which edge or corner is the column of heart cards nearest to? Answer with one of: top, top right, right, bottom right, bottom, bottom left, left, top left, or none if no column of hearts is laid out here.",
+          "boxes": "seat_box",
+          "pad": 0.9,
+          "out": "side_rd"
+        },
+        {
+          "fail_if": ["side_rd.unreadable"]
+        },
+        {
+          "run": "dummy_side",
+          "args": [
+            "seat_rd",
+            "face_rd",
+            "side_rd",
+            "reference.dummy_seat",
+            "reference.trump_dir_deg"
+          ],
+          "out": "dumv"
+        },
+        {
+          "compare_compass": "dumv.gap",
+          "to": 0,
+          "core": 25.0,
+          "margin": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "exactly_the_three_seats_that_are_not_the_declarers_partner_keep_their_cards_down",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a group of playing cards on the table beside one of the four seat nameplates",
+          "sweep": true,
+          "out": "back_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["back_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which word is printed on the wooden nameplate? Answer with the word exactly as it is printed.",
+          "boxes": "back_box",
+          "pad": 0.9,
+          "out": "bkey_rd"
+        },
+        {
+          "fail_if": ["bkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, are the playing cards showing their printed faces or their plain backs? Answer with one word: faces or backs.",
+          "boxes": "back_box",
+          "pad": 0.9,
+          "out": "bface_rd"
+        },
+        {
+          "fail_if": ["bface_rd.unreadable"]
+        },
+        {
+          "run": "backs_kept",
+          "args": ["bkey_rd", "bface_rd", "reference.all_seats", "reference.n_backs"],
+          "out": "bakv"
+        },
+        {
+          "compare_band": "bakv.n",
+          "to": "reference.n_backs",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "all_four_seats_have_a_hand_of_cards_in_front_of_them",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a group of playing cards on the table beside one of the four seat nameplates",
+          "sweep": true,
+          "out": "cen_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a group of playing cards lying on the table? Answer yes or no only.",
+          "boxes": "cen_box",
+          "pad": 0.9,
+          "out": "cen_rd"
+        },
+        {
+          "fail_if": ["cen_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_rd"],
+          "out": "cenn"
+        },
+        {
+          "compare_band": "cenn.n",
+          "to": "reference.n_seats",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_word_arrow_or_marker_is_added_to_the_table_top",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word, arrow or marker on the table top other than the four seat nameplates and the board slip",
+          "sweep": true,
+          "out": "sweep_s",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

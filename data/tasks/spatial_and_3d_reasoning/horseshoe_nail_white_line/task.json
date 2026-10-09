@@ -1,0 +1,155 @@
+{
+  "id": "horseshoe_nail_white_line",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A riding school keeps a photograph of every shoeing, and this near fore has just come off the stand.\n\nThe farrier holds the foot up with the sole toward the camera and the toe away from her, so the whole of the sole, the shoe and the nails are square to the lens. She has chalked a broad stripe down the outside wall of this foot so that the two branches of the shoe can be told apart in the picture.\n\nThe shoe went on with seven nails, and the shoe was punched for them like this:\n\n  branch nearest the chalk stripe   two holes in the front third of the foot, two more in the middle third\n  the other branch                  three holes, all in the front third\n\nThe horse's record explains the difference: the wall on the branch away from the stripe has been thin for two shoeings, so nothing is driven into it behind the front third.\n\nThe one thing every farrier is taught about where a nail may go is anatomy rather than custom. Running round inside the wall on the sole of the foot there is a paler band, and everything on the far side of it toward the frog is living tissue. A nail is driven through the horn OUTSIDE that band. A nail on the wrong side of it lames the horse on the spot.\n\nWhere the seven nails have gone is what the record is kept for, and I am not saying. The paler band stays visible all the way round the sole and all seven nail heads stay in view. No arrow and no note is drawn on the foot.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show the underside of a shod horse's hoof held up toward the camera? A photograph or a scan of one both count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "nail_plan": {
+      "stripe|front": 2,
+      "stripe|middle": 2,
+      "other|front": 3
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_nail_stands_outside_the_pale_band_and_the_seven_fall_in_the_pattern_the_punching_allows",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the whole sole of the shod foot with the shoe, the chalk stripe and the nail heads",
+          "out": "sl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sl_r.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, the chalk stripe runs down the wall on one side of the foot. Is that stripe on the left side or the right side of this cut-out? Answer left or right only.",
+          "boxes": "sl_r",
+          "pad": 0.2,
+          "out": "sl_s"
+        },
+        {
+          "fail_if": ["sl_s.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the toe of the foot toward the top of this cut-out or toward the bottom? The toe is the end away from the heels of the shoe. Answer top or bottom only.",
+          "boxes": "sl_r",
+          "pad": 0.2,
+          "out": "sl_t"
+        },
+        {
+          "fail_if": ["sl_t.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "a nail head showing in a nail hole of the shoe",
+          "out": "nl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["nl_r.unreadable"]
+        },
+        {
+          "read_crop": "Is the nail in this cut-out on the outer side of the pale band that runs round inside the wall, or on the frog side of it? Answer 'outside' or 'inside'.",
+          "boxes": "nl_r",
+          "pad": 0.7,
+          "out": "nl_l"
+        },
+        {
+          "fail_if": ["nl_l.unreadable"]
+        },
+        {
+          "run": "check_nail_placement",
+          "args": ["sl_r", "sl_s", "sl_t", "nl_r", "nl_l", "reference.nail_plan"],
+          "out": "nl_x"
+        },
+        {
+          "compare_category": "nl_x.miss",
+          "to": 0,
+          "max_steps": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_turned_over_nail_points_stand_in_one_row_on_the_wall",
+      "weight": 0.7,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a turned over nail point on the outside of the hoof wall",
+          "out": "cl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["cl_r.unreadable"]
+        },
+        {
+          "read_crop": "Does the turned over nail point in this cut-out stand level with the others in its row, or clearly above or below that row? Answer 'level' or 'off'.",
+          "boxes": "cl_r",
+          "pad": 1.2,
+          "out": "cl_h",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cl_h.unreadable"]
+        },
+        {
+          "run": "count_clenches_off",
+          "args": ["cl_h"],
+          "out": "cl_x"
+        },
+        {
+          "compare_category": "cl_x.off",
+          "to": 0,
+          "max_steps": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_arrow_or_note_was_drawn_on_the_foot",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow or a written note drawn on the hoof",
+          "out": "ar_r",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["ar_r.unreadable"]
+        },
+        {
+          "compare": "ar_r.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

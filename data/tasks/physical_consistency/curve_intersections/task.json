@@ -1,0 +1,91 @@
+{
+  "id": "curve_intersections",
+  "axis": "physical_consistency",
+  "prompt": "A maths-classroom exam FIGURE on plain white: a straight LINE and a downward-opening PARABOLA drawn together as thin black curves, with each point where they CROSS marked by a small solid RED dot. The straight line is y = 0.6*x + 0.10. The parabola is y = -0.9*x^2 + 0.20*x + 0.55. Draw both over the range x from -1.2 on the left to 1.2 on the right (x increasing to the right, y increasing upward), sized to fill the card, and place a RED dot at every point where the line meets the parabola -- these crossing points are fixed by the two equations. Black line and black parabola, small filled red dots ONLY at the true crossings, plain white background, no axes, no grid, no coordinate numbers, no other coloured marks.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show maths-classroom exam figure of a straight line and a downward parabola drawn together on white, their true crossing points marked with small red dots, no axes or coordinate numbers? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "roots_x": [-0.963, 0.519],
+    "n_roots": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "mark_count",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a red marker dot on the curves",
+          "out": "dots"
+        },
+        {
+          "fail_if": ["dots.unreadable"]
+        },
+        {
+          "run": "mark_positions",
+          "args": ["dots"],
+          "out": "mk"
+        },
+        {
+          "fail_if": ["mk.degenerate"]
+        },
+        {
+          "compare_tolerance": "mk.n_marks",
+          "to": "reference.n_roots",
+          "tol": 0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "mark_positions",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a red marker dot on the curves",
+          "out": "dots2"
+        },
+        {
+          "fail_if": ["dots2.unreadable"]
+        },
+        {
+          "run": "mark_positions",
+          "args": ["dots2"],
+          "out": "mk2"
+        },
+        {
+          "fail_if": ["mk2.degenerate"]
+        },
+        {
+          "compare_sequence": "mk2.xs",
+          "to": "reference.roots_x",
+          "core": 0.06,
+          "margin": 0.2,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "4:3"
+}

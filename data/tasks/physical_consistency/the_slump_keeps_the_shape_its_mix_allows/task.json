@@ -1,0 +1,84 @@
+{
+  "id": "the_slump_keeps_the_shape_its_mix_allows",
+  "axis": "physical_consistency",
+  "prompt": "The site technician photographs each load at the discharge point before it goes to the pour, so the cone is lifted clear and the plate is shot from above and to one side.\n\nA dark steel plate lies on the ground at a ready-mix discharge point. The slump cone has been lifted and set down beside the heap, a tamping rod leans against it, and the ring where the cone stood is scribed on the plate. The delivery ticket weighted down on the plate gives a water-to-binder ratio of 0.62, a plasticiser dose of nil, and a note that a viscosity modifier was batched at the plant. Beside the ticket a briefing card carries three drawn outlines with their names under them: true slump, shear slump, collapse slump. The plate has been wetted so the steel reads dark under the heap.\n\nWhat this load does when the cone comes off, and what it leaves on the plate, is what the ticket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a slump test at a ready-mix discharge point, with the cone lifted and set down beside the heap on a steel plate? Answer yes or no only.",
+  "reference": {
+    "part1": "spread_out_flat",
+    "part2": "plate_dry_and_unstained"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the heap of concrete on the plate, beside the lifted cone. Answer with one of: the heap has settled evenly all round and still holds a whole cone shape; one side of the heap has sheared off and slid down; the heap has spread out flat all round.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the plate around the foot of the heap, inside and outside the scribed ring. Answer with one of: a ring of thin grey paste has run out around the foot; the plate around the foot is dry and unstained; a ring of loose stones lies around the foot.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

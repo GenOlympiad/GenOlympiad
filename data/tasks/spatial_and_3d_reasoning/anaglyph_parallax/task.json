@@ -1,0 +1,210 @@
+{
+  "id": "anaglyph_parallax",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Make a red/cyan anaglyph product photograph -- the kind you look at through red/cyan 3D glasses -- of three plain kraft cardboard cartons standing well apart on a seamless white background:\n- a MEDIUM carton in the LEFT third of the frame,\n- a SMALL carton in the MIDDLE third, standing nearer the camera,\n- a LARGE carton in the RIGHT third, standing further from the camera.\n\nBuild it the way a real stereo pair is built: draw EVERY object TWICE -- once into the RED channel (the left eye's view) and once into the CYAN channel (the right eye's view) -- and separate those two copies horizontally by exactly the amount listed for that object below. Each amount is a percentage of the full width of the picture. A POSITIVE amount means that object's RED copy sits to the RIGHT of its CYAN copy. A NEGATIVE amount means the opposite: that object's RED copy sits to the LEFT of its CYAN copy.\n- the medium left carton: 0.0 % -- its red copy and its cyan copy must land in exactly the same place, so it carries no colour fringe at all\n- the small middle carton: +2.2 % of the picture width\n- the large right carton: -1.4 % of the picture width -- its RED copy to the LEFT of its CYAN copy\nEvery object gets its own separation; do not give them all the same one, and do not settle for a decorative coloured outline instead of a genuinely displaced second copy.\nThe two copies of an object may differ ONLY left-to-right: their vertical positions must be identical, so nothing anywhere in the picture is offset up or down.\nThe objects must stand well apart and must not overlap or touch. Plain uncluttered background, even lighting.\nNo text, no numbers, no labels, no rulers or measuring marks, no 3D glasses in the picture.\n",
+  "difficulty": "s3",
+  "easy_question": "Ignoring colour and picture quality, does this image show three separate cardboard boxes standing apart from one another against a plain background? Answer NO only if it shows something else entirely -- a single box, a stack of boxes piled together, printed text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "script": [
+      {
+        "name": "medium carton",
+        "box": [0.02, 0.04, 0.335, 0.96],
+        "target": 0.0
+      },
+      {
+        "name": "small carton",
+        "box": [0.335, 0.04, 0.665, 0.96],
+        "target": 2.2
+      },
+      {
+        "name": "large carton",
+        "box": [0.665, 0.04, 0.98, 0.96],
+        "target": -1.4
+      }
+    ],
+    "core": 0.15,
+    "margin": 0.45,
+    "sep_min": 0.3,
+    "c_core": 0.2,
+    "c_margin": 0.6,
+    "dy_core": 0.08,
+    "dy_margin": 0.08,
+    "coh_min": 0.2,
+    "enforce_notext": true,
+    "q_notext": "Is there any printed word or number anywhere in this image? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "three_objects_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "disparity_field",
+          "args": ["image", "reference.script", "reference.coh_min"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "bands_readable",
+          "args": ["m"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_vertical_parallax",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "run": "disparity_field",
+          "args": ["image", "reference.script", "reference.coh_min"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "vertical_shift_score",
+          "args": ["m", "reference.dy_core", "reference.dy_margin"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nonzero_disparities_match_script",
+      "weight": 5.0,
+      "steps": [
+        {
+          "run": "disparity_field",
+          "args": ["image", "reference.script", "reference.coh_min"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "parallax_match_score",
+          "args": ["m", "reference.core", "reference.margin"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "depth_order_matches_script",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "disparity_field",
+          "args": ["image", "reference.script", "reference.coh_min"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "depth_order_score",
+          "args": ["m", "reference.sep_min"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "screen_plane_contrast",
+      "weight": 7.0,
+      "steps": [
+        {
+          "run": "disparity_field",
+          "args": ["image", "reference.script", "reference.coh_min"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "parallax_contrast_score",
+          "args": ["m", "reference.c_core", "reference.c_margin"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_parallax_overlay",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "run": "parallax_overlay_marked",
+          "args": ["image", "reference.script", "'parallax'", "8.0", "reference.coh_min"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "rects": "ov.mk_measured_objects.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [255, 215, 0],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "ask": "Look at the black panel marked with a star in the strip along the bottom of this image. Inside that panel a solid YELLOW bar is drawn directly above a solid WHITE bar. Is the yellow bar the same length as the white bar? Answer yes or no only.",
+          "image": "ov.path",
+          "out": "q"
+        },
+        {
+          "fail_if": ["q.unreadable"]
+        },
+        {
+          "compare": "q",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

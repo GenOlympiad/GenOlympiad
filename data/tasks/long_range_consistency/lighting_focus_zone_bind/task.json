@@ -1,0 +1,181 @@
+{
+  "id": "lighting_focus_zone_bind",
+  "axis": "long_range_consistency",
+  "prompt": "Focus call overran last night and the designer wants a record of the bar before the crew touch anything. The picture is that record shot, taken from the stalls looking up at one lighting bar over the stage, with the bar, all eight lanterns and the stage floor beneath them in the same frame. There is enough haze in the air for the beams to read, and the lighting plot is clipped to the board at the edge of the picture.\n\nThe eight lanterns are the same model as one another and they hang in a row along the bar, each with its number on a strip of tape on the yoke: 1 at the audience's left-hand end of the bar through to 8 at the right-hand end. The stage floor below is taped into four acting zones, lettered on the floor A, B, C and D, running A to D from the audience's left. Zone A lies under the second lantern of the row, zone B under the fourth, zone C under the sixth and zone D under the eighth.\n\nThe plot clipped to the board gives one zone to each lantern, and this is what it says:\n1 - B     2 - D     3 - A     4 - C\n5 - B     6 - D     7 - A     8 - C\n\nThe rule a focus call runs on is simply that the plot has to end up true of the rig: the centre of the pool a lantern throws lands inside the zone the plot gives that lantern, whatever the lantern would have covered if it had been left hanging straight.\n\nWhere each barrel ends up pointing is the part you have to work out -- I am deliberately not telling you, and there is no worked example anywhere in the picture. Keep the yoke numbers legible and the pools distinct enough that the middle of one pool can be told from the next. Apart from the eight yoke numbers and the four zone letters, no further word or arrow belongs on the stage or on the bar.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show stage lanterns hanging on a bar above a stage? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no lanterns on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "zone_map": "1=B,2=D,3=A,4=C,5=B,6=D,7=A,8=C",
+    "tilt_token": "1:right|2:right|3:left|4:right|5:left|6:right|7:left|8:left",
+    "n_lamps": 8
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_pool_lands_in_the_zone_the_plot_gives_its_own_lantern",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lantern on the bar together with its own beam of light and the pool that beam throws on the stage floor",
+          "sweep": true,
+          "out": "lamp_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["lamp_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which number is on the tape on the yoke of the lantern the beam leaves from? Answer with the number exactly as it is written.",
+          "boxes": "lamp_box",
+          "pad": 1.0,
+          "out": "lkey_rd"
+        },
+        {
+          "fail_if": ["lkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, follow the beam of light from the lantern down to the stage floor. Which taped zone letter does the middle of the pool at the foot of that beam sit inside? Answer with one of: A, B, C, D, or none if no pool is drawn here.",
+          "boxes": "lamp_box",
+          "pad": 1.0,
+          "out": "zone_rd"
+        },
+        {
+          "fail_if": ["zone_rd.unreadable"]
+        },
+        {
+          "run": "worst_zone_error",
+          "args": ["lkey_rd", "zone_rd", "reference.zone_map"],
+          "out": "zonev"
+        },
+        {
+          "compare_category": "zonev.err",
+          "to": 0,
+          "max_steps": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_barrel_is_turned_the_way_its_own_place_on_the_bar_demands",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lantern hanging on the lighting bar",
+          "sweep": true,
+          "out": "tilt_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["tilt_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which number is on the tape on the lantern's yoke? Answer with the number exactly as it is written.",
+          "boxes": "tilt_box",
+          "pad": 0.8,
+          "out": "tkey_rd"
+        },
+        {
+          "fail_if": ["tkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, the lantern's barrel is turned to one side. Does the open front of the barrel face down and to the left, or down and to the right? Answer left or right only.",
+          "boxes": "tilt_box",
+          "pad": 0.8,
+          "out": "tilt_rd"
+        },
+        {
+          "fail_if": ["tilt_rd.unreadable"]
+        },
+        {
+          "run": "tilt_token",
+          "args": ["tkey_rd", "tilt_rd"],
+          "out": "tiltv"
+        },
+        {
+          "compare": "tiltv.tok",
+          "to": "reference.tilt_token",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_lantern_on_the_bar_carries_its_number_on_the_yoke",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lantern hanging on the lighting bar",
+          "sweep": true,
+          "out": "num_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["num_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a number written on the tape on the lantern's yoke? Answer yes or no only.",
+          "boxes": "num_box",
+          "pad": 0.8,
+          "out": "num_rd"
+        },
+        {
+          "fail_if": ["num_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["num_rd"],
+          "out": "numn"
+        },
+        {
+          "compare_band": "numn.n",
+          "to": "reference.n_lamps",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_extra_word_or_arrow_was_added_to_the_stage_or_the_bar",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word or arrow on the stage or the bar beyond the yoke numbers and the zone letters",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

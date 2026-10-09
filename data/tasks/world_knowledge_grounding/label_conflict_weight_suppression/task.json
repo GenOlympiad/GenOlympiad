@@ -1,0 +1,84 @@
+{
+  "id": "label_conflict_weight_suppression",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The map house cannot send this sheet to plate until the compiler has settled the crowded ground, so the proof is photographed flat on the light table.\n\nThe proof shows a stretch of river valley at 1:10 000 with small settlements, a mill leat and a footbridge, each carrying its symbol. At the tight spots the typesetter has ruled a pale candidate box in ink, one for each name that could go there, and has lettered every box. A small printed table clipped to the edge of the light table holds a row for settlements and a row for watercourses, each row with an empty box for the compiler to write a figure in. The house rule printed under it says that when two names want the same ground, the class carrying the higher figure is set and the other name is left off the sheet altogether, not moved elsewhere.\n\nWhat figures go in that table, and which names survive, is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a map proof lying flat on a light table with a small printed table clipped beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "one_box_left_empty",
+    "part2": "rows_differ"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the pale candidate boxes ruled in ink on the proof sheet. Answer with one of: one box holds a name in type and the box beside it stands empty; every candidate box on the sheet holds a name in type; every candidate box on the sheet stands empty.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the small printed class table clipped beside the proof and read the figure written in each of its rows. Answer with one of: the two rows carry figures that differ from each other; the two rows carry the same figure; the boxes in both rows have been left empty.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

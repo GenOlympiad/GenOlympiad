@@ -1,0 +1,171 @@
+{
+  "id": "stopcock_bore_ports",
+  "axis": "symbolic_systems",
+  "prompt": "Drug goes in from the syringe first and the main bag waits, which is the moment the ward sister wants photographed for the teaching folder.\n\nA giving set on a drip stand at a bedside, warm lamp light from one side. Two three-way stopcocks are in the line, one after the other, and each has its three ports arranged the same way on its body as drawn: one port pointing up the tubing toward the bag, one pointing down the tubing toward the patient, and one standing out sideways. The sideways port of the first stopcock carries the syringe; the sideways port of the second carries a capped extension. Each stopcock has its bore type moulded on the body in a single letter, L on the first and T on the second, and each has a handle.\n\nTwo things about a stopcock of this kind are counter-intuitive and both are ordinary ward practice. The handle points at the port it has SHUT, not at the ports it has opened. And the letter matters: an L bore joins only two ports at a time, whichever two the handle is not pointing at, while a T bore joins all three unless the handle shuts one off.\n\nAt this moment the drug has to run from the syringe down toward the patient with the bag isolated, and the second stopcock has to be left with its capped extension shut off and the line through it open.\n\nWhere each handle ends up is the whole point of the picture and I am deliberately not telling you. Nothing is drawn on the picture: no flow arrows, no labels on the tubing, no annotation. Keep both stopcock bodies, their letters and their handles easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an intravenous giving set at a bedside with two three-way taps in the line, one of them carrying a syringe? A photograph, an illustration or a printed panel all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "bores": ["L", "T"],
+    "n_units": 2,
+    "handle_shut": ["up", "side"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_handle_points_at_the_port_its_own_bore_letter_needs_shut_for_the_path_asked_for",
+      "weight": 3.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one three-way tap in the giving set with its lettered body and handle",
+          "out": "sc_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sc_r.unreadable"]
+        },
+        {
+          "read_crop": "What single letter is moulded on the body of the tap in this cut-out? Answer with that letter only.",
+          "boxes": "sc_r",
+          "pad": 0.2,
+          "out": "sc_k",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sc_k.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out as a clock face with 12 at the top. Which hour does this tap's handle point toward? Answer with a single number from 1 to 12.",
+          "boxes": "sc_r",
+          "pad": 0.2,
+          "out": "sc_h",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sc_h.unreadable"]
+        },
+        {
+          "read_crop": "Does this tap have a port at the top running up the tubing, a port at the bottom running down the tubing, and a third port standing out sideways? Answer yes or no only.",
+          "boxes": "sc_r",
+          "pad": 0.2,
+          "out": "sc_s",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sc_s.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out as a clock face with 12 at the top. Toward which hour does this tap's sideways port stand out from the body? Answer with a single number from 1 to 12.",
+          "boxes": "sc_r",
+          "pad": 0.2,
+          "out": "sc_p",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sc_p.unreadable"]
+        },
+        {
+          "run": "handle_vs_shut_port",
+          "args": ["sc_k", "sc_h", "sc_s", "sc_p", "reference.bores", "reference.handle_shut"],
+          "out": "sc_o"
+        },
+        {
+          "compare_compass": "sc_o.obs",
+          "to": "sc_o.exp",
+          "core": 22.5,
+          "margin": 44.0,
+          "out": "f_geom"
+        },
+        {
+          "compare_band": "sc_o.ports",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 1.5,
+          "out": "f_fact"
+        },
+        {
+          "minimum": ["f_geom", "f_fact"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_line_carries_its_two_lettered_three_way_taps",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one three-way tap in the giving set with its lettered body and handle",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole three-way tap with its moulded letter and its handle, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.2,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_flow_arrow_tubing_label_or_annotation_was_added_to_the_picture",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a flow arrow, a label on the tubing or an annotation added to the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

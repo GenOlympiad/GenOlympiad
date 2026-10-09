@@ -1,0 +1,185 @@
+{
+  "id": "filename_sanitize_collision",
+  "axis": "text_fidelity",
+  "prompt": "The ingest desk of a regional broadcaster's picture archive, an hour before the day's rushes go over to the library. On the screen is the ingest tool's checking window: two columns side by side, on the left the SHOT TITLE exactly as the camera crew typed it, on the right THE NAME THE ARCHIVE KEEPS for that file.\n\nThese are the six titles the crew handed over today, one per row, in this order:\nBerth 4 Mooring Test.\nTug *Kestrel* leaving lock\nQuayside Crane Inspection: pass 1\nLifeboat Drill Briefing Room 2\nQuayside Crane Inspection <final>\nHarbour Master Brief 12/03\n\nThe store tidies every title before it keeps it, always in this order. First, each of the characters : * ? \" < > | / \\ becomes one hyphen. Second, the title is cut down to at most 24 characters. Third, any full stop or space still sitting at the end is dropped. Last, if the name that comes out is one that an earlier row has already taken, this later row keeps that same name with -2 on the end of it. Two rushes that end up under one name is how footage gets quietly overwritten, which is why the desk reads this window before anything goes to the library.\n\nWork the right-hand column out yourself -- I am deliberately not telling you which rows land on the same name, and I am not telling you what any stored name comes out as. Nothing else may appear on the right: no working, no rule text, no character counts, no explanation, just the six stored names. The titles on the left stay exactly as they were typed. Use one plain monospaced face throughout, big enough that every character can be read, with all six rows in the same frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two columns of file names side by side, typed titles down one side and stored names down the other? A screenshot, a photo of a screen, a document mockup or an illustration ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_rows": 6,
+    "n_clean": 6,
+    "n_junk": 2,
+    "expect_state": "ok",
+    "stored_seq": "Berth 4 Mooring Test|Tug -Kestrel- leaving lo|Quayside Crane Inspectio|Lifeboat Drill Briefing|Quayside Crane Inspectio-2|Harbour Master Brief 12-"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "collision_forces_the_second_rename",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one stored file name in the right-hand column",
+          "sweep": true,
+          "out": "kept"
+        },
+        {
+          "fail_if": ["kept.unreadable"]
+        },
+        {
+          "read_crop": "Copy the file name printed in this cut-out, exactly as printed, keeping every mark at the end of it. If more than one file name is printed here, copy the one nearest the middle of this cut-out. Write nothing else.",
+          "boxes": "kept",
+          "pad": 0.3,
+          "out": "keptx"
+        },
+        {
+          "fail_if": ["keptx.unreadable"]
+        },
+        {
+          "run": "collision_suffix_check",
+          "args": ["keptx"],
+          "out": "dd"
+        },
+        {
+          "compare": "dd.state",
+          "to": "reference.expect_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "trailing_marks_and_the_cut",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one stored file name in the right-hand column",
+          "sweep": true,
+          "out": "kept2"
+        },
+        {
+          "fail_if": ["kept2.unreadable"]
+        },
+        {
+          "read_crop": "Copy the file name printed in this cut-out, exactly as printed, keeping every mark at the end of it. If more than one file name is printed here, copy the one nearest the middle of this cut-out. Write nothing else.",
+          "boxes": "kept2",
+          "pad": 0.3,
+          "out": "kept2x"
+        },
+        {
+          "fail_if": ["kept2x.unreadable"]
+        },
+        {
+          "run": "trailing_mark_fixes",
+          "args": ["kept2x"],
+          "out": "jk"
+        },
+        {
+          "compare_band": "jk.n",
+          "to": "reference.n_junk",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_permitted_characters_survive",
+      "weight": 0.7,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one stored file name in the right-hand column",
+          "sweep": true,
+          "out": "kept3"
+        },
+        {
+          "fail_if": ["kept3.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one stored file name. Copy that name exactly as it is printed, character for character, including any punctuation marks it carries. Write only the name and nothing else.",
+          "boxes": "kept3",
+          "pad": 0.3,
+          "out": "legal"
+        },
+        {
+          "fail_if": ["legal.unreadable"]
+        },
+        {
+          "run": "check_permitted_characters",
+          "args": ["legal", "' -'", "'yes'", "'no'"],
+          "out": "legal__mapped"
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["legal__mapped"],
+          "out": "lg"
+        },
+        {
+          "compare_band": "lg.n",
+          "to": "reference.n_clean",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "typed_titles_column",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one typed shot title in the left-hand column",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "raw"
+        },
+        {
+          "fail_if": ["raw.unreadable"]
+        },
+        {
+          "read_crop": "Answer yes only if this cut-out shows ONE complete typed title with none of its letters cut off by the edge of the cut-out. Answer no if it shows two or more titles, or only part of one title. Answer yes or no only.",
+          "boxes": "raw",
+          "pad": 0.3,
+          "out": "rawc"
+        },
+        {
+          "fail_if": ["rawc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["rawc"],
+          "out": "rawn"
+        },
+        {
+          "compare_band": "rawn.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

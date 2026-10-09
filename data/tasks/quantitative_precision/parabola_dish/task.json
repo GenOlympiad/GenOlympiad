@@ -1,0 +1,86 @@
+{
+  "id": "parabola_dish",
+  "axis": "quantitative_precision",
+  "prompt": "A clean a cross-section of a parabolic HEADLIGHT reflector: a faint parabola, its focus as a dark dot, a grey directrix line, and 5 magenta points ON the parabola curve. Every magenta point must lie exactly ON the parabola: by definition, each point on a parabola is EQUIDISTANT from the focus (the dark dot) and the directrix (the grey line). Place all points on the true parabola so each one's distance to the focus equals its distance to the directrix. Do NOT place any point off the curve. Plain background.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a cross-section of a parabolic HEADLIGHT reflector: a faint parabola, its focus as a dark dot, a grey directrix line, and 5 magenta points ON the parabola curve. Ignoring artistic quality, does the image show a curved parabola-like line with several magenta points on/near it, a dark focus dot, and a grey straight directrix line? Answer NO only if those are missing or it is unrelated. yes or no.",
+  "reference": {
+    "mark_lo": [135, 80, 80],
+    "mark_hi": [160, 255, 255],
+    "focus": [0.5, 0.61],
+    "directrix": ["h", 0.83],
+    "min_pts": 4,
+    "tol": 0.1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "parabola_prop",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "circle",
+          "target": "the FOCUS dot -- the single small dark solid dot that is drawn on its own, away from the curve (it is not one of the magenta dots sitting on the curve). There is only ONE such dot: mark that one dot alone, with the circle just big enough to hold it. Do not mark a magenta dot, the long straight grey line, or any part of the curve.",
+          "out": "foc"
+        },
+        {
+          "fail_if": ["foc.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the DIRECTRIX line -- the long straight grey line that is drawn on its own, away from the curve (one tight box around that grey line)",
+          "expected_n": 1,
+          "out": "dirl"
+        },
+        {
+          "fail_if": ["dirl.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the magenta dots that sit on the curve -- one tight box per magenta dot",
+          "out": "mk"
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "parabola_fit_score",
+          "args": ["foc", "dirl", "mk", "src", "reference"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.degenerate"]
+        },
+        {
+          "compare_band": "rd.frac",
+          "to": 1.0,
+          "core": 0.15,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

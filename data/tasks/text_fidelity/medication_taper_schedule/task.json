@@ -1,0 +1,119 @@
+{
+  "id": "medication_taper_schedule",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed HOSPITAL MEDICATION TAPER chart titled 'HARBOUR CLINIC - Withdrawal schedule' for the drug Gabapentin. Print ONE ROW PER DAY in a small table with columns Day / Date / Dose. Rules: the first day is dated 10 Sep 2026 and every following row is the NEXT CALENDAR DAY (dates strictly consecutive, no gap). The starting dose is 1800 mg and it REDUCES each day through these phases in order: 3 days at -250 mg/day; 3 days at -200 mg/day; 3 days at -150 mg/day. After the last scheduled reduction, print one final row on the next day showing 'STOP (0 mg)'. So the dose walks DOWN across the phases and ends at STOP. Print every day's row (10 rows). Print only the table. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed hospital medication taper schedule with one row per consecutive day, each showing a date and a reducing dose down to a STOP row. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 10,
+    "read_row": 8,
+    "read_dose": 300,
+    "read_date_day": 17,
+    "read_date_iso": "2026-09-17",
+    "start_iso": "2026-09-10",
+    "day_index": 7,
+    "q_count": "How many day rows does this taper table have (count every Day row including the final STOP row, not the header)? Whole number only.",
+    "q_dose": "Read the DOSE printed on row number 8 (the 8-th day row from the top). Give the milligram number only. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Number only, no 'mg'.",
+    "q_day": "Read the DATE printed on row number 8 (the 8-th day row). What is the day-of-month number (the numeric day)? Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only.",
+    "q_lastdose": "Read the DOSE printed on the VERY LAST row of the table. If it says STOP or 0 mg, answer 0; otherwise give the milligram number. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "taper_chain_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_dose",
+          "out": "dose"
+        },
+        {
+          "fail_if": ["dose.unreadable"]
+        },
+        {
+          "read_number": "reference.q_day",
+          "out": "day"
+        },
+        {
+          "fail_if": ["day.unreadable"]
+        },
+        {
+          "read_number": "reference.q_lastdose",
+          "out": "lastdose"
+        },
+        {
+          "fail_if": ["lastdose.unreadable"]
+        },
+        {
+          "run": "taper_row_check",
+          "args": [
+            "dose",
+            "day",
+            "lastdose",
+            "reference.read_dose",
+            "reference.read_date_day",
+            "reference.start_iso",
+            "reference.day_index"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed table row for a single day of the taper, including the final stop row",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed table row for a single day, rather than the column-heading row or only part of a row? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 1.5,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

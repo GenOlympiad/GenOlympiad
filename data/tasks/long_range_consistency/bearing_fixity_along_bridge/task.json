@@ -1,0 +1,84 @@
+{
+  "id": "bearing_fixity_along_bridge",
+  "axis": "long_range_consistency",
+  "prompt": "The bearing gang hands this span over to the resident engineer this afternoon, so the deck is walked end to end with a drone and the shots are laid up into one strip for the file.\n\nFive piers carry the deck, their numbers stencilled in white on the shafts as P1 through P5 from the south abutment. Each pier top carries two bearings. The works stamps every bearing a type plate, and paints on its top plate an arrow for the way that bearing is free to slide; the stamped word is either FIXED or MOVABLE. The deck above is one continuous unit from abutment to abutment, cast without a joint, and the carriageway runs dead straight. The bearing schedule taped to the crash barrier says one thing only: the fixed pier for this unit is P3.\n\nWhich plate goes on which pier top, and which way each arrow points, is what the schedule does not say.",
+  "difficulty": "s1",
+  "easy_question": "Is this a strip of drone shots looking down on a run of bridge piers, with bearings sitting on each pier top and numbers stencilled on the pier shafts? Answer yes or no only.",
+  "reference": {
+    "part1": "8",
+    "part2": "along_bridge"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Count the bearings on the five pier tops whose stamped type plate reads MOVABLE. Write the number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the painted arrows on the bearings sitting on the pier tops other than P3. Answer with one of: every arrow lies along the roadway, running towards the far end of the bridge; every arrow lies across the roadway, running towards the parapets; the arrows do not all lie the same way.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

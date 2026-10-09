@@ -1,0 +1,84 @@
+{
+  "id": "radiograph_magnification_geometry",
+  "axis": "physical_consistency",
+  "prompt": "The films cannot be reported until both exposures of the same weld defect are up on the viewer side by side, so the interpreter clips them together.\n\nTwo films are clipped to the illuminator. Both were shot on the same weld and the same lack of fusion running along it, and each carries a printed wire scale along its lower edge so lengths can be read off. The exposure card gives the geometry and nothing else: the left film was shot with the source seven hundred millimetres from the weld and the film pressed hard against the far face of it; the right film was shot with the source at the same seven hundred millimetres, but with the weld held two hundred millimetres away from the film. The source focal spot is the same size for both shots.\n\nHow long the defect comes out on each film, and how hard its edges are, is the whole of the report and the card does not print it.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show two X-ray films clipped side by side on a lighted viewer with a printed card lying below them? Answer yes or no only.",
+  "reference": {
+    "part1": "longer_on_the_right",
+    "part2": "softer_on_the_right"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the image of the defect on each film and at the printed wire scale taped along the lower edge of each. Answer with one of: the defect image runs longer on the right film than on the left; the defect image runs longer on the left film than on the right; the defect image runs the same length on both films.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the edges of the defect image on each film. Answer with one of: the edges are softer and less distinct on the right film; the edges are softer and less distinct on the left film; the edges are just as distinct on one film as on the other.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "id": "patent_numeral_across_figures",
+  "axis": "long_range_consistency",
+  "prompt": "The drawing office has to get the amended sheet away to the agent this afternoon, so the board is photographed as it stands with the parts list still weighted down beside it.\n\nA single patent figure sheet lies on the board. It carries an outline view of the whole pressure relief valve, a sectioned view of the same valve, and an enlarged view of the seat assembly alone. Leader lines run from parts out to plain arabic numerals set outside the outlines, each leader ending in a heavy dot. The printed parts list weighted down at the corner of the board reads: 12 bonnet, 14 valve seat, 16 spring cap, 18 body flange, 22 adjusting screw. The seat assembly is made up of the valve seat, the spring cap and the adjusting screw. The sheet number is printed in the title strip.\n\nWhich part each leader ends on is what the parts list does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a patent figure sheet with three views of one valve and numbered leader lines running out from the parts? Answer yes or no only.",
+  "reference": {
+    "part1": "every_across_number_in_grid",
+    "part2": "same_part_in_both_views"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the numerals at the ends of the leader lines in the outline view of the whole valve, taking them from left to right, and write those numbers.",
+          "out": "a_part1_g"
+        },
+        {
+          "fail_if": ["a_part1_g.unreadable"]
+        },
+        {
+          "ask": "Read the numerals at the ends of the leader lines in the enlarged view of the seat assembly, and write those numbers.",
+          "out": "a_part1_x"
+        },
+        {
+          "fail_if": ["a_part1_x.unreadable"]
+        },
+        {
+          "run": "subset_check",
+          "args": ["a_part1_g", "a_part1_x"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Take the leader numbered 14 in the outline view and the leader numbered 14 in the sectioned view, and say what they end on. Answer with one of: both leaders end on the same part; the two leaders end on parts of unlike shape; only one of the views carries a leader numbered 14.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

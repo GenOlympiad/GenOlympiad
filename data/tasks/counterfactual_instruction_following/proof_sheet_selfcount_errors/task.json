@@ -1,0 +1,133 @@
+{
+  "id": "proof_sheet_selfcount_errors",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A printer's proofing room, and on the bench a single specimen sheet photographed flat from above. Plain white stock, one column of set text, a red rubber stamp across the head of the sheet.\n\nThe stamp at the head reads, in one line: THIS SHEET CARRIES 3 SEEDED FAULTS.\n\nBelow the stamp the sheet sets twelve numbered lines. This is the house copy the compositor works from, exactly as it stands in the file, line by line:\n 1  The committee met on the fourth floor.\n 2  Please receive this note as formal notice.\n 3  A quorum of seven members was present.\n 4  The chair opened the meeting at ten.\n 5  Apologies were noted from two members.\n 6  The lease runs to 2023-02-28 in every copy.\n 7  No other business was raised.\n 8  The clerk read the accounts aloud.\n 9  Fees of 48 and 27 give a subtotal of 75.\n10  The minutes were approved without change.\n11  The next meeting falls in the spring.\n12  The chair closed the meeting at noon.\n\nThis sheet is not the house copy. It is the test sheet the proofing room runs to check that its readers are awake, and the works manager has specified the three faults it is to be seeded with, each of which replaces one thing in the house copy and nothing else:\n  on line 2, the word receive is set as recieve\n  on line 6, the date is set as 2023-02-30\n  on line 9, the figure 75 is set as 65\n\nEvery other line is set word for word as the house copy has it. The seeded faults are the whole point of the sheet, so they are to stand exactly as specified: a sheet that quietly puts any of them right, or that differs from the house copy anywhere else, is useless and gets thrown away. Do not add any note, mark, correction, tick or annotation of any kind. The stamp and all twelve numbered lines have to be legible in the one frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed sheet with a red stamp at the top and a column of numbered lines of text below it? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no printed lines at all. Answer yes or no only.",
+  "reference": {
+    "expected_lines": "the committee met on the fourth floor.|please recieve this note as formal notice.|a quorum of seven members was present.|the chair opened the meeting at ten.|apologies were noted from two members.|the lease runs to 2023-02-30 in every copy.|no other business was raised.|the clerk read the accounts aloud.|fees of 48 and 27 give a subtotal of 65.|the minutes were approved without change.|the next meeting falls in the spring.|the chair closed the meeting at noon.",
+    "n_lines_ok": 12,
+    "stamp_number": "3",
+    "clean_no_annotation": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sheet_differs_from_the_house_copy_in_exactly_the_seeded_places",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered line of the set text on the sheet",
+          "sweep": true,
+          "out": "ln"
+        },
+        {
+          "fail_if": ["ln.unreadable"]
+        },
+        {
+          "read_crop": "Copy the small number printed at the left of this line. Write the number only.",
+          "boxes": "ln",
+          "pad": 0.08,
+          "out": "lnk"
+        },
+        {
+          "read_crop": "Copy the words printed on this line, exactly as they are set. Write the words only.",
+          "boxes": "ln",
+          "pad": 0.08,
+          "out": "lnv"
+        },
+        {
+          "run": "count_lines_as_specified",
+          "args": ["lnk", "lnv", "reference.expected_lines"],
+          "out": "df"
+        },
+        {
+          "fail_if": ["df.refused"]
+        },
+        {
+          "compare_band": "df.n_ok",
+          "to": "reference.n_lines_ok",
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_stamp_declares_the_number_of_faults_the_sheet_carries",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the red stamp across the head of the sheet",
+          "out": "sm"
+        },
+        {
+          "fail_if": ["sm.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure printed in the stamp in this cut-out. Write the figure only.",
+          "boxes": "sm",
+          "pad": 0.15,
+          "out": "smx"
+        },
+        {
+          "run": "stamped_fault_count",
+          "args": ["smx"],
+          "out": "sn"
+        },
+        {
+          "fail_if": ["sn.refused"]
+        },
+        {
+          "compare": "sn.num",
+          "to": "reference.stamp_number",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_corrections_or_annotations_added_to_the_sheet",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a handwritten mark, a tick, a correction or a note added to the sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "an"
+        },
+        {
+          "fail_if": ["an.unreadable"]
+        },
+        {
+          "compare": "an.clean",
+          "to": "reference.clean_no_annotation",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

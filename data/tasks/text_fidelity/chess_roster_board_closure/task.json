@@ -1,0 +1,81 @@
+{
+  "id": "chess_roster_board_closure",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed CHESS POSITION DIAGRAM for the 'NORTHGATE CHESS CLUB' (Adjourned position 41). Draw a standard 8x8 chessboard with file letters a-h and rank numbers 1-8. Place 8 WHITE pieces (light discs with a black letter) and 7 BLACK pieces (dark discs with a white letter), each labelled with its piece letter (K,Q,R,B,N,P). Above the board, print a boxed PIECE ROSTER with two lines: 'White: ' then each white piece as its letter followed by its square (e.g. 'Qd4'), and 'Black: ' likewise. CRITICAL correspondence: every piece named in the roster with a square MUST actually be drawn on that exact square of the board -- the roster and the board must agree piece-for-piece and square-for-square. Roster: White: Kg4, Qf2, Ra7, Ra6, Bf1, Bg7, Nb2, Ne1 ; Black: Ke8, Qf7, Rg8, Rh2, Bd6, Bh5, Nf4. Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a printed chess position diagram (an 8x8 board with lettered pieces) and a boxed PIECE ROSTER listing each piece with its square. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "wsq": "g4",
+    "bsq": "f7",
+    "q_wsquare": "On this chessboard, which square is the WHITE KING (the light disc marked with a black letter K) standing on? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the square in algebraic notation like e4 (a file letter a-h and a rank number 1-8), nothing else.",
+    "q_bsquare": "On this chessboard, which square is the BLACK QUEEN (the dark disc marked with a white letter Q) standing on? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the square in algebraic notation like e4 (a file letter a-h and a rank number 1-8), nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chess_roster_board_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_wsquare",
+          "out": "ws"
+        },
+        {
+          "fail_if": ["ws.unreadable"]
+        },
+        {
+          "ask": "reference.q_bsquare",
+          "out": "bs"
+        },
+        {
+          "fail_if": ["bs.unreadable"]
+        },
+        {
+          "run": "pieces_on_required_squares",
+          "args": ["ws", "bs", "reference.wsq", "reference.bsq"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.q_bsquare",
+          "out": "gp"
+        },
+        {
+          "fail_if": ["gp.unreadable"]
+        },
+        {
+          "compare_token": "gp",
+          "to": "reference.bsq",
+          "keep": "alnum",
+          "mode": "equals",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

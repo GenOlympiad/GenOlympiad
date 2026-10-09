@@ -1,0 +1,79 @@
+{
+  "id": "t9_keypad",
+  "axis": "symbolic_systems",
+  "prompt": "A clean straight-on mock-up of an old nine-key mobile phone, as a retro-tech blog header. Show the sequence of number keys you would press to type the word 'FJORD' using the classic T9 / multi-tap keypad, where the letters are grouped on the digit keys in the standard way (ABC on 2, DEF on 3, GHI on 4, JKL on 5, MNO on 6, PQRS on 7, TUV on 8, WXYZ on 9). Draw the pressed keys in a single left-to-right row, each as a rounded key showing only its digit. Print only the row of digit keys - no letters, no word, no other text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show vintage nine-key mobile phone screen mock-up on a retro-tech blog header, showing the T9 keypad-digit sequence for a word, straight-on? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "word": "FJORD",
+    "digits": "35673",
+    "digit_list": ["3", "5", "6", "7", "3"],
+    "n": 5,
+    "target_seq": "3 5 6 7 3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "digit_seq",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "rounded number key in the row of pressed keys on the phone mock-up",
+          "votes": 3,
+          "out": "kb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["kb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a mock-up of an old mobile phone with number keys. Does this cut-out show exactly ONE whole rounded number key from the phone keypad -- one single one on its own, not two of them together, not just a part of one, and not only the plain background with no key on it? Answer yes or no only.",
+          "boxes": "kb",
+          "pad": 0.1,
+          "out": "kc"
+        },
+        {
+          "fail_if": ["kc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one rounded key from a phone keypad, and a digit is printed on the face of that key. What digit is printed on it? Answer with that single digit and nothing else. If nothing at all is printed on this key, answer none.",
+          "boxes": "kb",
+          "pad": 0.06,
+          "out": "kv"
+        },
+        {
+          "fail_if": ["kv.unreadable"]
+        },
+        {
+          "run": "row_digits",
+          "args": ["kb", "kc", "kv"],
+          "out": "ks"
+        },
+        {
+          "run": "seq_match",
+          "args": ["ks.digits", "reference.digit_list"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

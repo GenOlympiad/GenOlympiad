@@ -1,0 +1,84 @@
+{
+  "id": "release_labels_wait_on_the_printout",
+  "axis": "long_range_consistency",
+  "prompt": "A hospital sterile services unit has to show what it did with a load before the trolleys go out, so the store room is photographed at the end of the cycle and the frame goes into the load record.\n\nThree wrapped packs stand in a row on the steel table, each with indicator tape that has already changed colour, and each label written up with cycle number 4416. A pack that goes out for use carries a printed release label stuck on its wrap. The printer under the steriliser has fed out that cycle's strip: highest temperature 135, pressure 2.10 bar, hold two minutes forty-five seconds. The plate on the wall gives the bands this machine runs to: temperature 134 to 137, pressure 2.05 to 2.25 bar, hold three to four minutes. A shelf each side of the table carries a sign, one reading READY FOR ISSUE and one reading FOR RE-PROCESSING.\n\nWhat happened to the three packs is what the record does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show three wrapped sterilisation packs on a table with a cycle printout hanging from the steriliser and a wall plate of running bands? Answer yes or no only.",
+  "reference": {
+    "part1": "no_pack_released",
+    "part2": "packs_on_reprocess_shelf"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the three wrapped packs on the table and say how the release labels stand on them. Answer with one of: the three packs are standing without a release label on any of them; every one of the three packs carries a release label; some of the packs carry a release label and some do not.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at where the three wrapped packs have ended up and say which shelf they are standing on. Answer with one of: all three packs are on the shelf under the re-processing sign; all three packs are on the shelf under the ready for issue sign; the packs are on the bench and on neither shelf.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

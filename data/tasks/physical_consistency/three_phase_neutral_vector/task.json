@@ -1,0 +1,171 @@
+{
+  "id": "three_phase_neutral_vector",
+  "axis": "physical_consistency",
+  "prompt": "An open low-voltage switchboard during a night load survey, photographed square-on with the door swung aside. An electrician's clamp meter has been moved around the board and four digital readouts are visible at once: three clamp readouts hanging on the three phase busbars, each busbar stencilled with its phase letter, and one clamp readout on the white neutral conductor below them.\n\nThe survey card taped inside the door is printed with the three phase figures the crew logged tonight: phase A 40 amps, phase B 70 amps, phase C 100 amps, the three currents spaced a third of a cycle apart as they always are on a healthy supply. The three phase clamps show exactly those three figures. The neutral clamp shows what the neutral actually carries under that unbalance -- work that figure out yourself: I am deliberately not telling you the neutral current, and the crew knows a faked survey photo at a glance because an overloaded neutral is what burns boards down.\n\nDo not print any working, any plus or minus signs, or any extra caption in the picture: the only text is the stencilled phase letters, the survey card's three logged figures, and the four clamp readouts, all large and sharp enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show the inside of an electrical panel with clamp-meter readouts on its conductors? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "neutral_amps": "52",
+    "phase_figures": "a:40|b:70|c:100",
+    "n_clamps": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "neutral_clamp_shows_the_vector_sum",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the clamp readout hanging on the white neutral conductor",
+          "sweep": true,
+          "out": "nc"
+        },
+        {
+          "fail_if": ["nc.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one clamp meter readout. Copy the amps figure shown on that readout. If more than one readout is visible in this cut-out, read the one nearest the middle of it. Write the number only and nothing else.",
+          "boxes": "nc",
+          "pad": 0.3,
+          "out": "nc_t"
+        },
+        {
+          "fail_if": ["nc_t.unreadable"]
+        },
+        {
+          "run": "neutral_whole_amps",
+          "args": ["nc_t"],
+          "out": "na"
+        },
+        {
+          "compare": "na.amp",
+          "to": "reference.neutral_amps",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "phase_clamps_carry_the_logged_figures",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one clamp readout on a phase busbar together with the stencilled phase letter beside it",
+          "sweep": true,
+          "out": "pcr"
+        },
+        {
+          "fail_if": ["pcr.unreadable"]
+        },
+        {
+          "read_crop": "Copy the stencilled phase letter in this cut-out. If more than one stencilled letter is visible here, copy the one nearest the middle of the cut-out. Write the single letter only and nothing else.",
+          "boxes": "pcr",
+          "pad": 0.3,
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one clamp meter readout. Copy the amps figure shown on that readout. If more than one readout is visible in this cut-out, read the one nearest the middle of it. Write the number only and nothing else.",
+          "boxes": "pcr",
+          "pad": 0.3,
+          "out": "pv"
+        },
+        {
+          "fail_if": ["pv.unreadable"]
+        },
+        {
+          "run": "phase_pairs",
+          "args": ["pl", "pv"],
+          "out": "pp"
+        },
+        {
+          "compare": "pp.pairs",
+          "to": "reference.phase_figures",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "four_clamp_readouts_certificate",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one digital clamp-meter readout",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_c"
+        },
+        {
+          "fail_if": ["box_c.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE digital readout with a figure on it, rather than the survey card or only part of a readout? Answer yes or no only.",
+          "boxes": "box_c",
+          "pad": 0.3,
+          "out": "cert"
+        },
+        {
+          "fail_if": ["cert.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cert"],
+          "out": "n_c"
+        },
+        {
+          "compare_band": "n_c.n",
+          "to": "reference.n_clamps",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_in_frame",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a formula, a plus sign or a worked calculation printed anywhere in the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

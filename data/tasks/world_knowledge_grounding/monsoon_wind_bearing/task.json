@@ -1,0 +1,88 @@
+{
+  "id": "monsoon_wind_bearing",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A clean climatology map of the INDIAN OCEAN showing the monsoon wind, with a compass rose labelled N, NE, E, SE, S, SW, W, NW in one corner, and a big month label reading 'MONTH: JULY'. Draw a bold red WIND ARROW across the ocean showing the prevailing monsoon wind for that month. In July the monsoon reverses: the summer monsoon blows toward the NE (the summer monsoon flows from the southwest toward the northeast; the winter monsoon flows from the northeast toward the southwest). Point the arrow's head toward the NE so it matches the compass rose. Do NOT print the direction as text; the arrow direction must convey it.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a climatology map of the Indian Ocean monsoon with a labelled month, a wind arrow and a compass rose? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "toward": "ne",
+    "q_toward": "This is a monsoon wind map with a labelled compass rose (N, NE, E, SE, S, SW, W, NW) and a big red WIND ARROW. Look at the direction the arrow's HEAD (the arrowhead) points, and match it to the compass rose. Toward which compass direction does the wind arrow point? Answer with one of: N, NE, E, SE, S, SW, W, NW -- just the compass abbreviation of the arrowhead's direction."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "wind_octant",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_toward",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "extract": "(?i)(?<!['’])\\b(ne|nw|se|sw|n|e|s|w)\\b",
+          "value": "a",
+          "out": "tok",
+          "pick": "last"
+        },
+        {
+          "fail_if": ["tok.none"]
+        },
+        {
+          "compare": "tok",
+          "to": "reference.toward",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "wind_octant_confirm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_toward",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "extract": "(?i)(?<!['’])\\b(ne|nw|se|sw|n|e|s|w)\\b",
+          "value": "a",
+          "out": "tok",
+          "pick": "last"
+        },
+        {
+          "fail_if": ["tok.none"]
+        },
+        {
+          "compare": "tok",
+          "to": "reference.toward",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "source": "The South Asian monsoon changes direction: south-west winds in summer, north-east winds in winter.",
+  "grounding": "static"
+}

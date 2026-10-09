@@ -1,0 +1,354 @@
+{
+  "id": "css_combinator_scope",
+  "axis": "latent_computation",
+  "prompt": "Draw the page exactly as a browser renders it from this source. Work out the final colour of every tile yourself from the cascade — selector weight, declaration order, inheritance and structural selectors all take part; do not guess from the class names.\n\n```html\n<div id=\"page\">\n  <h1 class=\"hd\">Marina Berth Map</h1>\n  <p class=\"sub\">open quay and two enclosed basins</p>\n  <main id=\"rack\" class=\"rack\">\n    <div class=\"tile\">A1</div>\n    <div class=\"tile mark\">A2</div>\n    <div class=\"tile\">A3</div>\n    <div class=\"tile\">A4</div>\n    <div class=\"tile\">A5</div>\n    <div class=\"tile\">A6</div>\n    <div class=\"bay\">\n      <div class=\"tile\">B1</div>\n      <div class=\"tile\">B2</div>\n      <div class=\"tile mark\">B3</div>\n      <div class=\"tile\">B4</div>\n      <div class=\"tile\">B5</div>\n      <div class=\"tile\">B6</div>\n    </div>\n    <div class=\"bay\">\n      <div class=\"tile mark\">C1</div>\n      <div class=\"tile\">C2</div>\n      <div class=\"tile\">C3</div>\n      <div class=\"tile\">C4</div>\n      <div class=\"tile\">C5</div>\n      <div class=\"tile\">C6</div>\n    </div>\n  </main>\n  <p class=\"foot\">18 berths</p>\n</div>\n```\n\n```css\n.hd { margin:0 0 6px; font:bold 34px sans-serif; color:#1b1b1b }\n.sub { margin:0 0 28px; font:20px sans-serif; color:#5a5a5a }\n.foot { margin:28px 0 0; font:20px sans-serif; color:#5a5a5a }\n.rack { display:grid; grid-template-columns:repeat(6,96px); grid-auto-rows:96px; gap:14px }\n.bay { display:grid; grid-template-columns:repeat(6,96px); grid-auto-rows:96px; gap:14px; grid-column:1 / -1 }\n.tile { display:flex; align-items:center; justify-content:center; box-sizing:border-box; border:3px solid #4a4a4a; color:#111; font:bold 20px sans-serif; border-radius:50%; background:#3949ab }\n.rack .tile { background:#2e7d32 }\n.rack > .tile { background:#e53935 }\n.tile.mark ~ .tile { background:#00acc1 }\n.tile.mark + .tile { background:#ffeb3b }\n.bay > .tile.mark { background:#8e24aa }\n```\n\nOutput ONLY the rendered page as a clean, flat screenshot: the dark heading and small grey sub-heading exactly as the markup gives them, and below them the circular tiles laid out as a single grid of exactly 3 rows by 6 columns (18 tiles), each tile filled with one flat solid colour and carrying its dark label text. Show no source code, no browser window, address bar, tabs or developer tools, no legend, no colour names, no swatch key, no arrows or annotations, no shadows or gradients. The page background is plain white and every coloured area in the image must be one of the 18 tiles — nothing else in the picture may be coloured.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a marina berth map of eighteen round berth markers? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "rows": 3,
+    "cols": 6,
+    "n_tiles": 18,
+    "palette": ["blue", "cyan", "green", "purple", "red", "yellow"],
+    "grid": [
+      ["red", "red", "yellow", "cyan", "cyan", "cyan"],
+      ["green", "green", "purple", "yellow", "cyan", "cyan"],
+      ["purple", "yellow", "cyan", "cyan", "cyan", "cyan"]
+    ],
+    "contested": [
+      [0, 2],
+      [1, 0],
+      [1, 1],
+      [1, 3],
+      [2, 1]
+    ],
+    "ct_grid": [
+      ["yellow", "green", "green", "yellow", "yellow"]
+    ],
+    "probe": [0, 2],
+    "q_form": "Does this image show one single rectangular grid of exactly 3 rows and 6 columns of circular tiles (that is 18 tiles in total), each tile filled with one flat solid colour, on a plain white page? Answer yes or no only.",
+    "q_colors": "The image shows a grid of 18 coloured tiles arranged in 3 rows of 6. Report the fill colour of every tile in reading order (left to right along the top row first, then the next row, and so on). Use exactly one word per tile from this list: red, yellow, green, cyan, blue, purple. Answer with the 18 colour words separated by commas and nothing else.",
+    "q_probe": "A thick WHITE rectangle has been drawn on top of exactly one tile in this image. What colour is the tile it is drawn on -- that is, the colour surrounding and showing through inside that white rectangle? Answer with exactly one word from this list: red, yellow, green, cyan, blue, purple.",
+    "q_count": "How many separate coloured tiles are shown in the grid? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "grid_form",
+      "weight": 0.4,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cascade_contested_cells",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the whole coloured board behind the lettered blocks, including the bare parts where no block sits",
+          "expected_n": 1,
+          "out": "b1"
+        },
+        {
+          "read": "boxes",
+          "target": "the block of coloured rectangles itself -- the rectangular area covered by the coloured blocks, not the white page",
+          "expected_n": 1,
+          "out": "b2"
+        },
+        {
+          "read": "boxes",
+          "target": "the wide band of colour in the middle of the page, out to its own edges",
+          "expected_n": 1,
+          "out": "b3"
+        },
+        {
+          "run": "plan_board_strips",
+          "args": ["image", "b1", "b2", "b3", "reference.rows", "reference.cols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "rects": "pl.rects",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "color": [255, 255, 255],
+          "width_frac": 0.005,
+          "out": "ov"
+        },
+        {
+          "read_crop": "This is one horizontal strip cut out of a coloured board. {pl.m} equal areas are outlined in white, side by side. Reading strictly left to right, name the colour filling the area inside each white outline. Use one word for each, from this list: red, yellow, green, cyan, blue, purple. Answer with the {pl.m} colour words separated by commas and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.chunks",
+          "pad": 0.02,
+          "out": "rd"
+        },
+        {
+          "run": "assemble_colour_grid",
+          "args": ["rd", "pl", "reference.rows", "reference.cols", "reference.palette"],
+          "out": "cg"
+        },
+        {
+          "fail_if": ["cg.no_read"]
+        },
+        {
+          "run": "colours_at_squares",
+          "args": ["cg.grid", "reference.contested"],
+          "out": "got"
+        },
+        {
+          "compare_grid": "got",
+          "to": "reference.ct_grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "overlay_verdict_recheck",
+      "weight": 0.4,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the whole coloured board behind the lettered blocks, including the bare parts where no block sits",
+          "expected_n": 1,
+          "out": "b1"
+        },
+        {
+          "read": "boxes",
+          "target": "the block of coloured rectangles itself -- the rectangular area covered by the coloured blocks, not the white page",
+          "expected_n": 1,
+          "out": "b2"
+        },
+        {
+          "read": "boxes",
+          "target": "the wide band of colour in the middle of the page, out to its own edges",
+          "expected_n": 1,
+          "out": "b3"
+        },
+        {
+          "run": "plan_board_strips",
+          "args": ["image", "b1", "b2", "b3", "reference.rows", "reference.cols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "rects": "pl.rects",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "color": [255, 255, 255],
+          "width_frac": 0.005,
+          "out": "ov"
+        },
+        {
+          "read_crop": "This is one horizontal strip cut out of a coloured board. {pl.m} equal areas are outlined in white, side by side. Reading strictly left to right, name the colour filling the area inside each white outline. Use one word for each, from this list: red, yellow, green, cyan, blue, purple. Answer with the {pl.m} colour words separated by commas and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.chunks",
+          "pad": 0.02,
+          "out": "rd"
+        },
+        {
+          "run": "assemble_colour_grid",
+          "args": ["rd", "pl", "reference.rows", "reference.cols", "reference.palette"],
+          "out": "cg"
+        },
+        {
+          "fail_if": ["cg.no_read"]
+        },
+        {
+          "run": "compare_grid",
+          "args": ["cg.grid", "reference.grid", "reference.rows", "reference.cols"],
+          "out": "vd"
+        },
+        {
+          "overlay": "homography",
+          "rects": "vd.ok",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "color": [0, 200, 0],
+          "width_frac": 0.006,
+          "out": "ov1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ov1.path",
+          "rects": "vd.bad",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "color": [255, 255, 255],
+          "width_frac": 0.014,
+          "out": "ov2"
+        },
+        {
+          "read_number": "Rectangular outlines have been drawn on top of the tiles of this page. Most are green; a few may instead be WHITE. Ignore the colours the tiles are filled with and look only at the drawn outlines: how many tiles carry a WHITE outline? Answer 0 if none of them do. Answer with a whole number and nothing else.",
+          "image": "ov2.path",
+          "out": "n"
+        },
+        {
+          "fail_if": ["n.unreadable"]
+        },
+        {
+          "compare_band": "n",
+          "to": "vd.n_bad",
+          "core_abs": 2.0,
+          "margin_abs": 2.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "probe_cell_recheck",
+      "weight": 0.4,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the whole coloured board behind the lettered blocks, including the bare parts where no block sits",
+          "expected_n": 1,
+          "out": "b1"
+        },
+        {
+          "read": "boxes",
+          "target": "the block of coloured rectangles itself -- the rectangular area covered by the coloured blocks, not the white page",
+          "expected_n": 1,
+          "out": "b2"
+        },
+        {
+          "read": "boxes",
+          "target": "the wide band of colour in the middle of the page, out to its own edges",
+          "expected_n": 1,
+          "out": "b3"
+        },
+        {
+          "run": "plan_board_strips",
+          "args": ["image", "b1", "b2", "b3", "reference.rows", "reference.cols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "overlay": "homography",
+          "rects": "pl.rects",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "color": [255, 255, 255],
+          "width_frac": 0.005,
+          "out": "ov"
+        },
+        {
+          "read_crop": "This is one horizontal strip cut out of a coloured board. {pl.m} equal areas are outlined in white, side by side. Reading strictly left to right, name the colour filling the area inside each white outline. Use one word for each, from this list: red, yellow, green, cyan, blue, purple. Answer with the {pl.m} colour words separated by commas and nothing else.",
+          "image": "ov.path",
+          "boxes": "pl.chunks",
+          "pad": 0.02,
+          "out": "rd"
+        },
+        {
+          "run": "assemble_colour_grid",
+          "args": ["rd", "pl", "reference.rows", "reference.cols", "reference.palette"],
+          "out": "cg"
+        },
+        {
+          "fail_if": ["cg.no_read"]
+        },
+        {
+          "run": "probe_square_colour",
+          "args": ["cg.grid", "reference.probe", "reference.rows", "reference.cols"],
+          "out": "pb"
+        },
+        {
+          "overlay": "homography",
+          "rects": "pb.rect",
+          "ref_anchors": [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+          ],
+          "found_anchors": "pl.found_anchors",
+          "color": [255, 255, 255],
+          "width_frac": 0.014,
+          "out": "ovp"
+        },
+        {
+          "ask": "reference.q_probe",
+          "image": "ovp.path",
+          "out": "vc"
+        },
+        {
+          "fail_if": ["vc.unreadable"]
+        },
+        {
+          "run": "colour_name",
+          "args": ["vc"],
+          "out": "vcn"
+        },
+        {
+          "compare": "vcn",
+          "to": "pb.color",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

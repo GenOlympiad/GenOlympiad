@@ -1,0 +1,141 @@
+{
+  "id": "drift_coastline_fit",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A clean continental-drift jigsaw diagram showing South America's east coast on the LEFT and Africa's west coast on the RIGHT, across a dashed central seam (the Atlantic pulled open). The two Atlantic coasts INTERLOCK: where South America's coast BULGES out toward the seam (the Brazilian nose, marked X at mid-height), Africa's coast must have a matching NOTCH (a bay curving AWAY from the seam) directly opposite it. Mark three spots on Africa's coast A (upper), B (middle, opposite X), C (lower). Draw B as a NOTCH so it interlocks with the bulge X; draw A and C as gentle bulges. Do NOT draw both coasts bulging at the same height (they would collide, not fit). Clean schematic.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a continental-drift diagram of the South America and Africa coasts across a central seam? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "answer": "B"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "coast_fit",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "printed capital letter marking a spot on the map",
+          "votes": 3,
+          "out": "spb",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["spb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a map. Does this cut-out show exactly ONE printed capital letter, rather than two letters at once or just plain background? Answer yes or no only.",
+          "boxes": "spb",
+          "pad": 0.12,
+          "out": "spc"
+        },
+        {
+          "fail_if": ["spc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a map. One capital letter is printed at this marked spot. Which letter is it? Answer with a single letter and nothing else.",
+          "boxes": "spb",
+          "pad": 0.12,
+          "out": "spl"
+        },
+        {
+          "fail_if": ["spl.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a map. A dashed seam line runs down the picture and land lies beside it. Right here at the marked spot, does the edge of the land push OUT towards the dashed seam, or does it curve AWAY from the seam so the water cuts into the land? Answer with exactly one word: out, or away.",
+          "boxes": "spb",
+          "pad": 0.18,
+          "out": "sps"
+        },
+        {
+          "fail_if": ["sps.unreadable"]
+        },
+        {
+          "run": "notch_letter",
+          "args": ["spb", "spc", "spl", "sps", "reference"],
+          "out": "nl"
+        },
+        {
+          "compare": "nl.letter",
+          "to": "reference.answer",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "coast_fit_confirm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "printed capital letter marking a spot on the map",
+          "votes": 3,
+          "out": "spb",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["spb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a map. Does this cut-out show exactly ONE printed capital letter, rather than two letters at once or just plain background? Answer yes or no only.",
+          "boxes": "spb",
+          "pad": 0.12,
+          "out": "spc"
+        },
+        {
+          "fail_if": ["spc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a map. One capital letter is printed at this marked spot. Which letter is it? Answer with a single letter and nothing else.",
+          "boxes": "spb",
+          "pad": 0.12,
+          "out": "spl"
+        },
+        {
+          "fail_if": ["spl.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a map. A dashed seam line runs down the picture and land lies beside it. Right here at the marked spot, does the edge of the land push OUT towards the dashed seam, or does it curve AWAY from the seam so the water cuts into the land? Answer with exactly one word: out, or away.",
+          "boxes": "spb",
+          "pad": 0.18,
+          "out": "sps"
+        },
+        {
+          "fail_if": ["sps.unreadable"]
+        },
+        {
+          "run": "notch_letter",
+          "args": ["spb", "spc", "spl", "sps", "reference"],
+          "out": "nl"
+        },
+        {
+          "compare": "nl.letter",
+          "to": "reference.answer",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "source": "Continental fit (Wegener): the Atlantic coasts of South America and Africa match each other.",
+  "grounding": "static"
+}

@@ -1,0 +1,254 @@
+{
+  "id": "hexcolor_rgb_swatch_triad",
+  "axis": "text_fidelity",
+  "prompt": "A brand studio is issuing the colour specification sheet that goes to the printer and to the web team on the same afternoon. Six brand colours come out of the brand book, and the book states each of them one way only, as a hexadecimal value, in this order: C41E3A, F07B18, F2D024, 2E8B3A, 1B4FA8, 6B2E8F.\n\nThe sheet the studio issues carries the six swatches in one row across the page. Under each swatch stand two value lines: first the hexadecimal value exactly as the brand book states it, and beneath it the same colour written as its three decimal channel values separated by commas, in the order the channels always run. The swatch above those lines is filled with that same colour. Three ways of saying one thing, which is the whole point of the sheet: the printer works off one line, the web team off the other, and the eye off the swatch, and if they disagree the two disagree in production.\n\nThe decimal values are deliberately not being given to you -- converting them is what the studio is for -- and no swatch may be filled with anything except the shade its own two lines name. Keep the six in the order the book states them, make the swatches large and the value lines big enough to read across a desk, and let no colour name, no working and no second copy of the values appear anywhere on the sheet.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a row of filled swatches on a sheet with two lines of printed values under each of them? A realistic photo, a document mockup or an illustration ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "decimal_seq": "196,30,58|240,123,24|242,208,36|46,139,58|27,79,168|107,46,143",
+    "name_seq": "red|orange|yellow|green|blue|purple",
+    "hexvals": "C41E3A|F07B18|F2D024|2E8B3A|1B4FA8|6B2E8F",
+    "n_swatches": 6,
+    "agree_expected": "agree|agree|agree|agree|agree|agree",
+    "clean_sheet": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_decimal_lines_are_the_book_values_converted",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one swatch with the two value lines under it",
+          "sweep": true,
+          "out": "sw"
+        },
+        {
+          "fail_if": ["sw.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one colour swatch with three decimal numbers printed under it. Copy those three numbers from left to right, separated by single commas with no spaces, no units and no other words -- three numbers and two commas. If more than one row of three numbers is printed in this cut-out, copy the row nearest the middle of it.",
+          "boxes": "sw",
+          "pad": 0.3,
+          "out": "swd"
+        },
+        {
+          "fail_if": ["swd.unreadable"]
+        },
+        {
+          "run": "decimal_triples_by_position",
+          "args": ["swd", "sw"],
+          "out": "td"
+        },
+        {
+          "compare": "td.seq",
+          "to": "reference.decimal_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_ink_is_the_shade_its_own_lines_name",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one filled colour patch alone, not the printed lines under it",
+          "sweep": true,
+          "out": "sw2"
+        },
+        {
+          "fail_if": ["sw2.unreadable"]
+        },
+        {
+          "read_crop": "Which one of these words names the shade filling this patch. Answer with one word: red, orange, yellow, green, blue, purple.",
+          "boxes": "sw2",
+          "pad": 0.02,
+          "out": "sw2n"
+        },
+        {
+          "fail_if": ["sw2n.unreadable"]
+        },
+        {
+          "run": "colour_names_by_position",
+          "args": ["sw2n", "sw2"],
+          "out": "nm"
+        },
+        {
+          "compare": "nm.seq",
+          "to": "reference.name_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_book_values_travel_unaltered",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one swatch with the two value lines under it",
+          "sweep": true,
+          "out": "sw3"
+        },
+        {
+          "fail_if": ["sw3.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one colour swatch with a six-character hexadecimal value printed under it. Copy that value exactly as printed. If more than one such value is printed in this cut-out, copy the one nearest the middle of it. Write exactly six characters and nothing else.",
+          "boxes": "sw3",
+          "pad": 0.3,
+          "out": "sw3h"
+        },
+        {
+          "fail_if": ["sw3h.unreadable"]
+        },
+        {
+          "run": "hex_values_by_position",
+          "args": ["sw3h", "sw3"],
+          "out": "hx"
+        },
+        {
+          "compare": "hx.seq",
+          "to": "reference.hexvals",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_patch_agrees_with_the_two_lines_printed_under_it",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one swatch with the two value lines under it",
+          "sweep": true,
+          "out": "ag_block"
+        },
+        {
+          "fail_if": ["ag_block.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one colour swatch with a six-character hexadecimal value printed under it. Copy that value exactly as printed. If more than one such value is printed in this cut-out, copy the one nearest the middle of it. Write exactly six characters and nothing else.",
+          "boxes": "ag_block",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "ag_hex"
+        },
+        {
+          "fail_if": ["ag_hex.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one colour swatch with three decimal numbers printed under it. Copy those three numbers from left to right, separated by single commas with no spaces, no units and no other words -- three numbers and two commas. If more than one row of three numbers is printed in this cut-out, copy the row nearest the middle of it.",
+          "boxes": "ag_block",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "ag_dec"
+        },
+        {
+          "fail_if": ["ag_dec.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out one filled swatch stands above its printed value lines. Which one of these words names the shade filling the patch? Answer with one word: red, orange, yellow, green, blue, purple.",
+          "boxes": "ag_block",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "ag_ink"
+        },
+        {
+          "fail_if": ["ag_ink.unreadable"]
+        },
+        {
+          "run": "three_notations_agree",
+          "args": ["ag_hex", "ag_dec", "ag_ink"],
+          "out": "ag"
+        },
+        {
+          "compare": "ag.seq",
+          "to": "reference.agree_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_colour_name_or_working_on_the_sheet",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a colour name, a line of working or a second copy of the values on the sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "clean_sweep"
+        },
+        {
+          "fail_if": ["clean_sweep.unreadable"]
+        },
+        {
+          "compare": "clean_sweep.clean",
+          "to": "reference.clean_sheet",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_row_carries_six_swatches",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one swatch with the two value lines under it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "swc"
+        },
+        {
+          "fail_if": ["swc.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole filled swatch with printed lines under it, rather than the sheet head or only part of one? Answer yes or no only.",
+          "boxes": "swc",
+          "pad": 0.3,
+          "out": "swcc"
+        },
+        {
+          "fail_if": ["swcc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["swcc"],
+          "out": "swcn"
+        },
+        {
+          "compare_band": "swcn.n",
+          "to": "reference.n_swatches",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

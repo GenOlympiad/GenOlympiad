@@ -1,0 +1,98 @@
+{
+  "id": "dry_aging_shrink_tag",
+  "axis": "long_range_consistency",
+  "prompt": "The head chef signs the ageing cabinet off every Monday before service, so the door is left shut and the check photograph is taken straight through the glass.\n\nThree bone-in ribs hang on their own hooks inside the cabinet, and every hook carries a spring balance with a dial face. The tag wired to each rib is printed with the date it went in and the weight it went in at: 22 February at 7.2 kilograms, 8 February at 10.0 kilograms, 25 January at 6.4 kilograms. The loss chart taped to the inside of the door reads: after a fortnight 0.92 of the weight is left, after four weeks 0.84, after six weeks 0.74. The docket clipped to the handle dates this check 8 March, and the cabinet air stands at 1 degree and 82 per cent.\n\nWhat each balance ought to be showing this morning is what the tags do not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a glass-fronted ageing cabinet with joints of beef hanging inside on hooks, each hook carrying a spring balance? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "neither_matches"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Three tags hang in the cabinet, each printed with a date. Find the rib whose tag is printed 25 January and read the dial of the spring balance on that hook. Give the reading in kilograms.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "4.55", "4.95"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the dial of the spring balance on the hook whose tag is printed 8 February, and write down that reading.",
+          "out": "dial_feb8"
+        },
+        {
+          "fail_if": ["dial_feb8.unreadable"]
+        },
+        {
+          "ask": "Now read the dial of the spring balance on the hook whose tag is printed 22 February, and write down that reading.",
+          "out": "dial_feb22"
+        },
+        {
+          "fail_if": ["dial_feb22.unreadable"]
+        },
+        {
+          "ask": "Read the weight printed on the tag itself that is dated 8 February, and write down that figure.",
+          "out": "tag_feb8"
+        },
+        {
+          "fail_if": ["tag_feb8.unreadable"]
+        },
+        {
+          "run": "meter_matching_sheet",
+          "args": ["dial_feb8", "dial_feb22", "tag_feb8"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

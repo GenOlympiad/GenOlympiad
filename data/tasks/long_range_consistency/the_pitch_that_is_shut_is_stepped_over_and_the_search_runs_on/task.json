@@ -1,0 +1,217 @@
+{
+  "id": "the_pitch_that_is_shut_is_stepped_over_and_the_search_runs_on",
+  "axis": "long_range_consistency",
+  "prompt": "Six o'clock at a touring caravan site, and what is wanted is the warden's counter as it stands once the last arrival has been booked in. The pitch board hangs on the wall behind the counter, the day's booking sheet is clipped beside it, and the warden's slate lies on the counter facing the camera. All three are in the one frame.\n\nThe touring field has eight pitches. The board has one hook for each of them, stencilled 01 at the left through to 08 at the right. A pitch that is taken has its party's booking tag hanging on its hook, with the booking number large on the tag; a pitch that is free has an empty hook.\n\nPitch 05 has been shut since the weekend while its hardstanding is relaid. Its hook carries a SHUT card instead of a tag, and no party goes on it.\n\nThe warden's standing rule, on the board's header strip: a party goes on the pitch named on their booking; if that pitch is already taken they go on the next higher-numbered free pitch; the search carries on from pitch 01 once it runs past pitch 08; and a pitch that is shut is stepped over as though it were not there.\n\nThe field was empty this morning. Today's arrivals, in the order they drove in, each with its booking number and the pitch named on the booking:\n4471 - pitch 04\n4472 - pitch 07\n4473 - pitch 04\n4474 - pitch 07\n4475 - pitch 02\n4476 - pitch 08\n\nThe slate on the counter is headed PITCHES FREE TONIGHT, and the warden has chalked on it the pitches still free.\n\nWork the field through for yourself -- I am deliberately not telling you which party ends up on which pitch, and I am not telling you what is on the slate. Nothing in the picture may carry an arrow between hooks, a note of where a party was moved from, or any working: the writing in the picture is the stencilled pitch numbers, one booking number on each tag, the SHUT card, the header strip, the booking sheet as given above and the slate. Every number has to be easy to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a board with a row of numbered hooks, some of them carrying a card or a tag and some of them bare? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image is a blank panel that just states an answer, or if there is no board of hooks in it. Answer yes or no only.",
+  "reference": {
+    "slate_tag": "yes",
+    "sixth_tag": "yes",
+    "fifth_tag": "yes",
+    "sheet_tag": "yes",
+    "clean_frame": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_slate_names_the_one_pitch_the_evening_actually_leaves_empty",
+      "weight": 3.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the warden's slate headed PITCHES FREE TONIGHT on the counter",
+          "out": "slb"
+        },
+        {
+          "fail_if": ["slb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy every pitch number chalked on this slate. Write the numbers only, separated by spaces. If no number is chalked on it, answer none.",
+          "boxes": "slb",
+          "pad": 0.15,
+          "out": "slv"
+        },
+        {
+          "run": "check_slate_free_pitches",
+          "args": ["slv"],
+          "out": "sl"
+        },
+        {
+          "fail_if": ["sl.refused"]
+        },
+        {
+          "compare": "sl.tag",
+          "to": "reference.slate_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_hook_past_the_shut_pitch_carries_the_party_it_pushed_along",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the hook of the pitch board with 06 stencilled above it",
+          "out": "sxb"
+        },
+        {
+          "fail_if": ["sxb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the booking number on the tag hanging on this hook. Write the number only. If no tag is hanging on it, answer none.",
+          "boxes": "sxb",
+          "pad": 0.15,
+          "out": "sxv"
+        },
+        {
+          "run": "check_pitch_six_tag",
+          "args": ["sxv"],
+          "out": "sx"
+        },
+        {
+          "fail_if": ["sx.refused"]
+        },
+        {
+          "compare": "sx.tag",
+          "to": "reference.sixth_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_shut_pitch_is_still_shut_at_the_end_of_the_evening",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the hook of the pitch board with 05 stencilled above it",
+          "out": "ffb"
+        },
+        {
+          "fail_if": ["ffb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is a booking tag, a SHUT card or nothing at all hanging on this hook? Answer tag, shut or nothing.",
+          "boxes": "ffb",
+          "pad": 0.15,
+          "out": "ffv"
+        },
+        {
+          "run": "check_pitch_five_shut",
+          "args": ["ffv"],
+          "out": "ff"
+        },
+        {
+          "fail_if": ["ff.refused"]
+        },
+        {
+          "compare": "ff.tag",
+          "to": "reference.fifth_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_booking_sheet_still_names_the_pitch_the_party_actually_booked",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the day's booking sheet clipped beside the pitch board",
+          "out": "shb"
+        },
+        {
+          "fail_if": ["shb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the pitch number written against booking 4474 on this sheet. Write the number only. If that booking is not on the sheet, answer none.",
+          "boxes": "shb",
+          "pad": 0.15,
+          "out": "shv"
+        },
+        {
+          "run": "check_sheet_pitch",
+          "args": ["shv"],
+          "out": "sh"
+        },
+        {
+          "fail_if": ["sh.refused"]
+        },
+        {
+          "compare": "sh.tag",
+          "to": "reference.sheet_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_move_was_written_up_on_the_board",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow between hooks, a note of where a party was moved from or a line of working",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: an arrow between hooks, a note of where a party was moved from or a line of working? Answer yes or no. Answer no if the cut-out shows a hook, a stencilled pitch number, a booking tag, the SHUT card, the header strip, the booking sheet or the slate.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as an arrow between hooks, a note of where a party was moved from or a line of working? Answer yes or no. Answer no if it belongs there -- a hook, a stencilled pitch number, a booking tag, the SHUT card, the header strip, the booking sheet or the slate.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_frame",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

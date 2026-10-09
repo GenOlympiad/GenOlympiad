@@ -1,0 +1,176 @@
+{
+  "id": "count_colour_run_segments",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic close-up photograph of a bracelet coiled on a dark tray, beads in three colour segments: a red segment, a cyan segment and an orange segment. Reading along the strand, the beads form THREE contiguous colour blocks with EXACTLY these counts: the RED block has 6 beads, the second block has 7 beads, the third block has 8 beads. The RED block must contain EXACTLY 6 red beads -- not 5, not 7. Beads are round and evenly strung, well separated. No text, no numerals.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a single beaded necklace whose beads run in three contiguous colour blocks along the strand (a block of one colour, then a block of another, then a third)? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 6,
+    "runs": [6, 7, 8],
+    "q": "How many RED beads are in this image? The necklace has beads in three contiguous colour blocks; count ONLY the beads in the RED block (ignore the other colours). Count them one by one. Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This picture should show these countable objects: a single beaded necklace whose beads run in three contiguous colour blocks along the strand (a block of one colour, then a block of another, then a third). Look at the individual objects being counted. Is each one a red bead, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them visible as its own separate individual (allowing for the intended overlaps/stacking the scene describes), rather than merged into one indistinct blob? Answer yes if each intended object can be told apart, no if they merge into an uncountable mass. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "round bead on the strand",
+          "out": "bx",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows one WHOLE round bead of a strand, together with parts of its neighbours cut off at the edges. Look at the one whole, fully-visible bead (ignore any partial beads at the edges). Is that bead RED in colour? Answer no if it is orange, yellow, pink, purple, green, cyan or blue, and no if no whole bead is visible here. Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cr"],
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "premise_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show a single beaded strand whose beads are arranged in contiguous blocks of different colours along its length? Answer yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_objform",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a clump on the strand where several beads merge together so they cannot be told apart",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g"
+        },
+        {
+          "fail_if": ["sweep_g.unreadable"]
+        },
+        {
+          "compare": "sweep_g.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a red bead",
+  "count_total": "reference.n"
+}

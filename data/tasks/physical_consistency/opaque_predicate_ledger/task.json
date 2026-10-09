@@ -1,0 +1,77 @@
+{
+  "id": "opaque_predicate_ledger",
+  "axis": "physical_consistency",
+  "prompt": "A photorealistic straight-on photograph of a white shop-window display shelf standing in front of a completely plain white wall. Standing in one row on the shelf, evenly spaced and well separated, are five jars of the same size and shape, alternating between matte white porcelain and clear colourless glass, with a porcelain jar at each end of the row and no two glass jars next to each other.\n\nOne bright lamp sits low down in front of the shelf and off to one SIDE, so every shadow is thrown UP and SIDEWAYS onto the plain wall well ABOVE the vessels and clearly SHIFTED along the wall, never directly above the vessel that made it, and never touching the vessels.\n\nObey real optics exactly: only a body that BLOCKS light casts a shadow.\n\nEven exposure, plain white wall and shelf, sharp focus, nothing else in the picture, no text, no numerals.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a row of vessels standing on a pale shelf in front of a plain wall that carries dark shadow silhouettes above them? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_opaque": 3,
+    "n_glass": 2,
+    "n_total": 5,
+    "lo": 1,
+    "hi": 8,
+    "q_count": "Look only at the plain wall ABOVE the row of vessels. Count the dark shadow silhouettes on that wall. Answer with a whole number only.",
+    "q_total": "How many vessels stand in the row on the shelf in this picture? Count every vessel, clear or solid. Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shadow_ledger",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_count",
+          "out": "n"
+        },
+        {
+          "fail_if": ["n.unreadable"]
+        },
+        {
+          "compare_band": "n",
+          "to": "reference.n_opaque",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "vessel_total",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_total",
+          "out": "ng"
+        },
+        {
+          "fail_if": ["ng.unreadable"]
+        },
+        {
+          "compare_band": "ng",
+          "to": "reference.n_total",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

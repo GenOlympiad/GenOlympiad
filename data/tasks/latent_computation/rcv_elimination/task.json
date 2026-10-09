@@ -1,0 +1,205 @@
+{
+  "id": "rcv_elimination",
+  "axis": "latent_computation",
+  "prompt": "A clean straight-on photo of a city-hall election results board announcing the outcome of a RANKED-CHOICE (instant-runoff) contest among four candidates: Ash, Bray, Cole, and Dane. One hundred voters ranked them. First choices: Ash 34, Bray 28, Dane 21, Cole 17. Second and later preferences: every Cole ballot ranks Bray next; every Dane ballot ranks Cole next; every Bray ballot ranks Cole next. Instant-runoff eliminates the lowest candidate each round and transfers their ballots to the next surviving preference until one candidate holds more than half. Render the FINAL results board: the elected winner clearly marked with a WINNER badge, and the winner's and runner-up's final vote totals shown as printed numbers. Do not show intermediate rounds or any arrows.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show city-hall ranked-choice election results announcement board with a WINNER badge and printed final vote totals? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "winner": "Bray",
+    "winner_votes": 66,
+    "runnerup": "Ash",
+    "runnerup_votes": 34
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "winner_name",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "candidate name printed on the row of this results table that carries the winner badge",
+          "expected_n": 1,
+          "out": "wa_box"
+        },
+        {
+          "fail_if": ["wa_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed results board, showing part of one row of a table. A person's name is printed in it. Copy that name exactly as it is printed and write nothing else.",
+          "boxes": "wa_box",
+          "pad": 0.15,
+          "out": "wa_cr"
+        },
+        {
+          "fail_if": ["wa_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "wa_cr",
+          "out": "wa"
+        },
+        {
+          "run": "winner_named",
+          "args": ["wa", "reference.winner"],
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "run": "score_fraction",
+          "args": ["s"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "winner_votes",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "vote total printed in the final-vote-total column, on the row of this results table that carries the winner badge -- draw ONE box on that printed number only, from its first digit to its last; do not box the candidate name on that row, do not box the WINNER badge itself, and do not box a number printed on a row that carries no winner badge.",
+          "expected_n": 1,
+          "out": "wv_box"
+        },
+        {
+          "fail_if": ["wv_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed results board. One whole number is printed in it. Write down just that number, digits only, and nothing else.",
+          "boxes": "wv_box",
+          "pad": 0.2,
+          "out": "wv_cr"
+        },
+        {
+          "fail_if": ["wv_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "wv_cr",
+          "out": "wv"
+        },
+        {
+          "compare_tolerance": "wv",
+          "to": "reference.winner_votes",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_runnerup_votes_line",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "vote total printed in the final-vote-total column, on the row of this results table that has a vote total but no winner badge",
+          "expected_n": 1,
+          "out": "read_box"
+        },
+        {
+          "fail_if": ["read_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed results board. One whole number is printed in it. Write down just that number, digits only, and nothing else.",
+          "boxes": "read_box",
+          "pad": 0.2,
+          "out": "read_cr"
+        },
+        {
+          "fail_if": ["read_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "read_cr",
+          "out": "read"
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.runnerup_votes",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_runnerup_name",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "candidate name printed on the row of this results table that has a vote total but no winner badge -- draw ONE box on that row's printed person name only, from its first letter to its last; do not box that row's vote number, do not box the WINNER badge or the badged winner's own name, and do not box the board heading or a row that carries no vote total.",
+          "expected_n": 1,
+          "out": "s_box"
+        },
+        {
+          "fail_if": ["s_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed results board, showing part of one row of a table. A person's name is printed in it. Copy that name exactly as it is printed and write nothing else.",
+          "boxes": "s_box",
+          "pad": 0.15,
+          "out": "s_cr"
+        },
+        {
+          "fail_if": ["s_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "s_cr",
+          "out": "s"
+        },
+        {
+          "compare": "s",
+          "to": "reference.runnerup",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_one_winner_badge",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is exactly one candidate marked with a WINNER badge on the results board? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

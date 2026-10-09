@@ -1,0 +1,96 @@
+{
+  "id": "refraction_snell",
+  "axis": "quantitative_precision",
+  "prompt": "A clean a physics ray diagram of light entering GLASS: a red incident ray and a blue refracted ray bending into the tinted glass below a flat surface line. The bend must obey Snell's law: the sine of the angle of incidence divided by the sine of the angle of refraction (both measured from the surface normal) must equal the index n = 1.5. The refracted (blue) ray must bend TOWARD the normal by exactly the Snell amount. Do NOT under-bend or over-bend the refracted ray. Plain background, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a physics ray diagram of light entering GLASS: a red incident ray and a blue refracted ray bending into the tinted glass below a flat surface line. Ignoring artistic quality, does the image show a red ray above a surface line and a blue ray below it, meeting at the surface? Answer NO only if those are missing or it is unrelated. yes or no.",
+  "reference": {
+    "in_lo": [160, 90, 80],
+    "in_hi": [10, 255, 255],
+    "out_lo": [100, 90, 60],
+    "out_hi": [130, 255, 255],
+    "hit": [0.5, 0.5],
+    "normal_deg": 90.0,
+    "n": 1.5,
+    "tol": 0.16,
+    "enforce_notext": true,
+    "q_notext": "Is there any printed number or written measurement note anywhere in this diagram? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "snell_ratio",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "line",
+          "target": "RED incident ray -- the bold straight red line in the air above the flat surface, drawn from its far tip down to the spot where it meets that surface line",
+          "out": "ri"
+        },
+        {
+          "fail_if": ["ri.unreadable"]
+        },
+        {
+          "read": "line",
+          "target": "BLUE refracted ray",
+          "out": "ro"
+        },
+        {
+          "fail_if": ["ro.unreadable"]
+        },
+        {
+          "run": "sine_ratio_score",
+          "args": ["ri", "ro", "reference", "image"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.degenerate"]
+        },
+        {
+          "compare_band": "rd.frac",
+          "to": 1.0,
+          "core": 0.15,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

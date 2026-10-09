@@ -1,0 +1,99 @@
+{
+  "id": "led_resistor_color_composite",
+  "axis": "symbolic_systems",
+  "prompt": "A sharp photorealistic EXTREME CLOSE-UP MACRO PHOTOGRAPH of a single axial through-hole resistor lying on an electronics workbench, shot straight on, with a metal wire lead from each end and colour bands painted around its cylindrical body. This resistor is the current-limiting resistor for a blue LED, and you must compute its value and render the correct colour bands. The circuit: a 12.0 V supply drives a blue LED in series with this resistor, and the LED should run at 20 mA. Use this LED forward-voltage table by colour: red 1.8 V, yellow 2.0 V, green 2.1 V, blue 3.2 V, white 3.4 V. Compute the resistor value by Ohm's law: R = (supply voltage MINUS the LED's forward voltage) divided by the current -- you must SUBTRACT the LED forward voltage from the supply before dividing, not use the whole supply voltage. Then paint the four (4) standard resistor colour bands that encode that resistance at +-5% tolerance (first two bands = the two significant digits, third band = the power-of-ten multiplier, fourth band = the gold tolerance band at the right end), in the correct left-to-right order. Render a real component with real lighting and sharp focus; paint ONLY the colour bands -- no printed numbers, no text, no resistance value, no working, nothing else in frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an axial resistor (a small cylindrical component with a wire lead at each end and coloured bands painted around its body)? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "value_ohm": 440.0,
+    "bands": ["yellow", "yellow", "brown", "gold"],
+    "n_bands": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "band_value",
+      "weight": 4.0,
+      "score": "bv.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the resistor BODY -- the small cylindrical component between the two metal wire leads, the part that carries the painted colour bands (the body alone, not the wire leads)",
+          "expected_n": 1,
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "read_crop": "This picture shows the body of one axial resistor with colour bands painted around it. List the colours of the painted bands in order, starting at the LEFT end of the body and moving to the RIGHT end. Use only these colour words: black, brown, red, orange, yellow, green, blue, violet, grey, white, gold, silver. Answer with the colour words in order, separated by single spaces, and nothing else.",
+          "boxes": "rb",
+          "out": "bandseq"
+        },
+        {
+          "fail_if": ["bandseq.unreadable"]
+        },
+        {
+          "run": "band_value_matches",
+          "args": ["bandseq", "reference.value_ohm"],
+          "out": "bv"
+        }
+      ]
+    },
+    {
+      "name": "band_count",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coloured band painted right around the resistor's cylindrical body (one tight box per painted band; the bare body colour between bands is not a band)",
+          "context": "the resistor BODY -- the small cylindrical component between the two metal wire leads, the part that carries the painted colour bands (the body alone, not the wire leads)",
+          "out": "bb",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["bb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up crop cut from a photo of an electronic resistor. Does the crop show a PAINTED COLOUR BAND -- a stripe of one solid colour, clearly different from the pale body colour around it -- running across the picture? Answer no if the crop shows only the plain body surface, a metal wire, or background. Answer yes or no only.",
+          "boxes": "bb",
+          "out": "bc"
+        },
+        {
+          "fail_if": ["bc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["bc"],
+          "out": "bn"
+        },
+        {
+          "compare_band": "bn.n",
+          "to": "reference.n_bands",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

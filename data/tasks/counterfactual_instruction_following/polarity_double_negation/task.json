@@ -1,0 +1,201 @@
+{
+  "id": "polarity_double_negation",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A straight-on photo of a paint shop's quality-control bench with THREE rectangular colour sample cards stacked one above another. Top card: swatch solid BLUE, sticky note THE NAME BELOW THE SWATCH AGREES WITH THE COLOUR, red stamp under it SUPERVISOR: THE NOTE IS CORRECT. Middle card: swatch solid GREEN, sticky note THE NAME BELOW THE SWATCH AGREES WITH THE COLOUR, red stamp under it SUPERVISOR: THE NOTE IS MISTAKEN. Bottom card: swatch solid BLUE, sticky note THE NAME BELOW THE SWATCH DOES NOT MATCH THE COLOUR, red stamp under it SUPERVISOR: THE NOTE IS CORRECT. On every card a white strip directly under the swatch carries that card's name in large black capitals. Every colour card in this shop carries one of only two names: HARBOUR BLUE or MEADOW GREEN. The supervisor's red stamp is never wrong. Print each card's name in large capitals and keep every swatch colour, note and stamp exactly as described. Along the very bottom print the small caption PAINT SHOP QUALITY CONTROL. No other text anywhere.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show at least one colour sample card -- a block of solid paint colour with a printed name near it -- plus a yellow note and an ink stamp somewhere in the picture. Never mind how well it is drawn, or what any of the words say. Does the image actually DEPICT that subject? Answer NO only if it is blank or shows something completely different. Answer yes or no only.",
+  "reference": {
+    "n_seq": 6,
+    "exp_seq": ["blue", "blue", "green", "blue", "blue", "green"],
+    "kinds": ["eq", "eq", "eq", "eq", "eq", "eq"],
+    "q_verbatim": "Write out every line of printed, written or stamped text you can see IN THIS PICTURE -- including text on stickers, sticky notes, ink stamps, labels and cards. Copy each line exactly as it appears, character by character. Do NOT correct spelling, arithmetic or anything that looks wrong, and do not leave any line out. If there is no text at all, answer NONE. Separate the lines with spaces.",
+    "exp_lines": [
+      "PAINT SHOP QUALITY CONTROL",
+      "THE NAME BELOW THE SWATCH AGREES WITH THE COLOUR",
+      "SUPERVISOR: THE NOTE IS CORRECT",
+      "THE NAME BELOW THE SWATCH AGREES WITH THE COLOUR",
+      "SUPERVISOR: THE NOTE IS MISTAKEN",
+      "THE NAME BELOW THE SWATCH DOES NOT MATCH THE COLOUR",
+      "SUPERVISOR: THE NOTE IS CORRECT"
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "double_negation_count",
+      "weight": 8.0,
+      "score": "res.frac",
+      "steps": [
+        {
+          "run": "group_count",
+          "args": ["reference.n_seq", "2"],
+          "out": "nc"
+        },
+        {
+          "read": "boxes",
+          "target": "colour sample card",
+          "votes": 3,
+          "out": "cdb",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cdb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a paint shop bench. Does this cut-out show exactly ONE whole colour sample card -- one card carrying a block of solid paint colour with a white strip of printed capital letters under it -- rather than two cards together, only a piece of one card, or just the bare bench? Answer yes or no only.",
+          "boxes": "cdb",
+          "pad": 0.06,
+          "out": "cdc"
+        },
+        {
+          "fail_if": ["cdc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one colour sample card. Look ONLY at the big block of solid paint colour on this card and ignore every word printed anywhere. What colour is that painted block? Answer with a single word, either blue or green.",
+          "boxes": "cdb",
+          "pad": 0.04,
+          "out": "cdw"
+        },
+        {
+          "fail_if": ["cdw.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one colour sample card. Under the block of paint colour there is a white strip with the card's name printed on it in capital letters. Read that printed name. Answer with just those words and nothing else.",
+          "boxes": "cdb",
+          "pad": 0.04,
+          "out": "cdn"
+        },
+        {
+          "fail_if": ["cdn.unreadable"]
+        },
+        {
+          "run": "samples_in_reading_order",
+          "args": ["cdb", "cdc", "cdw", "cdn", "nc"],
+          "out": "rd"
+        },
+        {
+          "run": "sequence_all_match",
+          "args": ["rd.colours", "rd.names", "reference.exp_seq", "reference.kinds"],
+          "out": "res0"
+        },
+        {
+          "run": "hold_count_seq",
+          "args": ["res0"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "double_negation_agreement",
+      "weight": 1.0,
+      "score": "res.frac",
+      "steps": [
+        {
+          "run": "group_count",
+          "args": ["reference.n_seq", "2"],
+          "out": "nc"
+        },
+        {
+          "read": "boxes",
+          "target": "colour sample card",
+          "votes": 3,
+          "out": "cdb",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cdb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a paint shop bench. Does this cut-out show exactly ONE whole colour sample card -- one card carrying a block of solid paint colour with a white strip of printed capital letters under it -- rather than two cards together, only a piece of one card, or just the bare bench? Answer yes or no only.",
+          "boxes": "cdb",
+          "pad": 0.06,
+          "out": "cdc"
+        },
+        {
+          "fail_if": ["cdc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one colour sample card. Look ONLY at the big block of solid paint colour on this card and ignore every word printed anywhere. What colour is that painted block? Answer with a single word, either blue or green.",
+          "boxes": "cdb",
+          "pad": 0.04,
+          "out": "cdw"
+        },
+        {
+          "fail_if": ["cdw.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one colour sample card. Under the block of paint colour there is a white strip with the card's name printed on it in capital letters. Read that printed name. Answer with just those words and nothing else.",
+          "boxes": "cdb",
+          "pad": 0.04,
+          "out": "cdn"
+        },
+        {
+          "fail_if": ["cdn.unreadable"]
+        },
+        {
+          "run": "samples_in_reading_order",
+          "args": ["cdb", "cdc", "cdw", "cdn", "nc"],
+          "out": "rd"
+        },
+        {
+          "run": "sequence_agreement",
+          "args": ["rd.colours", "rd.names", "reference.exp_seq", "reference.kinds"],
+          "out": "res0"
+        },
+        {
+          "run": "hold_agreement_seq",
+          "args": ["res0"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "double_negation_text_present",
+      "weight": 2.0,
+      "pass_at": 0.8,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read_crop": "reference.q_verbatim",
+          "votes": 1,
+          "out": "b1"
+        },
+        {
+          "run": "page_text_coverage",
+          "args": ["reference.exp_lines", "b1"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

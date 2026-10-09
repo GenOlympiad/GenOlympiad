@@ -1,0 +1,234 @@
+{
+  "id": "srt_line_and_rate_limits",
+  "axis": "text_fidelity",
+  "prompt": "A subtitling house is cutting the narration of a documentary segment into cues before the file goes to the broadcaster for technical review, and this is the cue list in the editor with the waveform beside it.\n\nThe narration, word for word, is: The dam was raised in stages between the wars, and the village it drowned still shows at the surface in the driest summers, when the water drops below the old bridge.\n\nThe broadcaster's delivery specification, which every file is checked against on arrival: no cue carries more than two lines; no line carries more than 37 characters, counting the spaces; every cue stays on screen at a rate of between twelve and seventeen characters a second; cues never overlap and never run backwards; and the narration goes out entire and word for word, nothing added and nothing lost. The run begins at 00:00:02,000.\n\nHow many cues that comes to, where the narration is cut and every in and out time is deliberately being kept from you: that split is the whole of the job, and there is no cut that satisfies the measure and the rate by accident. Give me the editor with its cue rows in reading order, each row carrying its in time, its out time and its own subtitle text, the text large enough to be counted character by character. No character counts, no rate figures and no working may appear anywhere on the screen.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a subtitling editor with a list of rows, each row carrying times and a short piece of text? A realistic photo, a document mockup or an illustration ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "measure_verdict": "within",
+    "timing_verdict": "clear",
+    "rate_verdict": "inband",
+    "closing_words": "the old bridge",
+    "opening_ms": 2000,
+    "narration_words": 31
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_cue_line_sits_inside_the_measure",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one cue row in the subtitle list",
+          "sweep": true,
+          "out": "cu"
+        },
+        {
+          "fail_if": ["cu.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one subtitle row. Copy the subtitle text on that row exactly, putting a slash between its two lines if it has two. Ignore anything printed on a row above or below it. Write nothing else.",
+          "boxes": "cu",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "cut"
+        },
+        {
+          "fail_if": ["cut.unreadable"]
+        },
+        {
+          "run": "line_limits",
+          "args": ["cut", "reference.narration_words"],
+          "out": "ms"
+        },
+        {
+          "compare": "ms.txt",
+          "to": "reference.measure_verdict",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_reading_rate_stays_inside_the_delivery_band",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one cue row in the subtitle list",
+          "sweep": true,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one subtitle row. Copy the subtitle text on that row exactly, putting a slash between its two lines if it has two. Ignore anything printed on a row above or below it. Write nothing else.",
+          "boxes": "cr",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "crt"
+        },
+        {
+          "fail_if": ["crt.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one subtitle row with an in time and an out time printed on it. Copy both times exactly as printed, in that order -- the in time first, then the out time. Ignore anything printed on a row above or below it. Write nothing else.",
+          "boxes": "cr",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "crm"
+        },
+        {
+          "fail_if": ["crm.unreadable"]
+        },
+        {
+          "run": "reading_rate_in_band",
+          "args": ["crt", "crm"],
+          "out": "rt"
+        },
+        {
+          "compare": "rt.txt",
+          "to": "reference.rate_verdict",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_cues_run_forward_without_overlapping",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one cue row in the subtitle list",
+          "sweep": true,
+          "out": "ct"
+        },
+        {
+          "fail_if": ["ct.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one subtitle row with an in time and an out time printed on it. Copy both times exactly as printed, in that order -- the in time first, then the out time. Ignore anything printed on a row above or below it. Write nothing else.",
+          "boxes": "ct",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "ctm"
+        },
+        {
+          "fail_if": ["ctm.unreadable"]
+        },
+        {
+          "run": "cue_times_clear",
+          "args": ["ctm"],
+          "out": "tm"
+        },
+        {
+          "compare": "tm.txt",
+          "to": "reference.timing_verdict",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_narration_runs_to_its_last_words",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one cue row in the subtitle list",
+          "sweep": true,
+          "out": "cw"
+        },
+        {
+          "fail_if": ["cw.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one subtitle row. Copy the subtitle text on that row exactly, putting a slash between its two lines if it has two. Ignore anything printed on a row above or below it. Write nothing else.",
+          "boxes": "cw",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "cwt"
+        },
+        {
+          "fail_if": ["cwt.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one subtitle row with an in time and an out time printed on it. Copy both times exactly as printed, in that order -- the in time first, then the out time. Ignore anything printed on a row above or below it. Write nothing else.",
+          "boxes": "cw",
+          "pad": 0.25,
+          "sort": "reading_order",
+          "out": "cwm"
+        },
+        {
+          "fail_if": ["cwm.unreadable"]
+        },
+        {
+          "run": "closing_words",
+          "args": ["cwt", "cwm"],
+          "out": "lw"
+        },
+        {
+          "compare": "lw.txt",
+          "to": "reference.closing_words",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_run_opens_where_the_specification_pins_it",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one cue row in the subtitle list",
+          "sweep": true,
+          "out": "co"
+        },
+        {
+          "fail_if": ["co.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one subtitle row with an in time and an out time printed on it. Copy both times exactly as printed, in that order -- the in time first, then the out time. Ignore anything printed on a row above or below it. Write nothing else.",
+          "boxes": "co",
+          "pad": 0.25,
+          "out": "com"
+        },
+        {
+          "fail_if": ["com.unreadable"]
+        },
+        {
+          "run": "cue_times_clear",
+          "args": ["com"],
+          "out": "op2"
+        },
+        {
+          "compare_band": "op2.opening",
+          "to": "reference.opening_ms",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

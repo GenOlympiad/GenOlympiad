@@ -1,0 +1,164 @@
+{
+  "id": "waterfall_bridging",
+  "axis": "long_range_consistency",
+  "prompt": "A clean flat WATERFALL (bridge) chart on a plain white background, the kind used in a quarterly finance review. A first grey anchor column starts at value 120. Then EXACTLY EIGHT floating segment columns follow, left to right, showing these signed changes in order: +35, -22, +48, -15, +27, -40, +33, -18. Each floating column MUST BRIDGE: its base sits exactly at the top of the previous column, so the running cumulative total carries across with no gaps and no overlaps. Colour every RISE green and every FALL red; the anchor is grey. Above each floating column, print its RUNNING CUMULATIVE TOTAL (the value its top edge reaches after applying that change) as a small number. Do NOT print the individual changes again -- only the eight running totals. No legend, no axis title, no other text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show quarterly-finance waterfall (bridge) chart on white, grey anchor + eight green/red floating segment columns? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "start": 120,
+    "deltas": [35, -22, 48, -15, 27, -40, 33, -18],
+    "cum_levels": [155, 133, 181, 166, 193, 153, 186, 168],
+    "up_down": ["up", "down", "up", "down", "up", "down", "up", "down"],
+    "q_cum": "This is a close-up of one small number printed on a chart. What number is printed here? Answer with that number only, digits (and a minus sign if there is one), nothing else.",
+    "q_bridge": "In this waterfall chart, does every floating column start exactly at the top level of the previous column (a continuous bridge with no gaps and no overlaps)? Answer strictly 'yes' or 'no'."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bridge_continuous",
+      "weight": 2.0,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one column of the waterfall chart: the grey anchor column or a coloured floating column",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "segs_box"
+        },
+        {
+          "fail_if": ["segs_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole column of the chart, its top edge and its bottom edge included, rather than bare background or only part of a column? Answer yes or no only.",
+          "boxes": "segs_box",
+          "out": "segs_chk"
+        },
+        {
+          "fail_if": ["segs_chk.unreadable"]
+        },
+        {
+          "run": "columns_bridge",
+          "args": ["segs_box", "segs_chk"],
+          "out": "bc"
+        },
+        {
+          "compare": "bc.value",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cumulative_chain",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "small printed running-total number sitting just above one of the coloured (green or red) floating columns of the waterfall chart",
+          "retries": 5,
+          "out": "cols"
+        },
+        {
+          "fail_if": ["cols.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_cum",
+          "boxes": "cols",
+          "out": "vals"
+        },
+        {
+          "fail_if": ["vals.unreadable"]
+        },
+        {
+          "run": "running_total_share",
+          "args": ["cols", "vals", "reference['cum_levels']"],
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare_band": "s.frac",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_cum_first",
+      "weight": 0.7,
+      "steps": [
+        {
+          "read_number": "In this waterfall (bridge) chart there is a small running-total number printed above each floating column (excluding the first grey anchor). Read ONLY the first floating column's printed running-total number and answer with that single integer, digits only, nothing else.",
+          "out": "rv"
+        },
+        {
+          "fail_if": ["rv.unreadable"]
+        },
+        {
+          "run": "level_matches",
+          "args": ["rv", "reference['cum_levels'][0]"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_cum_mid",
+      "weight": 0.7,
+      "steps": [
+        {
+          "read_number": "In this waterfall (bridge) chart there is a small running-total number printed above each floating column (excluding the first grey anchor). Read ONLY the middle floating column's printed running-total number and answer with that single integer, digits only, nothing else.",
+          "out": "rv"
+        },
+        {
+          "fail_if": ["rv.unreadable"]
+        },
+        {
+          "run": "level_matches",
+          "args": ["rv", "reference['cum_levels'][4]"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_cum_last",
+      "weight": 0.7,
+      "steps": [
+        {
+          "read_number": "In this waterfall (bridge) chart there is a small running-total number printed above each floating column (excluding the first grey anchor). Read ONLY the last floating column's printed running-total number and answer with that single integer, digits only, nothing else.",
+          "out": "rv"
+        },
+        {
+          "fail_if": ["rv.unreadable"]
+        },
+        {
+          "run": "level_matches",
+          "args": ["rv", "reference['cum_levels'][7]"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

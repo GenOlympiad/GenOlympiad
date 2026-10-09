@@ -1,0 +1,181 @@
+{
+  "id": "commodity_futures_live",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A wall-mounted COMMODITY SPOT-PRICE BOARD glowing above a bank's commodity trading desk, traders at screens in the foreground. Use the real settlement prices for the 2026-07-16 session (the pinned quotes for this board). Lay it out as a tidy dark dashboard, one row per commodity: GOLD (US$ per troy ounce), SILVER (US$ per troy ounce), and WTI CRUDE OIL (US$ per barrel), each printed with its real price. Then, below a divider, print the GOLD/SILVER RATIO -- the number of ounces of silver that equals one ounce of gold, i.e. the gold price DIVIDED BY the silver price -- as a single number to one decimal. Use the REAL market prices, and make the printed ratio actually equal gold price divided by silver price. Crisp aligned columns, every label, price and the ratio sharp and legible.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a trading-floor commodity desk spot-price wall board with a computed gold/silver ratio? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {},
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "gold_price",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "price row of this board labelled GOLD -- that word and the price printed at the end of the row",
+          "expected_n": 1,
+          "out": "a_box"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit price board, showing one row of it. A price is printed in it. Copy that price exactly as it is printed, digits only, with no currency sign and no commas. Write nothing else.",
+          "boxes": "a_box",
+          "pad": 0.15,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare_band": "a",
+          "to": "reference.mkt.gold",
+          "core_rel": 0.015,
+          "margin_rel": 0.015,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "silver_price",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "price row of this board labelled SILVER -- that word and the price printed at the end of the row",
+          "expected_n": 1,
+          "out": "a_box"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit price board, showing one row of it. A price is printed in it. Copy that price exactly as it is printed, digits only, with no currency sign and no commas. Write nothing else.",
+          "boxes": "a_box",
+          "pad": 0.15,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare_band": "a",
+          "to": "reference.mkt.silver",
+          "core_rel": 0.02,
+          "margin_rel": 0.02,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "wti_price",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "price row of this board labelled WTI CRUDE OIL -- those words and the price printed at the end of the row",
+          "expected_n": 1,
+          "out": "a_box"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit price board, showing one row of it. A price is printed in it. Copy that price exactly as it is printed, digits only, with no currency sign and no commas. Write nothing else.",
+          "boxes": "a_box",
+          "pad": 0.15,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare_band": "a",
+          "to": "reference.mkt.wti",
+          "core_rel": 0.02,
+          "margin_rel": 0.02,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "gold_silver_ratio",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the number printed on the GOLD/SILVER RATIO line of this board",
+          "expected_n": 1,
+          "out": "a_box"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit price board, showing one line of it. One number is printed in it. Copy that number exactly as it is printed, digits only, with no commas. Write nothing else.",
+          "boxes": "a_box",
+          "pad": 0.15,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare_band": "a",
+          "to": "reference.mkt.ratio",
+          "core": 2.5,
+          "margin": 2.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "run": "fetch_spot_prices",
+      "value": "gt",
+      "out": "mkt"
+    }
+  ],
+  "grounding": "live"
+}

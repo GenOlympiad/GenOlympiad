@@ -1,0 +1,205 @@
+{
+  "id": "marker_layout_allowance_excluded",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of the marker a garment factory's lay planner has just finished, pinned flat on the cutting room table and taken from directly above. One length of cloth runs away from the camera with its two selvedge edges ruled down the sides, the five pattern pieces for this style are out on it, and the works ticket is clipped at the head of the table.\n\nThe cloth is 150 cm usable between the edges. The works ticket gives the five pieces with their sizes in centimetres:\nFRONT   62 by 48\nBACK    62 by 50\nSLEEVE  58 by 26\nCOLLAR  20 by 12\nPOCKET  16 by 14\nEvery size on this factory's tickets is a finished size, with the seam allowance outside it. The house allowance is 1.5 cm along each edge of a piece, the same on every edge and on every piece.\n\nEach piece on the marker carries, on the piece itself, the two figures for that piece as the cutter will cut it, and the length the lay needs stands at the far end of the cloth. All five pieces have to sit inside the two edges, and none of them may lie on top of another.\n\nWork out for yourself what belongs on each piece and how they fit -- I am deliberately not telling you any of the cut sizes, nor how the pieces are arranged. The figures on the pieces must be large and sharp. Nothing may appear beyond the cloth, the pieces, their figures, the lay length and the ticket: no working, no allowance table, no note about the house rule.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a length of cloth or paper with several outlined pattern pieces laid out on it, each carrying figures? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cut_sizes": "15 x 23, 17 x 19, 29 x 61, 51 x 65, 53 x 65",
+    "edge_state": "inside",
+    "overlap_state": "no",
+    "n_pieces": 5,
+    "q_piece_cert": "Does this cut-out show ONE whole pattern piece laid on the cloth, rather than bare cloth or only part of a piece? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_piece_is_marked_at_the_size_the_cutter_cuts_not_the_size_the_ticket_states",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a pattern piece laid on the cloth",
+          "sweep": true,
+          "out": "pc_ring"
+        },
+        {
+          "fail_if": ["pc_ring.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one marked-out piece with two figures written on it. Copy both figures, the left-hand one first. If more than one piece is visible in this cut-out, read the one nearest the middle of it. Write them only and nothing else.",
+          "boxes": "pc_ring",
+          "pad": 0.15,
+          "out": "pc_txt"
+        },
+        {
+          "fail_if": ["pc_txt.unreadable"]
+        },
+        {
+          "run": "read_piece_sizes",
+          "args": ["pc_txt"],
+          "out": "sizes"
+        },
+        {
+          "compare": "sizes.seq",
+          "to": "reference.cut_sizes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_piece_reaches_past_a_selvedge_edge",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a pattern piece laid on the cloth",
+          "sweep": true,
+          "out": "edge_ring"
+        },
+        {
+          "fail_if": ["edge_ring.unreadable"]
+        },
+        {
+          "read_crop": "Does the whole of this piece lie between the two ruled edges of the cloth, or does part of it cross one? Answer with one word: inside or crossing.",
+          "boxes": "edge_ring",
+          "pad": 0.4,
+          "out": "edge_txt"
+        },
+        {
+          "fail_if": ["edge_txt.unreadable"]
+        },
+        {
+          "run": "distinct_answers",
+          "args": ["edge_txt"],
+          "out": "edges"
+        },
+        {
+          "compare": "edges.seq",
+          "to": "reference.edge_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_piece_lies_on_top_of_another",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a pattern piece laid on the cloth",
+          "sweep": true,
+          "out": "ov_ring"
+        },
+        {
+          "fail_if": ["ov_ring.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one pattern piece laid on cloth. Name what lies over the pattern piece in the middle of this cut-out, using one word from this list: piece (part of another pattern piece lies over it) or clear (nothing lies over it). Write that one word and nothing else.",
+          "boxes": "ov_ring",
+          "pad": 0.3,
+          "out": "ov_txt"
+        },
+        {
+          "fail_if": ["ov_txt.unreadable"]
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["ov_txt", "[[['piece'],'yes'],[['clear'],'no']]"],
+          "out": "ov_txt__mapped"
+        },
+        {
+          "run": "distinct_answers",
+          "args": ["ov_txt__mapped"],
+          "out": "overs"
+        },
+        {
+          "compare": "overs.seq",
+          "to": "reference.overlap_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_five_pattern_pieces_lie_on_the_cloth",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a pattern piece laid on the cloth",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_piece_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_pieces",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_was_added_to_the_cutting_table",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of arithmetic, an allowance table or a note laid on the table",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

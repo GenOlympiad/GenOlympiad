@@ -1,0 +1,217 @@
+{
+  "id": "pao_vs_bbd_symbol_branch",
+  "axis": "world_knowledge_grounding",
+  "prompt": "Flat on the meeting table at a skincare brand lies the back-label proofing sheet that is going into the legal sign-off. The two artworks are printed side by side at full size, and the stability report for each one is clipped beside its own artwork.\n\nThe range is two tubes. The artwork on the sheet at the top is headed SKU 4401, a night balm, and its report gives a minimum durability of 36 months from filling and a period after opening of 12 months. The artwork under it is headed SKU 4402, a vitamin serum, and its report gives a minimum durability of 18 months from filling. Both were filled in 09/2026, and both reports say so. Each artwork carries the usual back-of-pack matter -- the range name, the contents in millilitres, the batch code -- and, at the foot of each, the durability marking that this product has to go to press with, with any figure or date that marking takes printed beside it. Where a date is called for it goes as month and year in figures.\n\nLegal signs this sheet and the plates are cut from it. A range that goes out with the wrong marking on one of its tubes is recalled and destroyed at the brand's cost. Work out for yourself what each of these two tubes has to carry -- I am deliberately not telling you which marking either product takes, I am not telling you where the line between them falls, and I am not telling you what to print beside either one.\n\nBoth markings and everything printed beside them must be large enough to read on the sheet. Nothing may go on the sheet beyond the two artworks and the two reports: no rules, no notes, no comparison table.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two printed label artworks side by side with small printed matter on them? A photograph, an illustration, a schematic or a plain layout ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no artwork in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "short_symbol": "hourglass",
+    "long_symbol": "jar",
+    "bbd_norm": "3-2028",
+    "n_artworks": 2,
+    "date_present": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_short_life_tube_takes_the_branch_the_threshold_sends_it_down",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the foot of the artwork headed SKU 4402",
+          "sweep": true,
+          "out": "short_box"
+        },
+        {
+          "fail_if": ["short_box.unreadable"]
+        },
+        {
+          "read_crop": "At the foot of this artwork, is the small mark an hourglass pinched in at its waist, is it an open jar with its lid lifted off, or is there no such mark at all? Answer hourglass, jar or none.",
+          "boxes": "short_box",
+          "pad": 0.35,
+          "out": "short_rd"
+        },
+        {
+          "fail_if": ["short_rd.unreadable"]
+        },
+        {
+          "compare": "short_rd.answers.0",
+          "to": "reference.short_symbol",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_long_life_tube_takes_the_other_branch",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the foot of the artwork headed SKU 4401",
+          "sweep": true,
+          "out": "long_box"
+        },
+        {
+          "fail_if": ["long_box.unreadable"]
+        },
+        {
+          "read_crop": "At the foot of this artwork, is the small mark an open jar with its lid lifted off, is it an hourglass pinched in at its waist, or is there no such mark at all? Answer jar, hourglass or none.",
+          "boxes": "long_box",
+          "pad": 0.35,
+          "out": "long_rd"
+        },
+        {
+          "fail_if": ["long_rd.unreadable"]
+        },
+        {
+          "compare": "long_rd.answers.0",
+          "to": "reference.long_symbol",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_date_beside_that_marking_is_the_one_the_filling_date_grows_into",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the foot of the artwork headed SKU 4402",
+          "sweep": true,
+          "out": "date_box"
+        },
+        {
+          "fail_if": ["date_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the month and year printed beside the small mark at the foot of this artwork, exactly as they are printed. If no date is printed here, write NONE.",
+          "boxes": "date_box",
+          "pad": 0.25,
+          "out": "date_rd"
+        },
+        {
+          "fail_if": ["date_rd.unreadable"]
+        },
+        {
+          "run": "read_month_year",
+          "args": ["date_rd"],
+          "out": "bbd"
+        },
+        {
+          "compare": "bbd.norm",
+          "to": "reference.bbd_norm",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "a_date_stands_beside_the_short_life_marking_at_all",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the foot of the artwork headed SKU 4402",
+          "sweep": true,
+          "out": "dp_box"
+        },
+        {
+          "fail_if": ["dp_box.unreadable"]
+        },
+        {
+          "read_crop": "Is a date printed beside the small mark at the foot of the artwork in this cut-out? If more than one such mark is visible here, judge the one nearest the middle of the cut-out. Answer yes or no only.",
+          "boxes": "dp_box",
+          "pad": 0.25,
+          "out": "dp_rd"
+        },
+        {
+          "fail_if": ["dp_rd.unreadable"]
+        },
+        {
+          "compare": "dp_rd.answers.0",
+          "to": "reference.date_present",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_tubes_of_the_range_are_on_the_sheet",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a back-label artwork printed on the proofing sheet",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole back-label artwork, rather than a clipped report, a printed mark on its own or only part of an artwork? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.3,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_artworks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_comparison_table_added",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a rule, a note or a comparison table added to the sheet beyond the artworks and the reports",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

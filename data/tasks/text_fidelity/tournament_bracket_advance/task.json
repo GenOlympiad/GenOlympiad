@@ -1,0 +1,79 @@
+{
+  "id": "tournament_bracket_advance",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed SINGLE-ELIMINATION tournament BRACKET for 'MERIDIAN CUP - Knockout Bracket': 8 entrants in 4 Quarterfinals on the left, 2 Semifinals in the middle, a Final on the right, then the Champion. Rules of advancement: the WINNER of each match ADVANCES to the connected next-round match. Quarterfinal results:\n  QF1: Adler vs Boyd  -> winner Adler\n  QF2: Cole vs Diaz  -> winner Diaz\n  QF3: Ellis vs Frost  -> winner Ellis\n  QF4: Gomez vs Hale  -> winner Hale\nSemifinal 1 is the QF1 winner vs the QF2 winner; Semifinal 2 is the QF3 winner vs the QF4 winner. Winner of Semifinal 1 is Adler; winner of Semifinal 2 is Hale. The Final is those two semifinal winners, and the Champion is Adler. Highlight each match's winner. The two names in each next-round match MUST be the winners advancing from the previous round. Print the full bracket with the champion. Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a printed single-elimination tournament bracket with quarterfinals, semifinals and a final, winners highlighted. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "sf1_slot0": "Adler",
+    "final0": "Adler",
+    "final1": "Hale",
+    "sf_win0": "Adler",
+    "sf_win1": "Hale",
+    "q_sf1top": "In the SEMIFINAL 1 match, read the name in the TOP slot (the upper of the two names). Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give the name only.",
+    "q_ftop": "In the FINAL match, read the name in the TOP slot. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give the name only.",
+    "q_fbot": "In the FINAL match, read the name in the BOTTOM slot. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give the name only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bracket_advance_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_sf1top",
+          "out": "sf1top"
+        },
+        {
+          "fail_if": ["sf1top.unreadable"]
+        },
+        {
+          "ask": "reference.q_ftop",
+          "out": "ftop"
+        },
+        {
+          "fail_if": ["ftop.unreadable"]
+        },
+        {
+          "ask": "reference.q_fbot",
+          "out": "fbot"
+        },
+        {
+          "fail_if": ["fbot.unreadable"]
+        },
+        {
+          "run": "check_bracket_advance",
+          "args": [
+            "sf1top",
+            "ftop",
+            "fbot",
+            "reference.sf1_slot0",
+            "reference.final0",
+            "reference.final1",
+            "reference.sf_win0",
+            "reference.sf_win1"
+          ],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

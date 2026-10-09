@@ -1,0 +1,183 @@
+{
+  "id": "the_book_is_written_from_the_stage_and_the_camera_sits_in_the_stalls",
+  "axis": "physical_consistency",
+  "prompt": "A rehearsal record photograph for the deputy stage manager's prompt book, taken from the middle of the empty stalls during a technical rehearsal so that the moment can be re-set exactly when the production goes on tour. Two actors stand on a bare stage under working light, both of them in full view from head to foot and both facing out into the auditorium.\n\nThe prompt book is kept in stage directions, and the front page of the unit fixes what those mean, word for word: stage left and stage right are always given from the actor's own point of view as the actor faces the audience, and upstage means further from the audience.\n\nThe book's entry for this cue says, word for word:\n  BRENNAN stands stage right of MARLOW\n  MARLOW stands one full pace upstage of BRENNAN\n  on the cue word BRENNAN raises his own LEFT arm straight above his head and holds it there\n  MARLOW keeps both arms hanging at his sides throughout\n\nWhich side of the photograph each of them ends up on, and which side of BRENNAN's body the raised arm goes up on, are for you to work out from those directions. I am deliberately telling you neither, and I am not telling you which of the two ends up nearer the camera.\n\nBoth actors have to be in the one frame from head to foot, with the raised arm and both of MARLOW's hands in full view. Nothing is written or projected anywhere in the picture: no caption, no name board and no chalk mark on the stage floor.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is lit. Does this picture show two people standing on a stage, both of them in view from head to foot? A photograph, a scan or an illustration ALL count as yes. Answer NO only if the image is a blank sheet that just states an answer, or if there are not two people in it at all. Answer yes or no only.",
+  "reference": {
+    "side_tag": "yes",
+    "arm_tag": "yes",
+    "depth_tag": "yes",
+    "clean_frame": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_raiser_stands_on_the_side_the_actors_own_right_turns_into",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the two actors standing together on the stage",
+          "out": "sdb"
+        },
+        {
+          "fail_if": ["sdb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the actor whose arm is raised standing to the left of the other actor, or to the right of the other actor? Answer left or right.",
+          "boxes": "sdb",
+          "pad": 0.1,
+          "out": "sd"
+        },
+        {
+          "run": "raised_arm_side",
+          "args": ["sd"],
+          "out": "sdr"
+        },
+        {
+          "fail_if": ["sdr.refused"]
+        },
+        {
+          "compare": "sdr.tag",
+          "to": "reference.side_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_raised_arm_is_the_one_on_the_far_side_of_his_own_body",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the two actors standing together on the stage",
+          "out": "amb"
+        },
+        {
+          "fail_if": ["amb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the raised arm the one between the two actors, or the one on the outside of the pair? Answer between or outside.",
+          "boxes": "amb",
+          "pad": 0.1,
+          "out": "am"
+        },
+        {
+          "run": "raised_arm_between",
+          "args": ["am"],
+          "out": "amr"
+        },
+        {
+          "fail_if": ["amr.refused"]
+        },
+        {
+          "compare": "amr.tag",
+          "to": "reference.arm_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "upstage_puts_the_other_actor_further_from_the_camera_not_sideways",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the two actors standing together on the stage",
+          "out": "dpb"
+        },
+        {
+          "fail_if": ["dpb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the actor whose arms are both down standing nearer the camera than the other one, or further from the camera? Answer nearer or further.",
+          "boxes": "dpb",
+          "pad": 0.1,
+          "out": "dp"
+        },
+        {
+          "run": "arms_down_further",
+          "args": ["dp"],
+          "out": "dpr"
+        },
+        {
+          "fail_if": ["dpr.refused"]
+        },
+        {
+          "compare": "dpr.tag",
+          "to": "reference.depth_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_in_the_house_spells_the_cue_out_for_the_reader",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a caption, a name board or a chalk mark on the stage floor",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a caption, a name board or a chalk mark on the stage floor? Answer yes or no. Answer no if the cut-out shows an actor, the bare stage, a working light, the seating or the auditorium wall.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as a caption, a name board or a chalk mark on the stage floor? Answer yes or no. Answer no if it belongs there -- an actor, the bare stage, a working light, the seating or the auditorium wall.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_frame",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

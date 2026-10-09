@@ -1,0 +1,84 @@
+{
+  "id": "the_justified_line_pads_by_what_it_lacks",
+  "axis": "text_fidelity",
+  "prompt": "The jobbing printer has to pull a proof of the setting before the forme goes on the press, so the stick is photographed on the imposing surface with the copy and the space box beside it.\n\nA composing stick lies on the surface with a stanza of large type set in it. The stick's gauge is notched at the measure the customer asked for, and the setting runs to several lines. Between the words stand brass and copper spaces; the space box on the frame has a compartment for each class of space it holds, and every space is cast with its own mark on the top face, so that a compositor can tell the classes apart by eye. The customer's docket gives the copy and the measure and nothing else. House practice is that a line is spaced out until it fills the measure of the stick.\n\nHow each line has been spaced out is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a letterpress composing stick holding set type, with a space box and a printed docket lying beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "all_end_on_the_measure",
+    "part2": "lines_carry_different_marks"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the right-hand ends of the lines set in the stick and say how they stand. Answer with one of: all the lines end against the same edge of the stick; the lines end raggedly, each in a different place from the others; the lines end well inside the stick's edge, all at the same station.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the marks cast on the top faces of the spaces standing between the words and say how those marks stand across the lines. Answer with one of: different lines carry spaces of different marks; every line carries spaces of the same mark; the tops of the spaces carry no mark at all.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

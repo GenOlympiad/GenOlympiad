@@ -1,0 +1,220 @@
+{
+  "id": "ean13_check_digit",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photograph of a single artisan BAKERY product barcode LABEL (a small sticker on a paper bread bag), high contrast, sharp. The label shows a standard EAN-13 barcode: the black-and-white vertical bars, and DIRECTLY BELOW the bars the complete 13-digit barcode number printed as a single row of large legible human-readable digits.\n\nThe product's 12-digit EAN prefix is 840-7621-53094 (that is, the first twelve digits are 840762153094). You must print the FULL 13-DIGIT number: the twelve given digits followed by the correct EAN-13 CHECK DIGIT as the thirteenth and final digit. Compute the check digit with the standard EAN-13 checksum (weight the digits 1,3,1,3,... from the left, sum them, and the check digit is the amount needed to reach the next multiple of ten). Print all thirteen digits in order, left to right, below the barcode. You may also print these small label details: Baked fresh daily; Net 800g; Best before in 3 days.\n\nProduct name on the label: STONE HEARTH BAKERY SOURDOUGH COUNTRY LOAF. Make the 13-digit human-readable row large and fully legible. Do not print the check-digit formula or any explanatory text on the label.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show artisan bakery bread-bag EAN-13 barcode label whose printed 13th digit is the weighted-mod-10 check digit of a fictional prefix? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "prefix12": "840762153094",
+    "check_digit": 7,
+    "full13": "8407621530947",
+    "q_digits": "This is an artisan bakery product barcode label. Below the black-and-white barcode bars there is a single row of the human-readable barcode digits. Read that number. Output ONLY the digits with no spaces and nothing else.",
+    "q_form": "Look at this image. Is it a picture of a RETAIL PRODUCT BARCODE LABEL, i.e. does it show black-and-white barcode bars WITH a row of human-readable digits printed directly below the bars? Answer ONLY 'yes' or 'no'.",
+    "total_digits": 13.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "prefix12",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_digits",
+          "out": "ans"
+        },
+        {
+          "run": "extract_13_digits",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "prefix_matches",
+          "args": ["read", "reference.prefix12"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "checkdigit",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_digits",
+          "out": "ans"
+        },
+        {
+          "run": "extract_13_digits",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "check_digit_matches",
+          "args": ["read", "reference.full13"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_prefix12",
+      "weight": 0.75,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed human-readable digit in the row of digits below the barcode bars",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "digits_box"
+        },
+        {
+          "fail_if": ["digits_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one printed digit. Which digit is it? Answer with just that one digit.",
+          "boxes": "digits_box",
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "dg"
+        },
+        {
+          "fail_if": ["dg.unreadable"]
+        },
+        {
+          "run": "first_twelve_digits",
+          "args": ["dg"],
+          "out": "pfx"
+        },
+        {
+          "compare": "pfx.s",
+          "to": "reference.prefix12",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_total_digits",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed human-readable digit in the row of digits below the barcode bars",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "digits_box"
+        },
+        {
+          "fail_if": ["digits_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole printed digit from the row under the bars, rather than bare label, a barcode bar or only part of a digit? Answer yes or no only.",
+          "boxes": "digits_box",
+          "out": "dg_chk"
+        },
+        {
+          "fail_if": ["dg_chk.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["dg_chk"],
+          "out": "cnt_dg"
+        },
+        {
+          "compare_band": "cnt_dg.n",
+          "to": "reference.total_digits",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_has_bars",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does the label show black-and-white vertical barcode bars ABOVE the row of human-readable digits? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_extra_working",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "worked-out arithmetic, a written formula, or an explanation of how a value was worked out, on the label",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sw"
+        },
+        {
+          "fail_if": ["sw.unreadable"]
+        },
+        {
+          "compare": "sw.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

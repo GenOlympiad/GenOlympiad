@@ -1,0 +1,123 @@
+{
+  "id": "wind_barb",
+  "axis": "symbolic_systems",
+  "prompt": "A clean printed surface weather map on a coastal forecast desk, photographed straight on. On it, draw exactly ONE meteorological station wind barb for a wind of 115 knots blowing FROM the northwest: a small station circle with a straight shaft, and along the shaft the standard WMO barb marks that ENCODE the speed - solid triangular pennants worth 50 knots each, long full barbs worth 10 knots each, and short half barbs worth 5 knots each, using the fewest marks (largest first). Draw only the barb and shaft; print no numbers, no text, no other symbols anywhere.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict printed surface-analysis weather map beside a coastal forecast desk, with a single station wind-barb plotted on it, straight-on scan. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "speed": 115,
+    "speed_round": 115,
+    "pennants": 2,
+    "fulls": 1,
+    "halfs": 1,
+    "target_seq": "2 1 1",
+    "q_seq": "This is a meteorological wind barb: a straight shaft carrying, from the far end inward, some solid black TRIANGLES (pennants), then some FULL-LENGTH slanted lines (full barbs), then possibly ONE SHORT half-length slanted line (a half barb) at the very inner end. Count each type of mark actually drawn. Answer three integers separated by spaces in this order: number_of_triangles number_of_full_length_lines number_of_short_half_lines. Count ONLY the marks that are drawn; do NOT do any sums or guess the wind speed. If nothing is readable answer 'unreadable'."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "barb_seq",
+      "weight": 4.0,
+      "score": "sm.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the head of the wind barb: the stretch of the straight shaft that carries the solid black triangles and the slanted marks -- box that stretch of shaft together with all of those triangles and slanted marks, from the outer tip of the shaft in to the innermost slanted mark (not the small station circle at the other end, and not the bare stretch of shaft between them)",
+          "expected_n": 1,
+          "out": "hd"
+        },
+        {
+          "fail_if": ["hd.unreadable"]
+        },
+        {
+          "run": "barb_window",
+          "args": ["hd"],
+          "out": "reg"
+        },
+        {
+          "fail_if": ["reg.degenerate"]
+        },
+        {
+          "crop": "reg.bbox",
+          "out": "hc"
+        },
+        {
+          "read_crop": "This is a meteorological wind barb: one long straight SHAFT with marks attached along it. Write down every SOLID FILLED TRIANGLE (pennant) attached to the shaft, each with a few plain words saying where along the shaft it is attached. Take only solid filled triangles, and only marks that are actually drawn; do NOT do any sums and do not guess the wind speed. Separate one item from the next with a semicolon; write no running total and nothing else. If no solid filled triangle is attached, write the single word NONE.",
+          "image": "hc",
+          "out": "a_pen"
+        },
+        {
+          "fail_if": ["a_pen.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["a_pen", "empty_as='0'"],
+          "out": "a_pen__std"
+        },
+        {
+          "fail_if": ["a_pen__std.refused"]
+        },
+        {
+          "read_crop": "This is a meteorological wind barb: one long straight SHAFT with marks attached along it. Leave out the shaft itself and leave out any solid filled triangle. Write down every separate straight LINE attached to the shaft, of any length, each with a few plain words saying where along the shaft it is attached and how far out it runs. Take only marks that are actually drawn; do NOT do any sums and do not guess the wind speed. Separate one item from the next with a semicolon; write no running total and nothing else. If no straight line is attached, write the single word NONE.",
+          "image": "hc",
+          "out": "a_line"
+        },
+        {
+          "fail_if": ["a_line.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["a_line", "empty_as='0'"],
+          "out": "a_line__std"
+        },
+        {
+          "fail_if": ["a_line__std.refused"]
+        },
+        {
+          "read_crop": "This is a meteorological wind barb: one long straight SHAFT with marks attached along it. Leave out the shaft itself and leave out any solid filled triangle. Among the straight lines attached to the shaft, write down every SHORT one, about HALF the length of the longest attached line, each with a few plain words saying where along the shaft it is attached. Take only marks that are actually drawn; do NOT do any sums and do not guess the wind speed. Separate one item from the next with a semicolon; write no running total and nothing else. If every attached line is the same length, write the single word NONE.",
+          "image": "hc",
+          "out": "a_half"
+        },
+        {
+          "fail_if": ["a_half.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["a_half", "empty_as='0'"],
+          "out": "a_half__std"
+        },
+        {
+          "fail_if": ["a_half__std.refused"]
+        },
+        {
+          "run": "seq_match",
+          "args": [
+            "a_pen__std",
+            "a_line__std",
+            "a_half__std",
+            "[reference.pennants, reference.fulls, reference.halfs]"
+          ],
+          "out": "sm"
+        }
+      ]
+    }
+  ]
+}

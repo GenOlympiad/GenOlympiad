@@ -1,0 +1,199 @@
+{
+  "id": "egg_stamp_method_reconcile",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A Dutch packing centre files a photograph with every compliance spot-check, and this is that photograph, taken across the grading table with the observation window into the laying house behind it, so that one frame holds all three things the check turns on.\n\nOn the table lie one egg that has just come out from under the stamping head and one box from the same batch, standing with its front to the camera. Through the window behind them the inside of the laying house is in view.\n\nThe centre packs for one producer only, and the paperwork hands over this and nothing else:\n  the front of the box is lettered, word for word: SCHARRELEIEREN / BARN EGGS\n  the country segment of the shell stamp is NL and the holding number is 4231897\n  the stamp runs in the order the European marketing standard lays down, and the same standard decides what a house holding this producer's flock looks like inside\n\nWhat the stamp opens with, and what the inspector sees through the window, are the two things the check exists to establish -- I am deliberately not telling you either one. Keep the stamp on the shell big enough to read, the box front square to the camera, and the inside of the house in plain view through the window. Apart from what is lettered on the box front and the stamp on the shell, nothing on the box says anything about how the hens are kept.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show eggs or an egg box on a table? A photograph, an illustration or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with nothing of the sort in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "housing_expected": "inside=floor,outside=no",
+    "stamp_expected": "2nl4231897",
+    "declaration_state": "yes",
+    "n_eggs": 1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_house_behind_the_window_is_the_one_the_declaration_on_the_box_names",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the window in the wall of the packing hall",
+          "out": "hs_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["hs_box.unreadable"]
+        },
+        {
+          "read_crop": "Through the window in this cut-out, what are the hens kept on: rows of wire cages, an open floor with litter and perches, or grass in the open air? Answer cages, floor, or grass.",
+          "boxes": "hs_box",
+          "pad": 0.1,
+          "out": "hs_kind"
+        },
+        {
+          "fail_if": ["hs_kind.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is there an opening in the wall of the house that leads out of doors? Answer yes or no, or none if the inside of the house cannot be made out.",
+          "boxes": "hs_box",
+          "pad": 0.1,
+          "out": "hs_out"
+        },
+        {
+          "fail_if": ["hs_out.unreadable"]
+        },
+        {
+          "run": "read_housing_view",
+          "args": ["hs_kind", "hs_out"],
+          "out": "hsv"
+        },
+        {
+          "compare": "hsv.s",
+          "to": "reference.housing_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_shell_stamp_opens_with_the_method_digit_the_declaration_gives",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the egg lying on the grading table",
+          "out": "sp_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["sp_box.unreadable"]
+        },
+        {
+          "read_crop": "What code is stamped on the shell of the egg in this cut-out? Answer with that code exactly as it is printed, or none if no code can be read on it.",
+          "boxes": "sp_box",
+          "pad": 0.25,
+          "out": "sp_code"
+        },
+        {
+          "fail_if": ["sp_code.unreadable"]
+        },
+        {
+          "run": "read_shell_stamp",
+          "args": ["sp_code"],
+          "out": "spv"
+        },
+        {
+          "compare": "spv.s",
+          "to": "reference.stamp_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_box_front_carries_the_declaration_the_paperwork_gives",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the front of the egg box on the grading table",
+          "out": "dc_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["dc_box.unreadable"]
+        },
+        {
+          "read_crop": "Is the word SCHARRELEIEREN lettered on the box front in this cut-out? Answer yes or no only.",
+          "boxes": "dc_box",
+          "pad": 0.15,
+          "out": "dc_q"
+        },
+        {
+          "fail_if": ["dc_q.unreadable"]
+        },
+        {
+          "compare": "dc_q",
+          "to": "reference.declaration_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_code_on_the_shell_is_legible_in_the_record_photograph",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the egg lying on the grading table",
+          "sweep": true,
+          "out": "lg_area",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["lg_area.unreadable"]
+        },
+        {
+          "read_crop": "Is a printed code legible on the shell of the egg in this cut-out? Answer yes or no only.",
+          "boxes": "lg_area",
+          "pad": 0.25,
+          "out": "lg_q"
+        },
+        {
+          "fail_if": ["lg_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["lg_q"],
+          "out": "lg_n"
+        },
+        {
+          "compare_band": "lg_n.n",
+          "to": "reference.n_eggs",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_on_the_box_claims_another_way_of_keeping_the_hens",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a wording or picture on the box claiming another way of keeping the hens",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_bx"
+        },
+        {
+          "fail_if": ["sweep_bx.unreadable"]
+        },
+        {
+          "compare": "sweep_bx.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

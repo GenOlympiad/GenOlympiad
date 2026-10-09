@@ -1,0 +1,184 @@
+{
+  "id": "groyne_drift_updrift_fill",
+  "axis": "physical_consistency",
+  "prompt": "Every third summer the coastal authority flies this stretch at low water, and the frame goes into the file that decides whether the groyne field is still working.\n\nFour timber groynes run out across a sandy beach at even spacing. Each carries its number on the shore-end post, 1 to 4 along the beach. Beyond the last of them stands a fifth, much older and shorter, which has been out of maintenance for thirty years: it is buried to its head, and sand has spilled round the end of it and settled in a tongue on the far side. The camera is vertically above, tide well out, so the whole width of beach either side of every groyne is in frame.\n\nLongshore drift on this coast has run the same way for as long as there has been a coast here, and the old groyne is the evidence of it: sand piles against a barrier on the side the drift comes from and starves the side it goes to, so the beach beside each groyne is wide and convex on one side and narrow and hollowed on the other, usually with a small step in the sand at the root of the starved side.\n\nWhich side of each groyne is which is what the file is for, and I am deliberately not telling you. Nothing is drawn over the picture: no drift arrows, no labels, no annotation on the sand. Keep every groyne and the beach either side of it easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture look straight down on a sandy beach at low water with several groynes running out across it? A photograph, an illustration or a printed panel all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "groynes": ["1", "2", "3", "4"],
+    "n_units": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_groyne_builds_its_wide_beach_on_the_side_the_old_buried_groyne_says_it_should",
+      "weight": 3.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered groyne with the beach either side of it",
+          "out": "gy_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["gy_r.unreadable"]
+        },
+        {
+          "read_crop": "What number is on the shore-end post of the groyne in this cut-out? Answer with that number only.",
+          "boxes": "gy_r",
+          "pad": 0.2,
+          "out": "gy_k",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["gy_k.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out as a clock face with 12 at the top. Which hour lies toward the wider, more convex beach beside this groyne? Answer with a single number from 1 to 12.",
+          "boxes": "gy_r",
+          "pad": 0.2,
+          "out": "gy_h",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["gy_h.unreadable"]
+        },
+        {
+          "read_crop": "Is there a small step or scarp in the sand at the root of this groyne on the narrower side? Answer yes or no only.",
+          "boxes": "gy_r",
+          "pad": 0.2,
+          "out": "gy_s",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["gy_s.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the old buried groyne beyond the end of the run",
+          "out": "go_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["go_r.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out as a clock face with 12 at the top. Which hour lies toward the side where sand has spilled over and settled in a tongue? Answer with a single number from 1 to 12.",
+          "boxes": "go_r",
+          "pad": 0.2,
+          "out": "go_h",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["go_h.unreadable"]
+        },
+        {
+          "run": "worst_drift_angle",
+          "args": ["gy_k", "gy_h", "go_h", "reference.groynes"],
+          "out": "gy_s2"
+        },
+        {
+          "compare_compass": "gy_s2.obs",
+          "to": "gy_s2.exp",
+          "core": 22.5,
+          "margin": 44.0,
+          "out": "f_geom"
+        },
+        {
+          "run": "keyed_yes",
+          "args": ["gy_k", "gy_s", "reference.groynes"],
+          "out": "gy_o"
+        },
+        {
+          "compare_band": "gy_o.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 1.5,
+          "out": "f_fact"
+        },
+        {
+          "minimum": ["f_geom", "f_fact"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_beach_carries_its_four_numbered_groynes",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered groyne with the beach either side of it",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole groyne with its numbered shore-end post and the beach on both sides of it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.2,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_drift_arrow_label_or_annotation_was_drawn_over_the_sand",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a drift arrow, a label or an annotation drawn over the sand",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

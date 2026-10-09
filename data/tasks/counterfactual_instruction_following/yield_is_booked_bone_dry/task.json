@@ -1,0 +1,84 @@
+{
+  "id": "yield_is_booked_bone_dry",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A chip mill has to close its monthly material balance before the figures go to the buyer, so the weighbridge office is photographed with the ledger open and the frame is attached to the return.\n\nThe weighbridge display and the ledger page are in the same frame, and the ledger has three ruled rows: chips in, chips out, and sweepings lost. The weighbridge totals for the month are printed on the docket clipped beside it: chips in 240.0 tonnes, chips out 160.0 tonnes, sweepings 10.0 tonnes. Three moisture strips from the sampling points are taped to the same page and read 45, 20 and 60 per cent in that row order. The heading ruled across the top of the ledger states the mill's standing rule: yield on this page is booked bone dry.\n\nWhat goes in the dry column is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a weighbridge display beside an open material balance ledger with moisture strips taped to the page? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "dry_below_wet_everywhere"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the figure written in the dry column of the chips in row of the ledger and write that figure only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "131", "133"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the weighbridge figure for each row and the figure in the dry column of the same row, and say how the two stand. Answer with one of: the dry column figure is smaller than the weighbridge figure in every row; the dry column figure is the same as the weighbridge figure in every row; the dry column figure is bigger than the weighbridge figure in every row.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

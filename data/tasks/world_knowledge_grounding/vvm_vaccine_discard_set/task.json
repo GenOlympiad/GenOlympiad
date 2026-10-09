@@ -1,0 +1,155 @@
+{
+  "id": "vvm_vaccine_discard_set",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photograph taken at an outreach immunisation session in a village hall, over the nurse's shoulder as she works down the batch, with the open tray on the bench in front of her and the discard bin standing beside it.\n\nEight vials came out of the cold box, lettered A to H in bold on their caps. Each label carries the heat indicator every vial of this programme is bought with: a small square sitting inside a printed ring. On the labels of B, C and D the square matches the tone of the ring around it. On A, E, F, G and H the square is a paler tone than its ring. The printed expiry dates do not run together: A, B, C and D are dated next March, while E, F, G and H are dated this month.\n\nThe nurse has already been through the whole batch by hand. The ones she is not going to use are standing in the discard bin; the rest are back in the tray, and the session is about to start.\n\nWork out for yourself which vials ended up where -- I am deliberately not telling you how many went into the bin, and I am not telling you what the indicator on a label means. Every cap letter and every indicator square has to be readable at the size a supervisor checks them, and the two containers have to be plainly separate in the frame. Nothing may be added to the photograph beyond the labels and caps the vials already carry: no captions, no arrows, no marks written on the labels.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show small glass vials with letters on their caps, standing in a tray and in a separate bin beside it? A photograph, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no vials in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "discard_letters": "B,C,D",
+    "n_tray_paler": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_bin_holds_the_lettered_vials_whose_square_has_reached_its_ring",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a vial",
+          "context": "the discard bin standing beside the tray on the bench",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "bin_box"
+        },
+        {
+          "fail_if": ["bin_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole vial standing upright, rather than two vials, the bench, or only part of a vial? Answer yes or no only.",
+          "boxes": "bin_box",
+          "pad": 0.25,
+          "out": "bin_cert"
+        },
+        {
+          "fail_if": ["bin_cert.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a vial with one letter printed in bold on its cap. Copy that letter. If more than one vial cap is visible in this cut-out, read the one nearest the middle of it. Write only the single letter and nothing else.",
+          "boxes": "bin_box",
+          "pad": 0.25,
+          "out": "bin_letter"
+        },
+        {
+          "fail_if": ["bin_letter.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out the vial's label carries a small square inside a printed ring. Is the square a paler tone than the ring, or does it match the ring or look darker? Answer paler or matching.",
+          "boxes": "bin_box",
+          "pad": 0.25,
+          "out": "bin_state"
+        },
+        {
+          "fail_if": ["bin_state.unreadable"]
+        },
+        {
+          "run": "dark_letters",
+          "args": ["bin_cert", "bin_letter", "bin_state"],
+          "out": "dl"
+        },
+        {
+          "compare_set": "dl.letters",
+          "to": "reference.discard_letters",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_vial_left_in_the_tray_reads_paler_than_its_own_ring",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a vial",
+          "context": "the open tray on the bench in front of the nurse",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "tray_box"
+        },
+        {
+          "fail_if": ["tray_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole vial standing upright, rather than two vials, the bench, or only part of a vial? Answer yes or no only.",
+          "boxes": "tray_box",
+          "pad": 0.25,
+          "out": "tray_cert"
+        },
+        {
+          "fail_if": ["tray_cert.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out the vial's label carries a small square inside a printed ring. Is the square a paler tone than the ring, or does it match the ring or look darker? Answer paler or matching.",
+          "boxes": "tray_box",
+          "pad": 0.25,
+          "out": "tray_state"
+        },
+        {
+          "fail_if": ["tray_state.unreadable"]
+        },
+        {
+          "run": "light_count",
+          "args": ["tray_cert", "tray_state"],
+          "out": "lc"
+        },
+        {
+          "compare_band": "lc.n",
+          "to": "reference.n_tray_paler",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_has_been_written_or_drawn_onto_the_photograph",
+      "weight": 0.7,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a caption, an arrow or a mark written onto the picture or onto a label",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "add_s"
+        },
+        {
+          "fail_if": ["add_s.unreadable"]
+        },
+        {
+          "compare": "add_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

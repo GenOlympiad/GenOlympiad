@@ -1,0 +1,77 @@
+{
+  "id": "neon_missing_letter",
+  "axis": "text_fidelity",
+  "prompt": "A photorealistic close night photograph of a small illuminated NEON SIGN above a doorway, glowing cyan against a dark rainy street, reflections on wet pavement below, straight-on framing. The sign spells the single word 'HOTEL' in neon tube capital letters, left to right: H O T E L. Render it so that EXACTLY ONE letter is UNLIT -- its glass tube dark, cold and NOT glowing -- while ALL the other letters glow brightly with a cyan neon halo. The dark letter must be the letter at POSITION 2 counting from the LEFT (the second letter, O). Do NOT 'repair' the sign: positions 1,3,4,5 must clearly GLOW and only position 2 must be dark. Keep every letter in place and legible; only its lit/unlit state changes. No extra text, no caption.",
+  "difficulty": "s2",
+  "easy_question": "This picture was supposed to show a NEON SIGN on a dark background spelling a word in glowing tube letters, with one letter's tube unlit. Never mind how well it is drawn. Does the picture show a neon-style sign of glowing letters on a dark background? A photo, render or illustration all count as yes. Answer NO only if it instead shows a blank panel, plain daytime text, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "word": "HOTEL",
+    "n_letters": 5,
+    "dark_index": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "dark_letter_index",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single capital letter of the tube sign, whether its tube is glowing or dark -- ONE letter boxed from the top of its glass tube to the bottom and from its leftmost stroke to its rightmost; the unlit letter is a dark cold tube with no glow and must be boxed too; count a rectangle only if it holds exactly one whole letter, so do not put two letters in one rectangle and do not box the wall, the halo or a reflection.",
+          "votes": 3,
+          "out": "nlb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["nlb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a shop sign whose letters are made of glass tubes. Does this cut-out show exactly ONE whole letter of that sign -- one single letter, and it counts whether it is glowing or dark -- rather than two letters together, only a part of a letter, or just the wall behind the sign? Answer yes or no only.",
+          "boxes": "nlb",
+          "pad": 0.12,
+          "out": "nlc"
+        },
+        {
+          "fail_if": ["nlc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one letter of a shop sign made of glass tubes. Is this letter's tube switched on and glowing brightly, or is its tube dark and not lit? Answer with one word, either glowing or dark.",
+          "boxes": "nlb",
+          "pad": 0.12,
+          "out": "nlv"
+        },
+        {
+          "fail_if": ["nlv.unreadable"]
+        },
+        {
+          "run": "dark_positions",
+          "args": ["nlb", "nlc", "nlv", "reference"],
+          "out": "dp"
+        },
+        {
+          "run": "single_dark_place",
+          "args": ["dp.read", "reference.dark_index"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

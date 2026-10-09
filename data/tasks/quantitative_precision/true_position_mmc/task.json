@@ -1,0 +1,284 @@
+{
+  "id": "true_position_mmc",
+  "axis": "quantitative_precision",
+  "prompt": "A photograph of the first-article inspection report an aerospace subcontractor's coordinate measuring machine operator has just finished, lying on the desk beside the machined aluminium bracket it belongs to.\n\nThe bracket carries five drilled holes, H1 to H5. The drawing calls them up at 8.00 to 8.20 diameter with a position callout of 0.20 at maximum material condition, and the machine has already reported, for every hole, how far its measured centre sits from where the drawing wants it and how big the hole actually came out:\n  H1   X +0.040   Y -0.030   DIA 8.05\n  H2   X -0.090   Y +0.120   DIA 8.18\n  H3   X +0.150   Y +0.200   DIA 8.04\n  H4   X +0.060   Y -0.080   DIA 8.10\n  H5   X -0.180   Y -0.240   DIA 8.20\n\nTwo conventions out of the drawing standard turn those readings into a report. A position error is quoted as a diameter, so it comes to twice the straight-line distance between where the drawing wants the centre and where the centre actually is. And at maximum material condition a hole earns a further allowance on top of the 0.20 called up, equal to however much larger than 8.00 that hole was actually drilled; a hole passes when its own error is no larger than its own allowance.\n\nThe report travels to the customer's source inspector with the parts, and a line whose figure and whose verdict do not answer to one another has the whole first article rejected, so the table has to stand on its own. The results table runs one line per hole under three captioned columns -- ACTUAL DIA, POSITION and RESULT -- and every line is complete. The RESULT column carries one word on each line, PASS or FAIL. Work the figures and the verdicts out for yourself -- I am deliberately not telling you any of the five figures and I am not telling you which holes pass. Do not put any arithmetic, any square-root sign or any note about how a figure was obtained anywhere on the sheet. Every line of the table must be big and sharp enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed inspection report with a results table lying beside a machined metal bracket? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "hole_keys": "h1,h2,h3,h4,h5",
+    "pos_grid": [
+      ["0.1"],
+      ["0.3"],
+      ["0.5"],
+      ["0.2"],
+      ["0.6"]
+    ],
+    "verdict_grid": [
+      ["pass"],
+      ["pass"],
+      ["fail"],
+      ["pass"],
+      ["fail"]
+    ],
+    "dia_grid": [
+      ["8.05"],
+      ["8.18"],
+      ["8.04"],
+      ["8.1"],
+      ["8.2"]
+    ],
+    "n_rows": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "position_column",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one hole line of the results table, from its hole name to its right-hand end",
+          "out": "box_rows",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_rows.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of an inspection table. Copy the hole name printed on it, then an equals sign, then the entry in the POSITION column. Write nothing else.",
+          "boxes": "box_rows",
+          "out": "cell"
+        },
+        {
+          "fail_if": ["cell.unreadable"]
+        },
+        {
+          "run": "values_by_hole",
+          "args": ["cell", "reference.hole_keys"],
+          "out": "rk"
+        },
+        {
+          "compare_grid": "rk.rows",
+          "to": "reference.pos_grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "result_column",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one hole line of the results table, from its hole name to its right-hand end",
+          "out": "box_rows",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_rows.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of an inspection table. Copy the hole name printed on it, then an equals sign, then the entry in the RESULT column. Write nothing else.",
+          "boxes": "box_rows",
+          "out": "cell"
+        },
+        {
+          "fail_if": ["cell.unreadable"]
+        },
+        {
+          "run": "values_by_hole",
+          "args": ["cell", "reference.hole_keys"],
+          "out": "rk"
+        },
+        {
+          "run": "second_hole_verdict_matches",
+          "args": ["rk", "reference.verdict_grid"],
+          "out": "h2"
+        },
+        {
+          "compare": "h2.v",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "line_is_self_consistent",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one hole line of the results table, from its hole name to its right-hand end",
+          "out": "box_rows",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_rows.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of an inspection table. Copy the hole name printed on it, then an equals sign, then the entry in the ACTUAL DIA column. Write nothing else.",
+          "boxes": "box_rows",
+          "out": "cdia"
+        },
+        {
+          "fail_if": ["cdia.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of an inspection table. Copy the hole name printed on it, then an equals sign, then the entry in the POSITION column. Write nothing else.",
+          "boxes": "box_rows",
+          "out": "cpos"
+        },
+        {
+          "fail_if": ["cpos.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of an inspection table. Copy the hole name printed on it, then an equals sign, then the entry in the RESULT column. Write nothing else.",
+          "boxes": "box_rows",
+          "out": "cres"
+        },
+        {
+          "fail_if": ["cres.unreadable"]
+        },
+        {
+          "run": "values_by_hole",
+          "args": ["cdia", "reference.hole_keys"],
+          "out": "rdia"
+        },
+        {
+          "run": "values_by_hole",
+          "args": ["cpos", "reference.hole_keys"],
+          "out": "rpos"
+        },
+        {
+          "run": "values_by_hole",
+          "args": ["cres", "reference.hole_keys"],
+          "out": "rres"
+        },
+        {
+          "run": "verdicts_agree_with_numbers",
+          "args": ["rdia", "rpos", "rres"],
+          "out": "sc2"
+        },
+        {
+          "compare": "sc2.v",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measured_diameters",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one hole line of the results table, from its hole name to its right-hand end",
+          "out": "box_rows",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_rows.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one line of an inspection table. Copy the hole name printed on it, then an equals sign, then the entry in the ACTUAL DIA column. Write nothing else.",
+          "boxes": "box_rows",
+          "out": "cell"
+        },
+        {
+          "fail_if": ["cell.unreadable"]
+        },
+        {
+          "run": "values_by_hole",
+          "args": ["cell", "reference.hole_keys"],
+          "out": "rk"
+        },
+        {
+          "compare_grid": "rk.rows",
+          "to": "reference.dia_grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "table_lines",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one hole line of the results table, from its hole name to its right-hand end",
+          "out": "box_read",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole line of the results table, with a hole name at its left-hand end, rather than bare paper, a column heading, or only part of a line? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "arithmetic, a square-root sign, or a note saying how a figure was obtained",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

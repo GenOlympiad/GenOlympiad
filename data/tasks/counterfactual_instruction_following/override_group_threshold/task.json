@@ -1,0 +1,313 @@
+{
+  "id": "override_group_threshold",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A straight-on photograph of an angling club's catch card pinned inside a wooden clubhouse case. The card is headed 'ANGLING CLUB - CATCH KG - LIMIT 18' and carries a small table with a member-name column and three month columns headed JUN, JUL, AUG, with exactly 6 member rows printed in this order top to bottom:\nADAMS 4 5 6\nBRENT 7 6 6\nCOYLE 6 6 6\nDIXON 5 5 6\nELLIS 8 6 5\nFLYNN 5 6 6\n\nThe club marks the card like this, and the picture must show it: a small RED PAPER TAG hangs beside EVERY member whose THREE-MONTH TOTAL comes to STRICTLY LESS THAN the limit of 18 kg printed in the heading, and no tag at all beside the others. A total of exactly 18 is NOT less than 18 and gets no tag. There may be one such member, or several, or none — do not assume there is exactly one, and do not tag the biggest total. Add each row up yourself; I am deliberately not telling you which members qualify.\n\nEvery tag must hang clearly beside its own row, at the right-hand edge of that row. The member names and all eighteen numbers must be clearly legible exactly as given. Do not print any totals, any ticks or any extra words on the card.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a club catch card listing member names and monthly weights, with small red tags hanging beside some rows. Ignoring artistic quality and ignoring WHICH ones are marked, does the image DEPICT that? Answer NO only if it is blank or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "na": 6,
+    "qa": "This picture shows 6 printed member rows on the card in a single row. Look at all 6 of them in order, from the top row down to the bottom row. For EACH one give TWO words joined by a space: first the member name printed at the start of that row, then the word TAG if a small red paper tag hangs beside that row, or the word BARE if there is no tag beside it. The printed member rows on the card do not have to agree with one another — report what each one actually shows. Answer with exactly 6 comma-separated items and nothing else.",
+    "qa2": "The picture has a row of 6 printed member rows on the card. Going through them from the top row down to the bottom row, tell me for each one, in turn, the member name printed at the start of that row followed by the word TAG if a small red paper tag hangs beside that row, or the word BARE if there is no tag beside it. Judge each one on its own; two of them may well differ, so do not assume a regular pattern. Reply with exactly 6 comma-separated items, two words each, and nothing else.",
+    "expa": ["ADAMS TAG", "BRENT BARE", "COYLE BARE", "DIXON TAG", "ELLIS BARE", "FLYNN TAG"],
+    "exp_lines": [
+      "ANGLING CLUB - CATCH KG - LIMIT 18",
+      "ADAMS 4 5 6",
+      "BRENT 7 6 6",
+      "COYLE 6 6 6",
+      "DIXON 5 5 6",
+      "ELLIS 8 6 5",
+      "FLYNN 5 6 6"
+    ],
+    "q_verbatim": "Write out every line of printed, painted, chalked or written text you can see IN THIS PICTURE -- including text on boards, signs, placards, plates, labels and stickers. If a line is cut off by the edge of this picture, copy the characters you can actually see and do not guess the rest. Copy each line exactly as it appears, character by character. Do NOT correct spelling, arithmetic or anything that looks wrong, and do not leave any line out. If there is no text at all, answer NONE. Separate the lines with spaces.",
+    "count_noun": "a marked row",
+    "q_row_name": "This picture is one row cut out of a printed club catch card. A member name is printed at the START of this row -- nearest its left edge. What is that name? Ignore anything printed on a row above or below it. Answer with just that name and nothing else.",
+    "q_row_mark": "This picture is one row cut out of a printed club catch card. Answer TAG if a small red paper tag hangs beside THIS row, or BARE if there is no tag beside it. A tag hanging beside a row above or below does not count. Answer with just that one word and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "override_count",
+      "weight": 8.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed sheet or card itself",
+          "expected_n": 1,
+          "out": "page"
+        },
+        {
+          "fail_if": ["page.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the ruled table printed on the page",
+          "expected_n": 1,
+          "out": "anc",
+          "context": "the printed sheet or card pinned or clipped up on the board"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_member_rows",
+          "args": ["image", "page", "anc", "reference.na"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.q_row_name",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rn"
+        },
+        {
+          "read_crop": "reference.q_row_mark",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rm"
+        },
+        {
+          "run": "pack_row_reads",
+          "args": ["rn", "rm"],
+          "out": "pk"
+        },
+        {
+          "run": "score_slots",
+          "args": ["[pk.rows]", "[reference.expa]", "['eq']"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "paint_row_checks",
+          "args": ["pl", "pk", "reference.expa"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "binding_agreement",
+      "weight": 1.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed sheet or card itself",
+          "expected_n": 1,
+          "out": "page"
+        },
+        {
+          "fail_if": ["page.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the ruled table printed on the page",
+          "expected_n": 1,
+          "out": "anc",
+          "context": "the printed sheet or card pinned or clipped up on the board"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_member_rows",
+          "args": ["image", "page", "anc", "reference.na"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.q_row_name",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rn"
+        },
+        {
+          "read_crop": "reference.q_row_mark",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rm"
+        },
+        {
+          "run": "pack_row_reads",
+          "args": ["rn", "rm"],
+          "out": "pk"
+        },
+        {
+          "run": "score_slots",
+          "args": ["[pk.rows]", "[reference.expa]", "['eq']"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "paint_row_checks",
+          "args": ["pl", "pk", "reference.expa"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "data_present",
+      "weight": 2.0,
+      "pass_at": 0.8,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed sheet or card itself",
+          "expected_n": 1,
+          "out": "page"
+        },
+        {
+          "fail_if": ["page.unreadable"]
+        },
+        {
+          "run": "ag_plan",
+          "args": ["image", "page", "rows=1", "cols=1", "pad=0.03"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.q_verbatim",
+          "boxes": "pl.cells",
+          "votes": 1,
+          "pad": 0.0,
+          "out": "b1"
+        },
+        {
+          "run": "page_text_coverage",
+          "args": ["reference.exp_lines", "b1"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["pl", "res.frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a red drawing pin",
+    "s2": "a wooden clothes peg",
+    "s3": "a small red paper tag"
+  },
+  "aspect_ratio": "2:3"
+}

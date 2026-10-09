@@ -1,0 +1,111 @@
+{
+  "id": "inverted_signal",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a single vertical TRAFFIC LIGHT (three round lamps stacked in one upright housing), shown straight-on, filling most of the frame.\n\nIMPORTANT LAYOUT RULE: this traffic light uses a REVERSED lamp order. Put the GREEN lamp at the TOP, the amber (yellow) lamp in the MIDDLE, and the RED lamp at the BOTTOM -- the opposite of a normal traffic light (which has red on top and green on the bottom). Follow this reversed order exactly.\n\nShow the light with exactly ONE lamp LIT (glowing brightly) and the other two dark: the lamp that is LIT must be the one at the MIDDLE position. Keep each lamp's colour as stated by the reversed order above (green on top, amber middle, red bottom). Do not add any words, numbers, or labels to the image.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a vertical TRAFFIC LIGHT (a stack of round lamps in a housing). Ignoring the colour order and ignoring artistic quality, does the image actually DEPICT a vertical traffic light with stacked round lamps? A photo, illustration or clean graphic all count as yes. Answer NO only if it shows a blank card, a plain panel printing text, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "bb_top": [0.4253, 0.2087, 0.5747, 0.4223],
+    "bb_mid": [0.4253, 0.4349, 0.5747, 0.6485],
+    "bb_bot": [0.4253, 0.6611, 0.5747, 0.8746],
+    "q_top": "This is a cropped picture of the TOP lamp of a vertical traffic light (one round lamp). What COLOUR is this lamp? Answer with one word only: red, amber (yellow), or green. Report the colour you literally see, whether it is glowing brightly or dim/dark.",
+    "q_mid": "This is a cropped picture of the MIDDLE lamp of a vertical traffic light (one round lamp). What COLOUR is this lamp? Answer with one word only: red, amber (yellow), or green. Report the colour you literally see, whether it is glowing brightly or dim/dark.",
+    "q_bot": "This is a cropped picture of the BOTTOM lamp of a vertical traffic light (one round lamp). What COLOUR is this lamp? Answer with one word only: red, amber (yellow), or green. Report the colour you literally see, whether it is glowing brightly or dim/dark.",
+    "exp_top": "green",
+    "exp_bot": "red",
+    "lit_pos": "middle",
+    "q_lampstate": "This is a cropped picture of ONE round lamp of a traffic light. Is this lamp switched on -- glowing brightly, lit up -- or is it switched off -- dark, dull, not glowing? Answer with one word only: lit or dark."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "order_and_lit_count",
+      "weight": 6.0,
+      "steps": [
+        {
+          "crop": "reference.bb_top",
+          "out": "ct"
+        },
+        {
+          "ask": "reference.q_top",
+          "image": "ct",
+          "out": "at"
+        },
+        {
+          "crop": "reference.bb_bot",
+          "out": "cb"
+        },
+        {
+          "ask": "reference.q_bot",
+          "image": "cb",
+          "out": "ab"
+        },
+        {
+          "crop": "reference.bb_mid",
+          "out": "cm"
+        },
+        {
+          "ask": "reference.q_lampstate",
+          "image": "ct",
+          "out": "lt"
+        },
+        {
+          "ask": "reference.q_lampstate",
+          "image": "cm",
+          "out": "lm"
+        },
+        {
+          "ask": "reference.q_lampstate",
+          "image": "cb",
+          "out": "lb"
+        },
+        {
+          "fail_if": [
+            "at.unreadable",
+            "ab.unreadable",
+            "lt.unreadable",
+            "lm.unreadable",
+            "lb.unreadable"
+          ]
+        },
+        {
+          "run": "lamp_colour_matches",
+          "args": ["at", "reference.exp_top"],
+          "out": "st"
+        },
+        {
+          "run": "lamp_colour_matches",
+          "args": ["ab", "reference.exp_bot"],
+          "out": "sb"
+        },
+        {
+          "run": "lit_lamp_matches",
+          "args": ["lt", "lm", "lb", "reference.lit_pos"],
+          "out": "sl"
+        },
+        {
+          "product": ["st", "sb", "sl"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

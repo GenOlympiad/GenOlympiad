@@ -1,0 +1,204 @@
+{
+  "id": "dice_pip_sum",
+  "axis": "latent_computation",
+  "prompt": "A clean, evenly-lit top-down photograph of a family GAME NIGHT in progress: exactly 23 standard white six-sided dice with black pips have been rolled out flat on a dark charcoal SLATE board, viewed straight from above so only the TOP face of every die is visible. The dice are well separated so every top face is individually readable. The pips on the 23 visible top faces must add up to EXACTLY 131 — not about 131, exactly 131. There must be exactly 23 dice and nothing else on the slate. Photorealistic, sharp focus, no motion blur, no text, no labels.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show family game-night scatter of standard white dice on a dark charcoal slate board, shot straight down? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_dice": 23,
+    "total": 131
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pip_sum",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "white die with black pips",
+          "out": "db"
+        },
+        {
+          "fail_if": ["db.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows the upward-facing top face of one white six-sided die. Write down every black pip (dot) printed on that top face, each with a few plain words saying where on the face it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If this picture does not show the top face of a die at all, write the single word NONE.",
+          "boxes": "db",
+          "out": "cs"
+        },
+        {
+          "fail_if": ["cs.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["cs", "empty_as='0'"],
+          "out": "cs__std"
+        },
+        {
+          "fail_if": ["cs__std.refused"]
+        },
+        {
+          "run": "sum_top_faces",
+          "args": ["cs__std"],
+          "out": "ds"
+        },
+        {
+          "compare_band": "ds.total",
+          "to": "reference.total",
+          "core": 0.0,
+          "margin": 4.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "dice_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "white die with black pips",
+          "out": "db2"
+        },
+        {
+          "fail_if": ["db2.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows the upward-facing top face of one white six-sided die. Write down every black pip (dot) printed on that top face, each with a few plain words saying where on the face it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If this picture does not show the top face of a die at all, write the single word NONE.",
+          "boxes": "db2",
+          "out": "cs2"
+        },
+        {
+          "fail_if": ["cs2.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["cs2", "empty_as='0'"],
+          "out": "cs2__std"
+        },
+        {
+          "fail_if": ["cs2__std.refused"]
+        },
+        {
+          "run": "sum_top_faces",
+          "args": ["cs2__std"],
+          "out": "ds2"
+        },
+        {
+          "compare_band": "ds2.n",
+          "to": "reference.n_dice",
+          "core": 0.0,
+          "margin": 2.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_dice",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one die lying on the slate board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole die, rather than bare board or only part of a die? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_dice",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_only_top_faces",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a die that shows a slanted side face as well as its top face, or that is partly hidden under another die",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_nothing_else",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "anything on the slate board that is not a die -- printed text, a label, a digit, an arrow, or any other object",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

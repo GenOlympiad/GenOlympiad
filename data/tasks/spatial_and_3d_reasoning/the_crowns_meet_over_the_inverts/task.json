@@ -1,0 +1,84 @@
+{
+  "id": "the_crowns_meet_over_the_inverts",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The resident engineer files one photograph of the profile board each week, so the run and the strip beneath it go into a single frame.\n\nA drainage profile board is lashed to a site hoarding outside a plant room. A heavy line crosses it for the storm main, stepping through three manholes. The four reaches are lettered A, B, C and D down the run, and each is labelled with its bore: A is 300, B is 400, C is 500 and D is 600. A strip ruled into one box for each reach runs under the line, and every box is filled with that reach's invert level in metres. The title block gives the invert at the head of reach A as 26.40, the fall as 1 in 150, and the length of every reach as 30 metres.\n\nWhat figure belongs in each box, and how the two pipes sit against one another inside a manhole, is what the title block does not give.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a drainage profile board lashed to a site hoarding, with a lettered run of pipe above a strip of ruled boxes? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "tops_in_line"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "The strip under the pipe line is ruled into one box for each reach. Read the figure printed in the box for reach C and give it in metres.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "25.77", "25.83"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Inside the middle manhole the pipe coming in and the pipe going on are drawn one against the other. Answer with one of: tops in line; bottoms in line; both in line.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

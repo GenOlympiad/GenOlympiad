@@ -1,0 +1,190 @@
+{
+  "id": "rubiks_face_after_moves",
+  "axis": "latent_computation",
+  "prompt": "A clean, sharp, straight-on studio photograph, taken at a lost-property desk, of the FRONT face of a 2x2 pocket twist cube after a sequence of turns has been applied. The cube begins SOLVED in the standard Western colour scheme: UP is WHITE, DOWN is YELLOW, FRONT is GREEN, BACK is BLUE, RIGHT is RED, LEFT is ORANGE. From that solved state, apply EXACTLY this sequence of face turns in order, in standard cube notation: U R F R' U' F U R'. (A letter is a 90-degree clockwise turn of that face viewed from outside; a prime ' means counter-clockwise; a 2 means a half turn.) After the whole sequence, render ONLY the resulting FRONT face as a flat 2x2 grid of four coloured square stickers filling the frame, thin black lines between the four stickers, each sticker one flat solid colour from the six cube colours. No other faces, no cube body, no desk, no background, no text, no arrows, no labels.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show lost-property-desk studio photo of a 2x2 pocket twist cube's front face after an 8-turn sequence? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 2,
+    "moves": "U R F R' U' F U R'",
+    "front": [
+      ["white", "white"],
+      ["green", "white"]
+    ],
+    "n_stickers": 4.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "front_face_colors",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the flat block of four coloured cube stickers (ONE tight rectangle around ALL four sticker squares together, not around a single sticker)",
+          "expected_n": 1,
+          "out": "face"
+        },
+        {
+          "run": "sticker_boxes",
+          "args": ["face", "reference.n"],
+          "out": "cellbx"
+        },
+        {
+          "read_crop": "This crop shows ONE flat square sticker from the face of a puzzle cube. What is the sticker's colour? Use only these six words: white, yellow, green, blue, red, orange. Answer with exactly one colour word and nothing else.",
+          "boxes": "cellbx.boxes",
+          "out": "sk"
+        },
+        {
+          "fail_if": ["sk.unreadable"]
+        },
+        {
+          "run": "face_grid",
+          "args": ["sk", "reference.n"],
+          "out": "fg"
+        },
+        {
+          "compare_grid": "fg.grid",
+          "to": "reference.front",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sticker_count",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one coloured square sticker in the flat grid of the cube face",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole square sticker of a single solid colour, rather than the background or only part of a sticker? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_stickers",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_front_face",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does the image show ONLY a flat 2x2 grid of four solid-coloured stickers (no cube body, no other faces, no background, no text)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "colors_from_set",
+      "weight": 0.225,
+      "gate": true,
+      "score": "afs.frac",
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one coloured square sticker in the flat grid of the cube face",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_s"
+        },
+        {
+          "fail_if": ["box_s.unreadable"]
+        },
+        {
+          "read_crop": "Is this cut-out filled with one flat solid colour that is white, yellow, green, blue, red or orange? Answer yes or no only.",
+          "boxes": "box_s",
+          "out": "crop_s"
+        },
+        {
+          "fail_if": ["crop_s.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_s"],
+          "out": "cnt_s"
+        },
+        {
+          "run": "all_from_set",
+          "args": ["cnt_s"],
+          "out": "afs"
+        },
+        {
+          "fail_if": ["afs.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "thin_black_lines",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Are the four stickers separated by thin black lines and arranged as a 2x2 grid filling the frame? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

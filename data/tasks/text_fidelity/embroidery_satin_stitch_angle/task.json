@@ -1,0 +1,176 @@
+{
+  "id": "embroidery_satin_stitch_angle",
+  "axis": "text_fidelity",
+  "prompt": "First-off approval for a uniform contract hangs on one embroidered letter, so the punching room shoots the sample before it goes to the customer. The picture is that sample shot, taken square-on to the hoop with a lamp raking across from one side so that the lie of the thread throws its own shine, and with the whole letter, the pins and the punching card all in the frame.\n\nA panel of dark workwear twill is stretched in the hoop and one capital K is worked on it in satin stitch, in a plain block face, standing upright: an upright stroke down the left, an arm running up to the right from the middle of the upright, and another arm running down to the right from the same place. The letter is worked large enough to fill most of the hoop.\n\nSatin stitch is laid ACROSS the stroke it fills, from one edge of the stroke to the other, which is what makes the thread lie flat and catch the light in one direction; that is the whole of the craft rule, and it holds separately on every stroke of a letter. Where two strokes meet, the direction is turned through a fan of stitches so the fill does not break along a line.\n\nThree brass pins are pushed into the cloth just outside the letter, one against each stroke, and each carries its number on a small paper flag: 1 against the upright, 2 against the arm that runs up to the right, 3 against the arm that runs down to the right. The punching card propped against the hoop carries the same three numbers and nothing else.\n\nWhich way the stitches run on each stroke is the part you have to work out -- I am deliberately not telling you, and there is no worked example anywhere in the picture. Keep the letter big and the raking light strong enough that the direction of the thread can be told on each stroke and at the joins. Apart from the three numbered pin flags and the punching card, no word, mark or line belongs on the cloth.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show cloth stretched in a hoop with stitching worked on it? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no cloth on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "stitch_axes": "1=90,2=135,3=45",
+    "n_pins": 3,
+    "n_joins": 2,
+    "n_breaks": 0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_stitches_on_each_stroke_lie_across_that_stroke_and_not_across_the_letter",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered pin flag with the stitched stroke beside it",
+          "sweep": true,
+          "out": "pin_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["pin_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which number is written on the paper flag? Answer with the number exactly as it is written.",
+          "boxes": "pin_box",
+          "pad": 1.0,
+          "out": "nkey_rd"
+        },
+        {
+          "fail_if": ["nkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which way do the individual threads of the stitching beside the pin run? Answer with one of: up and down, left and right, lower left to upper right, upper left to lower right, or none if no stitching is drawn here.",
+          "boxes": "pin_box",
+          "pad": 1.0,
+          "out": "run_rd"
+        },
+        {
+          "fail_if": ["run_rd.unreadable"]
+        },
+        {
+          "run": "stitch_gap",
+          "args": ["nkey_rd", "run_rd", "reference.stitch_axes"],
+          "out": "stitchv"
+        },
+        {
+          "compare_compass": "stitchv.gap",
+          "to": 0,
+          "core": 25.0,
+          "margin": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_fill_turns_through_a_fan_at_each_join_instead_of_breaking_along_a_line",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a place where two stitched strokes of the letter run into each other",
+          "sweep": true,
+          "out": "join_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["join_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, does the direction of the threads swing round gradually from one stroke to the next, or does it change all at once along a straight line? Answer fan or break only.",
+          "boxes": "join_box",
+          "pad": 1.0,
+          "out": "join_rd"
+        },
+        {
+          "fail_if": ["join_rd.unreadable"]
+        },
+        {
+          "run": "count_direction_breaks",
+          "args": ["join_rd", "reference.n_joins"],
+          "out": "breakv"
+        },
+        {
+          "compare_band": "breakv.n",
+          "to": "reference.n_breaks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_stroke_of_the_letter_has_its_numbered_pin_beside_it",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a pin pushed into the cloth beside the letter",
+          "sweep": true,
+          "out": "flag_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["flag_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a number written on the paper flag on the pin? Answer yes or no only.",
+          "boxes": "flag_box",
+          "pad": 0.8,
+          "out": "flag_rd"
+        },
+        {
+          "fail_if": ["flag_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["flag_rd"],
+          "out": "flagn"
+        },
+        {
+          "compare_band": "flagn.n",
+          "to": "reference.n_pins",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_mark_or_line_was_drawn_on_the_cloth",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a drawn mark or word on the cloth beyond the stitching and the pin flags",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

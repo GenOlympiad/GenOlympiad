@@ -1,0 +1,221 @@
+{
+  "id": "catify_everything",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A dreamlike, surreal wide-angle street scene in soft golden light, flat vivid illustration style with painterly texture, where EVERYTHING has quietly grown CAT traits. The scene contains exactly these 8 objects, each in its stated part of the frame, and EVERY one of them must visibly incorporate a subtle cat feature blended into its own shape: a CLOUD in the upper-left sky (with pointed cat ears and a curled tail of cloud), the SUN in the upper-right sky (with whiskers radiating from its disc), a house FRONT DOOR on the left (its round window is a cat eye with a vertical slit pupil), a STREETLAMP left of centre (its lamp head has pointed cat ears and whiskers), a CAR right of centre (pointed cat ears on its roof), a MAILBOX on the right (whiskers on its sides), a pink BALLOON floating upper-centre-left (pointed cat ears), and a giant TEAPOT on the pavement at the bottom (its spout is a curled cat tail). Every single one of the 8 objects must carry its cat feature -- do NOT leave any object in its ordinary un-catified form. No people, no animals as separate figures, no text or writing anywhere.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a surreal street scene containing a cloud, a sun, a house with a front door, a streetlamp, a car, a mailbox, a balloon and a large teapot. Ignoring artistic quality, does the image actually DEPICT a street scene with most of those objects present? A realistic photo, an illustration or a stylised rendering ALL count as yes. Answer NO only if the image shows a blank panel or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_objects": 8,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a picture of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "objects": [
+      "a cloud",
+      "the sun",
+      "a house front door",
+      "a streetlamp",
+      "a car",
+      "a mailbox",
+      "a pink balloon",
+      "a large teapot"
+    ],
+    "questions": [
+      "Look ONLY at the single object shown in this crop (a cloud). Does this object visibly incorporate a subtle CAT feature -- pointed cat EARS, a curled cat TAIL, WHISKERS, a vertical slit cat-eye PUPIL, or a paw print -- blended into its shape? Answer with the single word yes or no only.",
+      "Look ONLY at the single object shown in this crop (the sun). Does this object visibly incorporate a subtle CAT feature -- pointed cat EARS, a curled cat TAIL, WHISKERS, a vertical slit cat-eye PUPIL, or a paw print -- blended into its shape? Answer with the single word yes or no only.",
+      "Look ONLY at the single object shown in this crop (a front door). Does this object visibly incorporate a subtle CAT feature -- pointed cat EARS, a curled cat TAIL, WHISKERS, a vertical slit cat-eye PUPIL, or a paw print -- blended into its shape? Answer with the single word yes or no only.",
+      "Look ONLY at the single object shown in this crop (a streetlamp). Does this object visibly incorporate a subtle CAT feature -- pointed cat EARS, a curled cat TAIL, WHISKERS, a vertical slit cat-eye PUPIL, or a paw print -- blended into its shape? Answer with the single word yes or no only.",
+      "Look ONLY at the single object shown in this crop (a car). Does this object visibly incorporate a subtle CAT feature -- pointed cat EARS, a curled cat TAIL, WHISKERS, a vertical slit cat-eye PUPIL, or a paw print -- blended into its shape? Answer with the single word yes or no only.",
+      "Look ONLY at the single object shown in this crop (a mailbox). Does this object visibly incorporate a subtle CAT feature -- pointed cat EARS, a curled cat TAIL, WHISKERS, a vertical slit cat-eye PUPIL, or a paw print -- blended into its shape? Answer with the single word yes or no only.",
+      "Look ONLY at the single object shown in this crop (a balloon). Does this object visibly incorporate a subtle CAT feature -- pointed cat EARS, a curled cat TAIL, WHISKERS, a vertical slit cat-eye PUPIL, or a paw print -- blended into its shape? Answer with the single word yes or no only.",
+      "Look ONLY at the single object shown in this crop (a teapot). Does this object visibly incorporate a subtle CAT feature -- pointed cat EARS, a curled cat TAIL, WHISKERS, a vertical slit cat-eye PUPIL, or a paw print -- blended into its shape? Answer with the single word yes or no only."
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "catify_count",
+      "weight": 6.0,
+      "score": "cen.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "{gt.objects.0}",
+          "expected_n": 1,
+          "retries": 5,
+          "votes": 3,
+          "out": "b0"
+        },
+        {
+          "fail_if": ["b0.unreadable"]
+        },
+        {
+          "read_crop": "reference.questions.0",
+          "boxes": "b0",
+          "pad": 0.25,
+          "out": "c0"
+        },
+        {
+          "read": "boxes",
+          "target": "{gt.objects.1}",
+          "expected_n": 1,
+          "retries": 5,
+          "votes": 3,
+          "out": "b1"
+        },
+        {
+          "fail_if": ["b1.unreadable"]
+        },
+        {
+          "read_crop": "reference.questions.1",
+          "boxes": "b1",
+          "pad": 0.25,
+          "out": "c1"
+        },
+        {
+          "read": "boxes",
+          "target": "{gt.objects.2}",
+          "expected_n": 1,
+          "retries": 5,
+          "votes": 3,
+          "out": "b2"
+        },
+        {
+          "fail_if": ["b2.unreadable"]
+        },
+        {
+          "read_crop": "reference.questions.2",
+          "boxes": "b2",
+          "pad": 0.25,
+          "out": "c2"
+        },
+        {
+          "read": "boxes",
+          "target": "{gt.objects.3}",
+          "expected_n": 1,
+          "retries": 5,
+          "votes": 3,
+          "out": "b3"
+        },
+        {
+          "fail_if": ["b3.unreadable"]
+        },
+        {
+          "read_crop": "reference.questions.3",
+          "boxes": "b3",
+          "pad": 0.25,
+          "out": "c3"
+        },
+        {
+          "read": "boxes",
+          "target": "{gt.objects.4}",
+          "expected_n": 1,
+          "retries": 5,
+          "votes": 3,
+          "out": "b4"
+        },
+        {
+          "fail_if": ["b4.unreadable"]
+        },
+        {
+          "read_crop": "reference.questions.4",
+          "boxes": "b4",
+          "pad": 0.25,
+          "out": "c4"
+        },
+        {
+          "read": "boxes",
+          "target": "{gt.objects.5}",
+          "expected_n": 1,
+          "retries": 5,
+          "votes": 3,
+          "out": "b5"
+        },
+        {
+          "fail_if": ["b5.unreadable"]
+        },
+        {
+          "read_crop": "reference.questions.5",
+          "boxes": "b5",
+          "pad": 0.25,
+          "out": "c5"
+        },
+        {
+          "read": "boxes",
+          "target": "{gt.objects.6}",
+          "expected_n": 1,
+          "retries": 5,
+          "votes": 3,
+          "out": "b6"
+        },
+        {
+          "fail_if": ["b6.unreadable"]
+        },
+        {
+          "read_crop": "reference.questions.6",
+          "boxes": "b6",
+          "pad": 0.25,
+          "out": "c6"
+        },
+        {
+          "read": "boxes",
+          "target": "{gt.objects.7}",
+          "expected_n": 1,
+          "retries": 5,
+          "votes": 3,
+          "out": "b7"
+        },
+        {
+          "fail_if": ["b7.unreadable"]
+        },
+        {
+          "read_crop": "reference.questions.7",
+          "boxes": "b7",
+          "pad": 0.25,
+          "out": "c7"
+        },
+        {
+          "run": "count_cat_objects",
+          "args": ["reference", "c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7"],
+          "out": "cen"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "4:3"
+}

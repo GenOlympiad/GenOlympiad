@@ -1,0 +1,86 @@
+{
+  "id": "the_wristband_lists_what_is_safe",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The trolley is photographed at the bedside before the round starts, so the check goes into the ward's medicines file.\n\nThe card hanging on the trolley handle gives the ward's rule: the band on the patient's wrist lists the substitutes the team has cleared for use, while what the patient reacts to is set out in the red box on the front sheet. The band, laid flat and in the frame, names Azurin, Bellin and Cerol. The red box on the front sheet clipped at the bed end names Dolane and Elmix. The trolley top is divided into bays, and the bays in stock today hold ampoule boxes of Azurin, Cerol, Dolane and Elmix, each bay with its drug name on a large label. The giving tray stands on the trolley top with ampoule boxes already set out in it.\n\nWhich ampoule boxes have been set out in that tray is what the medicines file does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a bedside drug trolley with labelled bays of ampoule boxes, a giving tray on its top, and a flattened patient band and front sheet in the same frame? Answer yes or no only.",
+  "reference": {
+    "part1": "2",
+    "part2": "tray_names_come_off_the_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "ampoule boxes already set out in the giving tray standing on the trolley top",
+          "out": "r_part1",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part1.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the drug names printed on the ampoule boxes set out in the giving tray. Answer with one of: every name in the tray also stands on the patient's band; every name in the tray also stands in the red box on the front sheet; the tray holds names off the band and names out of the red box alike.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

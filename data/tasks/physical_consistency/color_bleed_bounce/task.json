@@ -1,0 +1,165 @@
+{
+  "id": "color_bleed_bounce",
+  "axis": "physical_consistency",
+  "prompt": "A photorealistic photo of a WHITE ceramic mug standing beside a bright RED folder propped up on its LEFT, on a white desk. Obey real colour bleed: the red folder bounces red light onto the mug's near (LEFT) side, tinting it reddish/pink, while the mug's far (RIGHT) side stays neutral white. Draw the near side reddish and the far side white. Do NOT make the mug uniformly white. No text.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a bright red folder propped up next to a white ceramic mug? Illustration/schematic/diagram ALL count as yes. Answer NO only if it shows a blank card / plain answer panel / something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_near": "A bright RED folder stands to the LEFT of a WHITE mug. Real bounced light makes the folder tint the mug's near side: the side of the white mug FACING the red folder (its LEFT side) picks up a REDDISH / pink tint. Is the LEFT side of the white mug (the side toward the red folder) tinted REDDISH/pink? Answer yes if the folder-facing side is reddish; answer no if the mug is plain white all over. Answer yes or no only.",
+    "q_far": "On the same white mug, the side facing AWAY from the red folder (its RIGHT side) gets no bounced red light and stays neutral white. Is the RIGHT side of the mug (away from the folder) still neutral WHITE (not red-tinted)? Answer yes if the far side is neutral white; answer no if the whole mug is red-tinted. Answer yes or no only.",
+    "tgt_ball": "the white ceramic mug",
+    "found_ball": "white mug",
+    "tgt_wall": "the bright red folder propped up beside the mug",
+    "found_wall": "red folder",
+    "q_half_tint": "This is a close-up cut out of a bigger picture. It shows one side of a white mug. Is the mug's surface here tinted reddish or pink, or is it plain neutral white? Answer with exactly one word: reddish or white."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "color_bleed",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.tgt_ball",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "bb"
+        },
+        {
+          "fail_if": ["bb.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "reference.tgt_wall",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "wb"
+        },
+        {
+          "fail_if": ["wb.unreadable"]
+        },
+        {
+          "run": "split_ball_halves",
+          "args": ["bb", "wb"],
+          "out": "hv"
+        },
+        {
+          "read_crop": "reference.q_half_tint",
+          "boxes": "hv.near",
+          "pad": 0.0,
+          "out": "ncr"
+        },
+        {
+          "fail_if": ["ncr.unreadable"]
+        },
+        {
+          "run": "tint_matches",
+          "args": ["ncr", "'reddish'"],
+          "out": "a0"
+        },
+        {
+          "compare": "a0",
+          "to": "yes",
+          "out": "f0"
+        },
+        {
+          "read_crop": "reference.q_half_tint",
+          "boxes": "hv.far",
+          "pad": 0.0,
+          "out": "fcr"
+        },
+        {
+          "fail_if": ["fcr.unreadable"]
+        },
+        {
+          "run": "tint_matches",
+          "args": ["fcr", "'white'"],
+          "out": "a1"
+        },
+        {
+          "compare": "a1",
+          "to": "yes",
+          "out": "f1"
+        },
+        {
+          "all": ["f0", "f1"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_near",
+      "weight": 0.6,
+      "not_scored": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.tgt_ball",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "bb"
+        },
+        {
+          "fail_if": ["bb.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "reference.tgt_wall",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "wb"
+        },
+        {
+          "fail_if": ["wb.unreadable"]
+        },
+        {
+          "run": "split_ball_halves",
+          "args": ["bb", "wb"],
+          "out": "hv"
+        },
+        {
+          "read_crop": "reference.q_half_tint",
+          "boxes": "hv.near",
+          "pad": 0.0,
+          "out": "ncr"
+        },
+        {
+          "fail_if": ["ncr.unreadable"]
+        },
+        {
+          "run": "tint_matches",
+          "args": ["ncr", "'reddish'"],
+          "out": "a0"
+        },
+        {
+          "compare": "a0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

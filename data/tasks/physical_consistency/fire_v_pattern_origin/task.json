@@ -1,0 +1,190 @@
+{
+  "id": "fire_v_pattern_origin",
+  "axis": "physical_consistency",
+  "prompt": "The loss adjuster has an hour in this flat before it is boarded up again.\n\nAlready fixed and not yours to move: the room is a burnt-out bedsit and the frame holds two walls and the ceiling; three numbered scale rods stand against the walls, rod 1 against the window wall, rod 2 against the wall at right angles to it and rod 3 against the wall opposite the window, each rod marked off in half metres. The extract grille sits high in the wall above the door and the building log shows it ran throughout. The only thing in the room burnt down to bare metal is the extension lead lying on the floor at the foot of the window wall; everything else is no worse than smoke-blackened.\n\nWhat the investigation manual says about the marks fire leaves on a wall:\nthe burning spreads upward and outward from where it started, so the mark narrows towards the bottom close to the seat and opens wider the further along you go;\na running extract drags the plume towards itself, and the mark on the wall the plume is drawn across leans that way rather than standing even;\na wall far enough from the seat carries no pointed mark at all, only a level layer of smoke under the ceiling.\n\nWhere the point of each mark ends up against the rods, and which way each mark leans, is the part I am deliberately not telling you, and there is no worked example on any wall. Frame the corner so that all three rods and the walls behind them are in it. Nothing is chalked on any wall beyond the numbered rods.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show the inside of a fire-damaged room with smoke or burn marks on its walls? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no room in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "apex_height": "1=below the 0.5 m mark|2=between the 0.5 m and 1.0 m|3=no pointed mark",
+    "vent_lean": "1=stands even on both sides|2=leans towards the extract grille",
+    "n_rods": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_point_of_each_mark_sits_where_its_distance_from_the_seat_puts_it",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered scale rod standing against a wall with the wall behind it",
+          "sweep": true,
+          "out": "ap_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["ap_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what number is on the scale rod? Answer with the number exactly as it is on the rod, or none if no number is on it.",
+          "boxes": "ap_box",
+          "pad": 0.9,
+          "out": "ap_key"
+        },
+        {
+          "fail_if": ["ap_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, where against the rod does the point of the burn mark sit? Answer with one of: below the 0.5 m mark, between the 0.5 m and 1.0 m marks, above the 1.0 m mark, no pointed mark on this wall, or none if the wall cannot be made out.",
+          "boxes": "ap_box",
+          "pad": 0.9,
+          "out": "ap_val"
+        },
+        {
+          "fail_if": ["ap_val.unreadable"]
+        },
+        {
+          "run": "count_key_matches",
+          "args": ["ap_key", "ap_val", "reference.apex_height"],
+          "out": "ap_v"
+        },
+        {
+          "compare_band": "ap_v.n",
+          "to": "reference.n_rods",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_marks_lean_the_way_the_running_extract_leaves_them",
+      "weight": 1.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered scale rod standing against a wall with the wall behind it",
+          "sweep": true,
+          "out": "vl_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["vl_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what number is on the scale rod? Answer with the number exactly as it is on the rod, or none if no number is on it.",
+          "boxes": "vl_box",
+          "pad": 0.9,
+          "out": "vl_key"
+        },
+        {
+          "fail_if": ["vl_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how does the burn mark on this wall sit? Answer with one of: it stands even on both sides, it leans towards the left edge of the picture, it leans towards the right edge of the picture, no pointed mark on this wall, or none if the wall cannot be made out.",
+          "boxes": "vl_box",
+          "pad": 0.9,
+          "out": "vl_val"
+        },
+        {
+          "fail_if": ["vl_val.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the extract grille set high in its wall",
+          "out": "gr_box",
+          "sweep": true
+        },
+        {
+          "fail_if": ["gr_box.unreadable"]
+        },
+        {
+          "run": "rod_lean_scores",
+          "args": ["vl_key", "vl_val", "vl_box", "gr_box", "reference.vent_lean"],
+          "out": "vl_v"
+        },
+        {
+          "minimum": ["vl_v.a", "vl_v.b"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_scale_rod_carries_its_number",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered scale rod standing against a wall with the wall behind it",
+          "sweep": true,
+          "out": "rd_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["rd_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a number written on the scale rod? Answer yes or no only.",
+          "boxes": "rd_box",
+          "pad": 0.5,
+          "out": "rd_rd"
+        },
+        {
+          "fail_if": ["rd_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["rd_rd"],
+          "out": "rd_v"
+        },
+        {
+          "compare_band": "rd_v.n",
+          "to": "reference.n_rods",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_word_or_arrow_is_chalked_onto_a_wall",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a chalked word or arrow on a wall beyond the numbered scale rods",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "pr_sw"
+        },
+        {
+          "fail_if": ["pr_sw.unreadable"]
+        },
+        {
+          "compare": "pr_sw.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

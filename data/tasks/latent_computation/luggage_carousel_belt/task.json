@@ -1,0 +1,176 @@
+{
+  "id": "luggage_carousel_belt",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on top-down photograph of an AIRPORT BAGGAGE CAROUSEL: an oval conveyor belt with 6 numbered position slots evenly spaced around it, numbered 1 to 6 CLOCKWISE, with slot 1 at the TOP marked by a red PICKUP arrow (the pickup point). Suitcases are solid single colours (colours used are RED, BLUE, GREEN, YELLOW, ORANGE, PURPLE) and each occupied slot carries one suitcase on the outer edge of the belt.\n\nAt the START the suitcases are placed like this:\n    - slot 3 carries a GREEN suitcase\n    - slot 5 carries a ORANGE suitcase\n    - slot 6 carries a BLUE suitcase\n\nAll other slots start empty. Then the belt runs for 4 ticks. On each tick, IN THIS ORDER, the following happens:\n\n    1. the belt rotates one slot clockwise, then the suitcase now sitting at the PICKUP POINT (slot 1, under the arrow) is taken off the belt\n    2. the belt rotates one slot clockwise (nothing is picked up or loaded)\n    3. the belt rotates one slot clockwise (nothing is picked up or loaded)\n    4. the belt rotates one slot clockwise, then a new RED suitcase is loaded onto slot 4 (the entry chute)\n\nOn every tick the whole belt rotates by exactly ONE slot CLOCKWISE, so every suitcase moves from its slot to the next higher-numbered slot, and a suitcase on slot 6 wraps around to slot 1. Work through the ticks in order and render the FINAL state of the carousel after all 4 ticks: draw the oval belt with its 6 numbered slots and the pickup arrow at slot 1, and place each remaining suitcase in its correct colour at its correct numbered slot. Leave empty slots empty. Do NOT write the tick list, the slot numbers of the bags, or any counts anywhere in the image -- the answer must be shown only by which coloured suitcase sits at which numbered slot around the ring.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an airport baggage carousel: an oval conveyor belt with numbered position slots around it, a pickup arrow, and coloured suitcases sitting on some slots? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      [1],
+      [0],
+      [1],
+      [1],
+      [0],
+      [0]
+    ],
+    "colors": ["GREEN", "empty", "ORANGE", "RED", "empty", "empty"],
+    "n_slots": 6,
+    "n_bags": 3,
+    "pickup": "GREEN",
+    "pickup_lc": "green",
+    "second_slot": 3,
+    "second_col": "ORANGE",
+    "second_lc": "orange",
+    "q_pickup": "Look at the airport baggage carousel. What COLOUR is the suitcase sitting at the PICKUP POINT -- slot number 1, directly under the red pickup arrow at the top? If slot 1 is empty, answer 'empty'. Answer with a single colour word (one of: red, blue, green, yellow, orange, purple) or 'empty'.",
+    "q_second": "Look at the airport baggage carousel. What COLOUR is the suitcase sitting at slot number 3 counting 2 slots clockwise from the pickup arrow at slot 1? If that slot is empty, answer 'empty'. Answer with a single colour word (one of: red, blue, green, yellow, orange, purple) or 'empty'.",
+    "q_bags": "Write down every coloured suitcase on the baggage carousel belt, each with a few plain words saying where along the belt it sits and what colour it is. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no suitcase on the belt, write the single word NONE.",
+    "q_slots": "How many numbered position slots are spaced around the baggage carousel belt? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "state_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_pickup",
+          "out": "pk"
+        },
+        {
+          "ask": "reference.q_second",
+          "out": "sd"
+        },
+        {
+          "ask": "reference.q_bags",
+          "out": "nb"
+        },
+        {
+          "fail_if": ["pk.unreadable", "sd.unreadable", "nb.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["nb", "empty_as='0'"],
+          "out": "nb__std"
+        },
+        {
+          "fail_if": ["nb__std.refused"]
+        },
+        {
+          "compare": "pk",
+          "to": "reference.pickup_lc",
+          "out": "fp"
+        },
+        {
+          "compare": "sd",
+          "to": "reference.second_lc",
+          "out": "fs"
+        },
+        {
+          "compare_band": "nb__std.n",
+          "to": "reference.n_bags",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "fn"
+        },
+        {
+          "all": ["fp", "fs", "fn"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pickup_slot",
+      "weight": 0.8,
+      "steps": [
+        {
+          "ask": "reference.q_pickup",
+          "out": "pk2"
+        },
+        {
+          "fail_if": ["pk2.unreadable"]
+        },
+        {
+          "compare": "pk2",
+          "to": "reference.pickup_lc",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "occupancy_grid",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read_grid": "whether each numbered carousel slot has a suitcase on it, going in order slot 1 (under the pickup arrow) then clockwise around the ring; write 1 if that slot has a suitcase and 0 if it is empty, one number per row, slot 1 on the top row",
+          "rows": "reference.n_slots",
+          "cols": 1,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "compare_grid": "cells.values",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_slot_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered position slot marked around the edge of the carousel belt",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_ns"
+        },
+        {
+          "fail_if": ["box_ns.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one marked position on the conveyor belt carrying its own printed position number, rather than bare floor or a stretch of belt with no number? Answer yes or no only.",
+          "boxes": "box_ns",
+          "out": "crop_ns"
+        },
+        {
+          "fail_if": ["crop_ns.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_ns"],
+          "out": "cnt_ns"
+        },
+        {
+          "compare_band": "cnt_ns.n",
+          "to": "reference.n_slots",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

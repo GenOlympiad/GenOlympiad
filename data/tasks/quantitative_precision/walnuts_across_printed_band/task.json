@@ -1,0 +1,185 @@
+{
+  "id": "walnuts_across_printed_band",
+  "axis": "quantitative_precision",
+  "prompt": "A photograph taken from straight above a stall at a farmers market, the moment the grower has finished setting out a sample lot for a buyer.\n\nThe stall cloth is a plain cotton square with a thick straight band of dye printed across it from edge to edge, and with one large stencilled letter in each of the two halves the band makes: an A stencilled in one half and a B in the other, both big enough to read from a step away. Nine walnuts of the same size lie loose on the cloth. The grower's habit, and the thing the buyer looks at, is that exactly three of the nine walnuts lie wholly inside the half that carries the B, and every one of the other six lies wholly inside the half that carries the A, and not one walnut sits on the printed band or overlaps it even a little.\n\nWhich walnuts go where is the grower's own arrangement -- I am deliberately not telling you where on the cloth to put any single walnut, only how many end up in each half. Nothing is added to the cloth: no numbers, no chalk marks, no labels and no arrows beside the walnuts. The band, both stencilled letters and all nine walnuts are in the frame together, and the walnuts are big enough in the frame that each one can be told from its neighbours.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a cloth with a thick band printed across it, a large stencilled letter in each half, and loose walnuts lying on the cloth? A photograph, a still life or an overhead shot all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_nuts": 9,
+    "n_in_b": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "exactly_three_walnuts_lie_in_the_half_that_carries_the_b",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a whole walnut lying on the stall cloth",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "nut_r"
+        },
+        {
+          "fail_if": ["nut_r.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the thick printed band of dye running across the stall cloth",
+          "out": "bnd_r"
+        },
+        {
+          "fail_if": ["bnd_r.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "a large stencilled letter printed on the stall cloth",
+          "out": "ltr_r"
+        },
+        {
+          "fail_if": ["ltr_r.unreadable"]
+        },
+        {
+          "read_crop": "Which letter is stencilled in this cut-out? Answer with one letter: A or B. If no letter is printed here, answer -.",
+          "boxes": "ltr_r",
+          "pad": 0.25,
+          "out": "ltr_q"
+        },
+        {
+          "fail_if": ["ltr_q.unreadable"]
+        },
+        {
+          "run": "count_nuts_in_b_half",
+          "args": ["nut_r", "bnd_r", "ltr_r", "ltr_q", "reference.n_in_b"],
+          "out": "nut_s"
+        },
+        {
+          "fail_if": ["nut_s.no_read"]
+        },
+        {
+          "compare": "nut_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_walnut_is_left_sitting_on_the_printed_band",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a whole walnut lying on the stall cloth",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "band_r"
+        },
+        {
+          "fail_if": ["band_r.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a walnut lying on a cloth that carries a thick printed band across it. Name what the walnut is lying on, using one word from this list: band (some part of the walnut lies on the printed band) or cloth (the whole walnut lies on plain cloth away from the band). Write that one word and nothing else.",
+          "boxes": "band_r",
+          "pad": 0.5,
+          "out": "band_q"
+        },
+        {
+          "fail_if": ["band_q.unreadable"]
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["band_q", "[[['band'],'yes'],[['cloth'],'no']]"],
+          "out": "band_q__mapped"
+        },
+        {
+          "run": "none_on_line",
+          "args": ["band_q__mapped"],
+          "out": "band_s"
+        },
+        {
+          "compare": "band_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nine_separate_walnuts_are_on_the_cloth",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a whole walnut lying on the stall cloth",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole walnut, rather than a piece of one or more than one? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.3,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_nuts",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_was_written_or_drawn_on_the_cloth",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a number, a chalk mark, a label or an arrow added to the stall cloth",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

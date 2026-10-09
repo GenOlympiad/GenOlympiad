@@ -1,0 +1,280 @@
+{
+  "id": "lenticular_interleave",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A backlit lenticular sign hangs behind the glass of a station ticket window. It is printed\nfrom a single interleaved master: two complete sign faces were each cut into equal-width vertical\nstrips, and the strips were laid down alternately across one panel, so that the sign reads one word\nto somebody walking up from one side and the other word from the other side.\n\nRender that master panel, seen straight on and filling the whole frame. The panel's two sign faces\nare:\n  FACE ONE: the single word OPEN in tall bold white capital letters, centred on a dark green panel.\n  FACE TWO: the single word SHUT in tall bold white capital letters, centred on a dark red panel.\n\nAll of this must be true of the finished panel:\n- The strips alternate strictly, one from each picture, from the left edge of the panel to the\n  right edge, with no gaps and no repeats.\n- Every strip is the same width, and they are fine enough that the two pictures interlock into one\n  continuous surface rather than reading as a few broad bands.\n- Each picture survives on its own: cover up one set of strips and the strips that are left still\n  show that whole picture, subject and background together.\n- The two subjects claim the SAME middle area of the panel, one lying over the other. Do not put\n  one of them on one half and the other on the other half, and do not draw them next to each other.\n- The only lettering anywhere on the panel is the word\n  OPEN carried by one set of strips and the word SHUT carried by the other set. Do not print the two\n  words side by side, do not stack one above the other, and add no other text of any kind.\n",
+  "difficulty": "s3",
+  "easy_question": "Is this whole image one single flat sign panel that fills the frame, rather than several separate pictures placed apart from one another? Answer yes or no only.",
+  "reference": {
+    "vlm_content": false,
+    "ocr_content": true,
+    "word_first": "OPEN",
+    "word_second": "SHUT"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "strip_lattice_present",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "lattice_ok",
+          "args": ["interleave_read(image)"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_column_sets_carry_a_picture",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "both_phases_ok",
+          "args": ["interleave_read(image)"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "column_sets_are_two_different_pictures",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "distinct_ok",
+          "args": ["interleave_read(image)"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_pictures_use_the_same_area",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "same_area_ok",
+          "args": ["interleave_read(image)"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "one_column_set_is_the_first_picture",
+      "weight": 3.0,
+      "only_if": "reference.vlm_content",
+      "steps": [
+        {
+          "run": "interleave_read",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "ask": "reference.q_first",
+          "image": "m.path_a",
+          "out": "a1"
+        },
+        {
+          "ask": "reference.q_second",
+          "image": "m.path_a",
+          "out": "a2"
+        },
+        {
+          "ask": "reference.q_first",
+          "image": "m.path_b",
+          "out": "b1"
+        },
+        {
+          "ask": "reference.q_second",
+          "image": "m.path_b",
+          "out": "b2"
+        },
+        {
+          "fail_if": ["a1.unreadable", "a2.unreadable", "b1.unreadable", "b2.unreadable"]
+        },
+        {
+          "run": "one_set_is",
+          "args": ["a1", "a2", "b1", "b2"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "one_column_set_is_the_second_picture",
+      "weight": 3.0,
+      "only_if": "reference.vlm_content",
+      "steps": [
+        {
+          "run": "interleave_read",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "ask": "reference.q_first",
+          "image": "m.path_a",
+          "out": "a1"
+        },
+        {
+          "ask": "reference.q_second",
+          "image": "m.path_a",
+          "out": "a2"
+        },
+        {
+          "ask": "reference.q_first",
+          "image": "m.path_b",
+          "out": "b1"
+        },
+        {
+          "ask": "reference.q_second",
+          "image": "m.path_b",
+          "out": "b2"
+        },
+        {
+          "fail_if": ["a1.unreadable", "a2.unreadable", "b1.unreadable", "b2.unreadable"]
+        },
+        {
+          "run": "one_set_is",
+          "args": ["a2", "a1", "b2", "b1"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "one_column_set_prints_the_first_word",
+      "weight": 3.0,
+      "only_if": "reference.ocr_content",
+      "steps": [
+        {
+          "run": "interleave_read",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "read_text": true,
+          "image": "m.path_a",
+          "out": "oa"
+        },
+        {
+          "read_text": true,
+          "image": "m.path_b",
+          "out": "ob"
+        },
+        {
+          "run": "one_set_reads",
+          "args": ["oa.text", "ob.text", "reference.word_first", "reference.word_second"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "one_column_set_prints_the_second_word",
+      "weight": 3.0,
+      "only_if": "reference.ocr_content",
+      "steps": [
+        {
+          "run": "interleave_read",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "read_text": true,
+          "image": "m.path_a",
+          "out": "oa"
+        },
+        {
+          "read_text": true,
+          "image": "m.path_b",
+          "out": "ob"
+        },
+        {
+          "run": "one_set_reads",
+          "args": ["oa.text", "ob.text", "reference.word_second", "reference.word_first"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "strips_fine_and_equal_width",
+      "weight": 2.0,
+      "pass_at": 0.75,
+      "steps": [
+        {
+          "run": "fine_and_even",
+          "args": ["interleave_read(image)"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_deinterleave_evidence",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "evidence_page_marked",
+          "args": ["image", "'lent'"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "polylines": "ov.mk_strip_boundaries.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 0, 190],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "polylines": "ov.mk_one_strip_span.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 0, 190],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "run": "read_ok",
+          "args": ["ov"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

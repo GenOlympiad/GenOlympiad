@@ -1,0 +1,65 @@
+{
+  "id": "clocks_all_frozen",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean, straight-on illustration of a station clock display displaying 7 round analog wall clocks arranged in a grid, each clock with clear hour and minute hands. IMPORTANT RULE: EVERY clock in this display is stopped at exactly the SAME time -- 6 o'clock. For every single clock, set the hands to 6:00 (the short hour hand pointing at 6 and the long minute hand pointing straight up at 12). All 7 clocks must show 6:00 -- do not set any clock to a different time. Draw 7 analog clocks, each reading 6:00. Add no caption or extra text.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a shop window or wall displaying several analog clocks. Never mind how well it is drawn, and never mind what time they show. Does the picture show several analog clocks? A photo, illustration or clean diagram all count as yes. Answer NO only if it shows a blank card, a plain panel printing an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "count_object": "a round analog wall clock",
+    "q_item": "This is a small cropped picture of a single analog clock. Look only at the SHORT hour hand -- ignore the long minute hand. Which number on the dial is the short hour hand pointing at? Answer with just that hour as a single number from 1 to 12, and nothing else.",
+    "exp_item": 6,
+    "n_objects": 7
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "clocks_frozen_count",
+      "weight": 6.0,
+      "score": "cen.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "{gt.count_object}",
+          "votes": 3,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item",
+          "boxes": "bx",
+          "pad": 0.25,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "all_clocks_match",
+          "args": ["cr", "reference"],
+          "out": "cen"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,208 @@
+{
+  "id": "count_nested_containers",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic overhead photo of an open gift hamper. Inside it are EXACTLY 4 identical open boxes arranged side by side. INSIDE EVERY box sit EXACTLY 3 small drawstring pouches -- the same number of pouches in each box. So there are 4 boxes, each with 3 pouches (12 pouches in total). There must be EXACTLY 4 boxes -- not 3, not 5 -- and every box shows exactly 3 pouches. Everything is clearly visible from above. No text, no numerals.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an open gift hamper containing several boxes, each box holding several small pouches, each pouch holding chocolates, where each layer's counts fit together consistently? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 4,
+    "pouches": 3,
+    "total_pouches": 12,
+    "q": "Write down every separate open BOX shown in the hamper, each with a few plain words saying where it sits and how big it looks. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no open box here, write the single word NONE.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This picture should show these countable objects: an open gift hamper containing several boxes, each box holding several small pouches, each pouch holding chocolates, where each layer's counts fit together consistently. Look at the individual objects being counted. Is each one a box, a pouch or a chocolate in the hamper, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them visible as its own separate individual (allowing for the intended overlaps/stacking the scene describes), rather than merged into one indistinct blob? Answer yes if each intended object can be told apart, no if they merge into an uncountable mass. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q",
+          "out": "fb"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["fb", "empty_as='0'"],
+          "out": "fb__std"
+        },
+        {
+          "fail_if": ["fb__std.refused"]
+        },
+        {
+          "const": "fb__std.n",
+          "out": "val"
+        },
+        {
+          "fail_if": ["fb.unreadable", "fb.refused"]
+        },
+        {
+          "compare_band": "val",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "premise_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show several open boxes, each box containing several small pouches inside it? Answer yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_objform",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a clump of boxes or pouches merged into one blob where the separate items cannot be told apart",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g"
+        },
+        {
+          "fail_if": ["sweep_g.unreadable"]
+        },
+        {
+          "compare": "sweep_g.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "per_box_equal",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "an open box sitting in the hamper -- one single open box with its own four walls, seen from above with its small drawstring pouches inside it. Draw ONE box per open box and box EVERY one of them separately, from that box's own left edge to its own right edge; do not box the hamper itself, do not draw one rectangle round all the boxes together, and do not box a single pouch.",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This crop shows one open box from a gift hamper. How many small pouches are inside this box? Count the small pouch shapes you can see inside the box in this crop. Answer with one whole number only.",
+          "boxes": "bx",
+          "out": "per"
+        },
+        {
+          "fail_if": ["per.unreadable"]
+        },
+        {
+          "run": "all_counts_equal",
+          "args": ["per"],
+          "out": "lw"
+        },
+        {
+          "fail_if": ["lw.no_read"]
+        },
+        {
+          "const": "lw.frac",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

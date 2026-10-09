@@ -1,0 +1,84 @@
+{
+  "id": "rain_is_booked_to_the_day_it_began",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The monthly return has to go up to the basin office tonight, so the reduction desk is photographed as the clerk left it, with the chart, the bar sheet and the reduction page all in one frame.\n\nThe siphon chart unrolled on the desk carries the falls of the past few days as steps. Three of them are marked up in pencil: one on the 3rd, from 09:00 to 14:00, 12 mm; one that began on the 4th at 22:00 and ran on past midnight into the 5th, 18 mm over the whole fall; and one on the 5th, from 15:00 to 17:00, 6 mm. Beside the chart lies the daily bar sheet, its bars already drawn against a printed scale up the side. The station's reduction page held down by the paperweight gives one working rule: a fall is booked to the day it began on.\n\nHow high the bars had to be drawn is what the reduction page does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a siphon rain chart unrolled on a desk with a daily bar sheet and a reduction page lying beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "bar_at_18",
+    "part2": "in_one_bar_only"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the bar drawn for the 4th against the printed scale up the side of the bar sheet. Answer with one of: the bar for the 4th stands at 18 mm on that scale; the bar for the 4th stands at 7 mm on that scale; the bar for the 4th stands at 6 mm on that scale.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at how the fall that ran on past midnight has been entered on the bar sheet. Answer with one of: that fall shows up in one bar only; that fall is split between two bars; that fall shows up in none of the bars on the sheet.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

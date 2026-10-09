@@ -1,0 +1,208 @@
+{
+  "id": "code39_mod43",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photograph of a printed WAREHOUSE SHELF / RACK LABEL slotted into a metal edge holder, sharp and high-contrast. Above the black-and-white Code 39 barcode bars, the human-readable location code is printed in one row of large plain capitals and digits.\n\nThe location data is the eight characters R A C K 0 7 J 9 (that is RACK07J9). You must print the location code as those eight characters FOLLOWED BY the correct Code 39 mod-43 CHECK CHARACTER as a ninth character. Compute it the standard way: give each character its Code 39 value in the ordering 0-9 = 0..9, A-Z = 10..35, then '-' '.' space '$' '/' '+' '%' = 36..42; add the values of the eight data characters; take that total modulo 43; the character whose value equals that remainder is the check character. Print all nine characters as one row above the bars.\n\nAlso print, smaller: 'AISLE 4  BAY 12' and 'FRAGILE - THIS WAY UP'. Make the nine-character human-readable row large and fully legible. Do not print the checksum formula on the label.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show printed warehouse rack location label in a metal edge holder, its human-readable Code-39 string ending in the mod-43 check character over a fictional location code? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_read": "This is a warehouse shelf label. Above the barcode bars, read the row of large human-readable capitals and digits (the location code, which ends in one extra check character). Output ONLY those characters, no spaces and nothing else.",
+    "q_form": "Look at this image. Is there a row of human-readable capitals and digits printed together with black-and-white barcode bars (a barcode label)? Answer ONLY 'yes' or 'no'.",
+    "data8": "RACK07J9",
+    "check_char": "I",
+    "full9": "RACK07J9I",
+    "aisle_bay": "AISLE 4  BAY 12"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "payload",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_read",
+          "out": "ans"
+        },
+        {
+          "run": "extract_code",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "data_prefix_ok",
+          "args": ["read", "reference.data8"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "checkvalue",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_read",
+          "out": "ans"
+        },
+        {
+          "run": "extract_code",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "check_char_ok",
+          "args": ["read", "reference.full9"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_data8",
+      "weight": 0.736,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the FIRST EIGHT characters of the large human-readable code row printed above the barcode bars. Report those eight characters exactly as printed (letters and digits, no spaces).",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.data8",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_aisle_bay_line",
+      "weight": 0.491,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the smaller line on the label that gives the aisle and bay. Report the text exactly as printed.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.aisle_bay",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_row_len_nine",
+      "weight": 0.491,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does the large human-readable code row above the bars contain exactly nine characters? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_formula_printed",
+      "weight": 0.491,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "printed checksum formula, equation or modulo calculation on the label",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_extra_working",
+      "weight": 0.491,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "worked-out arithmetic, a written formula, or an explanation of how a value was worked out, on the label",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

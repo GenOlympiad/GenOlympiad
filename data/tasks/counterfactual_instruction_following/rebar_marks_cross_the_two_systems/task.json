@@ -1,0 +1,105 @@
+{
+  "id": "rebar_marks_cross_the_two_systems",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The delivery has to be booked in before the steel goes to the bending shop, so the four bundles are photographed on their bearers with the mill certificate laid out on the trestle table beside them.\n\nFour banded bundles of reinforcing bar rest on timber bearers in the yard. The end bar of each bundle has been turned so that the marks rolled into the steel between its ribs face the camera. A plastic tag wired to each band carries the drawing bar mark: B7 on the near bundle, then B12, then B3, then B9 going away from the camera. The mill certificate on the trestle lists the bundles in the order they stand, near to far, giving nominal diameters of 16, 25, 12 and 20 millimetres. The booking-in note pinned to the shed says only that bundles are tagged from the rolled marks, and names the rolling standard those marks follow.\n\nWhat each end bar has rolled into it is what the certificate does not show.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show four banded bundles of reinforcing bar on bearers with a tag wired to each band and a certificate laid out beside them? Answer yes or no only.",
+  "reference": {
+    "part1": "sequences_are_identical",
+    "part2": "straight_run_meter_matches"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the bar size figure rolled into the steel on the end bar of each bundle, from the near bundle to the one furthest away, and write those figures in order separated by commas. Give the rolled size figures only, not the bar marks on the tags.",
+          "out": "a_part1_g"
+        },
+        {
+          "fail_if": ["a_part1_g.unreadable"]
+        },
+        {
+          "ask": "Read the nominal diameters listed on the mill certificate, from its top row downwards, and write those figures in order separated by commas.",
+          "out": "a_part1_x"
+        },
+        {
+          "fail_if": ["a_part1_x.unreadable"]
+        },
+        {
+          "run": "sequences_reversed",
+          "args": ["a_part1_g", "a_part1_x"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the drawing bar mark on the plastic tag wired to the near bundle and write only the number in it.",
+          "out": "m_bend"
+        },
+        {
+          "fail_if": ["m_bend.unreadable"]
+        },
+        {
+          "ask": "Read the bar size figure rolled into the steel on the end bar of the near bundle and write that number only.",
+          "out": "m_straight"
+        },
+        {
+          "fail_if": ["m_straight.unreadable"]
+        },
+        {
+          "ask": "Read the nominal diameter listed on the top row of the mill certificate and write that number only.",
+          "out": "m_sheet"
+        },
+        {
+          "fail_if": ["m_sheet.unreadable"]
+        },
+        {
+          "run": "meter_matching_sheet",
+          "args": ["m_bend", "m_straight", "m_sheet"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

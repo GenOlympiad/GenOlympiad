@@ -1,0 +1,190 @@
+{
+  "id": "iv_drip_rate",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photograph of a printed intravenous-infusion label wrapped on a ward IV fluid BAG hanging on a drip stand, plain print on a white label. The infusion is a weight-based drug order: patient weight 31 kg, drug dose 45 mg per kilogram, drug supplied at a concentration of 2.5 mg per mL, the whole dose to run over 5 hours using a giving-set with a drop factor of 15 drops per mL (gtt/mL). The label has a bold field 'SET RATE (gtt/min):' followed by the single whole-number drip rate the nurse should set. Work it out in order: total drug in mg = dose per kg x weight; volume to infuse in mL = total mg / concentration; then convert that volume and the time to a flow in drops per minute using the drop factor (drops = volume x drop factor; minutes = hours x 60) and round to the nearest whole drop per minute. Print that whole number there. Also print the weight, dose, concentration, time and drop factor as reference lines. Print only these numbers; make the SET RATE value large and legible. No working or formula on the label.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show ward IV fluid bag infusion label on a drip stand whose set drip rate is a weight-based dose-to-volume-to-rate chain? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "weight_kg": 31.0,
+    "dose_per_kg": 45.0,
+    "conc_mg_ml": 2.5,
+    "total_mg": 1395.0,
+    "vol_ml": 558.0,
+    "hours": 5,
+    "drop_factor": 15,
+    "gtt_min": 28,
+    "ml_h": 111.6,
+    "q_rate": "This is an IV infusion bag label. Find the bold field 'SET RATE (gtt/min)'. Read the whole-number drip rate printed on that line (drops per minute). Answer with ONLY that number, digits only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "gtt_min",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_rate",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_tolerance": "rd",
+          "to": "reference.gtt_min",
+          "tol": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_weight",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the patient WEIGHT (in kg) printed on the IV bag label reference lines. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.weight_kg",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_dose",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the drug DOSE per kilogram (in mg per kg) printed on the IV bag label reference lines. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.dose_per_kg",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_conc",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the drug CONCENTRATION (in mg per mL) printed on the IV bag label reference lines. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.conc_mg_ml",
+          "core_abs": 0.499,
+          "margin_abs": 0.1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_drop_factor",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the giving-set DROP FACTOR (in drops per mL) printed on the IV bag label reference lines. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.drop_factor",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_operand_hours",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the infusion TIME (in hours) printed on the IV bag label reference lines. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.hours",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_extra_working",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Apart from the small number of required result / reference values, does this image show any WORKED-OUT arithmetic, intermediate calculation lines, a written formula, a move list, or an explanation of how the value was obtained? Answer 'yes' if any such working / formula / explanation is visible, 'no' if only the required values (and ordinary labels) appear. Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

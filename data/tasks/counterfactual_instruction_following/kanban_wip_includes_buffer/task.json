@@ -1,0 +1,261 @@
+{
+  "id": "kanban_wip_includes_buffer",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Look square on at a machining cell's card rack on the shop floor. Three slotted steel card rails are bolted side by side to the rack upright. Each rail is headed by its own lane plate carrying the lane letter, a capacity scale running down the rail's edge, and a small tally window; at the shoulder of each rail, under the same letter, hangs that lane's hold pocket. A shallow hold-back tray stands at the end of the run.\n\nEleven work orders are waiting to go up this morning. Every card is printed with its order number, the letter of the lane whose operation it is queued for, and its promise date:\n4412  A  12 Mar\n4413  A  13 Mar\n4414  A  16 Mar\n4415  A  14 Mar\n4416  A  15 Mar\n4417  B  11 Mar\n4418  B  13 Mar\n4419  B  17 Mar\n4420  C  12 Mar\n4421  C  14 Mar\n4422  C  16 Mar\n\nThis cell caps every lane at four, and the cap here has always been counted the way this cell counts it: the cards on a rail and the cards in that lane's hold pocket come to four between them, because the pocket is inside the cap and not spare room beside it. When a lane cannot take everything queued for it, the order with the latest promise date waits in the hold-back tray until a card comes off.\n\nThe material handler has to walk up to this rack and see at a glance where every order stands. Work out for yourself how the cards go up, what waits in the hold-back tray and what each tally window says -- I am deliberately not telling you which order waits, nor how many cards any lane finishes with. The card numbers and the tally windows must be large and sharp. Nothing may appear beyond the rack, the rails, the pockets, the tray and the cards: no working, no note about the cap.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a rack of rails or slots holding printed cards, together with small plates or windows carrying figures? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "held_order": "4414",
+    "tallies": "a:4 b:3 c:3",
+    "card_set": "4412 4413 4414 4415 4416 4417 4418 4419 4420 4421 4422",
+    "n_rails": 3,
+    "q_rail_cert": "Does this cut-out show ONE whole lane plate at the head of a rail, rather than a work order card or only part of a plate? Answer yes or no only.",
+    "tally_agreement": "every window agrees with its rail"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_order_standing_off_the_rack_is_the_one_the_reaching_cap_pushes_out",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the hold-back tray standing at the end of the rack",
+          "out": "held_ring"
+        },
+        {
+          "fail_if": ["held_ring.unreadable"]
+        },
+        {
+          "read_crop": "Copy the order number printed on the card lying in this tray. If the tray is empty, write the word none. Write the number or the word none only.",
+          "boxes": "held_ring",
+          "pad": 0.25,
+          "out": "held_txt"
+        },
+        {
+          "fail_if": ["held_txt.unreadable"]
+        },
+        {
+          "run": "read_distinct_figures",
+          "args": ["held_txt"],
+          "out": "held"
+        },
+        {
+          "compare": "held.seq",
+          "to": "reference.held_order",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_tally_window_counts_the_hold_pocket_inside_the_cap",
+      "weight": 1.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lane plate at the head of a card rail",
+          "sweep": true,
+          "out": "lane_ring"
+        },
+        {
+          "fail_if": ["lane_ring.unreadable"]
+        },
+        {
+          "read_crop": "Copy the lane letter printed on this plate. Write the letter only.",
+          "boxes": "lane_ring",
+          "pad": 0.2,
+          "out": "lane_txt"
+        },
+        {
+          "fail_if": ["lane_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure showing in the tally window on this plate. Write the number only.",
+          "boxes": "lane_ring",
+          "pad": 0.2,
+          "out": "lane_num"
+        },
+        {
+          "fail_if": ["lane_num.unreadable"]
+        },
+        {
+          "run": "labelled_pairs",
+          "args": ["lane_txt", "lane_num"],
+          "out": "lanes"
+        },
+        {
+          "compare": "lanes.canon",
+          "to": "reference.tallies",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_tally_window_agrees_with_the_cards_hanging_under_it",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a card rail on the rack, with its lane plate at the head of it",
+          "sweep": true,
+          "out": "rl"
+        },
+        {
+          "fail_if": ["rl.unreadable"]
+        },
+        {
+          "read_crop": "Copy the lane letter printed on the plate at the head of this rail. Write the letter only.",
+          "boxes": "rl",
+          "pad": 0.25,
+          "out": "rl_let"
+        },
+        {
+          "fail_if": ["rl_let.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure showing in the tally window on this plate. Write the number only.",
+          "boxes": "rl",
+          "pad": 0.25,
+          "out": "rl_win"
+        },
+        {
+          "fail_if": ["rl_win.unreadable"]
+        },
+        {
+          "read_crop": "How many work order cards are hanging on this rail and in its pocket together? Write the number only.",
+          "boxes": "rl",
+          "pad": 0.25,
+          "out": "rl_cnt"
+        },
+        {
+          "fail_if": ["rl_cnt.unreadable"]
+        },
+        {
+          "run": "windows_match_counts",
+          "args": ["rl_let", "rl_win", "rl_cnt"],
+          "out": "tv"
+        },
+        {
+          "compare": "tv.txt",
+          "to": "reference.tally_agreement",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "all_eleven_orders_stand_on_the_rack_once_each",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a work order card on the rack or lying in the hold-back tray",
+          "sweep": true,
+          "out": "card_ring"
+        },
+        {
+          "fail_if": ["card_ring.unreadable"]
+        },
+        {
+          "read_crop": "Copy the order number printed on this card. Write the number only.",
+          "boxes": "card_ring",
+          "pad": 0.15,
+          "out": "card_txt"
+        },
+        {
+          "fail_if": ["card_txt.unreadable"]
+        },
+        {
+          "run": "read_distinct_figures",
+          "args": ["card_txt"],
+          "out": "cards"
+        },
+        {
+          "compare": "cards.seq",
+          "to": "reference.card_set",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_three_lane_plates_head_the_rack",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lane plate at the head of a card rail",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_rail_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rails",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_was_added_to_the_rack",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of arithmetic or a written note pinned to the rack",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

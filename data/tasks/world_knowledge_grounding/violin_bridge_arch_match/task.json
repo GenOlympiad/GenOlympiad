@@ -1,0 +1,188 @@
+{
+  "id": "violin_bridge_arch_match",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A customer is coming in to look at a new bridge before the violin is strung up, so the repairer takes one close photograph from above and to one side, with the end of the fingerboard and the bridge both in the frame.\n\nOn the bench and not yours to move: the violin lying face up with its strings off; the newly cut bridge standing upright in its place between the inner notches of the soundholes; and the arching template leaning against the ribs.\n\nWhat a bridge has to do, which every repairer knows and no customer is told: it carries the curve of the fingerboard out to the strings, so that each string ends up the same height above the board as its neighbours are above theirs; and it stands on the belly, which is not flat but arched, and is carried across all of both feet rather than on their corners.\n\nWhat shape the top of the bridge takes and how its feet meet the belly is the part you have to work out -- I am not telling you, and there is no second bridge on the bench to copy. Take it close enough that the line of the fingerboard end, the curve across the bridge top and the joint under each foot can all be seen. Nothing is to be written or drawn on the belly of the instrument.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a stringed instrument lying face up with a small upright piece of wood standing on it? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no drawing on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "shape_expected": "the same shape but a larger curve",
+    "centre_expected": "over the middle of the fingerboard curve",
+    "one": 1,
+    "n_feet": 2,
+    "n_notches": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_bridge_top_repeats_the_fingerboard_curve_at_a_larger_radius_on_its_centre",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the upright piece of wood standing between the soundholes of the instrument together with the end of the fingerboard",
+          "sweep": true,
+          "out": "br_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["br_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, compared with the curve across the end of the fingerboard, what is the curve across the top of the bridge? Answer with one of: the same shape but a larger curve, flatter than it, more strongly curved than it, straight across.",
+          "boxes": "br_box",
+          "pad": 0.5,
+          "out": "shp"
+        },
+        {
+          "fail_if": ["shp.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, where does the highest point of the bridge top stand? Answer with one of: over the middle of the fingerboard curve, off towards the left edge of the picture, off towards the right edge of the picture, cannot tell.",
+          "boxes": "br_box",
+          "pad": 0.5,
+          "out": "ctr"
+        },
+        {
+          "fail_if": ["ctr.unreadable"]
+        },
+        {
+          "run": "bridge_top_match",
+          "args": ["shp", "ctr", "reference.shape_expected", "reference.centre_expected"],
+          "out": "af"
+        },
+        {
+          "compare_band": "af.shape",
+          "to": "reference.one",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "f_shape"
+        },
+        {
+          "compare_band": "af.centre",
+          "to": "reference.one",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "f_centre"
+        },
+        {
+          "minimum": ["f_shape", "f_centre"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_feet_are_cut_to_sit_flush_on_the_arching_of_the_belly",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a foot of the upright piece of wood where it meets the belly",
+          "sweep": true,
+          "out": "ft_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["ft_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how does the foot of the bridge meet the belly of the instrument? Answer with one of: sitting flush along its whole length, lifted at one end, lifted in the middle, cannot tell.",
+          "boxes": "ft_box",
+          "pad": 0.3,
+          "out": "ft"
+        },
+        {
+          "fail_if": ["ft.unreadable"]
+        },
+        {
+          "run": "count_flush_feet",
+          "args": ["ft"],
+          "out": "ff"
+        },
+        {
+          "compare_band": "ff.n",
+          "to": "reference.n_feet",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_bridge_top_carries_a_notch_for_every_string",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a notch cut into the top edge of the upright piece of wood",
+          "sweep": true,
+          "out": "nt_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["nt_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a string notch cut into the top edge of the bridge? Answer yes or no only.",
+          "boxes": "nt_box",
+          "pad": 0.3,
+          "out": "ntc"
+        },
+        {
+          "fail_if": ["ntc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["ntc"],
+          "out": "nn"
+        },
+        {
+          "compare_band": "nn.n",
+          "to": "reference.n_notches",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_is_written_or_drawn_on_the_belly_of_the_instrument",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "writing or a drawn mark on the belly of the instrument",
+          "sweep": true,
+          "out": "swp",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

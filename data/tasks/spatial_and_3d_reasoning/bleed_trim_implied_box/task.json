@@ -1,0 +1,156 @@
+{
+  "id": "bleed_trim_implied_box",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A prepress operator's proof for the print shop's job file: a flat, straight-down photograph of one printed proof sheet lying on the light table. The sheet carries a poster artwork -- a full-bleed landscape photograph with one short headline line set well inside the picture area -- prepared to the shop's standard for cutting: the poster will be trimmed to A4, the artwork is prepared with 3 mm of bleed on every side, and the sheet is marked with crop marks only. At each corner of the intended trimmed page sit two short hairline marks, one horizontal and one vertical, each held clear of the trim corner itself, so the sheet carries eight short marks in all.\n\nWhat those marks imply about where the guillotine will cut, how far the photograph itself must run, and what must NOT be drawn on a proof marked this way, are for you to work out from prepress practice -- I am deliberately not telling you, and a proof the cutter cannot trust is thrown out with the job billed back to the operator. Even light-table illumination, the whole sheet in frame, and no lettering anywhere beyond the headline.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show one printed sheet with a poster image and some small marks near its corners? A realistic photo, a scan, an illustration or a plain drawing ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with nothing of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_marks": 8,
+    "bleed_split_expected": "continues:4|stops:0"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_trim_frame_is_drawn",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a ruled rectangular frame or border line running round the poster picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "fr"
+        },
+        {
+          "fail_if": ["fr.unreadable"]
+        },
+        {
+          "compare": "fr.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "picture_runs_past_the_marks_at_every_corner",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one corner area of the sheet where two short hairline marks sit",
+          "sweep": true,
+          "out": "cn"
+        },
+        {
+          "fail_if": ["cn.unreadable"]
+        },
+        {
+          "read_crop": "In this corner cut-out, does the poster picture continue outward past the little marks toward the sheet edge, or does it stop level with the marks leaving blank sheet beyond them? Answer with one word: continues or stops.",
+          "boxes": "cn",
+          "pad": 0.5,
+          "out": "bl"
+        },
+        {
+          "fail_if": ["bl.unreadable"]
+        },
+        {
+          "run": "count_bleed_corners",
+          "args": ["bl"],
+          "out": "bt"
+        },
+        {
+          "compare": "bt.split",
+          "to": "reference.bleed_split_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "eight_marks_certificate",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one short straight hairline crop mark near a corner of the poster area",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_m"
+        },
+        {
+          "fail_if": ["box_m.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE short straight hairline mark, rather than lettering or part of the poster picture? Answer yes or no only.",
+          "boxes": "box_m",
+          "pad": 0.4,
+          "out": "cert"
+        },
+        {
+          "fail_if": ["cert.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cert"],
+          "out": "n_m"
+        },
+        {
+          "compare_band": "n_m.n",
+          "to": "reference.n_marks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "headline_not_cut_by_sheet_edge",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the headline lettering inside the poster picture",
+          "sweep": true,
+          "out": "hl"
+        },
+        {
+          "fail_if": ["hl.unreadable"]
+        },
+        {
+          "read_crop": "Is any part of this headline lettering cut off by the edge of the sheet? Answer yes or no only.",
+          "boxes": "hl",
+          "pad": 0.4,
+          "out": "hc"
+        },
+        {
+          "fail_if": ["hc.unreadable"]
+        },
+        {
+          "compare": "hc.answers.0",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

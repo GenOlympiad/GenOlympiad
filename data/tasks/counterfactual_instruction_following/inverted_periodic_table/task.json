@@ -1,0 +1,351 @@
+{
+  "id": "inverted_periodic_table",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean, legible PERIODIC TABLE OF THE ELEMENTS as it would appear on a printed lab-mug wrap-around design, titled 'PERIODIC TABLE'. Use a simplified real periodic table covering only periods 1 to 4: period 1 has H and He; period 2 is Li, Be, B, C, N, O, F, Ne; period 3 is Na, Mg, Al, Si, P, S, Cl, Ar; period 4 is K, Ca, Sc, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn, Ga, Ge, As, Se, Br, Kr. Place every element in its correct group column and print each element's SYMBOL big in its square cell with its small atomic number. IMPORTANT LAYOUT OVERRIDE: this poster is printed 180 DEGREES POINT-INVERTED (the entire grid rotated a half-turn). So it must be UPSIDE-DOWN and MIRRORED left-to-right compared to a normal table: Hydrogen (H) must sit in the very BOTTOM-RIGHT cell, Helium (He) in the very BOTTOM-LEFT cell, period 1 becomes the BOTTOM row, period numbers increase from BOTTOM up to TOP so the heavy period-4 elements form the TOP row, and Krypton (Kr) ends up in the very TOP-LEFT cell with Potassium (K) in the very TOP-RIGHT cell. Draw clear square cell borders and legible symbols. Do not add any other note, caption, arrow or legend.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a printed PERIODIC TABLE OF THE ELEMENTS -- a grid of square cells, each cell printing an element symbol (like H, He, Na, Fe) and a small atomic number. Never mind how well it is drawn, and never mind the exact layout order. Does the picture show a periodic-table grid of element cells? A photo, illustration, poster, mug print or clean diagram all count as yes. Answer NO only if it shows a blank card, a plain panel printing an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "br_symbol": "H",
+    "bl_symbol": "He",
+    "tl_symbol": "Kr",
+    "q_br": "Look at this periodic-table grid of square element cells. Find the single cell in the very BOTTOM-RIGHT corner of the grid (the cell nearest the bottom edge AND the right edge at the same time). Read the ELEMENT SYMBOL (the big letters) printed inside that corner cell. Report ONLY the symbol actually printed in that bottom-right corner cell exactly as written; do NOT reason about where any element 'should' go on a standard table. Answer with just that element symbol and nothing else.",
+    "q_bl": "Look at this periodic-table grid of square element cells. Find the single cell in the very BOTTOM-LEFT corner of the grid (the cell nearest the bottom edge AND the left edge at the same time). Read the ELEMENT SYMBOL (the big letters) printed inside that corner cell. Report ONLY the symbol actually printed in that bottom-left corner cell exactly as written; do NOT reason about where any element 'should' go on a standard table. Answer with just that element symbol and nothing else.",
+    "q_tl": "Look at this periodic-table grid of square element cells. Find the single cell in the very TOP-LEFT corner of the grid (the cell nearest the top edge AND the left edge at the same time, ignoring the title text above the grid). Read the ELEMENT SYMBOL (the big letters) printed inside that corner cell. Report ONLY the symbol actually printed in that top-left corner cell exactly as written; do NOT reason about where any element 'should' go on a standard table. Answer with just that element symbol and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bottom_right_is_H",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of square element cells itself -- the outer edge of the grid of squares, counting the whole grid as one shape; not the title lettering above it and not the poster, mug or wall around it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read_crop": "This is a printed table of chemical elements, cut out of a bigger picture. It is a grid of square cells in straight rows and columns. Work across its widest part from the left edge to the right edge and write down every column of cells you pass, each with a few plain words saying what stands at the top of that column or that it is blank there. Take a column position even where some rows leave it empty. Separate one item from the next with a semicolon; write no running total and nothing else.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "sz_across"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["sz_across", "empty_as='0'"],
+          "out": "sz_across__std"
+        },
+        {
+          "fail_if": ["sz_across__std.refused"]
+        },
+        {
+          "read_crop": "This is a printed table of chemical elements, cut out of a bigger picture. It is a grid of square cells in straight rows and columns. Work down the grid from its top row to its bottom row. Write down every row of cells you pass, each with a few plain words saying what stands at the left-hand end of that row or that it is blank there. Separate one item from the next with a semicolon; write no running total and nothing else.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "sz_down"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["sz_down", "empty_as='0'"],
+          "out": "sz_down__std"
+        },
+        {
+          "fail_if": ["sz_down__std.refused"]
+        },
+        {
+          "run": "merge_board_size",
+          "args": ["sz_across__std", "sz_down__std"],
+          "out": "sz"
+        },
+        {
+          "run": "plan_corner_square",
+          "args": ["image", "anc", "sz", "'br'"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one square cell cut out of a printed table of chemical elements. What element symbol -- the big one or two letters, like H, He, Na or Fe -- is printed inside this square? Answer with just that symbol and nothing else. If the square has no letters in it, answer the single word blank.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "symbol_matches_reference",
+          "args": ["rd", "reference.br_symbol"],
+          "out": "res"
+        },
+        {
+          "run": "ag_paint",
+          "args": ["pl", "res.oks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "all": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bottom_left_is_He",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of square element cells itself -- the outer edge of the grid of squares, counting the whole grid as one shape; not the title lettering above it and not the poster, mug or wall around it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read_crop": "This is a printed table of chemical elements, cut out of a bigger picture. It is a grid of square cells in straight rows and columns. Work across its widest part from the left edge to the right edge and write down every column of cells you pass, each with a few plain words saying what stands at the top of that column or that it is blank there. Take a column position even where some rows leave it empty. Separate one item from the next with a semicolon; write no running total and nothing else.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "sz_across"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["sz_across", "empty_as='0'"],
+          "out": "sz_across__std"
+        },
+        {
+          "fail_if": ["sz_across__std.refused"]
+        },
+        {
+          "read_crop": "This is a printed table of chemical elements, cut out of a bigger picture. It is a grid of square cells in straight rows and columns. Work down the grid from its top row to its bottom row. Write down every row of cells you pass, each with a few plain words saying what stands at the left-hand end of that row or that it is blank there. Separate one item from the next with a semicolon; write no running total and nothing else.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "sz_down"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["sz_down", "empty_as='0'"],
+          "out": "sz_down__std"
+        },
+        {
+          "fail_if": ["sz_down__std.refused"]
+        },
+        {
+          "run": "merge_board_size",
+          "args": ["sz_across__std", "sz_down__std"],
+          "out": "sz"
+        },
+        {
+          "run": "plan_corner_square",
+          "args": ["image", "anc", "sz", "'bl'"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one square cell cut out of a printed table of chemical elements. What element symbol -- the big one or two letters, like H, He, Na or Fe -- is printed inside this square? Answer with just that symbol and nothing else. If the square has no letters in it, answer the single word blank.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "symbol_matches_reference",
+          "args": ["rd", "reference.bl_symbol"],
+          "out": "res"
+        },
+        {
+          "run": "ag_paint",
+          "args": ["pl", "res.oks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "all": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "top_left_is_Kr",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of square element cells itself -- the outer edge of the grid of squares, counting the whole grid as one shape; not the title lettering above it and not the poster, mug or wall around it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read_crop": "This is a printed table of chemical elements, cut out of a bigger picture. It is a grid of square cells in straight rows and columns. Work across its widest part from the left edge to the right edge and write down every column of cells you pass, each with a few plain words saying what stands at the top of that column or that it is blank there. Take a column position even where some rows leave it empty. Separate one item from the next with a semicolon; write no running total and nothing else.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "sz_across"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["sz_across", "empty_as='0'"],
+          "out": "sz_across__std"
+        },
+        {
+          "fail_if": ["sz_across__std.refused"]
+        },
+        {
+          "read_crop": "This is a printed table of chemical elements, cut out of a bigger picture. It is a grid of square cells in straight rows and columns. Work down the grid from its top row to its bottom row. Write down every row of cells you pass, each with a few plain words saying what stands at the left-hand end of that row or that it is blank there. Separate one item from the next with a semicolon; write no running total and nothing else.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "sz_down"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["sz_down", "empty_as='0'"],
+          "out": "sz_down__std"
+        },
+        {
+          "fail_if": ["sz_down__std.refused"]
+        },
+        {
+          "run": "merge_board_size",
+          "args": ["sz_across__std", "sz_down__std"],
+          "out": "sz"
+        },
+        {
+          "run": "plan_corner_square",
+          "args": ["image", "anc", "sz", "'tl'"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one square cell cut out of a printed table of chemical elements. What element symbol -- the big one or two letters, like H, He, Na or Fe -- is printed inside this square? Answer with just that symbol and nothing else. If the square has no letters in it, answer the single word blank.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "symbol_matches_reference",
+          "args": ["rd", "reference.tl_symbol"],
+          "out": "res"
+        },
+        {
+          "run": "ag_paint",
+          "args": ["pl", "res.oks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "all": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

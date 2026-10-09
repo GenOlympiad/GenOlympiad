@@ -1,0 +1,91 @@
+{
+  "id": "rear_projection_sends_it_mirrored",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The audio-visual contractor has to get the cabinet passed before the exhibition opens, so it is photographed with one side panel off and the test card running on the screen.\n\nA rear-projection cabinet stands open on the build. On the machine side are the projector and the small monitor showing the picture it is sending; in the middle is the translucent screen sheet; beyond it is the face of the screen that the visitors will stand in front of. The same test card is showing on both: a row of numerals, 3 7 1 9 4 6, printed large across it, with the word NORTH set under the row. The system label stuck to the cabinet says the installation is rear projection, with the audience on the far side of the sheet from the projector.\n\nHow the card stands on either face is what the label does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a cutaway rear-projection cabinet with a projector, a monitor picture, a translucent screen sheet and the visitors' face of that screen all in one frame? Answer yes or no only.",
+  "reference": {
+    "part1": "sequences_are_reverses",
+    "part2": "word_reads_normally"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the row of numerals on the test card as it shows on the projector's monitor, from the left of that picture to its right, and write those numerals in that order separated by commas.",
+          "out": "a_part1_g"
+        },
+        {
+          "fail_if": ["a_part1_g.unreadable"]
+        },
+        {
+          "ask": "Read the row of numerals on the test card as it shows on the face of the screen the visitors stand in front of, from the left of that face to its right, and write those numerals in that order separated by commas.",
+          "out": "a_part1_x"
+        },
+        {
+          "fail_if": ["a_part1_x.unreadable"]
+        },
+        {
+          "run": "reverse_pair",
+          "args": ["a_part1_g", "a_part1_x"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the test card on the face of the screen the visitors stand in front of and say how the word under the numerals stands. Answer with one of: that word reads the normal way round; that word is turned back to front; that word stands upside down.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

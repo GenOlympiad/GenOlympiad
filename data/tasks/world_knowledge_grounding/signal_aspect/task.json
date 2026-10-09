@@ -1,0 +1,287 @@
+{
+  "id": "signal_aspect",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photorealistic evening photograph taken from a footbridge, looking straight down a long straight stretch of British double-track main line. Four colour-light signal masts stand beside the nearer running line, one behind another, receding away from the camera; each mast carries a single standard four-aspect signal head, and all four heads sit close enough and large enough in the frame that it is obvious which of their lenses are burning. A heavy stone train stands dead still on that line just beyond the FOURTH and most distant of those signals, occupying the section ahead of it. Nothing else is on either line, behind the camera or in front. Every signal displays the aspect that British four-aspect colour-light signalling requires of it in exactly this situation. Those signal lenses are the only lit lamps anywhere in the picture: the stone train shows no lamps of its own and there are no lineside lights. No text, no numbers, no signs.",
+  "difficulty": "s1",
+  "easy_question": "This may be a photograph or a plain flat diagram. Does the picture show a railway track with a row of signal lights standing beside it, one behind another? Judge only whether the track and the signal lights are there. Ignore drawing quality, colours and lighting. Never mind whether any detail is right. Answer NO only if the picture shows no railway signals at all. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "q_train": "A train is standing still on the railway track -- it is the solid vehicle body sitting on the rails. Some of the signal masts beside the track may be nearer to the camera than the train and some may be further away than it. How many of the signal masts are FURTHER AWAY from the camera than the train? Answer with a single digit, using 0 if none of them are. Answer with the digit and nothing else.",
+    "q_form": "Look at the signal masts beside the railway line. Does every one of their signal heads carry four separate round lamp lenses stacked one above another inside its casing? Answer yes or no only.",
+    "n_signals": 4,
+    "occupied_signal": 4,
+    "occupied_signal_str": "4",
+    "aspects": ["green", "doubleyellow", "yellow", "red"],
+    "lit_counts": [1, 2, 1, 1]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "signal_heads_readable",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "the boxy lamp casing at the top of a lineside signal mast, holding the round lenses; not the mast, train or track",
+          "retries": 4,
+          "out": "hp"
+        },
+        {
+          "fail_if": ["hp.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of one railway signal head holding round lamp lenses. How many of its lenses are lit up and glowing? Answer with a single digit and nothing else.",
+          "boxes": "hp",
+          "out": "nl"
+        },
+        {
+          "fail_if": ["nl.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of one railway signal head holding round lamp lenses. What colour are the lenses that are lit up and glowing? Answer with one word: red, yellow, green, or dark -- dark meaning every lens looks the same dull unlit colour with no glow in the casing.",
+          "boxes": "hp",
+          "out": "lc"
+        },
+        {
+          "fail_if": ["lc.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "read_signal_heads",
+          "args": ["hp", "nl", "lc", "src"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "two_or_more_heads",
+          "args": ["m.n_heads"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "signal_count_as_briefed",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "the boxy lamp casing at the top of a lineside signal mast, holding the round lenses; not the mast, train or track",
+          "retries": 4,
+          "out": "hp"
+        },
+        {
+          "fail_if": ["hp.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of one railway signal head holding round lamp lenses. How many of its lenses are lit up and glowing? Answer with a single digit and nothing else.",
+          "boxes": "hp",
+          "out": "nl"
+        },
+        {
+          "fail_if": ["nl.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of one railway signal head holding round lamp lenses. What colour are the lenses that are lit up and glowing? Answer with one word: red, yellow, green, or dark -- dark meaning every lens looks the same dull unlit colour with no glow in the casing.",
+          "boxes": "hp",
+          "out": "lc"
+        },
+        {
+          "fail_if": ["lc.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "read_signal_heads",
+          "args": ["hp", "nl", "lc", "src"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "head_count_frac",
+          "args": ["m", "reference.n_signals"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lamps_lit_per_head",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "the boxy lamp casing at the top of a lineside signal mast, holding the round lenses; not the mast, train or track",
+          "retries": 4,
+          "out": "hp"
+        },
+        {
+          "fail_if": ["hp.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of one railway signal head holding round lamp lenses. How many of its lenses are lit up and glowing? Answer with a single digit and nothing else.",
+          "boxes": "hp",
+          "out": "nl"
+        },
+        {
+          "fail_if": ["nl.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of one railway signal head holding round lamp lenses. What colour are the lenses that are lit up and glowing? Answer with one word: red, yellow, green, or dark -- dark meaning every lens looks the same dull unlit colour with no glow in the casing.",
+          "boxes": "hp",
+          "out": "lc"
+        },
+        {
+          "fail_if": ["lc.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "read_signal_heads",
+          "args": ["hp", "nl", "lc", "src"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "lit_count_frac",
+          "args": ["m", "reference.lit_counts"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "aspect_sequence_nearest_first",
+      "weight": 7.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "the boxy lamp casing at the top of a lineside signal mast, holding the round lenses; not the mast, train or track",
+          "retries": 4,
+          "out": "hp"
+        },
+        {
+          "fail_if": ["hp.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of one railway signal head holding round lamp lenses. How many of its lenses are lit up and glowing? Answer with a single digit and nothing else.",
+          "boxes": "hp",
+          "out": "nl"
+        },
+        {
+          "fail_if": ["nl.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of one railway signal head holding round lamp lenses. What colour are the lenses that are lit up and glowing? Answer with one word: red, yellow, green, or dark -- dark meaning every lens looks the same dull unlit colour with no glow in the casing.",
+          "boxes": "hp",
+          "out": "lc"
+        },
+        {
+          "fail_if": ["lc.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "read_signal_heads",
+          "args": ["hp", "nl", "lc", "src"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "aspect_seq_frac",
+          "args": ["m", "reference.aspects"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "train_position_as_briefed",
+      "weight": 1.5,
+      "score": "res.frac",
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the boxy lamp casing at the top of a lineside signal mast, holding the round lenses; not the mast, train or track",
+          "retries": 4,
+          "out": "tm"
+        },
+        {
+          "fail_if": ["tm.unreadable"]
+        },
+        {
+          "ask": "reference.q_train",
+          "out": "tp"
+        },
+        {
+          "fail_if": ["tp.unreadable"]
+        },
+        {
+          "run": "occupied_signal",
+          "args": ["tm", "tp", "reference.occupied_signal_str"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "d2_head_looks_like_a_four_aspect_head",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fq"
+        },
+        {
+          "fail_if": ["fq.unreadable"]
+        },
+        {
+          "compare": "fq",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

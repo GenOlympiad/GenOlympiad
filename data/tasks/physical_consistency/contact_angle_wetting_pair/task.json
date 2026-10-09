@@ -1,0 +1,177 @@
+{
+  "id": "contact_angle_wetting_pair",
+  "axis": "physical_consistency",
+  "prompt": "A half-and-half comparison shot for a car detailing shop's shopfront advert, taken on the workshop floor on the day of the job.\n\nA strip of masking tape runs straight across the bonnet of the car and splits it into two halves. The detailer has written on the tape in marker pen, one word over each half: COATED over the half that has had the ceramic coating cured onto it, BARE over the half that was degreased back to plain paint an hour ago. With a pipette he has put one single 50 microlitre drop of water onto each half, both drops the same volume, both the same distance from the tape.\n\nThe camera sits down at bonnet level looking straight along the tape line, so both drops are seen from the side against the paint and the tape is the horizontal reference in the frame.\n\nWhat each drop does on its own half is for you to work out -- I am deliberately not telling you the shape of either one, and I am not telling you which half does what. Do not write any word onto the tape other than the two given above, and do not print a caption, an arrow or any note of a result anywhere in the picture.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a car bonnet split by a strip of masking tape with a written word on each half and a drop of water on each half, seen from bonnet level? A realistic photo, an illustration or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel with none of that, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "binding_ok": "yes",
+    "bare_shape": "film",
+    "coated_shape": "bead",
+    "n_drops": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "coating_shape_binding",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the water drop on the bonnet half labelled COATED",
+          "out": "box_c",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_c.unreadable"]
+        },
+        {
+          "read_crop": "Is the water in this cut-out shaped like a tall rounded bead, or spread out into a flat film? Answer bead or film.",
+          "boxes": "box_c",
+          "out": "c_read",
+          "pad": 0.3
+        },
+        {
+          "fail_if": ["c_read.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the water drop on the bonnet half labelled BARE",
+          "out": "box_b",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_b.unreadable"]
+        },
+        {
+          "read_crop": "Is the water in this cut-out shaped like a tall rounded bead, or spread out into a flat film? Answer bead or film.",
+          "boxes": "box_b",
+          "out": "b_read",
+          "pad": 0.3
+        },
+        {
+          "fail_if": ["b_read.unreadable"]
+        },
+        {
+          "run": "drop_shapes_match",
+          "args": ["c_read", "b_read"],
+          "out": "sb"
+        },
+        {
+          "compare": "sb.ok",
+          "to": "reference.binding_ok",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bare_side_wets_out",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the water drop on the bonnet half labelled BARE",
+          "out": "box_b",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_b.unreadable"]
+        },
+        {
+          "read_crop": "Is the water in this cut-out shaped like a tall rounded bead, or spread out into a flat film? Answer bead or film.",
+          "boxes": "box_b",
+          "out": "b_read",
+          "pad": 0.3
+        },
+        {
+          "fail_if": ["b_read.unreadable"]
+        },
+        {
+          "compare": "b_read.answers.0",
+          "to": "reference.bare_shape",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_drop_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a single drop of water resting on the bonnet paint",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole drop of water on the paint, rather than bare paint or only part of a drop? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_drops",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_extra_words",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word written on the masking tape other than COATED or BARE",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "id": "postnet_bars",
+  "axis": "symbolic_systems",
+  "prompt": "A sharp, straight-on macro photograph of the bottom-right corner of a white business envelope, showing a printed POSTNET postal barcode in black ink just above the address line. Encode the ZIP code 47823 as a standard USPS POSTNET barcode: first COMPUTE the POSTNET check digit (the extra digit that makes the sum of all six digits a multiple of 10), then print the barcode as a single horizontal row of tall and short bars — a tall FRAME bar at the very start, then each of the six digits (the five ZIP digits followed by the check digit) as its five-bar POSTNET pattern where every digit is exactly TWO TALL bars and THREE SHORT bars, and a tall FRAME bar at the very end. All bars the same width and evenly spaced, standing on a common baseline; tall bars are full height, short bars about half height. You MAY print the human-readable ZIP under the address, but the BARS must be the correct POSTNET encoding. Photoreal print, crisp black bars on white paper, nothing else in the frame.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict an envelope printed with a POSTNET postal barcode — a row of tall and short black bars. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "zip5": "47823",
+    "check_digit": 6,
+    "digits": [4, 7, 8, 2, 3, 6],
+    "digit_groups": [
+      [0, 1, 0, 0, 1],
+      [1, 0, 0, 0, 1],
+      [1, 0, 0, 1, 0],
+      [0, 0, 1, 0, 1],
+      [0, 0, 1, 1, 0],
+      [0, 1, 1, 0, 0]
+    ],
+    "bars": [
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1
+    ],
+    "n_bars": 32,
+    "q_bars": "This is a POSTNET postal barcode: a single horizontal row of TALL and SHORT bars on a common baseline. Reading LEFT to RIGHT, output one character per bar: 'T' for a full-height TALL bar and 'S' for a half-height SHORT bar, separated by single spaces. Include EVERY bar, including the tall frame bars at each end. Judge height only; do NOT decode digits. If unreadable answer 'unreadable'."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "barcode_digits",
+      "weight": 4.0,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "one vertical black BAR of the printed POSTNET barcode row. Box EVERY bar separately, one box per bar, including the short half-height ones and the tall bars at each end. A box must hold exactly ONE bar, with white paper showing on both sides of it -- never two neighbouring bars. Each box must cover the whole of its bar, from its top down to the common baseline. Do not box the address text.",
+          "out": "bc"
+        },
+        {
+          "fail_if": ["bc.unreadable"]
+        },
+        {
+          "run": "digit_group_boxes",
+          "args": ["bc", "5"],
+          "out": "gg"
+        },
+        {
+          "fail_if": ["gg.no_read"]
+        },
+        {
+          "read_crop": "This crop is cut from a printed barcode. Take the upright black bars in it one at a time, reading strictly left to right. For each bar write one word from this list: tall (the bar runs the whole height of the row) or short (the bar runs only part of the way up). Separate one item from the next with a semicolon, and add nothing else.",
+          "boxes": "gg.boxes",
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "map_items_to_tokens",
+          "args": ["cc", "[[['tall'],'tall'],[['short'],'short']]", "' '"],
+          "out": "cc__mapped"
+        },
+        {
+          "run": "digits_read_correctly",
+          "args": ["cc__mapped", "reference"],
+          "out": "law"
+        },
+        {
+          "fail_if": ["law.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "check_digit_present",
+      "weight": 0.5,
+      "score": "nb.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one vertical black BAR of the printed POSTNET barcode row. Box EVERY bar separately, one box per bar, including the short half-height ones and the tall bars at each end. A box must hold exactly ONE bar, with white paper showing on both sides of it -- never two neighbouring bars. Each box must cover the whole of its bar, from its top down to the common baseline. Do not box the address text.",
+          "out": "bc"
+        },
+        {
+          "fail_if": ["bc.unreadable"]
+        },
+        {
+          "run": "digit_group_boxes",
+          "args": ["bc", "5"],
+          "out": "gg"
+        },
+        {
+          "run": "bar_count_matches",
+          "args": ["gg", "reference.n_bars"],
+          "out": "nb"
+        },
+        {
+          "fail_if": ["nb.no_read"]
+        }
+      ]
+    }
+  ]
+}

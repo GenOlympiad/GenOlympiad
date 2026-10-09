@@ -1,0 +1,84 @@
+{
+  "id": "care_label_dot_bar_set",
+  "axis": "symbolic_systems",
+  "prompt": "The label proof has to be signed before the trim order goes out, so the first sample off the loom is laid on the light box and shot for the quality file.\n\nA garment care label lies face up on the light box, its row of care symbols above the fibre line. The finishing card weighted beside it carries this cloth's requirements in words: the cloth is cotton with elastane, the piece has been resin finished against shrinkage, the wash is fixed at 40 degrees, the mechanical action is to be held back to the gentle setting, an oxygen bleach may be used but chlorine may not, and the piece is not to be tumble dried. The card is written out as sentences and carries no symbols of its own.\n\nWhich symbols that wording turns into, and what goes inside each of them, is what the finishing card never draws.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a garment care label lying face up on a backlit light box with a printed finishing card weighted beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "2",
+    "part2": "two_slanting_strokes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Count the dots printed inside the wash tub symbol on the label. Write the number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the triangle symbol in the row of care symbols on the label and say what is inside it. Answer with one of: the triangle is left blank inside; the triangle carries two slanting strokes inside it; the triangle is crossed right through.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

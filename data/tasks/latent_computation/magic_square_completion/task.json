@@ -1,0 +1,286 @@
+{
+  "id": "magic_square_completion",
+  "axis": "latent_computation",
+  "prompt": "A photograph of a green chalkboard in a school science corner headed BRAIN TEASER OF THE WEEK, on which a teacher has chalked a single 4 by 4 grid of empty squares for students to complete as a MAGIC SQUARE. In a finished magic square the 4 numbers in every row, in every column, and along each of the two long diagonals all add to the same magic total, which here is 58. These squares are already chalked in and must stay exactly as shown (rows 1-4 top to bottom, columns 1-4 left to right): row 2 column 1 = 14; row 2 column 2 = 8; row 2 column 4 = 19; row 3 column 1 = 18; row 3 column 4 = 7; row 4 column 2 = 5; row 4 column 3 = 12; row 4 column 4 = 26. Work out the 8 missing numbers so that every row, every column and both diagonals total exactly 58, and draw the FULLY COMPLETED square with one bold chalk number centred in each of the 16 squares. Every square holds exactly one whole number in clear white chalk; no other writing, arrows, working or shading anywhere on the board.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show green science-corner chalkboard headed BRAIN TEASER OF THE WEEK with a chalked 4x4 magic-square grid to complete? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 4,
+    "S": 58,
+    "solution": [
+      [11, 25, 16, 6],
+      [14, 8, 17, 19],
+      [18, 20, 13, 7],
+      [15, 5, 12, 26]
+    ],
+    "given_grid": [
+      [null, null, null, null],
+      [14, 8, null, 19],
+      [18, null, null, 7],
+      [null, 5, 12, 26]
+    ],
+    "blanks": [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [1, 2],
+      [2, 1],
+      [2, 2],
+      [3, 0]
+    ],
+    "given_cells": [
+      [1, 0],
+      [1, 1],
+      [1, 3],
+      [2, 0],
+      [2, 3],
+      [3, 1],
+      [3, 2],
+      [3, 3]
+    ],
+    "given_r2c1": 14,
+    "given_r4c4": 26,
+    "total_cells": 16
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "given_fidelity",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the chalked grid of squares",
+          "expected_n": 1,
+          "out": "grid_box"
+        },
+        {
+          "fail_if": ["grid_box.unreadable"]
+        },
+        {
+          "grid_cells": "grid_box",
+          "rows": "reference.n",
+          "cols": "reference.n",
+          "inset": 0.12,
+          "out": "cells_box"
+        },
+        {
+          "fail_if": ["cells_box.degenerate"]
+        },
+        {
+          "read_crop": "This cut-out shows one square cell of a chalked grid. What number is chalked inside it? If the cell is empty, answer BLANK. Write nothing else.",
+          "boxes": "cells_box",
+          "out": "cellvals"
+        },
+        {
+          "fail_if": ["cellvals.unreadable"]
+        },
+        {
+          "run": "to_grid",
+          "args": ["cellvals", "reference.n"],
+          "out": "grid"
+        },
+        {
+          "fail_if": ["grid.short"]
+        },
+        {
+          "run": "given_fidelity",
+          "args": ["grid.rows", "reference.given_grid"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "all_lines_sum",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read_grid": "the single grid of numbers, read row by row (left-to-right, top-to-bottom); an empty cell has no number",
+          "rows": "reference.n",
+          "cols": "reference.n",
+          "retries": 3,
+          "out": "rg_a"
+        },
+        {
+          "fail_if": ["rg_a.no_matrix", "rg_a.wrong_shape", "rg_a.illegible"]
+        },
+        {
+          "run": "every_line_sums",
+          "args": ["rg_a['values']", "reference.n", "reference.S"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "blank_cells",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_grid": "the single grid of numbers, read row by row (left-to-right, top-to-bottom); an empty cell has no number",
+          "rows": "reference.n",
+          "cols": "reference.n",
+          "retries": 3,
+          "out": "rg_b"
+        },
+        {
+          "fail_if": ["rg_b.no_matrix", "rg_b.wrong_shape", "rg_b.illegible"]
+        },
+        {
+          "run": "blank_fill_share",
+          "args": ["rg_b['values']", "reference.solution", "reference.blanks"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_given_r2c1",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the chalk number in row 2, column 1 of the 4x4 grid (rows numbered top to bottom, columns left to right). Report just the number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.given_r2c1",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_given_r4c4",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the chalk number in row 4, column 4 of the 4x4 grid (rows numbered top to bottom, columns left to right). Report just the number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.given_r4c4",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_grid_cells_filled",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square cell of the chalked grid that holds a chalk number -- a single grid cell with one white chalk numeral written inside it, boxed from the chalk rule on its left to the rule on its right and from the rule above to the rule below; box EVERY such cell separately, including faint or smudged numbers, and do not box an empty cell, two cells together, a whole row, or the chalked heading",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "filled_box"
+        },
+        {
+          "fail_if": ["filled_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole square cell of the grid with exactly one chalk number written inside it, rather than an empty cell or only part of a cell? Answer yes or no only.",
+          "boxes": "filled_box",
+          "out": "filled_chk"
+        },
+        {
+          "fail_if": ["filled_chk.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["filled_chk"],
+          "out": "cnt_filled"
+        },
+        {
+          "compare_band": "cnt_filled.n",
+          "to": "reference.total_cells",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_one_number_per_cell",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a square of the chalked grid that is blank, or that holds two or more numbers instead of one",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sw_cell"
+        },
+        {
+          "fail_if": ["sw_cell.unreadable"]
+        },
+        {
+          "compare": "sw_cell.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_extra_working",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a worked-out calculation or a written explanation chalked on the board outside the grid squares and the heading",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sw_work"
+        },
+        {
+          "fail_if": ["sw_work.unreadable"]
+        },
+        {
+          "compare": "sw_work.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

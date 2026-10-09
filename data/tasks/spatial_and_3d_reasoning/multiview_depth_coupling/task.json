@@ -1,0 +1,364 @@
+{
+  "id": "multiview_depth_coupling",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Render a technical white-line-on-blue blueprint drawing of a plain rectangular sheet-metal junction box with a shallow lid lip around its top edge.\n\nLay the three views out in THIRD-ANGLE projection: the FRONT view in the middle of the sheet, the TOP view directly ABOVE the front view, and the RIGHT-SIDE view directly to the RIGHT of the front view. All three views are at the same scale and lined up with one another.\nThe three views are three sights of ONE object, so the dimensions they share must AGREE exactly on the paper:\n- the TOP view must be exactly as WIDE as the front view;\n- the RIGHT-SIDE view must be exactly as TALL as the front view;\n- and the one that is easy to get wrong: the object's front-to-back DEPTH appears twice -- as the HEIGHT of the top view and as the WIDTH of the right-side view. Those two must measure EXACTLY the same length on the sheet. Check them against each other before you finish.\nThin black lines, all three views clearly separated from one another. No text, no numbers, no labels, no dimensions, no title block, no projection symbol, no centre lines running between the views.\n",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show THREE separate simple line drawings placed apart from one another on one sheet (rather than a single picture, a photograph, or a page of text). Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank panel, printed text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "enforce_notext": true,
+    "q_notext": "Is there any printed word or number anywhere on this drawing? Answer yes or no.",
+    "stack_above": true,
+    "side_right": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.8,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "third_angle_layout",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "view_panels",
+          "args": ["image", "3"],
+          "out": "vp"
+        },
+        {
+          "fail_if": ["vp.no_read"]
+        },
+        {
+          "run": "panel_overlay_marked",
+          "args": ["image"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "image": "ov.path",
+          "rects": "ov.mk_panel_front.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [30, 120, 235],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "rects": "ov.mk_panel_stack.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [200, 120, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "rects": "ov.mk_panel_side.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [150, 40, 190],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm3.path",
+          "polylines": "ov.mk_depth_bars.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm4"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm4.path",
+          "polylines": "ov.mk_want_foot.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm5"
+        },
+        {
+          "run": "views_on_wanted_sides",
+          "args": [
+            "vp.stack_is_above",
+            "vp.side_is_right",
+            "reference.stack_above",
+            "reference.side_right"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "depth_agrees_between_views",
+      "weight": 4.0,
+      "steps": [
+        {
+          "run": "view_panels",
+          "args": ["image", "3"],
+          "out": "vp"
+        },
+        {
+          "fail_if": ["vp.no_read"]
+        },
+        {
+          "run": "panel_overlay_marked",
+          "args": ["image"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "image": "ov.path",
+          "rects": "ov.mk_panel_front.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [30, 120, 235],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "rects": "ov.mk_panel_stack.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [200, 120, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "rects": "ov.mk_panel_side.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [150, 40, 190],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm3.path",
+          "polylines": "ov.mk_depth_bars.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm4"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm4.path",
+          "polylines": "ov.mk_want_foot.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm5"
+        },
+        {
+          "compare_band": "vp.depth_mismatch",
+          "to": 0.0,
+          "core_abs": 0.03,
+          "margin_abs": 0.07,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "width_and_height_agree",
+      "weight": 1.2,
+      "steps": [
+        {
+          "run": "view_panels",
+          "args": ["image", "3"],
+          "out": "vp"
+        },
+        {
+          "fail_if": ["vp.no_read"]
+        },
+        {
+          "run": "panel_overlay_marked",
+          "args": ["image"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "image": "ov.path",
+          "rects": "ov.mk_panel_front.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [30, 120, 235],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "rects": "ov.mk_panel_stack.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [200, 120, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "rects": "ov.mk_panel_side.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [150, 40, 190],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm3.path",
+          "polylines": "ov.mk_depth_bars.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm4"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm4.path",
+          "polylines": "ov.mk_want_foot.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm5"
+        },
+        {
+          "compare_bands": ["vp.width_mismatch", "vp.height_mismatch"],
+          "to": 0.0,
+          "core": 0.03,
+          "margin": 0.08,
+          "aggregate": "mean",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_panel_overlay",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "run": "panel_overlay_marked",
+          "args": ["image"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "image": "ov.path",
+          "rects": "ov.mk_panel_front.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [30, 120, 235],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm1.path",
+          "rects": "ov.mk_panel_stack.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [200, 120, 0],
+          "width_frac": 0.004,
+          "out": "ovm2"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm2.path",
+          "rects": "ov.mk_panel_side.rects",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [150, 40, 190],
+          "width_frac": 0.004,
+          "out": "ovm3"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm3.path",
+          "polylines": "ov.mk_depth_bars.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [230, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm4"
+        },
+        {
+          "overlay": "homography",
+          "image": "ovm4.path",
+          "polylines": "ov.mk_want_foot.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [0, 175, 0],
+          "width_frac": 0.004,
+          "out": "ovm5"
+        },
+        {
+          "ask": "Coloured rectangles have been drawn around parts of this picture, and two thick red bars have been drawn just outside two of them. Does each coloured rectangle enclose one of the drawings on the sheet? Answer yes or no only.",
+          "image": "ovm5.path",
+          "out": "q"
+        },
+        {
+          "fail_if": ["q.unreadable"]
+        },
+        {
+          "compare": "q",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

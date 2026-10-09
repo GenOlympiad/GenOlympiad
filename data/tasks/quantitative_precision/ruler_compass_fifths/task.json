@@ -1,0 +1,102 @@
+{
+  "id": "ruler_compass_fifths",
+  "axis": "quantitative_precision",
+  "prompt": "A clean, precise technical DRAFTING-BOARD CONSTRUCTION on off-white drafting paper, straight-on. A solid horizontal STRIP runs left to right with its ends labelled A (left) and B (right). The task, titled 'DIVIDE THE STRIP A B INTO FIVE EQUAL PARTS', is to divide the strip into FIVE parts of EXACTLY equal length using the intercept-theorem ruler-and-compass construction:\n  - from A, draw an auxiliary straight ray going up and to the right at a shallow angle ABOVE the strip;\n  - with a compass set to a fixed opening, step off FIVE equal steps along that ray, showing the faint compass arcs at each step;\n  - join the fifth step point to B, then draw lines parallel to it through the other four step points; where those parallels meet the strip they mark the division lines.\n\nThe result is FOUR interior division lines drawn ACROSS the strip that split it into five identical parts -- they must fall at exactly one fifth, two fifths, three fifths and four fifths of the length from A to B. Draw the strip as a solid bar with four crisp full-height interior division lines at the exact fifths, and show the auxiliary ray with its five equal compass steps and the parallels above the strip. Do NOT space the interior lines by eye -- they must be the exact fifths produced by the construction. No numbers, no measurements, no text other than the A and B labels and the title.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a ruler-and-compass CONSTRUCTION dividing a strip A B into five equal parts: a solid horizontal strip with interior division marks, plus an auxiliary construction ray with equal compass steps above it. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "k_segments": 5,
+    "target_ratio": [1, 1, 1, 1, 1],
+    "ideal_interior": [0.2, 0.4, 0.6, 0.8],
+    "q_divisions": "The horizontal strip near the bottom of this drafting image (ends labelled A left, B right) is crossed by interior vertical division lines. IGNORE the construction ray, cross marks and arcs above the strip, and do NOT count the strip's own left and right outer edges. The lines may NOT be evenly spaced -- report what you SEE, not what the title asks for. For EACH interior line, estimate its position as a decimal fraction of the distance from A (0.0) to B (1.0), measuring carefully. Answer ONLY the comma-separated list of fractions in increasing order. No other text."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "division_geometry",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the flat horizontal bar at the bottom of the drawing -- box the WHOLE flat rectangle: its top edge, its bottom edge, its left end and its right end.",
+          "expected_n": 1,
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one SECTION of the flat horizontal bar at the bottom of this drawing",
+          "sweep": true,
+          "out": "dl"
+        },
+        {
+          "fail_if": ["dl.unreadable"]
+        },
+        {
+          "read_crop": "This close-up is cut from a drawing of a long flat bar that is cut into sections by upright lines. Does it hold exactly ONE whole section of that bar, with no part of a neighbouring section inside it? Answer yes or no only.",
+          "boxes": "dl",
+          "out": "da"
+        },
+        {
+          "fail_if": ["da.unreadable"]
+        },
+        {
+          "run": "division_error",
+          "args": ["dl", "da", "st", "reference.ideal_interior"],
+          "out": "dv"
+        },
+        {
+          "fail_if": ["dv.degenerate"]
+        },
+        {
+          "compare_band": "dv.err",
+          "to": 0.0,
+          "core": 0.015,
+          "margin": 0.025,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "construction_present",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show, in ADDITION to the divided strip, an auxiliary construction above it: a separate straight ray going off at an angle with several equally-spaced step marks or small compass arcs along it (the classical ruler-and-compass equal-division construction)? Answer yes if such an auxiliary stepped ray / compass arcs are present, no if only the plain strip and its division lines appear. Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

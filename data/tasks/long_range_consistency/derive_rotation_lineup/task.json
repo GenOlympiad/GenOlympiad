@@ -1,0 +1,177 @@
+{
+  "id": "derive_rotation_lineup",
+  "axis": "long_range_consistency",
+  "prompt": "A six-panel comic strip with clean ink borders, TWO ROWS OF THREE panels. The same three choir members stand side by side in every panel, all three fully visible: one in a RED coat, one in a GREEN coat, one in a BROWN coat.\n\nPANEL 1, reading left to right: RED, GREEN, BROWN.\n\nHOW THEY RE-ARRANGE FOR EACH NEW PANEL: take the line they were standing in in the previous panel; FIRST the two people on the LEFT of that line swap places with each other; THEN, in the line you now have, the two people on the RIGHT swap places with each other. That is the line-up for the next panel. Apply it once per panel, each time starting from the panel before — I am deliberately not listing the orders.\n\nSix different places on the way to the hall, a different pose and camera angle each time. No text, no captions, no lettering.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a comic strip: several separate panels, drawn side by side, with the same small group of people appearing together in each panel. Ignoring artistic quality and ignoring whether the story is right, does the image DEPICT that — a strip of separate panels with a recurring group of figures? A comic page, a storyboard or a picture-book strip all count as yes. Answer NO only if it is blank, a single picture with no panels, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 6,
+    "na": 6,
+    "qa": "This picture is a comic strip of 6 panels arranged as two rows of three panels. Look at every panel in reading order (the top row left to right, then the bottom row left to right). For EACH panel in that order, report what colour coat the person standing on the LEFT of the panel is wearing. Use only these words: red, green, brown, blue, white. The people change places from panel to panel, so look at each panel on its own. The panels do not have to agree with one another — report what each panel actually shows, one answer per panel, even if the answer repeats or changes from panel to panel. Answer with exactly 6 answers separated by commas, in panel order, and nothing else.",
+    "qa2": "The picture is a strip of separate drawings arranged as two rows of three panels. Going through them in the top row left to right, then the bottom row left to right order, tell me, for each drawing in turn, what colour coat the person standing on the LEFT of the panel is wearing. Allowed answers: red, green, brown, blue, white. The people change places from panel to panel, so look at each panel on its own. Judge each drawing on its own — two drawings may well disagree, so do not assume the strip is consistent. Reply with exactly 6 comma-separated answers and nothing else.",
+    "seq_a": ["red", "green", "brown", "red", "green", "brown"],
+    "nb": 6,
+    "qb": "This picture is a comic strip of 6 panels arranged as two rows of three panels. Look at every panel in reading order (the top row left to right, then the bottom row left to right). For EACH panel in that order, report what colour coat the person standing on the RIGHT of the panel is wearing. Use only these words: red, green, brown, blue, white. Exactly three people stand side by side in every panel; report the one at the far right-hand edge of the panel. The panels do not have to agree with one another — report what each panel actually shows, one answer per panel, even if the answer repeats or changes from panel to panel. Answer with exactly 6 answers separated by commas, in panel order, and nothing else.",
+    "qb2": "The picture is a strip of separate drawings arranged as two rows of three panels. Going through them in the top row left to right, then the bottom row left to right order, tell me, for each drawing in turn, what colour coat the person standing on the RIGHT of the panel is wearing. Allowed answers: red, green, brown, blue, white. Exactly three people stand side by side in every panel; report the one at the far right-hand edge of the panel. Judge each drawing on its own — two drawings may well disagree, so do not assume the strip is consistent. Reply with exactly 6 comma-separated answers and nothing else.",
+    "seq_b": ["brown", "red", "green", "brown", "red", "green"],
+    "enforce_notext": true,
+    "q_notext": "Look at every panel and the margins. Is there any written text that states the order the people are standing in, or that labels a person with a colour word? Answer yes or no.",
+    "q_panel_a": "This picture is one panel cut out of a comic strip. Several people are standing side by side in it. What colour is the coat of the person standing furthest to the LEFT? Answer with one word: red, green, brown, blue or white.",
+    "q_panel_b": "This picture is one panel cut out of a comic strip. Several people are standing side by side in it. What colour is the coat of the person standing furthest to the RIGHT? Answer with one word: red, green, brown, blue or white."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single panel of the comic strip",
+          "votes": 3,
+          "out": "pnb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pnb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a comic strip. Does this cut-out show exactly ONE whole panel of that strip -- one single drawing inside its own frame, with the people who are standing in it, and not two panels at once? Answer yes or no only.",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pnc"
+        },
+        {
+          "fail_if": ["pnc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_panel_a",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pnleft"
+        },
+        {
+          "fail_if": ["pnleft.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_panel_b",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pnright"
+        },
+        {
+          "fail_if": ["pnright.unreadable"]
+        },
+        {
+          "run": "panel_reads",
+          "args": ["pnb", "pnc", "pnleft", "pnright", "reference"],
+          "out": "pr"
+        },
+        {
+          "run": "check_lineups",
+          "args": ["[pr.left, pr.right]", "[reference.seq_a, reference.seq_b]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "panel_share",
+      "weight": 0.3,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single panel of the comic strip",
+          "votes": 3,
+          "out": "pnb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pnb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a comic strip. Does this cut-out show exactly ONE whole panel of that strip -- one single drawing inside its own frame, with the people who are standing in it, and not two panels at once? Answer yes or no only.",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pnc"
+        },
+        {
+          "fail_if": ["pnc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_panel_a",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pnleft"
+        },
+        {
+          "fail_if": ["pnleft.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_panel_b",
+          "boxes": "pnb",
+          "pad": 0.02,
+          "out": "pnright"
+        },
+        {
+          "fail_if": ["pnright.unreadable"]
+        },
+        {
+          "run": "panel_reads",
+          "args": ["pnb", "pnc", "pnleft", "pnright", "reference"],
+          "out": "pr"
+        },
+        {
+          "run": "check_lineups",
+          "args": ["[pr.left, pr.right]", "[reference.seq_a, reference.seq_b]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

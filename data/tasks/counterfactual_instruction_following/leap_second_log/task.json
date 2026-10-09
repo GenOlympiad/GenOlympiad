@@ -1,0 +1,192 @@
+{
+  "id": "leap_second_log",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "At the end of a day that carries one extra second in it, the duty officer of a national timing laboratory runs off the sheet that goes into the station log. The picture is that sheet lying flat on the bench under an even light, square to the camera.\n\nThe sheet is pre-printed and its ruling does not move: an upper panel ruled into 5 table rows under the two column headings TIME OF DAY and UTC-TAI, and, directly under it, a figure panel whose horizontal scale is ruled to the same instants as those rows, one row of the table to one mark on the scale, and whose vertical scale is gridded at 0.5 s to the grid row with UTC-TAI lettered down its side.\n\nThese are today's figures, taken word for word from the bulletin: a positive leap second is inserted at the end of this day; UTC-TAI stands at -37 s before it and at -38 s after it; the sheet covers the last three seconds of this day and the first two seconds of the next, which is what the 5 rows are for; the stepped line in the figure holds one level while UTC-TAI is -37 s and the other while it is -38 s.\n\nWhich 5 times go in the rows, and where along the scale the stepped line changes level, are the parts you have to work out -- I am deliberately not telling you either, and there is no worked example anywhere on the sheet. The times and the figure want to be large enough to read without a glass. Other than the two column headings, the scale figures and the times in the rows themselves, no further note, marker or annotation belongs on the sheet.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed sheet with a table of times on it and a stepped line figure under the table? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no sheet on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "rows": "23:59:58,23:59:59,23:59:60,00:00:00,00:00:01",
+    "step_stamp": "00:00:00",
+    "step_rows": 2,
+    "n_rows": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_extra_second_is_in_the_table_and_the_level_change_stands_over_the_stamp_after_it",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the times table printed in the upper panel of the report sheet",
+          "sweep": true,
+          "out": "row_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["row_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which time is printed at the left-hand end of the row? Answer with the time exactly as it is printed, or none if no time is printed here.",
+          "boxes": "row_box",
+          "pad": 0.9,
+          "out": "row_rd"
+        },
+        {
+          "fail_if": ["row_rd.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the stepped line figure panel printed below the table on the report sheet",
+          "sweep": true,
+          "out": "fig_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["fig_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, the stepped line changes level once. Which time is printed on the scale directly below the place where it changes? Answer with the time exactly as it is printed, or none if the line never changes level.",
+          "boxes": "fig_box",
+          "pad": 0.9,
+          "out": "step_rd"
+        },
+        {
+          "fail_if": ["step_rd.unreadable"]
+        },
+        {
+          "run": "rows_and_step_match",
+          "args": ["row_rd", "step_rd", "reference.rows", "reference.step_stamp"],
+          "out": "lockv"
+        },
+        {
+          "compare": "lockv.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_line_drops_by_the_number_of_grid_rows_the_scale_makes_one_second",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the stepped line figure panel printed below the table on the report sheet",
+          "sweep": true,
+          "out": "drop_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["drop_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, follow the stepped line to the place where it changes level. Write down every grid row -- every band lying between two neighbouring horizontal grid lines -- that the line passes down through at that place, each with a few plain words saying where that band sits. Separate one item from the next with a semicolon; write no running total and nothing else. If the line does not change level, write the single word NONE.",
+          "boxes": "drop_box",
+          "pad": 0.9,
+          "out": "drop_rd"
+        },
+        {
+          "fail_if": ["drop_rd.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["drop_rd", "empty_as='0'"],
+          "out": "drop_rd__std"
+        },
+        {
+          "fail_if": ["drop_rd__std.refused"]
+        },
+        {
+          "run": "largest_row_drop",
+          "args": ["drop_rd__std"],
+          "out": "dropv"
+        },
+        {
+          "compare_band": "dropv.n",
+          "to": "reference.step_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_table_carries_a_row_for_every_second_the_sheet_covers",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the times table printed in the upper panel of the report sheet",
+          "sweep": true,
+          "out": "cen_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a time printed at the left-hand end of the row? Answer yes or no only.",
+          "boxes": "cen_box",
+          "pad": 0.9,
+          "out": "cen_rd"
+        },
+        {
+          "fail_if": ["cen_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_rd"],
+          "out": "cenn"
+        },
+        {
+          "compare_band": "cenn.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_note_or_marker_is_added_to_the_sheet",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a note, marker or annotation on the sheet other than its column headings, scale figures and row times",
+          "sweep": true,
+          "out": "sweep_s",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "the_optical_centres_move_in_by_the_difference",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The bench hand photographs every pair before it goes on the blocker, so the job card, the layout card and both blanks go into the one overhead shot.\n\nTwo uncut round lens blanks lie on a printed layout card on a glazing bench. The card is printed with a millimetre grid, a figure at every fifth line, and the boxed outline and upright centre line of each lens shape. A cross has been drawn in marker on each blank. The job card wedged under the corner prints the frame's boxed centre distance as 70 mm, the wearer's between-eyes measure as 62 mm, the boxed depth of the shape as 36 mm, and the height of the wearer's pupil above the horizontal centre line of the shape as 5 mm. The chosen frame lies alongside on the bench.\n\nWhere each cross should sit on that grid is what the job card does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this overhead photograph show two round lens blanks lying on a printed layout card with a job card wedged under one corner? Answer yes or no only.",
+  "reference": {
+    "part1": "4",
+    "part2": "in_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Count the millimetre squares printed on the layout card between the upright centre line of the right-hand lens shape and the upright of the marker cross on that same blank. Write the number only, with no unit.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the millimetre figures printed up the side of the layout card and give the height of the marker cross on the right-hand blank above the lowest point of that lens shape, in millimetres.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part2", "21", "25"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

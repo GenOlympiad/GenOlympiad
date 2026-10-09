@@ -1,0 +1,84 @@
+{
+  "id": "the_drain_trap_answers_to_the_fan",
+  "axis": "physical_consistency",
+  "prompt": "The commissioning engineer files one photograph of the two traps before the unit is handed over, so both traps are shot from the same side of the casing.\n\nAn air handling unit stands in a plant room with a clear acrylic condensate trap piped from each of its two sections. The water in both traps is dyed dark blue. A sliding rule with bold millimetre graduations is clipped to each trap, its printed zero set against the water in the leg that runs to the drain; the other leg of each trap meets the unit casing. A label etched on the casing marks where the fan sits, so that one trap hangs on the coil side of the fan and the other beyond it. The unit's nameplate gives the external static pressure as 400 pascals. The unit is running and both traps are charged.\n\nHow far the water stands from each zero, and which leg of each trap stands higher, is what the nameplate does not give.",
+  "difficulty": "s1",
+  "easy_question": "Are two clear condensate traps shown hanging from an air handling unit, each with a graduated rule clipped beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "higher_in_the_drain_leg"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the millimetre rule clipped to the trap on the coil side of the fan. Give, in millimetres, the printed figure on that rule that the water in the casing-side leg of that trap stands at.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "36", "46"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the other trap, the one hanging beyond the fan from the coil. Answer with one of: the water stands higher in the leg that meets the unit casing; the water stands higher in the leg that runs to the drain; the water stands at the same height in both legs of that trap.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

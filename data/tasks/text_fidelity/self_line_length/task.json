@@ -1,0 +1,144 @@
+{
+  "id": "self_line_length",
+  "axis": "text_fidelity",
+  "prompt": "A straight-on photograph of a large printed record card lying on a desk -- white card, black type, a ruled line under a heading set at the top left. Headed 'MOUNTAIN LINE - WINTER NOTES' with the small line 'Eight entries; every length from four to eleven'. Set EXACTLY 8 numbered entries (1. to 8.), each one a plain English observation about a mountain railway in winter.\n\nCRITICAL WRITING LAW: an entry has to contain precisely as many words as there are letters in the word it opens with -- an entry beginning 'signals' (seven letters) is a seven-word entry. Across the eight entries every total from FOUR words up to ELEVEN words has to appear exactly once, so the eight opening words you choose must be four, five, six, seven, eight, nine, ten and eleven letters long, one of each, in whatever order you like. Count each entry through before printing it.\n\nNo border decoration, nothing else on the card.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a printed record card carrying a numbered list of short written entries. Ignoring artistic quality and ignoring whether the wording is correct, does the image DEPICT that -- a printed card carrying a numbered list of text lines? A photograph, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_read": "This image is a page carrying 8 numbered lines of text. Transcribe the 8 numbered lines EXACTLY as written, in order. Copy every word, keep the original spelling, and keep the spaces between words. If a numbered line wraps onto a second printed row, keep it as ONE line. Separate one numbered line from the next with a single pipe character | and nothing else. Do NOT transcribe the title, any heading or any word bank. Do not add commentary, line numbers or quotation marks. Output only the transcribed lines separated by |.",
+    "n_lines": 8,
+    "min_words": 4,
+    "cover": [4, 5, 6, 7, 8, 9, 10, 11],
+    "evidence": true,
+    "q_evidence": "This picture shows a printed page with hollow rectangles drawn on it, and a written list beside it. Is every hollow rectangle drawn around a numbered line of the page's own numbered list -- rather than around the heading, or sitting in blank paper with no text inside it? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_sequence": "reference.q_read",
+          "n": "reference.n_lines",
+          "delimiter": "|",
+          "retries": 2,
+          "out": "v"
+        },
+        {
+          "read_crop": "This card carries a numbered list of written lines. Write those numbered lines out again, exactly as they are printed. Put each numbered line on its own output line, starting with the number it carries, then a full stop, then that line's words with one space between neighbouring words. If one numbered line runs on to a second printed row, put it back together as ONE line. Copy every word letter for letter, keep the word order, add no word and leave none out. Leave out the title, any sub-heading and any text that carries no number. Write out the list and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Read every numbered line of text on this page and transcribe it word for word. Begin each transcribed line with its printed number followed by a full stop, then that line's words in the order they appear, one space between neighbouring words. Where a numbered line is set over two printed rows, join it back into a single line. Reproduce anything that looks like a mistake just as it stands -- never correct it, complete it or tidy it up. Ignore the heading, the sub-heading and any line that carries no number. Output only the transcribed lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "word_count_equals_first_word_length",
+          "args": ["v", "[t1, t2]", "reference.n_lines", "reference.min_words", "reference.cover"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read_sequence": "reference.q_read",
+          "n": "reference.n_lines",
+          "delimiter": "|",
+          "retries": 2,
+          "out": "v"
+        },
+        {
+          "read_crop": "This card carries a numbered list of written lines. Write those numbered lines out again, exactly as they are printed. Put each numbered line on its own output line, starting with the number it carries, then a full stop, then that line's words with one space between neighbouring words. If one numbered line runs on to a second printed row, put it back together as ONE line. Copy every word letter for letter, keep the word order, add no word and leave none out. Leave out the title, any sub-heading and any text that carries no number. Write out the list and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Read every numbered line of text on this page and transcribe it word for word. Begin each transcribed line with its printed number followed by a full stop, then that line's words in the order they appear, one space between neighbouring words. Where a numbered line is set over two printed rows, join it back into a single line. Reproduce anything that looks like a mistake just as it stands -- never correct it, complete it or tidy it up. Ignore the heading, the sub-heading and any line that carries no number. Output only the transcribed lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "word_count_equals_first_word_length",
+          "args": ["v", "[t1, t2]", "reference.n_lines", "reference.min_words", "reference.cover"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "distinct_counts",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read_sequence": "reference.q_read",
+          "n": "reference.n_lines",
+          "delimiter": "|",
+          "retries": 2,
+          "out": "v"
+        },
+        {
+          "read_crop": "This card carries a numbered list of written lines. Write those numbered lines out again, exactly as they are printed. Put each numbered line on its own output line, starting with the number it carries, then a full stop, then that line's words with one space between neighbouring words. If one numbered line runs on to a second printed row, put it back together as ONE line. Copy every word letter for letter, keep the word order, add no word and leave none out. Leave out the title, any sub-heading and any text that carries no number. Write out the list and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Read every numbered line of text on this page and transcribe it word for word. Begin each transcribed line with its printed number followed by a full stop, then that line's words in the order they appear, one space between neighbouring words. Where a numbered line is set over two printed rows, join it back into a single line. Reproduce anything that looks like a mistake just as it stands -- never correct it, complete it or tidy it up. Ignore the heading, the sub-heading and any line that carries no number. Output only the transcribed lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "distinct_line_counts",
+          "args": ["v", "[t1, t2]", "reference.n_lines"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

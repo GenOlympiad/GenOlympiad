@@ -1,0 +1,119 @@
+{
+  "id": "board_token_after_moves",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photo of a simple 5x5 board game, like a checkers board. The board is a 5-by-5 grid of large squares. Its ROWS are labelled A, B, C, D, E from TOP to bottom (printed down the left edge) and its COLUMNS are labelled 1, 2, 3, 4, 5 from LEFT to right (printed along the bottom edge), so any square is named by its row letter then its column number, e.g. C3 is the centre square. Large round playing discs sit on some squares.\n\nThe game starts with FOUR discs placed like this:\n  - a RED disc on square E1\n  - a BLUE disc on square A5\n  - a GREEN disc on square C3\n  - a YELLOW disc on square D4\n\nNow apply these SIX moves in this exact order. Each move slides ONE disc a number of squares in a direction (UP = toward row A, DOWN = toward row E, LEFT = toward column 1, RIGHT = toward column 5). If a disc lands on a square already holding ANOTHER disc, that other disc is CAPTURED and removed from the board.\n  1. Move the RED disc UP 2 squares.\n  2. Move the BLUE disc DOWN 3 squares.\n  3. Move the GREEN disc RIGHT 1 square.\n  4. Move the YELLOW disc UP 1 square.\n  5. Move the RED disc RIGHT 3 squares.\n  6. Move the BLUE disc LEFT 1 square.\n\nWork out the FINAL position of every disc still on the board after all six moves (remembering to remove any captured discs), and draw the board in that final state: each surviving disc as a single large filled circle of its colour, sitting in the centre of its final square; leave every other square empty. Show the A-E row labels and 1-5 column labels. Do not draw any captured discs, any arrows, any move numbers, or any text inside the squares.",
+  "difficulty": "s1",
+  "easy_question": "This picture was supposed to show a 5x5 board game with row labels (letters down the left edge) and column labels (numbers along the bottom) and a few large round coloured playing discs on some squares. Never mind how well it is drawn. Does the picture show a labelled grid board with coloured discs on it? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      ["empty", "empty", "empty", "empty", "empty"],
+      ["empty", "empty", "empty", "empty", "empty"],
+      ["empty", "empty", "empty", "red", "empty"],
+      ["empty", "empty", "empty", "blue", "empty"],
+      ["empty", "empty", "empty", "empty", "empty"]
+    ],
+    "red_cell": "C4",
+    "n_discs": 2,
+    "has_second": true,
+    "second_cell": "D4",
+    "q_second": "On the board, find the single BLUE disc. Report the grid square it sits in as a row LETTER immediately followed by a column NUMBER. Report ONLY the square of the BLUE disc as it is actually drawn; do not reason about where it should be. Answer with the square label only: the row letter immediately followed by the column number, and nothing else.",
+    "q_red": "On the board, find the single RED disc. Report the grid square it sits in as a row LETTER immediately followed by a column NUMBER. Report ONLY the square of the RED disc as it is actually drawn; do not reason about where it should be. Answer with the square label only: the row letter immediately followed by the column number, and nothing else.",
+    "q_ndiscs": "How many coloured playing discs are on the board in total? Count only the round coloured discs actually drawn on the squares. Give a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "red_disc_cell",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_red",
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.unreadable"]
+        },
+        {
+          "run": "square_matches",
+          "args": ["rc", "reference.red_cell"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "second_disc_cell",
+      "weight": 0.8,
+      "only_if": "reference.has_second",
+      "steps": [
+        {
+          "ask": "reference.q_second",
+          "out": "sc2"
+        },
+        {
+          "fail_if": ["sc2.unreadable"]
+        },
+        {
+          "run": "square_matches",
+          "args": ["sc2", "reference.second_cell"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_disc_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one round playing disc sitting on a square of the board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nd"
+        },
+        {
+          "fail_if": ["box_nd.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole round playing disc filled with a single solid colour, rather than an empty board square or only part of a disc? Answer yes or no only.",
+          "boxes": "box_nd",
+          "out": "crop_nd"
+        },
+        {
+          "fail_if": ["crop_nd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nd"],
+          "out": "cnt_nd"
+        },
+        {
+          "compare_band": "cnt_nd.n",
+          "to": "reference.n_discs",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

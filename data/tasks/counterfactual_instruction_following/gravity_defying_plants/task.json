@@ -1,0 +1,63 @@
+{
+  "id": "gravity_defying_plants",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean, straight-on illustration of a windowsill holding 6 potted plants in a row, each plant in its own flowerpot. IMPORTANT RULE: this is an ANTI-GRAVITY greenhouse where EVERY plant grows DOWNWARD. For every single pot, the plant's stem, leaves and flower must hang DOWN BELOW the rim of the pot (pointing toward the floor), instead of growing up above the pot. Every one of the 6 plants must grow downward -- do not leave any plant growing upward. Draw 6 flowerpots, each with its plant hanging downward below the pot. Add no caption or text.",
+  "difficulty": "s1",
+  "easy_question": "This picture was supposed to show a shelf or windowsill of several potted plants. Never mind how well it is drawn, and never mind which way the plants grow. Does the picture show several plants in pots? A photo, illustration or clean diagram all count as yes. Answer NO only if it shows a blank card, a plain panel printing an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "count_object": "a potted plant in a flowerpot",
+    "q_item": "This is a small cropped picture of a single potted plant. Look at where the green stem, leaves and flower are, relative to the flowerpot. Is the plant's foliage (its stem, leaves and flower) mainly in the TOP half of this picture (above the pot) or mainly in the BOTTOM half of this picture (below the pot)? Answer with exactly one word: top or bottom.",
+    "exp_item": "bottom",
+    "n_objects": 6
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "gravity_plants_count",
+      "weight": 6.0,
+      "score": "cen.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.count_object",
+          "out": "bx",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "all_plants_match",
+          "args": ["cr", "reference.exp_item", "reference.n_objects"],
+          "out": "cen"
+        }
+      ]
+    }
+  ]
+}

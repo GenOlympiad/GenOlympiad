@@ -1,0 +1,140 @@
+{
+  "id": "carbon_scope2_dual_method",
+  "axis": "long_range_consistency",
+  "prompt": "The reporting manager's screen at a listed manufacturer in the week the sustainability report goes to the printer, photographed square on. On it is the proof of the greenhouse gas page: the PURCHASED ELECTRICITY table at the top and, under it, the year's total emissions as two columns of the same width standing side by side on one baseline.\n\nThe year's data. Purchased electricity 41,000 MWh. Of that, 15,000 MWh came under a supply contract whose certificates carry a zero emission factor. The regional grid factor for this market is 0.42 tonnes of carbon dioxide equivalent per MWh, and the residual supply the contract does not cover carries that same 0.42. Scope one emissions for the year, from the company's own boilers and vehicles, are 12,600 tonnes.\n\nTwo accounting methods stand side by side in this disclosure. Under the LOCATION BASED method the whole of the purchased electricity is taken at the regional grid factor. Under the MARKET BASED method the contracted supply is taken at its certificate factor and only the remainder at the grid factor. Both methods take the same scope one figure.\n\nEach of the two columns has its method name under it and its own total in tonnes at the top of it. The taller column also wears a cap at its top in a lighter tint, the slice that the supply contract takes out, with that slice's own figure against it, so that a reader sees the shorter column as the taller one less that cap.\n\nWork the three figures out yourself -- I am deliberately not telling you either total, and I am not telling you how deep the cap goes or which method ends up on the shorter column. Keep the sums off the page: no formula, no working, no third column, no note calling one method better than the other. The electricity table, both method names, both totals and the cap figure all have to be legible in the one frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a page carrying a small table of figures and, below it, two upright columns of a bar chart standing side by side on one baseline? A screen proof, a document mockup or an illustration ALL count as yes. Answer NO only if the image instead shows a blank card that just states an answer, or shows neither a table nor a pair of columns. Answer yes or no only.",
+  "reference": {
+    "column_pairs": "location=29820|market=23520",
+    "cap_figure": "6300"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_method_carries_its_own_total",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one upright column of the emissions chart together with the method name written under it",
+          "sweep": true,
+          "out": "col"
+        },
+        {
+          "fail_if": ["col.unreadable"]
+        },
+        {
+          "read_crop": "Copy the method name written under the column in this cut-out. Write the words only.",
+          "boxes": "col",
+          "pad": 0.15,
+          "out": "nmx"
+        },
+        {
+          "fail_if": ["nmx.unreadable"]
+        },
+        {
+          "read_crop": "Copy the total written at the top of the column in this cut-out. Write the digits only.",
+          "boxes": "col",
+          "pad": 0.15,
+          "out": "tox"
+        },
+        {
+          "fail_if": ["tox.unreadable"]
+        },
+        {
+          "run": "read_column_figures",
+          "args": ["nmx", "tox"],
+          "out": "pr"
+        },
+        {
+          "compare": "pr.seq",
+          "to": "reference.column_pairs",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cap_accounts_for_the_gap",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the figure written against the lighter cap at the top of the taller column",
+          "sweep": true,
+          "out": "cap"
+        },
+        {
+          "fail_if": ["cap.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written against this cap. Write the digits only.",
+          "boxes": "cap",
+          "pad": 0.4,
+          "out": "capx"
+        },
+        {
+          "fail_if": ["capx.unreadable"]
+        },
+        {
+          "run": "read_cap_figure",
+          "args": ["capx"],
+          "out": "cp"
+        },
+        {
+          "compare": "cp.txt",
+          "to": "reference.cap_figure",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "electricity_table_present",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the purchased electricity table at the top of the page",
+          "sweep": true,
+          "out": "tbl"
+        },
+        {
+          "fail_if": ["tbl.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show a small table of written figures? Answer yes or no only.",
+          "boxes": "tbl",
+          "pad": 0.2,
+          "out": "tblx"
+        },
+        {
+          "fail_if": ["tblx.unreadable"]
+        },
+        {
+          "compare": "tblx.answers.0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

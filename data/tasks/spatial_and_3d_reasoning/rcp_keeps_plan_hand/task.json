@@ -1,0 +1,91 @@
+{
+  "id": "rcp_keeps_plan_hand",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The job architect has to release this sheet to the ceiling fixers, so it is photographed on the light table exactly as it will be issued.\n\nThe sheet carries the same meeting room drawn twice, one frame above the other. The upper frame is the floor plan. The lower frame is the reflected ceiling plan, which the office draws by looking down at the ceiling as though it had been laid on the floor, so it keeps the hand of the plan and is never turned over. A grid runs 1 to 4 along the head of each frame and A to D down each side, and both strips are printed on the sheet. The room holds an air diffuser, a projector mount and a smoke head. The fixers set out from the grid alone and never scale off the sheet.\n\nWhich grid cell each of those three has been drawn in on either frame is what the sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show one drawing sheet carrying two framed plans of the same room, each with a printed grid label strip along its head? Answer yes or no only.",
+  "reference": {
+    "part1": "same_cell_in_both_frames",
+    "part2": "sequences_are_reverses"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Take the air diffuser drawn in both frames of the sheet and say how the grid cells it stands in compare. Answer with one of: the diffuser stands in the same lettered and figured cell in both frames; the diffuser stands in cells that are turned over about the middle of the sheet; the diffuser is drawn in one of the two frames alone.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the grid figures printed along the head of the upper frame, from its left-hand end to its right-hand end, and write them in that order, separated by commas.",
+          "out": "a_part2_g"
+        },
+        {
+          "fail_if": ["a_part2_g.unreadable"]
+        },
+        {
+          "ask": "Read the grid figures printed along the head of the lower frame, from its right-hand end to its left-hand end, and write them in that order, separated by commas.",
+          "out": "a_part2_x"
+        },
+        {
+          "fail_if": ["a_part2_x.unreadable"]
+        },
+        {
+          "run": "reverse_pair",
+          "args": ["a_part2_g", "a_part2_x"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "id": "electrode_position_digit",
+  "axis": "symbolic_systems",
+  "prompt": "A photograph on a chemical plant's pipe rack, taken while a shutdown weld is being made. The joint is fixed: the pipe to be welded runs tight under the floor slab above it, with no room to get over the top of it, so the welder is under the pipe and reaching up to work on its underside.\n\nThree things have to be in the picture and readable. First, the welder at that joint. Second, his opened carton of stick electrodes on the grating at his feet, with the electrode classification on the carton label in large plain figures -- the ordinary carton marking, an E followed by four figures. Third, the welding machine standing beside him, whose front panel carries three markings in a row, AC, DCEP and DCEN, with a small indicator lamp beside each one and exactly one of the three lamps lit.\n\nThe plant's welding engineer signs this joint off on two counts: the classification on that carton has to be one that is rated for the position the man is actually working in, and the lamp that is lit has to be one of the currents that this kind of electrode covering runs on.\n\nWhich classification is in the carton and which lamp is lit are for you to work out -- I am deliberately not telling you either, and no classification chart is on this rack. Do not put a classification chart, a position diagram, an arrow, a caption or any other writing into the picture: the only writing in the picture is the marking on the carton label and the three panel markings.\n\nThe welder at the joint, the carton label and the panel with its three lamps must all be in the same photograph, and both the carton marking and the panel markings must be large and sharp.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a welder working at a pipe joint on an industrial pipe rack, with an opened carton of stick electrodes carrying a printed marking near him and a welding machine whose front panel carries three markings each with an indicator lamp beside it? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "overhead_ok_digits": ["1", "4"],
+    "current_by_last_digit": {
+      "0": ["dcep"],
+      "1": ["ac", "dcep"],
+      "2": ["ac", "dcen"],
+      "3": ["ac", "dcep", "dcen"],
+      "4": ["ac", "dcep", "dcen"],
+      "5": ["dcep"],
+      "6": ["ac", "dcep"],
+      "8": ["ac", "dcep"]
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "position_rating_matches_the_weld",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed classification marking on the label of the opened electrode carton",
+          "expected_n": 1,
+          "out": "lb"
+        },
+        {
+          "fail_if": ["lb.unreadable"]
+        },
+        {
+          "read_crop": "Copy the marking printed on this label exactly, letter and figures. Write nothing else.",
+          "boxes": "lb",
+          "out": "lr"
+        },
+        {
+          "fail_if": ["lr.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the welder working at the pipe joint",
+          "expected_n": 1,
+          "out": "wd"
+        },
+        {
+          "fail_if": ["wd.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a welder at a pipe. Is he reaching up under the pipe to work on its underside, or leaning over the pipe to work on its top? Answer with one word: underside or top.",
+          "boxes": "wd",
+          "out": "wr"
+        },
+        {
+          "fail_if": ["wr.unreadable"]
+        },
+        {
+          "run": "position_score",
+          "args": ["lr", "wr", "reference.overhead_ok_digits"],
+          "out": "pr"
+        },
+        {
+          "compare_band": "pr.frac",
+          "to": 1.0,
+          "core_abs": 0.0,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lit_lamp_matches_the_covering",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed classification marking on the label of the opened electrode carton",
+          "expected_n": 1,
+          "out": "lb2"
+        },
+        {
+          "fail_if": ["lb2.unreadable"]
+        },
+        {
+          "read_crop": "Copy the marking printed on this label exactly, letter and figures. Write nothing else.",
+          "boxes": "lb2",
+          "out": "lr2"
+        },
+        {
+          "fail_if": ["lr2.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the row of three marked indicator lamps on the front panel of the welding machine",
+          "expected_n": 1,
+          "out": "pn"
+        },
+        {
+          "fail_if": ["pn.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows three markings, AC, DCEP and DCEN, each with a lamp beside it. Which marking has the lit lamp beside it? Answer with one word: AC, DCEP or DCEN.",
+          "boxes": "pn",
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.unreadable"]
+        },
+        {
+          "run": "current_check",
+          "args": ["lr2", "pl", "reference.current_by_last_digit"],
+          "out": "cu"
+        },
+        {
+          "compare": "cu.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "exactly_one_lamp_lit",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one lit indicator lamp on the front panel of the welding machine",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole indicator lamp that is lit, rather than an unlit lamp, a printed marking, or part of a lamp? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": 1,
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a classification chart, a position diagram, an arrow or a caption added anywhere in the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

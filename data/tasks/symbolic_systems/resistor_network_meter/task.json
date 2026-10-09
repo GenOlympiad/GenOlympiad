@@ -1,0 +1,79 @@
+{
+  "id": "resistor_network_meter",
+  "axis": "symbolic_systems",
+  "prompt": "Render a clean, straight-on TWO-PANEL electronics diagram titled 'MEASURE R ACROSS A–B'.\nLEFT PANEL: a resistor NETWORK schematic. From terminal A a wire goes through resistor R1 (80 Ω) in SERIES to a node; from that node two resistors are wired in PARALLEL between the node and terminal B: R2 (120 Ω) on the top branch and R3 (60 Ω) on the bottom branch. Label the resistors R1, R2, R3 and print each one's ohm value next to it. Draw the two parallel branches clearly joining at both ends.\nRIGHT PANEL: an analog OHMMETER -- a round dial with 0 Ω at the TOP (12 o'clock) and the scale increasing CLOCKWISE all the way round one full turn back to 300 Ω at the top, with evenly spaced tick marks every 25 Ω around the ring, an 'Ω OHMS' label at the centre, and a single pivoting NEEDLE from the centre. Compute the EQUIVALENT resistance of the whole network measured across A–B -- first combine the parallel pair R2 ∥ R3 = (R2×R3)/(R2+R3), then ADD the series R1 -- and point the needle EXACTLY at that equivalent resistance on the dial. Do NOT just add all three resistors; the parallel pair combines to LESS than either branch. Draw ONLY the schematic and the meter with its needle at the correct value; do NOT print the equivalent resistance as a number anywhere (show it only as the needle position).",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a two-panel electronics diagram: a resistor network schematic on the left and an analog ohmmeter (a dial with a needle) on the right. Ignoring artistic quality, does the image actually DEPICT that -- resistor symbols with a wired network and a needle dial gauge? A clean schematic/diagram counts as yes. Answer NO only if it shows just plain text, a blank card, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "r1": 80.0,
+    "r2": 120.0,
+    "r3": 60.0,
+    "req": 120.0,
+    "sum_all": 260.0,
+    "vmin": 0.0,
+    "vmax": 300.0,
+    "start_deg": 0.0,
+    "sweep_deg": 360.0,
+    "band_core": 12.0,
+    "band_margin": 10.0,
+    "q_needle": "This is an analog OHMMETER: a round dial with 0 at the top (12 o'clock), the scale increasing clockwise one full turn back to 300 at the top, ticks every 25, with one needle pivoting from the centre. Read the value the NEEDLE points at. Answer with the number of ohms only (a single number)."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "needle_value",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "ray",
+          "target": [
+            "tip of the ohmmeter's NEEDLE (the pointed far end of the single pivoting pointer on the round dial)",
+            "centre of the pivot hub at the middle of the ohmmeter dial that the needle turns around"
+          ],
+          "out": "nd"
+        },
+        {
+          "fail_if": ["nd.unreadable"]
+        },
+        {
+          "run": "read_needle_value",
+          "args": ["nd", "reference", "image"],
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.degenerate"]
+        },
+        {
+          "compare_band": "g.value",
+          "to": "reference.req",
+          "core_abs": "reference.band_core",
+          "margin_abs": "reference.band_margin",
+          "out": "frac"
+        },
+        {
+          "compose_ray": "nd",
+          "caption": "g.caption",
+          "out": "viz"
+        }
+      ]
+    }
+  ]
+}

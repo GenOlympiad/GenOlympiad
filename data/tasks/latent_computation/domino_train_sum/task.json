@@ -1,0 +1,368 @@
+{
+  "id": "domino_train_sum",
+  "axis": "latent_computation",
+  "prompt": "A sharp top-down photograph of 8 white domino tiles laid end to end in a single horizontal row (a 'domino train') on the dark slate tabletop of a neighbourhood CAFE domino club. Two rules must BOTH hold:\n1) MATCHING: where two tiles touch, the pip numbers on the two touching ends must be EQUAL (the normal domino train rule) - so the right half of each tile matches the left half of the next tile.\n2) TOTAL: the grand total of ALL the pips on all 8 tiles (adding up both halves of every tile) must equal EXACTLY 63.\nEach tile is a standard domino: a white rectangle split by a centre line into two square halves, each half showing 0 to 6 black pips in the usual dice arrangement. Lay the 8 tiles in a straight left-to-right row, touching end to end, all fully visible and non-overlapping. No numerals, text or labels anywhere - only pip dots.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show cafe domino-club train of white domino tiles laid end-to-end on a dark slate tabletop under a match-and-total rule? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "tiles": [
+      [1, 5],
+      [5, 6],
+      [6, 6],
+      [6, 5],
+      [5, 0],
+      [0, 4],
+      [4, 3],
+      [3, 4]
+    ],
+    "n": 8,
+    "target_sum": 63,
+    "n_joints": 7,
+    "first_left": 1,
+    "last_right": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pip_total",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "white domino tile lying on the table",
+          "out": "dt",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["dt.unreadable"]
+        },
+        {
+          "ask": "Look at the domino tiles in this picture. On each tile, a straight line divides the tile into two halves. Does that dividing line run ACROSS the tile (so the two halves are an upper half and a lower half), or does it run UP AND DOWN the tile (so the two halves are a left half and a right half)? Answer with exactly one word: across or updown.",
+          "out": "dv"
+        },
+        {
+          "fail_if": ["dv.unreadable"]
+        },
+        {
+          "run": "split_tile_halves",
+          "args": ["dt", "dv"],
+          "out": "hv"
+        },
+        {
+          "read_crop": "This close-up shows one half of a domino tile. Write down every black pip dot printed in this picture, each with a few plain words saying where on the half it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If this half carries no dot, write the single word NONE.",
+          "boxes": "hv.first",
+          "pad": 0.0,
+          "out": "fa"
+        },
+        {
+          "fail_if": ["fa.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["fa", "empty_as='0'"],
+          "out": "fa__std"
+        },
+        {
+          "fail_if": ["fa__std.refused"]
+        },
+        {
+          "read_crop": "This close-up shows one half of a domino tile. Write down every black pip dot printed in this picture, each with a few plain words saying where on the half it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If this half carries no dot, write the single word NONE.",
+          "boxes": "hv.second",
+          "pad": 0.0,
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["fb", "empty_as='0'"],
+          "out": "fb__std"
+        },
+        {
+          "fail_if": ["fb__std.refused"]
+        },
+        {
+          "run": "tally_pips_and_joints",
+          "args": ["fa__std", "fb__std", "hv"],
+          "out": "dp"
+        },
+        {
+          "compare_band": "dp.total",
+          "to": "reference.target_sum",
+          "core": 0.5,
+          "margin": 6.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chain_match",
+      "weight": 1.0,
+      "score": "dp2.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "white domino tile lying on the table",
+          "out": "dt2",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["dt2.unreadable"]
+        },
+        {
+          "ask": "Look at the domino tiles in this picture. On each tile, a straight line divides the tile into two halves. Does that dividing line run ACROSS the tile (so the two halves are an upper half and a lower half), or does it run UP AND DOWN the tile (so the two halves are a left half and a right half)? Answer with exactly one word: across or updown.",
+          "out": "dv2"
+        },
+        {
+          "fail_if": ["dv2.unreadable"]
+        },
+        {
+          "run": "split_tile_halves",
+          "args": ["dt2", "dv2"],
+          "out": "hv2"
+        },
+        {
+          "read_crop": "This close-up shows one half of a domino tile. Write down every black pip dot printed in this picture, each with a few plain words saying where on the half it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If this half carries no dot, write the single word NONE.",
+          "boxes": "hv2.first",
+          "pad": 0.0,
+          "out": "fa2"
+        },
+        {
+          "fail_if": ["fa2.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["fa2", "empty_as='0'"],
+          "out": "fa2__std"
+        },
+        {
+          "fail_if": ["fa2__std.refused"]
+        },
+        {
+          "read_crop": "This close-up shows one half of a domino tile. Write down every black pip dot printed in this picture, each with a few plain words saying where on the half it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If this half carries no dot, write the single word NONE.",
+          "boxes": "hv2.second",
+          "pad": 0.0,
+          "out": "fb2"
+        },
+        {
+          "fail_if": ["fb2.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["fb2", "empty_as='0'"],
+          "out": "fb2__std"
+        },
+        {
+          "fail_if": ["fb2__std.refused"]
+        },
+        {
+          "run": "tally_pips_and_joints",
+          "args": ["fa2__std", "fb2__std", "hv2"],
+          "out": "dp2"
+        },
+        {
+          "run": "refuse_if_no_joints",
+          "args": ["dp2"],
+          "out": "dp2_h"
+        },
+        {
+          "fail_if": ["dp2_h.exhausted"]
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_tiles",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole domino tile lying in the row on the tabletop -- ONE white tile with both of its pip halves and the dividing line between them, boxed from that tile's own left edge to its own right edge; the tiles touch end to end, so two touching tiles are still two separate tiles and each needs its own box; do not put two tiles in one rectangle, do not box half a tile, and do not box the bare dark tabletop.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole domino tile with both of its pip halves rather than bare tabletop or only half a tile? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_pip_first_left",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Count the pip dots on the LEFT half of the LEFTMOST (first) domino tile in the row. Report only that dot count. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.first_left",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_pip_last_right",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Count the pip dots on the RIGHT half of the RIGHTMOST (last) domino tile in the row. Report only that dot count. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.last_right",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_joints_match",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "white domino tile",
+          "out": "dt3"
+        },
+        {
+          "fail_if": ["dt3.unreadable"]
+        },
+        {
+          "ask": "Look at the domino tiles in this picture. On each tile, a straight line divides the tile into two halves. Does that dividing line run ACROSS the tile (so the two halves are an upper half and a lower half), or does it run UP AND DOWN the tile (so the two halves are a left half and a right half)? Answer with exactly one word: across or updown.",
+          "out": "dv3"
+        },
+        {
+          "fail_if": ["dv3.unreadable"]
+        },
+        {
+          "run": "split_tile_halves",
+          "args": ["dt3", "dv3"],
+          "out": "hv3"
+        },
+        {
+          "read_crop": "This close-up shows one half of a domino tile. Count the black pip dots printed in this picture. Answer with a single digit from 0 to 6 and nothing else (answer 0 if there are none).",
+          "boxes": "hv3.first",
+          "pad": 0.0,
+          "out": "fa3"
+        },
+        {
+          "fail_if": ["fa3.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows one half of a domino tile. Count the black pip dots printed in this picture. Answer with a single digit from 0 to 6 and nothing else (answer 0 if there are none).",
+          "boxes": "hv3.second",
+          "pad": 0.0,
+          "out": "fb3"
+        },
+        {
+          "fail_if": ["fb3.unreadable"]
+        },
+        {
+          "run": "tally_pips_and_joints",
+          "args": ["fa3", "fb3", "hv3"],
+          "out": "dp3"
+        },
+        {
+          "run": "refuse_if_no_joints",
+          "args": ["dp3"],
+          "out": "dp3_h",
+          "code": {
+            "inline": "hold_d1_joints_match_dp3_code"
+          }
+        },
+        {
+          "fail_if": ["dp3_h.exhausted"]
+        },
+        {
+          "run": "all_joints_match",
+          "args": ["dp3"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_numerals",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a printed numeral, letter, word or label anywhere in the picture, not counting the round pip dots on the tiles",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

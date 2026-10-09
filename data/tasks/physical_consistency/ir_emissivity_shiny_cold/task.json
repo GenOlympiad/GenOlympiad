@@ -1,0 +1,218 @@
+{
+  "id": "ir_emissivity_shiny_cold",
+  "axis": "physical_consistency",
+  "prompt": "A page from an electrical thermography survey, the kind the surveyor files after a scheduled panel inspection. It carries two pictures of the same view side by side: on one side a flash photograph taken with the board's door open, on the other side the thermal camera's picture of exactly that same view, its temperature colour scale running down the edge of it.\n\nIn the view is one horizontal copper busbar inside the board. Three patches sit side by side along that bar, each with its own letter stencilled beside it in both pictures: A is a strip of matt black tape stuck onto the bar, B is a patch of the bar polished bright, C is a patch of the bar left dull and brown with oxide. A contact thermocouple is clipped to each patch, and the three handheld readouts they feed lie on the panel front with their displays towards the camera, each lettered to match its own patch.\n\nStanding data for this survey, off the surveyor's sheet: the bar is one solid length of copper and has been carrying a steady 320 A for two hours; the thermal camera's emissivity was set to 0.95 and left there for the whole picture; the surveyor's emissivity table gives matt black tape 0.95, polished copper 0.05 and oxidised copper 0.60; the camera's colour scale runs from dark blue for the coldest thing in the picture, through orange, to white for the hottest.\n\nWhat the three readouts say, and what each patch comes out like in the thermal picture, are for you to work out -- I am deliberately not telling you any of the three numbers and I am not telling you which patch comes out which way. Do not print a temperature beside any patch on the bar, an arrow, or a note about emissivity anywhere in the two pictures: the only lettering is the three patch letters, the three readout displays, the colour scale and the standing data.\n\nThe two pictures must be the same size and side by side, and the three patches and the three displays must be large enough to be read off the page.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a photograph of a busbar inside an electrical panel beside a thermal camera picture of the same thing? A photograph, an illustration or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel with none of that, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_patches": 3,
+    "n_readouts": 3,
+    "probe_spread_max": 1.0,
+    "patch_colour": {
+      "A": "white",
+      "B": "blue",
+      "C": "orange"
+    },
+    "eps_tape": 0.95,
+    "eps_polished": 0.05,
+    "eps_oxide": 0.6,
+    "camera_eps": 0.95
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "thermal_colours_rank_by_emissivity",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lettered patch on the busbar in the thermal camera picture",
+          "out": "pt_box",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["pt_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is part of a thermal camera picture. What letter is stencilled beside the patch in it? Answer with just that letter.",
+          "boxes": "pt_box",
+          "out": "pt_tag"
+        },
+        {
+          "fail_if": ["pt_tag.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is part of a thermal camera picture. What colour is the lettered patch in it? Answer with one word: blue, orange, or white.",
+          "boxes": "pt_box",
+          "out": "pt_col"
+        },
+        {
+          "fail_if": ["pt_col.unreadable"]
+        },
+        {
+          "run": "patch_colours_match",
+          "args": ["pt_tag", "pt_col", "reference.patch_colour"],
+          "out": "pc"
+        },
+        {
+          "compare": "pc.verdict",
+          "to": "ranked",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "contact_probes_all_agree",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the display of a handheld thermometer readout lying on the panel front",
+          "out": "rd_box",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["rd_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows the display of one handheld thermometer. Copy the number shown on it. Write the number only.",
+          "boxes": "rd_box",
+          "out": "rd_val"
+        },
+        {
+          "fail_if": ["rd_val.unreadable"]
+        },
+        {
+          "run": "probe_readings_agree",
+          "args": ["rd_val", "reference.probe_spread_max"],
+          "out": "pb"
+        },
+        {
+          "compare": "pb.verdict",
+          "to": "agree",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "patch_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lettered patch on the busbar in the flash photograph",
+          "out": "box_read",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole lettered patch on a copper bar, rather than bare bar or only part of a patch? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_patches",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "readout_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a handheld thermometer readout lying on the panel front",
+          "out": "box_read",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole handheld thermometer with a display, rather than bare panel or only part of one? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_readouts",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_written_verdict",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a temperature figure written beside a patch on the busbar, or an arrow pointing at a patch",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

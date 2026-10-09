@@ -1,0 +1,195 @@
+{
+  "id": "git_branch_commit_count",
+  "axis": "latent_computation",
+  "prompt": "A developer-tutorial commit-graph card explains a short Git history. Start with a repository that has ONE initial commit on the 'main' branch. Then apply these steps in order: (1) make a commit on main; (2) create a new branch 'feat' from main; (3) make a commit on feat; (4) make another commit on feat; (5) make a commit on main; (6) merge feat into main (a merge adds one new merge commit on main and makes every commit that was on feat part of main's history). For EACH branch, the number of commits in its history is how many commits are reachable from that branch's tip. Render a small summary panel that prints, for each branch, its name and the TOTAL number of commits in its history, as two labelled rows: 'main = N' and 'feat = M'. Do NOT draw the commit dots or the step list; print only the two counts.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show developer-tutorial summary panel printing each Git branch's reachable-commit count after a branch-and-merge history? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "main_count": 6,
+    "feat_count": 4,
+    "q_form": "Look at this image. Does it show a small panel printing two labelled rows, one for 'main' and one for 'feat', each with a number? Answer ONLY 'yes' or 'no'.",
+    "q_main": "Read ONLY the number printed on the 'main' row of this panel (the value after 'main ='). Report only the digits actually printed. Output only digits.",
+    "q_feat": "Read ONLY the number printed on the 'feat' row of this panel (the value after 'feat ='). Report only the digits actually printed. Output only digits.",
+    "n_rows": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "counts_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "reference.q_main",
+          "out": "cm"
+        },
+        {
+          "read_number": "reference.q_feat",
+          "out": "cf"
+        },
+        {
+          "fail_if": ["cm.unreadable", "cf.unreadable"]
+        },
+        {
+          "run": null,
+          "expression": "j(cm,cf,reference.main_count,reference.feat_count)",
+          "code": {
+            "inline": "j_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count_pt",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_main",
+          "out": "cm2"
+        },
+        {
+          "fail_if": ["cm2.unreadable"]
+        },
+        {
+          "compare_tolerance": "cm2",
+          "to": "reference.main_count",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_main_row_present",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is there a labelled row that reads 'main =' followed by a number? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_feat_row_present",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is there a labelled row that reads 'feat =' followed by a number? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_rows",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed row of the summary panel giving a branch name and a number",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed row that gives a branch name followed by a number, rather than bare background or only part of a row? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_dots",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Are any commit dots, a commit graph, or the step list drawn in the panel? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

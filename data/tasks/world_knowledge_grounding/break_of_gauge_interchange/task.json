@@ -1,0 +1,225 @@
+{
+  "id": "break_of_gauge_interchange",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A border transhipment yard photographs its outward road every morning so the traffic office can see what is standing where. What is wanted is that photograph: four covered wagons standing in a row of short sidings, seen from the side, with the depot board on its post at the entrance in the same frame.\n\nThe yard is at Brest and its own track is laid to 1520 mm, which is what the depot board says: BREST 1520. Two of the sidings are pit roads, with an open inspection pit running under the rails so that a wagon's bogies can be changed; the other two are plain ballasted track with no pit.\n\nEach wagon is chalked on its side in big letters with the country it is going out to, and under that, in the same chalk, with the width in millimetres that the country lays its track to. The four destinations, one per wagon: POLAND, GERMANY, KAZAKHSTAN, MONGOLIA.\n\nThe yard's standing rule is that a wagon whose destination lays its track to a different width from this yard's has to go over a pit to have its bogies changed, and a wagon whose destination lays track to the same width as this yard goes out on plain track.\n\nWhich wagons stand over a pit, and what width to chalk under each country, are for you to know -- I am deliberately not giving you a single one of those four widths. Nothing else in the yard may give it away: no notice listing gauges, no chalk on the ground, no writing on the wagons except the country and the width.\n\nAll four wagons, their chalk, the pits under two of them and the depot board must be in the one picture and sharp enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show railway wagons standing on sidings in a yard with writing chalked on their sides? A photograph, a drawing or a document mockup all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "road_seq": "germany=pit|kazakhstan=plain|mongolia=plain|poland=pit",
+    "gauge_seq": "germany=1435|kazakhstan=1520|mongolia=1520|poland=1435",
+    "agree_token": "agree",
+    "board_seq": "brest1520",
+    "q_dest": "Copy the country name chalked on the wagon in this cut-out.",
+    "q_gauge": "Copy the number chalked under the country name on the wagon in this cut-out. Write the number only.",
+    "q_road": "In this cut-out, is the wagon standing over an open pit in the ground, or on plain track with no pit? Answer with one word: pit or plain.",
+    "q_board": "Copy the words and figures painted on the board in this cut-out."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_wagon_stands_on_the_road_its_destination_calls_for",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one covered wagon standing in the yard",
+          "out": "wg",
+          "sweep": true
+        },
+        {
+          "fail_if": ["wg.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_dest",
+          "boxes": "wg",
+          "pad": 0.3,
+          "out": "dq",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["dq.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_road",
+          "boxes": "wg",
+          "pad": 0.3,
+          "out": "rq",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["rq.unreadable"]
+        },
+        {
+          "run": "join_rows",
+          "args": ["dq", "rq", "4"],
+          "out": "recheck"
+        },
+        {
+          "fail_if": ["recheck.unreadable"]
+        },
+        {
+          "compare": "recheck.seq",
+          "to": "reference.road_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_gauge_chalked_under_each_country",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one covered wagon standing in the yard",
+          "out": "wg2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["wg2.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_dest",
+          "boxes": "wg2",
+          "pad": 0.3,
+          "out": "dq2",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["dq2.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_gauge",
+          "boxes": "wg2",
+          "pad": 0.3,
+          "out": "gq",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["gq.unreadable"]
+        },
+        {
+          "run": "join_rows",
+          "args": ["dq2", "gq", "4"],
+          "out": "gj"
+        },
+        {
+          "fail_if": ["gj.unreadable"]
+        },
+        {
+          "compare": "gj.seq",
+          "to": "reference.gauge_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_road_agrees_with_the_figure_the_wagon_itself_carries",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one covered wagon standing in the yard",
+          "out": "wg3",
+          "sweep": true
+        },
+        {
+          "fail_if": ["wg3.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_gauge",
+          "boxes": "wg3",
+          "pad": 0.3,
+          "out": "gq2",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["gq2.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_road",
+          "boxes": "wg3",
+          "pad": 0.3,
+          "out": "rq2",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["rq2.unreadable"]
+        },
+        {
+          "run": "gauge_matches_road",
+          "args": ["gq2", "rq2", "1520"],
+          "out": "ag"
+        },
+        {
+          "fail_if": ["ag.unreadable"]
+        },
+        {
+          "compare": "ag.token",
+          "to": "reference.agree_token",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_depot_board_at_the_yard_entrance",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the depot board on its post at the yard entrance",
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_board",
+          "boxes": "bd",
+          "pad": 0.2,
+          "out": "bq",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["bq.unreadable"]
+        },
+        {
+          "run": "wordset",
+          "args": ["bq"],
+          "out": "bs"
+        },
+        {
+          "fail_if": ["bs.unreadable"]
+        },
+        {
+          "compare": "bs.seq",
+          "to": "reference.board_seq",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

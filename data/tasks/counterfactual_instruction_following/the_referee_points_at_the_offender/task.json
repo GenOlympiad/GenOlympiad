@@ -1,0 +1,84 @@
+{
+  "id": "the_referee_points_at_the_offender",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A referees' manual goes to the league for sign-off, so the plate for the hand-signal page is photographed live at the arena.\n\nThe referee stands out on the floor, one arm held straight out from the shoulder. A team bench runs down each side of the scorer's table, and the board over each carries that side's name, Kestrels on one and Foundry on the other. The rules board at the table gives the convention in one line: the arm is held out at the side that committed the foul, and the side that gets the ball is the one the arrow on the screen stands beside. The slip clipped to the table is written up against a Foundry player. The screen also keeps each side's team-foul figure, entered as every foul is registered; before this whistle the Foundry stood at 6 and the Kestrels at 4.\n\nWhich way the arm is held, and what the screen carries now, is what the page does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a referee standing out on an indoor court with a bench board on each side of the scorer's table and a screen at the table? Answer yes or no only.",
+  "reference": {
+    "part1": "arm_held_out_at_the_foundry_board",
+    "part2": "7"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Say which of the two bench boards the referee's outstretched arm is held out towards. Answer with one of: the arm is held out towards the board that reads Foundry; the arm is held out towards the board that reads Kestrels; the arm is raised straight over the referee's head and points at neither board.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the team-foul figure the screen on the scorer's table now shows for the Foundry side. Write the number only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

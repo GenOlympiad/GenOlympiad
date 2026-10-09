@@ -1,0 +1,191 @@
+{
+  "id": "count_bare_slots",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic photograph taken square-on to a post-room wall of small square wooden pigeonholes, all the same size, filling the whole frame in a flat grid. The back panel of every pigeonhole is painted bright BLUE. Almost every pigeonhole is packed with a rolled cream newspaper that completely hides the blue back panel, but EXACTLY 31 pigeonholes are EMPTY, so their flat blue back panel is plainly visible. The 31 empty slots are scattered irregularly over the wall -- never two side by side, never a whole empty row or column, never a block, never a border. You may choose how many pigeonholes the wall has, as long as there are at least 200 of them, but EXACTLY 31 must be empty -- not 30, not 32. Nothing else anywhere in the picture is blue. Even light, sharp focus, no perspective distortion: the wall is seen flat-on so every pigeonhole looks the same size. No text, no numerals, no labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a post-room wall of pigeonholes, almost every slot holding a rolled newspaper, a scatter of empty slots showing their blue painted backs. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q": "Count the empty pigeonholes (the slots showing a bare blue back panel, with no newspaper in them) in this image. Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This image should show the countable objects described as: a post-room wall of pigeonholes, almost every slot holding a rolled newspaper, a scatter of empty slots showing their blue painted backs. Look at the individual objects being counted. Are they clearly the correct KIND of object (the right thing, of the right colour where a colour was specified) rather than some other object, blobs, or a mix that does not match the description? Answer with the single word yes or no only.",
+    "n": 31,
+    "q_dense": "Look at this wall of pigeonholes. Is it a large wall of slots that is almost completely full of rolled newspapers, with only a small scatter of empty slots? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "empty_slot_count",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read_crop": "This is a strip cut from a bigger picture. Write down every blue patch you can see in this strip, one patch per item, and for each one say in a few plain words where it sits. Take a patch as belonging to this strip when the middle of that patch lies inside the strip. If there is no blue patch in this strip, write the single word NONE. Write no running total. Separate one item from the next with a semicolon, and add nothing else.",
+          "boxes": [
+            [0, 0, 250, 1000],
+            [250, 0, 500, 1000],
+            [500, 0, 750, 1000],
+            [750, 0, 1000, 1000]
+          ],
+          "pad": 0.0,
+          "out": "bs"
+        },
+        {
+          "fail_if": ["bs.unreadable"]
+        },
+        {
+          "run": "count_enumerated_items",
+          "args": ["bs", "'0'"],
+          "out": "bs__mapped"
+        },
+        {
+          "fail_if": ["bs__mapped.refused"]
+        },
+        {
+          "run": "sum_strip_counts",
+          "args": ["bs__mapped", "'blue empty places'"],
+          "out": "cnt"
+        },
+        {
+          "fail_if": ["cnt.unread"]
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sparse_empties_premise",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_crop": "Are most of the places in this picture filled, with only a few empty blue ones? Answer yes or no only.",
+          "boxes": [
+            [0, 0, 1000, 1000]
+          ],
+          "pad": 0.0,
+          "out": "sp"
+        },
+        {
+          "run": "yes_score",
+          "args": ["sp"],
+          "out": "frac"
+        },
+        {
+          "fail_if": ["frac.none"]
+        }
+      ]
+    },
+    {
+      "name": "d4_dense_field_premise_vlm",
+      "weight": 0.0,
+      "steps": [
+        {
+          "ask": "reference.q_dense",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the pegboard, tiled wall or wall of slots that fills the picture",
+          "out": "box_g",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "reference.d2_q_objform",
+          "boxes": "box_g",
+          "out": "crop_g",
+          "pad": 0.02
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a bare blue peg head",
+    "s2": "a blue tile recess",
+    "s3": "a blue pigeonhole back panel"
+  },
+  "count_total": "reference.n"
+}

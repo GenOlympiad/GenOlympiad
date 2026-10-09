@@ -1,0 +1,124 @@
+{
+  "id": "schematic_common_return_net",
+  "axis": "symbolic_systems",
+  "prompt": "A bench technician's circuit sheet for a small lamp driver, drawn in ink on squared paper and photographed flat from above. International circuit symbols throughout, drawn by hand but neatly.\n\nThe sheet is laid out the way this technician always lays one out: three named nets run down the sheet as vertical wires, N1 at the left, N2 in the middle and N3 at the right, and a single horizontal rail runs along the foot of the sheet beneath all three. The rail is the common return and carries no name. Six parts are drawn between these wires and labelled R1, R2, D1, C1, Q1 and LP1.\n\nThis is the part list the technician was handed, pin by pin. Every pin of every part that is not named in this list lands on the common return rail:\n  R1 -- one end on N1, the other end on N2\n  R2 -- one end on N2, the other end on N3\n  D1 -- its cathode pin on N3\n  C1 -- its upper plate on N3\n  Q1 -- its collector on N1, its base on N2\n  LP1 -- one terminal on N1\n\nThe drawing convention for the diode, which the technician follows without printing it: the short straight bar of the symbol stands on the cathode side, and the triangle points into that bar.\n\nWork out for yourself which parts finish with a pin on the return rail, and which way up the diode has to be drawn -- I am deliberately not telling you either. Do not write the part list, the pin assignments or any note anywhere on the sheet: the only writing on the sheet is the six part labels and the three net names. The rail along the foot with every wire that comes down to it, all six part symbols with their labels and the three net names have to be legible in the one frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a hand-drawn circuit diagram with several component symbols joined by lines? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no circuit at all. Answer yes or no only.",
+  "reference": {
+    "return_set": "c1,d1,lp1,q1",
+    "diode_bar_end": "top",
+    "clean_no_list": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_rail_collects_the_pins_the_list_left_out",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one place where a wire comes down and meets the horizontal rail along the foot of the sheet",
+          "sweep": true,
+          "out": "jn"
+        },
+        {
+          "fail_if": ["jn.unreadable"]
+        },
+        {
+          "read_crop": "Copy the part label written beside the symbol that this wire comes down from. Write the label only.",
+          "boxes": "jn",
+          "pad": 0.5,
+          "out": "jnx"
+        },
+        {
+          "run": "rail_part_labels",
+          "args": ["jnx"],
+          "out": "rl"
+        },
+        {
+          "fail_if": ["rl.refused"]
+        },
+        {
+          "compare": "rl.seq",
+          "to": "reference.return_set",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_diode_faces_the_net_its_cathode_is_given",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the symbol labelled D1 on the circuit sheet",
+          "out": "dd"
+        },
+        {
+          "fail_if": ["dd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the short straight bar at the upper end of the triangle or at the lower end of it? Answer with one word: top or bottom.",
+          "boxes": "dd",
+          "pad": 0.3,
+          "out": "ddx"
+        },
+        {
+          "run": "diode_bar_end",
+          "args": ["ddx"],
+          "out": "bs"
+        },
+        {
+          "fail_if": ["bs.refused"]
+        },
+        {
+          "compare": "bs.end",
+          "to": "reference.diode_bar_end",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_part_list_or_net_table_on_the_sheet",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written part list, a table of connections or a note about the wiring, on the sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "tb"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "compare": "tb.clean",
+          "to": "reference.clean_no_list",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,235 @@
+{
+  "id": "side_view_handedness",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Render a technical white-line-on-blue blueprint drawing of a plain aluminium camera mounting bracket: a tall flat upright plate with a flat foot projecting horizontally FORWARD, towards the viewer, from the bottom of that upright plate.\n\nLay the three views out like this:\n- The FRONT view -- looking straight at the face of the upright plate -- goes in the middle of the sheet.\n- The TOP view goes directly ABOVE the front view.\n- The view looking at the bracket FROM ITS RIGHT-HAND SIDE goes to the RIGHT of the front view. That panel shows the bracket's L-shaped profile.\nWork out for yourself which way round that L must appear in its panel. Draw exactly what you would really see if you stood at the right-hand side of the bracket and looked at it, so that the two ends of that panel correspond correctly to the FRONT and the BACK of the bracket. Do not simply copy or mirror the profile to whichever side looks tidier.\nThin black lines, all three views at the same scale, clearly separated from one another. No text, no numbers, no labels, no dimensions, no title block, no projection symbol.\n",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show THREE separate simple line drawings placed apart from one another on one sheet (rather than a single picture, a photograph, or a page of text). Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank panel, printed text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption anywhere on it (as opposed to being purely a drawing with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "want_dir": -1,
+    "side_right": true,
+    "stack_above": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.8,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "views_placed_as_asked",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "separate view drawing on the sheet",
+          "expected_n": 3,
+          "out": "pb"
+        },
+        {
+          "fail_if": ["pb.unreadable"]
+        },
+        {
+          "run": "arrange_views",
+          "args": ["pb", "image"],
+          "out": "vp"
+        },
+        {
+          "fail_if": ["vp.no_read"]
+        },
+        {
+          "run": "views_on_wanted_sides",
+          "args": [
+            "vp.stack_is_above",
+            "vp.side_is_right",
+            "reference.stack_above",
+            "reference.side_right"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "side_panel_shows_an_L",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "score": "lf.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "separate view drawing on the sheet",
+          "expected_n": 3,
+          "out": "pb"
+        },
+        {
+          "fail_if": ["pb.unreadable"]
+        },
+        {
+          "run": "arrange_views",
+          "args": ["pb", "image"],
+          "out": "vp"
+        },
+        {
+          "fail_if": ["vp.no_read"]
+        },
+        {
+          "read_crop": "Does this drawing show an L shape -- one tall upright part with a horizontal foot along the bottom that sticks out to one side -- rather than a plain rectangle? Answer yes or no only.",
+          "boxes": "vp.side_box",
+          "pad": 0.03,
+          "out": "lq"
+        },
+        {
+          "fail_if": ["lq.unreadable"]
+        },
+        {
+          "run": "side_view_shows_l_shape",
+          "args": ["lq"],
+          "code": {
+            "inline": "f_code_2"
+          },
+          "out": "lf"
+        }
+      ]
+    },
+    {
+      "name": "side_view_handedness",
+      "weight": 4.0,
+      "score": "hf.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "separate view drawing on the sheet",
+          "expected_n": 3,
+          "out": "pb"
+        },
+        {
+          "fail_if": ["pb.unreadable"]
+        },
+        {
+          "run": "arrange_views",
+          "args": ["pb", "image"],
+          "out": "vp"
+        },
+        {
+          "fail_if": ["vp.no_read"]
+        },
+        {
+          "read_crop": "In this drawing a horizontal foot runs along the bottom and sticks out past the tall upright part on one side only. Which side does the foot stick out to? Answer with the single word left or right.",
+          "boxes": "vp.side_box",
+          "pad": 0.03,
+          "out": "hq"
+        },
+        {
+          "fail_if": ["hq.unreadable"]
+        },
+        {
+          "run": "foot_points_wanted_way",
+          "args": ["hq", "reference.want_dir"],
+          "code": {
+            "inline": "f_code_3"
+          },
+          "out": "hf"
+        }
+      ]
+    },
+    {
+      "name": "views_aligned_on_projection_lines",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "separate view drawing on the sheet",
+          "expected_n": 3,
+          "out": "pb"
+        },
+        {
+          "fail_if": ["pb.unreadable"]
+        },
+        {
+          "run": "arrange_views",
+          "args": ["pb", "image"],
+          "out": "vp"
+        },
+        {
+          "fail_if": ["vp.no_read"]
+        },
+        {
+          "compare_bands": ["vp.width_mismatch", "vp.height_mismatch"],
+          "to": 0.0,
+          "core": 0.05,
+          "margin": 0.15000000000000002,
+          "aggregate": "mean",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_hand_overlay",
+      "weight": 0.0,
+      "score": "d1.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "separate view drawing on the sheet",
+          "expected_n": 3,
+          "out": "pb"
+        },
+        {
+          "fail_if": ["pb.unreadable"]
+        },
+        {
+          "run": "arrange_views",
+          "args": ["pb", "image"],
+          "out": "vp"
+        },
+        {
+          "fail_if": ["vp.no_read"]
+        },
+        {
+          "run": "show_views_verdict",
+          "args": ["vp"],
+          "out": "d1"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

@@ -1,0 +1,84 @@
+{
+  "id": "seal_across_binding_edge",
+  "axis": "long_range_consistency",
+  "prompt": "The records clerk photographs the executed contract before it goes into the file, so the four sheets are fanned on the desk with the bound edge toward the window and the whole spread in one frame.\n\nA four-sheet contract lies open on an archive desk, fanned so that the bound edge of every sheet shows below the sheet above it and none of the red ink on those edges is hidden. Each sheet is printed with its page number in the footer, page one uppermost. The office rule pasted inside the register beside the file reads: one round company seal is pressed once across the bound edge of the whole set, so that it lands on all the sheets together and is inked once only. The register also carries a clean impression of that same round seal as a reference.\n\nHow the ink falls on each sheet is what the register does not record.",
+  "difficulty": "s1",
+  "easy_question": "Is this an overhead photograph of a contract fanned open on a desk with red ink showing along the bound edge of the sheets Answer yes or no only.",
+  "reference": {
+    "part1": "fragment_per_sheet",
+    "part2": "consecutive_from_one"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look along the bound edge of each sheet in the fan, at the red ink lying on it. Answer with one of: Every sheet shows part of the round seal along its bound edge; At least one sheet shows a whole round seal; The bound edge of one sheet is bare.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the page number printed in the footer of each sheet, working from the top sheet of the fan down to the bottom one. Write the numbers in the order you read them.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "consecutive_run",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

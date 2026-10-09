@@ -1,0 +1,77 @@
+{
+  "id": "transpose_melody",
+  "axis": "symbolic_systems",
+  "prompt": "Render a clean, straight-on image of a printed MUSIC-THEORY TRANSPOSITION WORKSHEET (a titled sheet). Title it 'Transposition Exercise'.\n\nPrint, on a line labelled 'Original (C):', this melody written as note names:\n    C  E  G  A  G  E  D  C\n\nThen TRANSPOSE the whole melody UP by exactly 5 semitones so that it is in the key of F, and print the result on a second line labelled 'Transposed (F):'. Move EVERY note by the same 5 semitones (keep the melodic shape identical, only shift the pitch level). Write note names using SHARPS for any black keys (for example C#, F#, G#), separated by single spaces, in the same left-to-right order. Print only these two labelled lines, large and legible.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed music-theory transposition worksheet showing a short melody written as note names in one key and the same melody transposed into another key? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "src_key": "C",
+    "tgt_key": "F",
+    "semitones": 5,
+    "src_seq": ["C", "E", "G", "A", "G", "E", "D", "C"],
+    "tgt_seq": ["F", "A", "C", "D", "C", "A", "G", "F"],
+    "n_notes": 8,
+    "q_seq": "This worksheet shows a melody and its transposition. Read ONLY the line labelled 'Transposed' and list the note names printed on it, exactly as printed, in the printed left-to-right order. Write each note as a letter A-G optionally followed by '#' (sharp) or 'b' (flat), separated by single spaces. Do NOT transpose, correct or do any sums yourself -- copy exactly what is printed on the Transposed line. Output only those note names in order and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "transposed_seq",
+      "weight": 4.0,
+      "score": "cv.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single note name printed on the line labelled Transposed on this worksheet -- one box per note name, round that one name alone, its letter together with any # or b printed beside it. Box every note name on that line separately; do not box the line's own label words, do not box a note name on the Original line, and do not put two note names in one box.",
+          "sweep": true,
+          "out": "vseq_box"
+        },
+        {
+          "fail_if": ["vseq_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed music worksheet, showing one note name. If more than one note name is visible in this cut-out, read the one nearest the middle of it. Write down just that note name: one letter from A to G, followed by a # or a b only if one is printed right next to it. Copy exactly what is printed and write nothing else.",
+          "boxes": "vseq_box",
+          "pad": 0.2,
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "vseq_cr"
+        },
+        {
+          "fail_if": ["vseq_cr.unreadable"]
+        },
+        {
+          "get": ".answers",
+          "value": "vseq_cr",
+          "out": "vseq"
+        },
+        {
+          "run": "note_match_share",
+          "args": ["vseq", "reference"],
+          "out": "cv"
+        },
+        {
+          "fail_if": ["cv.no_read"]
+        }
+      ]
+    }
+  ]
+}

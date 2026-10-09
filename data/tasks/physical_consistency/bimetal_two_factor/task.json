@@ -1,0 +1,109 @@
+{
+  "id": "bimetal_two_factor",
+  "axis": "physical_consistency",
+  "prompt": "An old engineering patent plate printed on cream paper, drawn as clean line artwork with fine hatching only inside the metal bands, no photographic shading: eight thermostat elements shown one above another down the plate, well separated. Every element is a straight bimetal blade lying HORIZONTALLY across the plate, held at its own middle in a small square anchor block, both of its ends free to swing UP or DOWN. Each blade is drawn edge-on as two bonded bands, one directly above the other: the ALLOY band is filled solid bright yellow and the IRON band is filled solid mid grey. Counting the blades from the top of the plate: the first, the fourth, the sixth and the seventh have their yellow alloy band on TOP; the second, the third, the fifth and the eighth have their yellow alloy band UNDERNEATH.\n\nThe plate also shows what each blade sits in: the first, the second, the third, the fourth, the seventh and the eighth blade each sit inside a small drawn oven that is switched ON and is warming that blade; the fifth and the sixth blade each sit inside a small drawn cold chamber that is chilling that blade.\n\nObey the bimetal law exactly. The yellow alloy grows more than the grey iron when it is warmed and shrinks more than the grey iron when it is chilled. A WARMED blade therefore bends so that its yellow band lies on the OUTSIDE of the bend, on the bulging side; a CHILLED blade bends the opposite way, so that its yellow band lies on the INSIDE of the bend, on the hollow side. Take each blade on its own, use only that blade's own two facts, and draw it bent that way, its two free ends clearly ABOVE or clearly BELOW its anchored middle. The eight blades must not all bend the same way.\n\nEvery blade stays horizontal overall and is one smooth arc. Fine ink lines, blades clearly separated, no text, no numerals, no arrows, no dimension marks, no title block.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a printed engineering plate carrying several long flat blades one above another, each anchored at its middle and drawn as two bonded bands of different colour, with a heat or cold symbol beside each. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "k": 8,
+    "brass_on_top": [1, 0, 0, 1, 0, 1, 1, 0],
+    "being_warmed": [1, 1, 1, 1, 0, 0, 1, 1],
+    "expected_ends": ["down", "up", "up", "down", "down", "up", "down", "up"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "strips_readable",
+      "weight": 1.0,
+      "score": "cen.frac",
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "clamped metal strip",
+          "out": "bx",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "run": "order_strips",
+          "args": ["bx"],
+          "out": "srt"
+        },
+        {
+          "read_crop": "Look only at the long metal strip in this picture and ignore everything else. Is the strip curved like an ARCH (humped up in the middle, so its middle is higher than its two ends) or like a BOWL (dipping down in the middle, so its middle is lower than its two ends)? If the strip is dead straight, answer straight. If there is no metal strip here, answer none. Answer with exactly one word: arch, bowl, straight or none.",
+          "boxes": "srt",
+          "votes": 5,
+          "pad": 0.04,
+          "out": "cd"
+        },
+        {
+          "fail_if": ["cd.unreadable"]
+        },
+        {
+          "run": "count_strips",
+          "args": ["cd", "reference.k"],
+          "out": "cen"
+        }
+      ]
+    },
+    {
+      "name": "bend_direction_string",
+      "weight": 1.0,
+      "score": "bs.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "clamped metal strip",
+          "out": "bx",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "run": "order_strips",
+          "args": ["bx"],
+          "out": "srt"
+        },
+        {
+          "read_crop": "Look only at the long metal strip in this picture and ignore everything else. Name the shape the strip makes, using one word from this list: arch (it humps upward in the middle and both ends drop away), bowl (it dips downward in the middle and both ends rise away), straight (it runs as one straight line), none (there is no metal strip here). Write that one word and nothing else.",
+          "boxes": "srt",
+          "votes": 5,
+          "pad": 0.04,
+          "out": "cd"
+        },
+        {
+          "fail_if": ["cd.unreadable"]
+        },
+        {
+          "run": "score_bend_directions",
+          "args": ["cd", "reference.expected_ends"],
+          "out": "bs"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

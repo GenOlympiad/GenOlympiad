@@ -1,0 +1,89 @@
+{
+  "id": "banner_cloud_wind_direction",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A realistic mountaineering photograph of a sharp, isolated snow-capped peak (the Matterhorn) with a clearly labelled COMPASS ROSE in one corner (N up, E right, S down, W left, plus NE/SE/SW/NW).\n\nKEY FACT (banner-cloud meteorology): on a sharp peak a 'banner cloud' forms on the LEEWARD (downwind) side and streams away in the SAME direction the wind is blowing TOWARD (downwind). The prevailing wind blows FROM the NORTHWEST, so the wind is blowing TOWARD the SOUTHEAST. Draw the banner cloud streaming off the peak toward the SOUTHEAST (a long horizontal plume, thick where it leaves the summit and tapering to a thin wisp at its far southeast end).\n\nDo NOT draw the plume streaming into the wind (toward the northwest). Do NOT print any compass letters or the answer direction as text on the plume. The plume direction must be shown only by the geometry of the cloud against the compass rose.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a sharp mountain peak with a cloud plume (a banner cloud) streaming off it and a labelled compass rose. Ignoring which way the plume points and artistic quality, does the image DEPICT a mountain peak with a streaming cloud and a compass rose? A photo, render or clean illustration all count as yes. Answer NO only if it is blank or unrelated. Answer yes or no only.",
+  "reference": {
+    "toward": "SE",
+    "tgt_plume": "the cloud plume streaming sideways off the mountain summit",
+    "found_plume": "cloud plume off a mountain peak",
+    "tgt_rose": "the compass rose drawn on the picture",
+    "found_rose": "compass rose",
+    "q_plume_dir": "This is a close-up cut out of a bigger picture. It shows a mountain summit with a streak of cloud (or a large drawn wind arrow) leaving it. Which way does that streak stretch AWAY from the summit across this cut-out? Answer with exactly one of: up, down, left, right, up-left, up-right, down-left, down-right.",
+    "q_rose_north": "This is a close-up cut out of a bigger picture. It shows a compass rose. Which way does its NORTH point (the arm or arrow marked N) aim in this cut-out? Answer with exactly one of: up, down, left, right, up-left, up-right, down-left, down-right."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "banner_downwind_bearing",
+      "weight": 5.0,
+      "score": "lw.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.tgt_plume",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "pb"
+        },
+        {
+          "fail_if": ["pb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_plume_dir",
+          "boxes": "pb",
+          "pad": 0.35,
+          "out": "pcr"
+        },
+        {
+          "fail_if": ["pcr.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "reference.tgt_rose",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_rose_north",
+          "boxes": "rb",
+          "pad": 0.1,
+          "out": "rcr"
+        },
+        {
+          "fail_if": ["rcr.unreadable"]
+        },
+        {
+          "run": "plume_compass_bearing",
+          "args": ["pcr", "rcr", "reference.toward"],
+          "out": "lw"
+        }
+      ]
+    }
+  ]
+}

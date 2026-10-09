@@ -1,0 +1,205 @@
+{
+  "id": "the_sepia_spreads_stand_earliest",
+  "axis": "long_range_consistency",
+  "prompt": "A page from a children's picture-book dummy, photographed flat on the designer's desk: five double-page spreads printed small and laid out in a row, with the spread number in the corner of each one, 1 to 5.\n\nThe book has no words in it. Every spread is the same room, and there is always the same small potted plant standing on the windowsill.\n\nThe story is about a man who comes back to the house he grew up in. Two of the five spreads are from when he was a boy. Picture books have an old habit for that: a spread belonging to the earlier time is worked in shades of one single colour instead of in full colour.\n\nThe plant is the clock of this book. It has been losing leaves the whole time the story covers and it never grows one back, and nothing else in the room changes at all.\n\nWhich two spreads are the boyhood ones is yours to decide, and so is how many leaves the plant carries on each spread -- I am deliberately telling you neither. Keep the plant between two and six leaves so that they can be counted one by one, and no two spreads may carry the same number of them.\n\nAll five spreads and the plant on each of them must be plainly readable in the one frame. The only printing anywhere on the sheet is the spread number in the corner of each spread: no dates, no ages, no captions, no arrows.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show several small book pages or panels laid out side by side on one sheet? A photograph, a scan or a drawing ALL count as yes. Answer NO only if the image shows a blank sheet that just states an answer, or shows no page panels at all. Answer yes or no only.",
+  "reference": {
+    "two_single": "yes",
+    "earlier_group_leads": "yes",
+    "falls_in_order": "yes",
+    "page_is_clean": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "exactly_two_spreads_are_worked_in_one_colour",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "each of the five spreads printed on the dummy sheet",
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "read_crop": "Is this whole cut-out worked in shades of a single colour only? Answer yes or no.",
+          "boxes": "sp",
+          "pad": 0.1,
+          "out": "m"
+        },
+        {
+          "run": "exactly_k_yes",
+          "args": ["m", "2"],
+          "out": "cnt"
+        },
+        {
+          "fail_if": ["cnt.refused"]
+        },
+        {
+          "compare": "cnt.state",
+          "to": "reference.two_single",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_one_colour_spreads_carry_more_leaves_than_any_other",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "each of the five spreads printed on the dummy sheet",
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "read_crop": "Is this whole cut-out worked in shades of a single colour only? Answer yes or no.",
+          "boxes": "sp",
+          "pad": 0.1,
+          "out": "m"
+        },
+        {
+          "read_crop": "Write down every leaf on the small potted plant on the windowsill in this cut-out, each with a few plain words saying which way it points. Separate one item from the next with a semicolon; write no running total and nothing else. If the plant carries no leaf, write the single word NONE.",
+          "boxes": "sp",
+          "pad": 0.1,
+          "out": "lv"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["lv", "empty_as='0'"],
+          "out": "lv__std"
+        },
+        {
+          "fail_if": ["lv__std.refused"]
+        },
+        {
+          "run": "marked_group_order",
+          "args": ["m", "lv__std"],
+          "out": "gm"
+        },
+        {
+          "fail_if": ["gm.refused"]
+        },
+        {
+          "compare": "gm.sep",
+          "to": "reference.earlier_group_leads",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "inside_each_group_the_leaves_fall_along_the_row",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "each of the five spreads printed on the dummy sheet",
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "read_crop": "Is this whole cut-out worked in shades of a single colour only? Answer yes or no.",
+          "boxes": "sp",
+          "pad": 0.1,
+          "out": "m"
+        },
+        {
+          "read_crop": "Write down every leaf on the small potted plant on the windowsill in this cut-out, each with a few plain words saying which way it points. Separate one item from the next with a semicolon; write no running total and nothing else. If the plant carries no leaf, write the single word NONE.",
+          "boxes": "sp",
+          "pad": 0.1,
+          "out": "lv"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["lv", "empty_as='0'"],
+          "out": "lv__std"
+        },
+        {
+          "fail_if": ["lv__std.refused"]
+        },
+        {
+          "run": "marked_group_order",
+          "args": ["m", "lv__std"],
+          "out": "gm"
+        },
+        {
+          "fail_if": ["gm.refused"]
+        },
+        {
+          "compare": "gm.mono",
+          "to": "reference.falls_in_order",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_writing_says_which_spread_is_earlier",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a date, an age or a year written anywhere on the dummy sheet",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is this a written date, age or year? Answer yes or no. Answer no if the cut-out shows a spread number in a corner, part of the room, the plant, a person, or nothing printed at all.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "run": "sweep_holds_nothing_banned",
+          "args": ["xg", "xgw", "xgy"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.page_is_clean",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

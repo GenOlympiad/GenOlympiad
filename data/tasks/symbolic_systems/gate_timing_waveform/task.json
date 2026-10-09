@@ -1,0 +1,103 @@
+{
+  "id": "gate_timing_waveform",
+  "axis": "symbolic_systems",
+  "prompt": "Render a clean, straight-on DIGITAL TIMING DIAGRAM (a logic waveform chart) titled 'LOGIC TIMING: XOR GATE'. There are 6 clock ticks labelled t1..t6 left to right (draw faint vertical grid lines and the tick labels along the bottom). Draw THREE stacked waveform lanes, each a square-wave level trace that is either HIGH (up on the top rail) or LOW (down on the bottom rail) during each tick:\n\n- Lane A (top): t1=HIGH, t2=LOW, t3=HIGH, t4=HIGH, t5=LOW, t6=HIGH.\n- Lane B (middle): t1=LOW, t2=LOW, t3=HIGH, t4=LOW, t5=HIGH, t6=HIGH.\n- Lane Y (bottom, in a highlighted box): the OUTPUT of a XOR gate applied to A and B tick by tick. For EACH tick, set Y HIGH if (A XOR B) is true for that tick's A and B values, otherwise LOW. Print 'Y = A XOR B' as a caption. Make each lane's HIGH/LOW level in every tick clear and unambiguous, with clean vertical transitions between ticks. Label the lanes A, B, Y at the left.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a DIGITAL TIMING DIAGRAM: stacked square-wave lanes labelled A, B, Y with HIGH/LOW levels across numbered clock ticks. Ignoring artistic quality, does the image actually DEPICT that -- stacked logic waveform traces over time ticks? A clean chart counts as yes. Answer NO only if it shows just plain text, a blank card, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "gate": "XOR",
+    "A": [1, 0, 1, 1, 0, 1],
+    "B": [0, 0, 1, 0, 1, 1],
+    "Y": [1, 0, 0, 1, 1, 0],
+    "n": 6,
+    "query_ticks": [3, 4, 6],
+    "targets": [0, 1, 0],
+    "n_q": 3,
+    "q_ticks": {
+      "3": "This is a digital timing diagram. Look ONLY at the bottom OUTPUT lane labelled 'Y' (it is in a highlighted box, drawn in red). The clock ticks are labelled t1, t2, ... along the bottom. During tick t3, is the Y trace at the HIGH level (up on the top rail of its lane) or the LOW level (down on the bottom rail)? Read the Y trace's vertical position during tick t3 only. Answer exactly 'HIGH' or 'LOW'.",
+      "4": "This is a digital timing diagram. Look ONLY at the bottom OUTPUT lane labelled 'Y' (it is in a highlighted box, drawn in red). The clock ticks are labelled t1, t2, ... along the bottom. During tick t4, is the Y trace at the HIGH level (up on the top rail of its lane) or the LOW level (down on the bottom rail)? Read the Y trace's vertical position during tick t4 only. Answer exactly 'HIGH' or 'LOW'.",
+      "6": "This is a digital timing diagram. Look ONLY at the bottom OUTPUT lane labelled 'Y' (it is in a highlighted box, drawn in red). The clock ticks are labelled t1, t2, ... along the bottom. During tick t6, is the Y trace at the HIGH level (up on the top rail of its lane) or the LOW level (down on the bottom rail)? Read the Y trace's vertical position during tick t6 only. Answer exactly 'HIGH' or 'LOW'."
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "output_levels_exact",
+      "weight": 4.0,
+      "steps": [
+        {
+          "run": "tick_questions",
+          "args": ["reference"],
+          "out": "qlist"
+        },
+        {
+          "ask": "qlist.0",
+          "out": "a0"
+        },
+        {
+          "fail_if": ["a0.unreadable"]
+        },
+        {
+          "ask": "qlist.1",
+          "out": "a1"
+        },
+        {
+          "fail_if": ["a1.unreadable"]
+        },
+        {
+          "ask": "qlist.2",
+          "out": "a2"
+        },
+        {
+          "fail_if": ["a2.unreadable"]
+        },
+        {
+          "run": null,
+          "expression": "score(a0,a1,a2,reference)",
+          "code": {
+            "inline": "score_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_gate_named",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "This timing diagram has a caption of the form 'Y = A GATE B'. What GATE name is printed in that caption? Answer with just the gate name.",
+          "out": "gn"
+        },
+        {
+          "fail_if": ["gn.unreadable"]
+        },
+        {
+          "run": "level_matches",
+          "args": ["gn", "reference.gate"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

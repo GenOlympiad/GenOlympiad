@@ -1,0 +1,187 @@
+{
+  "id": "fisheye_center_line_straight",
+  "axis": "physical_consistency",
+  "prompt": "A photo-style fisheye (ultra-wide) image: a fisheye shot of a striped wall where the one stripe passing through the image center (highlight it in bright green) is perfectly straight while the stripes near the top and bottom edges bow outward. Obey fisheye optics: only lines passing through the exact optical CENTER stay perfectly STRAIGHT; all OTHER straight edges BOW outward (barrel distortion), more so farther from center. Draw the single green center line dead straight and the surrounding brown lines curved outward. No text.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a fisheye wide-angle photo with straight and bowed lines? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel printing an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_center": "One line is drawn in bright GREEN across the middle of this picture. Imagine a perfectly straight ruler laid between the green line's two end points. Does the middle of the green line sit on that ruler, or is it pushed off it by several times the line's own thickness? Answer yes if the green line sits on the straight join (it is straight); answer no if its middle is clearly pushed off (it is bowed). Answer yes or no only.",
+    "q_edge": "Now look at the brown lines near the TOP and BOTTOM edges of this picture. For each of them, imagine a straight ruler laid between its two end points. Is the middle of those edge lines clearly pushed off the straight join by several times the line's own thickness? Answer yes if the edge lines are pushed off (bowed); answer no if they sit on the straight join (straight). Answer yes or no only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "center_straight_edge_bows",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "bright green line running right across this picture from one side to the other",
+          "expected_n": 1,
+          "out": "c_box"
+        },
+        {
+          "fail_if": ["c_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture, showing one line that runs across it from side to side. Name the shape that line makes, using one word from this list: straight (the line runs as one straight line between its two ends) or bowed (the middle of the line is pushed off to one side of a straight line drawn between its two ends). Write that one word and nothing else.",
+          "boxes": "c_box",
+          "pad": 0.03,
+          "out": "c_cr"
+        },
+        {
+          "fail_if": ["c_cr.unreadable"]
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["c_cr", "[[['straight'],'yes'],[['bowed'],'no']]"],
+          "out": "c_cr__mapped"
+        },
+        {
+          "get": ".answers[0]",
+          "value": "c_cr__mapped",
+          "out": "c"
+        },
+        {
+          "compare": "c",
+          "to": "yes",
+          "out": "fc"
+        },
+        {
+          "read": "boxes",
+          "target": "topmost line running right across the wall in this picture, close to its top edge, which is not the green one",
+          "expected_n": 1,
+          "out": "e_box"
+        },
+        {
+          "fail_if": ["e_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture, showing one line that runs across it from side to side. Name the shape that line makes, using one word from this list: straight (the line runs as one straight line between its two ends) or bowed (the middle of the line is pushed off to one side of a straight line drawn between its two ends). Write that one word and nothing else.",
+          "boxes": "e_box",
+          "pad": 0.03,
+          "out": "e_cr"
+        },
+        {
+          "fail_if": ["e_cr.unreadable"]
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["e_cr", "[[['straight'],'yes'],[['bowed'],'no']]"],
+          "out": "e_cr__mapped"
+        },
+        {
+          "read": "boxes",
+          "target": "lowest line running right across the wall in this picture, close to its bottom edge, which is not the green one",
+          "expected_n": 1,
+          "out": "e_bot_box"
+        },
+        {
+          "fail_if": ["e_bot_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture, showing one line that runs across it from side to side. Name the shape that line makes, using one word from this list: straight (the line runs as one straight line between its two ends) or bowed (the middle of the line is pushed off to one side of a straight line drawn between its two ends). Write that one word and nothing else.",
+          "boxes": "e_bot_box",
+          "pad": 0.03,
+          "out": "e_bot_cr"
+        },
+        {
+          "fail_if": ["e_bot_cr.unreadable"]
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["e_bot_cr", "[[['straight'],'yes'],[['bowed'],'no']]"],
+          "out": "e_bot_cr__mapped"
+        },
+        {
+          "run": "both_edges_bow",
+          "args": ["e_cr__mapped", "e_bot_cr__mapped"],
+          "out": "e"
+        },
+        {
+          "compare": "e",
+          "to": "yes",
+          "out": "fe"
+        },
+        {
+          "all": ["fc", "fe"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_center",
+      "weight": 0.6,
+      "not_scored": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "bright green line running right across this picture from one side to the other",
+          "expected_n": 1,
+          "out": "a0_box"
+        },
+        {
+          "fail_if": ["a0_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture, showing one line that runs across it from side to side. Imagine a perfectly straight ruler laid between that line's two ends. Look at the middle of the line: is the gap between the line and that straight ruler wider than the line's own thickness? Answer no if the gap is wider than the line's own thickness, and yes if it is not. Answer with exactly one word: yes or no.",
+          "boxes": "a0_box",
+          "pad": 0.03,
+          "out": "a0_cr"
+        },
+        {
+          "fail_if": ["a0_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a0_cr",
+          "out": "a0"
+        },
+        {
+          "compare": "a0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

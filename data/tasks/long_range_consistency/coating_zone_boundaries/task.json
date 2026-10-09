@@ -1,0 +1,84 @@
+{
+  "id": "coating_zone_boundaries",
+  "axis": "long_range_consistency",
+  "prompt": "The berth cannot be signed off until the coating inspector has an elevation of one steel tube pile on his board, so the design office prints one.\n\nThe elevation scale runs down the right-hand side from 0 at the foot to 12 at the head, lettered at every metre, and it is the only scale on the sheet. The tide work gives the water level at 8 and the mud line at 2, and both lines are drawn across the pile and lettered. The specification extract taped in the corner is the port's standard one: splash-zone primer is carried up to three metres above the water level, buried-zone primer starts four metres above the mud line, and atmospheric primer takes everything between. So the pile stands in three bands of colour, each lettered with its primer code.\n\nWhere the two joins between the colours finish up is exactly what the inspector has come to check, and I am not saying. Every figure on the elevation scale stays legible.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a tall pile or column painted in bands of different colours, with a numbered scale of figures running down one side of it? Answer yes or no only.",
+  "reference": {
+    "part1": "11",
+    "part2": "6"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the numbered scale of figures running down the right-hand side of the sheet. The pile beside it is painted in three bands of colour, one above the other, with two joins between the bands. What figure on that scale stands directly opposite the UPPER of those two joins? Answer with that number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the same numbered scale of figures running down the right-hand side of the sheet. What figure on that scale stands directly opposite the LOWER of the two joins between the bands of colour? Answer with that number only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

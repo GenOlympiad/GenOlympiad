@@ -1,0 +1,155 @@
+{
+  "id": "tide_four_times_order",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on illustration of FOUR harbour water-level staff gauges standing in a row, each a vertical pole with a blue water column rising up it, showing the tide height at four different clock times, left to right: 03:00, 07:00, 10:00 and 13:00. The tide is a normal semidiurnal (twice-daily) tide with HIGH WATER at 06:00, a mean level of 3.0 m and a range of plus-or-minus 2.0 m about the mean, following a smooth cosine over a 12 hour 25 minute cycle (so height = 3.0 + 2.0 x cosine of the fraction of the cycle since high water). Work out the water height at each of the four times and draw each gauge's blue water column at that height. Remember the tide RISES to the high at 06:00 then FALLS, so the heights are NOT simply increasing or decreasing with clock time -- the gauge nearest 06:00 (the 07:00 one) is the tallest, and the ordering turns. Keep all four poles the same width. No numbers, tick labels, rulers or text anywhere in the image.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict four vertical water-level gauges (poles with a blue water column) standing in a row. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene? A photo, illustration, schematic or clean diagram ALL count as yes. Answer NO only if it shows just a blank card with none of the requested subject, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "names": ["03:00", "07:00", "10:00", "13:00"],
+    "n": 4,
+    "heights_m": [3.105, 4.749, 2.124, 1.158],
+    "ratios": [0.654, 1.0, 0.447, 0.244],
+    "order_low_to_high": ["13:00", "10:00", "03:00", "07:00"],
+    "q_ratios": "Four vertical blue water columns stand in a row, seen straight on. Compare each column's height with the TALLEST of the four: the tallest counts as 1.0, and every other column counts as its height divided by the tallest. Answer with exactly four decimal numbers separated by single spaces, for the columns LEFT to RIGHT, and nothing else.",
+    "q_order": "Four water-level gauges stand in a row; from left to right they show the times 03:00, 07:00, 10:00 and 13:00. Order the four gauges from the LOWEST water column to the HIGHEST. Answer with the four times only, lowest first, separated by single spaces.",
+    "q_count": "How many water-level gauge poles are standing in the row? Whole number only.",
+    "enforce_notext": true,
+    "q_notext": "Is there any printed word or number anywhere in this image? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "height_ratios",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "BLUE water column filled up a water-level gauge pole (the blue-filled part only, not the bare pole above it)",
+          "expected_n": "reference.n",
+          "retries": 5,
+          "out": "wc"
+        },
+        {
+          "fail_if": ["wc.unreadable"]
+        },
+        {
+          "run": "gauge_heights",
+          "args": ["wc", "reference.n"],
+          "out": "rr"
+        },
+        {
+          "fail_if": ["rr.degenerate"]
+        },
+        {
+          "compare_sequence": "rr.ratios",
+          "to": "reference.ratios",
+          "core": 0.06,
+          "margin": 0.14,
+          "shape_frac": 1.0,
+          "shape_delta": 0.08,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "order_low_to_high",
+      "weight": 1.5,
+      "score": "s.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "BLUE water column filled up a water-level gauge pole (the blue-filled part only, not the bare pole above it)",
+          "expected_n": "reference.n",
+          "retries": 5,
+          "out": "wc"
+        },
+        {
+          "fail_if": ["wc.unreadable"]
+        },
+        {
+          "run": "order_score",
+          "args": ["wc", "reference.names", "reference.order_low_to_high"],
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one upright gauge pole standing in the row, with its blue water column rising up it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_r"
+        },
+        {
+          "fail_if": ["box_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole upright gauge pole with its blue water column, standing clear of its neighbours, rather than plain background or only part of a pole? Answer yes or no only.",
+          "boxes": "box_r",
+          "out": "crop_r"
+        },
+        {
+          "fail_if": ["crop_r.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_r"],
+          "out": "cnt_r"
+        },
+        {
+          "compare_band": "cnt_r.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

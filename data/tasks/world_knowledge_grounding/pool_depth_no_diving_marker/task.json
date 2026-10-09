@@ -1,0 +1,86 @@
+{
+  "id": "pool_depth_no_diving_marker",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A leisure centre has to sign the poolside off before the doors open, so the long side of the pool is photographed from the far wall while the water is still and the hall is empty, and the frame goes into the opening check.\n\nThe board at the poolside gives the pool as 21 coping tiles long, numbered 1 at the shallow wall through to 21 at the deep wall, one tile to a metre. The same board gives the water as 1.0 metre deep at the shallow wall and 3.0 metres at the deep wall, with the floor falling evenly between them. The bylaw extract framed beside the board says a no-diving sign must be fixed on every coping tile where the water is 1.5 metres deep or shallower. Tile numbers and wall depth figures are painted large in dark tile on white, and no swimmer is in the hall.\n\nWhere the signs stop is what the board does not say.",
+  "difficulty": "s1",
+  "easy_question": "Is this a photograph of the long side of an indoor swimming pool showing numbered coping tiles and painted depth figures along the wall? Answer yes or no only.",
+  "reference": {
+    "part1": "run_ends_at_tile_six",
+    "part2": "6"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the number painted on the last coping tile that carries a no-diving sign, counting from the shallow wall, and say which tile that is. Answer with one of: the last tile carrying a sign is tile 6; the last tile carrying a sign is tile 11; the last tile carrying a sign is tile 21.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coping tiles carrying a no-diving sign along the poolside",
+          "out": "r_part2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part2.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

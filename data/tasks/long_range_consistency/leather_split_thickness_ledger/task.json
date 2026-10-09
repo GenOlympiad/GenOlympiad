@@ -1,0 +1,84 @@
+{
+  "id": "leather_split_thickness_ledger",
+  "axis": "long_range_consistency",
+  "prompt": "The splitter cannot pass the hide to the finishing room until the layers have been gauged in front of the works foreman, so the bench is shot with all three still in the gauges.\n\nA cowhide taken off the band knife lies opened out on a tannery bench in three layers, each with a printed use tag laid on it that reads FACE, LINING or SECOND. Three bench gauges of the dial type stand along the back, each with one of the three layers drawn into its anvil, and each dial is graduated in millimetres. A works card hangs on the wall above the bench. It gives the hide before splitting at 3.6 millimetres, books the shaving loss at 0.4 millimetres, and books the lining layer at 0.9 millimetres and the second layer at 0.5 millimetres. The card also has it that the layer put to face work is always the stoutest of the three.\n\nWhere the third dial has come to rest is what the card does not book.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a tannery bench with a cowhide opened out in three split layers under printed use tags and three dial gauges standing along the back of the bench? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "biggest_at_face"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the graduated dial on the gauge holding the layer whose use tag reads FACE, and give what it shows in millimetres.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "1.7", "1.9"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the three graduated dials along the back of the bench and at the use tag on the layer drawn into each. Answer with one of: the biggest number is beside the tag reading FACE; the biggest number is beside the tag reading LINING; the biggest number is beside the tag reading SECOND.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

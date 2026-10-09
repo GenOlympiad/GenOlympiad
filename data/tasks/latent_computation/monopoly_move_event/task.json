@@ -1,0 +1,190 @@
+{
+  "id": "monopoly_move_event",
+  "axis": "latent_computation",
+  "prompt": "A board-game rules illustration shows a 40-square loop board (squares numbered 0 to 39 clockwise). Square number 30 is the 'GO TO JAIL' corner, and JAIL is square number 10. MY token starts on square 0 (GO). I take four turns, moving my token forward clockwise by the dice total each turn: first 7, then 9, then 8, then 6 squares. Here is the special rule: if a move ENDS exactly on square 30 (Go To Jail), the token is immediately sent to square 10 (Jail) for the rest of that move. Work the four moves forward, applying the Go-To-Jail rule, and render the board's FINAL state with MY token placed on its final square. Do NOT print the dice numbers or the final square number anywhere on the board.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show board-game rules illustration of a 40-square loop with a token placed on its final square after four moves including a Go-To-Jail teleport? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "final": 10,
+    "q_form": "Look at this image. Is it a square loop board-game with numbered squares and a game token placed on one square? Answer ONLY 'yes' or 'no'.",
+    "q_pos": "Read ONLY the number of the square that MY token is sitting on in this board illustration. Report the printed square number the token occupies; do NOT play out any moves yourself. Output only digits.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "tgt_token": "my game token standing on one of the numbered squares of the board",
+    "found_token": "game token on a board",
+    "q_token_square": "This is a close-up cut out of a bigger picture of a board game. A single game token is standing on one of the numbered squares. What number is printed on the square the token is standing on? Answer with digits only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "final_square",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.tgt_token",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "tb"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_token_square",
+          "boxes": "tb",
+          "pad": 0.9,
+          "out": "tcr"
+        },
+        {
+          "fail_if": ["tcr.unreadable"]
+        },
+        {
+          "run": "landing_square",
+          "args": ["tcr"],
+          "out": "sq"
+        },
+        {
+          "fail_if": ["sq.no_read"]
+        },
+        {
+          "const": "sq.n",
+          "out": "fp"
+        },
+        {
+          "compare_tolerance": "fp",
+          "to": "reference.final",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_one_token",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.tgt_token",
+          "sweep": true,
+          "votes": 3,
+          "out": "tb"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "run": "one_token_framed",
+          "args": ["tb"],
+          "out": "one"
+        },
+        {
+          "const": "one.s",
+          "out": "s"
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_board_40_squares",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is the board a 40-square loop with a 'GO TO JAIL' corner and a 'JAIL' square drawn? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_dice_numbers",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Are the dice numbers or the final square number printed anywhere on the board? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

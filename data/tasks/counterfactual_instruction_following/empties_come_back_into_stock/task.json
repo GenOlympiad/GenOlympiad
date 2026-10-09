@@ -1,0 +1,84 @@
+{
+  "id": "empties_come_back_into_stock",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The brewery's container clerk must close the keg book before the dray goes out, so the store is photographed with the ledger and the fleet plate in frame.\n\nThe floor is painted into three bays, each with its own stencilled board: full kegs in stock, empties in stock, and kegs ready to go out. Every keg carries its yard number on the belly. The ledger on the wall gives a marker figure for each of those three states, and a stamped plate beside it puts the whole fleet at ninety kegs. The rule card under the ledger says a keg coming back empty is entered again on the stock side, never booked out as sold, and that the three figures must come to the fleet figure. Today's dray sheet names the kegs that came back, K12, K17, K21 and K30, and notes the empty bay stood clear at opening.\n\nWhat the three figures come to, and where those kegs stand, is what the sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a keg store with painted floor bays, a wall ledger and a stamped fleet plate in the same frame? Answer yes or no only.",
+  "reference": {
+    "part1": "4",
+    "part2": "empties_in_stock_bay"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Count the kegs standing in the bay whose board reads EMPTIES IN STOCK. Write the number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the keg that carries the yard number K21 and say which bay it stands in. Answer with one of: it stands in the bay whose board reads EMPTIES IN STOCK; it stands in the bay whose board reads KEGS READY TO GO OUT; it stands in the bay whose board reads FULL KEGS IN STOCK.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

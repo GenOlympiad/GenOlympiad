@@ -1,0 +1,237 @@
+{
+  "id": "ice_melt_level",
+  "axis": "latent_computation",
+  "prompt": "A clean two-panel science-classroom demonstration illustration, side by side, of the SAME drinking glass. Draw a thin dark tick mark on the glass rim marking the starting water level. LEFT panel labelled 'BEFORE': the glass is filled with water exactly to the brim tick, with several ice cubes FLOATING in it. RIGHT panel labelled 'AFTER': the very same glass after all the ice has completely melted. Render the after-glass following the real physics of floating ice (Archimedes' principle): a floating ice cube displaces its own weight of water, so when it melts the water level stays EXACTLY THE SAME -- the after water sits right at the brim tick, the glass does NOT overflow and the level does NOT drop. Show the after water level level with the brim mark. No numbers, no extra text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two-panel before/after science-class illustration of one glass of floating ice melting, with a brim tick line? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "after_level": "same",
+    "q_after": "Look ONLY at the glass on the RIGHT side of this image. It has a short dark tick mark on each side of its top rim marking a reference level. Judging PURELY by what is drawn -- ignore any physics or what you think should happen -- where is the top surface of the blue water in that right-hand glass relative to those rim tick marks? Answer with exactly one word: 'above' if the water rises above the ticks or spills over the top, 'same' if the water surface is right at the tick marks, or 'below' if the water surface is clearly lower than the tick marks. Report only what you SEE in the picture.",
+    "q_same_glass": "This image has a glass on the LEFT and a glass on the RIGHT. Look ONLY at the two glass containers themselves (ignore the water and ice inside). Choose the single option that best matches what is drawn: (a) the LEFT and RIGHT glasses are the SAME glass -- the same shape, the same width, and the same rim markings, or (b) the two glasses are visibly different (a different shape, a different width, or different markings). Answer with the single letter a or b only.",
+    "q_ice_contrast": "This image has a glass on the LEFT and a glass on the RIGHT. Choose the single option that best matches what is drawn: (a) the LEFT glass clearly contains floating ice cubes and the RIGHT glass contains no ice at all, or (b) otherwise (the left glass has no ice, or the right glass still has ice, or both). Answer with the single letter a or b only.",
+    "n_panels": 2,
+    "left_label": "BEFORE"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "after_level_unchanged",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "drinking glass from the right-hand panel of this two-panel picture, with the water inside it and the dark tick mark on its rim",
+          "expected_n": 1,
+          "out": "a_box"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut showing one drinking glass. There is a short dark tick mark on the rim of this glass. Judging PURELY by what is drawn -- ignore any physics and ignore what you think should happen -- where is the top surface of the water in this glass relative to that tick mark? Answer with exactly one word: 'above' if the water rises above the tick mark or spills over the top, 'same' if the water surface is right at the tick mark, or 'below' if the water surface is clearly lower than the tick mark. Report only what you SEE in the picture.",
+          "boxes": "a_box",
+          "pad": 0.15,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare": "a",
+          "to": "reference.after_level",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "panel_consistency",
+      "weight": 2.0,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "drinking glass",
+          "expected_n": "reference.n_panels",
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "g_box"
+        },
+        {
+          "fail_if": ["g_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this glass have ice cubes in it? Answer yes or no only.",
+          "boxes": "g_box",
+          "pad": 0.1,
+          "out": "ic_cr"
+        },
+        {
+          "fail_if": ["ic_cr.unreadable"]
+        },
+        {
+          "run": "union_glass_boxes",
+          "args": ["g_box"],
+          "out": "sg_box"
+        },
+        {
+          "fail_if": ["sg_box.degenerate"]
+        },
+        {
+          "read_crop": "This is a close-up cut showing a drinking glass on the LEFT and a drinking glass on the RIGHT. Look ONLY at the two glass containers themselves (ignore the water and ice inside). Choose the single option that best matches what is drawn: (a) the LEFT and RIGHT glasses are the SAME glass -- the same shape, the same width, and the same rim markings, or (b) the two glasses are visibly different (a different shape, a different width, or different markings). Answer with the single letter a or b only.",
+          "boxes": "sg_box",
+          "pad": 0.1,
+          "out": "sg_cr"
+        },
+        {
+          "fail_if": ["sg_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "sg_cr",
+          "out": "sg"
+        },
+        {
+          "run": "level_and_ice_score",
+          "args": ["sg", "ic_cr"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_panels",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one panel of the side-by-side illustration, holding one drinking glass and its label -- ONE box per panel, each box holding one whole drinking glass from above its rim down below its base together with the word printed as that panel's label. No box may hold two glasses, and no box may hold only part of a glass or bare background alone.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole panel of the illustration, with one complete drinking glass inside it, rather than plain background or only part of a panel? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_panels",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_left_panel_label",
+      "weight": 0.5,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "left-hand panel of this side-by-side picture, the one holding the glass on the left",
+          "expected_n": 1,
+          "out": "s_box"
+        },
+        {
+          "fail_if": ["s_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut showing one half of a side-by-side picture. If a word is printed in this cut-out as a heading or a label for this half, write down just that word and nothing else. If no word at all is printed here, answer NONE.",
+          "boxes": "s_box",
+          "pad": 0.05,
+          "out": "s_cr"
+        },
+        {
+          "fail_if": ["s_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "s_cr",
+          "out": "s"
+        },
+        {
+          "compare": "s",
+          "to": "reference.left_label",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_before_ice_floating",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "In the left-hand panel of this side-by-side picture, are several ice cubes shown FLOATING in the glass with water filled to the brim tick? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_brim_tick_present",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is a thin dark tick mark drawn on the glass rim marking the starting water level (visible in both panels)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

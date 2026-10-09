@@ -1,0 +1,154 @@
+{
+  "id": "spot_uv_plate_subset",
+  "axis": "long_range_consistency",
+  "prompt": "Finishing wants one photograph off the bench before the machine is made ready, showing the printed wrap and the varnish plate for it side by side, because that is the check that stops a plate going on press wrong.\n\nOn the bench, laid flat under the lamp:\n\n  - the printed wrap for a hardback, creased with two fold lines so that it reads as back cover, spine and front cover. On it are a circular press device near the top of the front cover, a cut-out photograph of a fountain pen which runs from the front cover across the front fold and onto the spine, a block of jacket copy on the back cover, a barcode in the bottom corner of the back cover, and the imprint's name at the foot of the spine;\n  - beside it, the varnish plate for the same wrap: same size, same way up, black where the varnish will be laid and clear everywhere else;\n  - a loupe, and the docket clipped to the bench rail.\n\nThe docket asks for varnish on two things only: the circular press device, and the photograph of the pen. The jacket copy, the barcode and the imprint's name are to be left matt.\n\nOne more rule comes from the material rather than from the docket, and the bench knows it by heart: cured varnish cracks if it is carried over a crease, so no varnished area is ever taken across a fold line.\n\nWhat the plate ends up carrying is exactly what this photograph is for and I am not describing it. Photograph the bench from above with both the wrap and the plate flat in the frame, close enough that the plate can be read against the wrap. Add nothing to the photograph and write nothing on the plate: no caption, no outline drawn in by hand, no note of which elements were asked for.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed sheet laid flat on a bench with a second sheet beside it that is black in some places and clear in others. A photograph, a rendering or a scan of one all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "edges_expected": "outlines",
+    "back_expected": "clear",
+    "fold_expected": "strip",
+    "piece_count": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_plate_carries_the_outlines_of_the_two_commissioned_elements_and_leaves_the_rest_clear",
+      "weight": 2.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the sheet on the bench that is black in places and clear elsewhere",
+          "out": "pl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pl_r.unreadable"]
+        },
+        {
+          "read_crop": "Look at the edges of the black areas in this cut-out. Are those edges the outlines of a round device and of a pen, or are the black areas plain rectangles and panels. Answer with the word outlines or the word rectangles.",
+          "boxes": "pl_r",
+          "pad": 0.05,
+          "out": "pl_s",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pl_s.unreadable"]
+        },
+        {
+          "read_crop": "This sheet is a book wrap divided into three panels side by side. One of those panels is the BACK COVER -- the panel carrying the jacket copy and the barcode. Is that panel entirely clear, or is there black on it? Answer with one word: clear if there is no black on that panel at all, or black if there is any black on it.",
+          "boxes": "pl_r",
+          "pad": 0.05,
+          "out": "pl_c",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pl_c.unreadable"]
+        },
+        {
+          "run": "check_varnish_plate",
+          "args": ["pl_s", "pl_c", "reference.edges_expected", "reference.back_expected"],
+          "out": "pl"
+        },
+        {
+          "compare": "pl.obs",
+          "to": "pl.exp",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_varnish_is_broken_at_the_fold_so_the_pen_comes_out_in_two_pieces",
+      "weight": 1.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the sheet on the bench that is black in places and clear elsewhere",
+          "out": "fd_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["fd_r.unreadable"]
+        },
+        {
+          "read_crop": "Write down every separate black shape on the sheet in this cut-out, each with a few plain words saying where it sits; a shape is separate when clear space runs all the way round it. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no black shape here, write the single word NONE.",
+          "boxes": "fd_r",
+          "pad": 0.05,
+          "out": "fd_n",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fd_n.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["fd_n", "empty_as='0'"],
+          "out": "fd_n__std"
+        },
+        {
+          "fail_if": ["fd_n__std.refused"]
+        },
+        {
+          "read_crop": "The wrap beside this sheet is creased in two places. Along the line where the front crease falls, does black run straight across the sheet, or is there a clear strip. Answer with the word across or the word strip.",
+          "boxes": "fd_r",
+          "pad": 0.05,
+          "out": "fd_g",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fd_g.unreadable"]
+        },
+        {
+          "run": "check_fold_break",
+          "args": ["fd_g", "fd_n__std", "reference.fold_expected", "reference.piece_count"],
+          "out": "fd"
+        },
+        {
+          "compare": "fd.obs",
+          "to": "fd.exp",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_was_written_on_the_plate_and_no_outline_was_drawn_in_by_hand",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "handwriting or a hand-drawn outline added on the clear sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "hw_r"
+        },
+        {
+          "fail_if": ["hw_r.unreadable"]
+        },
+        {
+          "compare": "hw_r.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

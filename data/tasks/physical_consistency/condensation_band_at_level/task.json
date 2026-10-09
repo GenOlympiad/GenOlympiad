@@ -1,0 +1,239 @@
+{
+  "id": "condensation_band_at_level",
+  "axis": "physical_consistency",
+  "prompt": "A photograph for a neighbourhood bar's summer drinks card, taken on the bar top in the middle of the afternoon.\n\nTwo identical straight-sided tumblers stand side by side on the polished bar, each on its own paper coaster. One is the drink being sold: iced barley tea poured over ice cubes straight from the fridge ten minutes ago, standing at about two thirds of the glass. The other is the jug water that has been out on the bar since opening, no ice in it, at whatever temperature the room is, standing at the same height as the other. Both are bare glass, no sleeve and no napkin round them.\n\nThe bar's little humidity card is propped up behind them with that afternoon's room readings on it: 32 C and 70 per cent relative humidity. The fridge label puts the barley tea at 4 C when it was poured.\n\nWhat the outside of each glass looks like after those ten minutes is for you to work out -- I am deliberately not telling you which glass does what, and I am not telling you how far up anything reaches. Do not print a temperature on either glass, an arrow, or any note anywhere in the frame: the only lettering anywhere is the two readings on the humidity card.\n\nBoth tumblers, both coasters and the card must be in the frame and sharp, and each glass must be large enough that the surface of the drink inside it and the outside of its wall can both be made out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two drinking glasses standing side by side on a bar top, each on its own paper mat? A photograph, an illustration or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel with none of that, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_tumblers": 2,
+    "iced_misting": "part",
+    "plain_misting": "none",
+    "band_top": "same",
+    "coaster_state": "soaked",
+    "room_c": 32,
+    "rh_pct": 70,
+    "drink_c": 4,
+    "dew_point_c": 26
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "misting_splits_the_two_tumblers",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the tumbler holding ice cubes on the bar top",
+          "out": "ic_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["ic_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one tumbler of drink. Is the outside of this glass beaded with water over its whole height, over only part of its height, or not at all? Answer with one word: whole, part, or none.",
+          "boxes": "ic_box",
+          "out": "ic_ext"
+        },
+        {
+          "fail_if": ["ic_ext.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the tumbler with no ice in it on the bar top",
+          "out": "pl_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["pl_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one tumbler of drink. Is the outside of this glass beaded with water over its whole height, over only part of its height, or not at all? Answer with one word: whole, part, or none.",
+          "boxes": "pl_box",
+          "out": "pl_ext"
+        },
+        {
+          "fail_if": ["pl_ext.unreadable"]
+        },
+        {
+          "run": "misting_split",
+          "args": ["ic_ext", "pl_ext"],
+          "out": "ms"
+        },
+        {
+          "compare": "ms.verdict",
+          "to": "split",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "band_top_meets_the_drink_surface",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the tumbler holding ice cubes on the bar top",
+          "out": "bt_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["bt_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one tumbler of cold drink. Compared with the surface of the drink inside the glass, does the beading on the outside of the glass end higher up, lower down, or at the same height? Answer with one word: higher, lower, or same.",
+          "boxes": "bt_box",
+          "out": "bt"
+        },
+        {
+          "fail_if": ["bt.unreadable"]
+        },
+        {
+          "compare": "bt.answers.0",
+          "to": "reference.band_top",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_tumbler_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a drinking tumbler standing on the bar top",
+          "out": "box_read",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole drinking tumbler, rather than bare bar top or only part of a glass? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_tumblers",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_iced_glass_has_ice",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the tumbler holding ice cubes on the bar top",
+          "out": "ii_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["ii_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ice cubes floating in the drink? Answer yes or no only.",
+          "boxes": "ii_box",
+          "out": "ii"
+        },
+        {
+          "fail_if": ["ii.unreadable"]
+        },
+        {
+          "compare": "ii.answers.0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_run_off_soaks_the_coaster",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the paper coaster under the tumbler holding ice cubes",
+          "out": "co_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["co_box.unreadable"]
+        },
+        {
+          "read_crop": "Is the paper in this cut-out soaked and darkened, or dry and pale? Answer with one word: soaked or dry.",
+          "boxes": "co_box",
+          "out": "co"
+        },
+        {
+          "fail_if": ["co.unreadable"]
+        },
+        {
+          "compare": "co.answers.0",
+          "to": "reference.coaster_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_written_note",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written temperature on a glass, an arrow, or a note about the misting",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

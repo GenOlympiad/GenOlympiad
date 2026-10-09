@@ -1,0 +1,84 @@
+{
+  "id": "the_written_amount_spells_what_the_lines_add_to",
+  "axis": "text_fidelity",
+  "prompt": "The payment run has to be signed before the post goes, so the cashier's desk is photographed with the supplier's invoice and the cheque lying side by side.\n\nA supplier invoice lies open on the desk. It carries four line items with the amounts 412.50, 96.00, 148.25 and 63.25 pounds, and prints a tax rate of 20 per cent at the foot; its own total box has been torn away at the corner. Beside it lies a printed company cheque, its payee line and date already filled in by machine, with an empty box for the amount in figures and an empty line above that box for the amount in words. The convention for setting out the words line is printed in small type across the cheque face. A stamp and a black pen rest on the blotter.\n\nWhat goes in that box and on that line is what the invoice no longer shows.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a supplier invoice and a printed company cheque lying side by side on a cashier's desk? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "words_give_the_total_with_tax"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the amount written in the figures box of the cheque and give it in pounds.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "860", "868"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the line of words above the figures box on the cheque and say what it reads. Answer with one of: the words line reads eight hundred and sixty-four pounds only; the words line reads seven hundred and twenty pounds only; the words line reads four hundred and twelve pounds and fifty pence.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

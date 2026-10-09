@@ -1,0 +1,176 @@
+{
+  "id": "count_chain_segments",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic top-down photo of a butcher's string of linked sausages lying on a wooden board. The string has been CUT through in exactly 8 places, so it is now separated into EXACTLY 9 distinct pieces -- each piece is an unbroken run of linked sausages, and there is a clear GAP at each cut where the string is severed. So counting the separate connected pieces gives EXACTLY 9 -- not 8, not 10 (remember 8 cuts make 9 pieces). The pieces are laid out with visible gaps between them, no piece touching another. No text, no numerals.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a single length of sausage links / rope lying on a surface that has been cut in several places, splitting it into separate pieces; count the number of separate pieces? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 9,
+    "breaks": 8,
+    "q": "A single string of linked sausages has been cut in several places, breaking it into separate PIECES. How many separate connected pieces of sausage-string are there now (each unbroken run of links joined together counts as one piece)? Answer with the integer number of separate pieces only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This picture should show these countable objects: a single length of sausage links / rope lying on a surface that has been cut in several places, splitting it into separate pieces; count the number of separate pieces. Look at the individual objects being counted. Is each one a separate connected piece of the linked-sausage string, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them visible as its own separate individual (allowing for the intended overlaps/stacking the scene describes), rather than merged into one indistinct blob? Answer yes if each intended object can be told apart, no if they merge into an uncountable mass. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "unbroken run of linked sausages with bare board at both of its ends",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_cnt"
+        },
+        {
+          "fail_if": ["box_cnt.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole run of sausages joined end to end, with empty board beyond each end of the run, rather than only part of a run or two separate runs together? Answer yes or no only.",
+          "boxes": "box_cnt",
+          "out": "crop_cnt"
+        },
+        {
+          "fail_if": ["crop_cnt.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_cnt"],
+          "out": "cnt_cnt"
+        },
+        {
+          "compare_band": "cnt_cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "premise_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show a string of linked sausages that has been cut into several separate pieces with clear gaps between the pieces? Answer yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_objform",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a clump where several separate pieces of the sausage string run together so the separate pieces cannot be told apart",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g"
+        },
+        {
+          "fail_if": ["sweep_g.unreadable"]
+        },
+        {
+          "compare": "sweep_g.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a separate connected piece of the linked-sausage string",
+  "count_total": "reference.n"
+}

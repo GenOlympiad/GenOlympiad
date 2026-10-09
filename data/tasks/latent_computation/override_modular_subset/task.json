@@ -1,0 +1,201 @@
+{
+  "id": "override_modular_subset",
+  "axis": "latent_computation",
+  "prompt": "A straight-on photograph of a row of exactly 6 identical roadside mailboxes mounted side by side on one wooden rail, photographed level so all six are visible. Each box has a large painted number on its front and a little RED SIGNAL FLAG on its side which is either raised upright or folded flat down. The boxes are NOT numbered consecutively: reading from left to right the six numbers are 12, 16, 21, 26, 32, 40.\n\nThe postman's rule, which the picture must show: the little red flag is RAISED UPRIGHT on every mailbox WHOSE PAINTED NUMBER DIVIDES EXACTLY BY FOUR, and folded FLAT DOWN on every other box. Check each number yourself — I am deliberately not telling you which boxes those are, and they are not evenly spaced along the row.\n\nA raised flag must stand clearly upright and a folded flag must lie plainly flat. All six numbers must be clearly legible. No other text anywhere.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a row of numbered roadside mailboxes, some with the little red flag raised. Ignoring artistic quality and ignoring WHICH ones are marked, does the image DEPICT that? Answer NO only if it is blank or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "na": 6,
+    "expa": ["12 FLAG", "16 FLAG", "21 PLAIN", "26 PLAIN", "32 FLAG", "40 FLAG"],
+    "exp_lines": ["12", "16", "21", "26", "32", "40"],
+    "q_verbatim": "This is one horizontal strip cut out of a larger picture. Write out every line of printed, painted, chalked or written text you can see IN THIS STRIP -- including text on boards, signs, placards, plates, labels and stickers. Copy each line exactly as it appears, character by character. Do NOT correct spelling, arithmetic or anything that looks wrong, and do not leave any line out. If a line is only partly visible at the top or bottom edge, copy the part you can see. If this strip has no text in it at all, answer NONE. Separate the lines with spaces.",
+    "count_noun": "a numbered mailbox",
+    "count_target": "mailbox in the row",
+    "q_item_confirm": "This is a close-up cut out of a bigger picture of a row of mailboxes. Does this cut-out show exactly ONE whole mailbox -- one single mailbox with a large number painted on the front of it, not two of them side by side and not just a piece of one? Answer yes or no only.",
+    "q_item_num": "This is a close-up cut out of a bigger picture. It shows one mailbox. What is the number painted on this mailbox? Answer with that number and nothing else. If you cannot see a number on it, answer NONE.",
+    "q_item_mark": "This is a close-up cut out of a bigger picture. It shows one mailbox. Is this mailbox's little red signal flag raised upright, or is it folded flat down against the side? Answer with one word only: FLAG if the flag is raised upright, or PLAIN if the flag is folded flat down."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "override_count",
+      "weight": 8.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "{gt.count_target}",
+          "votes": 3,
+          "out": "drb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["drb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_confirm",
+          "boxes": "drb",
+          "pad": 0.04,
+          "out": "drc"
+        },
+        {
+          "fail_if": ["drc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_num",
+          "boxes": "drb",
+          "pad": 0.04,
+          "out": "drn"
+        },
+        {
+          "fail_if": ["drn.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_mark",
+          "boxes": "drb",
+          "pad": 0.04,
+          "out": "drk"
+        },
+        {
+          "fail_if": ["drk.unreadable"]
+        },
+        {
+          "run": "door_slots",
+          "args": ["drb", "drc", "drn", "drk", "reference"],
+          "out": "ds"
+        },
+        {
+          "run": "score_slots",
+          "args": ["[ds.slots]", "[reference.expa]", "['eq']"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "binding_agreement",
+      "weight": 1.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "{gt.count_target}",
+          "votes": 3,
+          "out": "drb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["drb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_confirm",
+          "boxes": "drb",
+          "pad": 0.04,
+          "out": "drc"
+        },
+        {
+          "fail_if": ["drc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_num",
+          "boxes": "drb",
+          "pad": 0.04,
+          "out": "drn"
+        },
+        {
+          "fail_if": ["drn.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_item_mark",
+          "boxes": "drb",
+          "pad": 0.04,
+          "out": "drk"
+        },
+        {
+          "fail_if": ["drk.unreadable"]
+        },
+        {
+          "run": "door_slots",
+          "args": ["drb", "drc", "drn", "drk", "reference"],
+          "out": "ds"
+        },
+        {
+          "run": "score_slots",
+          "args": ["[ds.slots]", "[reference.expa]", "['eq']"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "data_present",
+      "weight": 2.0,
+      "pass_at": 0.8,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read_crop": "reference.q_verbatim",
+          "boxes": [
+            [0, 0, 420, 1000]
+          ],
+          "votes": 1,
+          "pad": 0.0,
+          "out": "b1"
+        },
+        {
+          "read_crop": "reference.q_verbatim",
+          "boxes": [
+            [290, 0, 710, 1000]
+          ],
+          "votes": 1,
+          "pad": 0.0,
+          "out": "b2"
+        },
+        {
+          "read_crop": "reference.q_verbatim",
+          "boxes": [
+            [580, 0, 1000, 1000]
+          ],
+          "votes": 1,
+          "pad": 0.0,
+          "out": "b3"
+        },
+        {
+          "run": "page_line_coverage",
+          "args": ["reference.exp_lines", "b1", "b2", "b3"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a metal locker door",
+    "s2": "a roadside mailbox"
+  },
+  "aspect_ratio": "3:2"
+}

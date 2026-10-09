@@ -1,0 +1,49 @@
+{
+  "id": "invented_chess_start",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Please draw the white back rank (rank 1) of a chess board as a horizontal strip of eight squares labelled a to b to c ... to h from left to right, with the squares in their normal alternating light/dark colours (the a-file square dark, b-file light, and so on). Title it 'Chess Variant Card — 'Mirror Royalty' Setup'.\n\nIMPORTANT VARIANT RULE (print it on the card): in this chess variant the WHITE QUEEN starts on a DARK square and the WHITE KING starts on a LIGHT square — the MIRROR of the usual rule where the queen starts on her own colour (d1, a light square). Do NOT use the standard opening placement.\n\nPlace the WHITE QUEEN on the c-file square (a dark square) and the WHITE KING on the f-file square (a light square). Draw a clear white queen piece (a crown) on the c square and a clear white king piece (a cross-topped crown) on the f square, and label each file a..h beneath its square. Keep all text in English.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a row of chess-board squares (a back rank) with file letters a to h and a white queen and white king piece placed on it. Never mind how well it is drawn, or which square each piece is on. Does the image DEPICT a row of labelled chess squares with a king and queen piece? A photo, render or clean diagram all count as yes. Answer NO only if it is blank or unrelated. Answer yes or no only.",
+  "reference": {
+    "file": "c"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "queen_file",
+      "weight": 5.0,
+      "steps": [
+        {
+          "ask": "This shows a chess back rank (a row of squares labelled a to h left to right) with a white QUEEN piece (a crown, marked Q) and a white KING piece (a cross-topped crown, marked K). The card prints a VARIANT rule where the queen may sit on a dark square. Read the FILE (the column letter a to h, printed beneath each square) of the square the white QUEEN is standing on. Do NOT assume the queen is on the standard d-file; read the file directly under the queen. Answer with just the single file letter (a to h).",
+          "out": "ans"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "file_matches_reference",
+          "args": ["ans", "reference.file"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "id": "egg_candling_aircell_float",
+  "axis": "physical_consistency",
+  "prompt": "This morning's self-check sheet is clipped to the inspection board over the grading bench of an egg grading room, and it is made up of three candling frames in a row above one side view of a glass of water. Photograph the board straight on under the room's cold overhead light, close enough that every stencil reads.\n\nThree eggs off the packing bench are on test today, 08 SEP. Each carries its own lay date stencilled on the shell, and the three dates are 19 AUG, 27 AUG and 04 SEP. Each candling frame holds one of those eggs against the candling lamp with its lay date turned to the camera and the depth of the air cell at the blunt end lettered in millimetres beside it. Below the frames, the same three eggs are together in one glass of water, seen from the side, each still with its lay date turned to the camera.\n\nThe grading room's two wall charts pin the rules, word for word. The first: 'The air cell is 2 mm deep on the day of lay and deepens by 0.25 mm for every day the egg is held.' The second: 'Float test, by days held. 0 to 7 days: the egg lies flat on the bottom. 8 to 16 days: it rests tilted with the blunt end raised. 17 days and over: it stands upright on its pointed end.'\n\nHow deep each air cell is and how each egg sits in the water you work out for yourself -- I am deliberately telling you neither. Nothing else belongs on the page: no wording and no figure anywhere that names an age in days or weeks, or a grade.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show three lit-through views of an egg in a row above a glass of water with eggs in it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "water_attitudes": "04sep lying, 19aug standing, 27aug tilted",
+    "air_cells": "04sep 3, 19aug 7, 27aug 5",
+    "n_date_stencils": 6,
+    "q_water_cert": "Does this cut-out show one whole egg inside the glass of water? Answer yes or no only.",
+    "q_date_copy": "This cut-out shows one egg with a lay date stencilled on it. Copy that date exactly as stencilled. If more than one egg is visible in this cut-out, read the one nearest the middle of it. Write only that date and nothing else.",
+    "q_attitude": "Is the egg in this cut-out lying flat, tilted with one end raised, or standing upright? Answer with one word: lying, tilted or standing.",
+    "q_frame_cert": "Does this cut-out show one egg held against the candling lamp? Answer yes or no only.",
+    "q_cell_copy": "Copy the air cell depth in millimetres lettered beside the egg in this cut-out. Write only the number.",
+    "q_stencil": "Does this cut-out show a date stencilled on an egg shell? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_egg_sits_in_the_water_the_way_its_own_date_allows",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an egg inside the glass of water on the page",
+          "sweep": true,
+          "out": "we_box"
+        },
+        {
+          "fail_if": ["we_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_water_cert",
+          "boxes": "we_box",
+          "pad": 0.3,
+          "out": "we_cert"
+        },
+        {
+          "fail_if": ["we_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_date_copy",
+          "boxes": "we_box",
+          "pad": 0.3,
+          "out": "we_date"
+        },
+        {
+          "fail_if": ["we_date.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_attitude",
+          "boxes": "we_box",
+          "pad": 0.3,
+          "out": "we_att"
+        },
+        {
+          "fail_if": ["we_att.unreadable"]
+        },
+        {
+          "run": "certified_egg_attitudes",
+          "args": ["we_cert", "we_date", "we_att"],
+          "out": "atts"
+        },
+        {
+          "compare_set": "atts.seq",
+          "to": "reference.water_attitudes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_air_cell_is_as_deep_as_its_own_date_makes_it",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an egg held against the candling lamp in a frame",
+          "sweep": true,
+          "out": "cf_box"
+        },
+        {
+          "fail_if": ["cf_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_frame_cert",
+          "boxes": "cf_box",
+          "pad": 0.3,
+          "out": "cf_cert"
+        },
+        {
+          "fail_if": ["cf_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_date_copy",
+          "boxes": "cf_box",
+          "pad": 0.3,
+          "out": "cf_date"
+        },
+        {
+          "fail_if": ["cf_date.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_cell_copy",
+          "boxes": "cf_box",
+          "pad": 0.3,
+          "out": "cf_mm"
+        },
+        {
+          "fail_if": ["cf_mm.unreadable"]
+        },
+        {
+          "run": "certified_aircell_depths",
+          "args": ["cf_cert", "cf_date", "cf_mm"],
+          "out": "cells"
+        },
+        {
+          "compare_set": "cells.seq",
+          "to": "reference.air_cells",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_every_egg_carries_its_date_on_both_carriers",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a lay date stencilled on an egg shell",
+          "sweep": true,
+          "out": "ds_box"
+        },
+        {
+          "fail_if": ["ds_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_stencil",
+          "boxes": "ds_box",
+          "pad": 0.3,
+          "out": "ds_cert"
+        },
+        {
+          "fail_if": ["ds_cert.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["ds_cert"],
+          "out": "ds_cnt"
+        },
+        {
+          "compare_band": "ds_cnt.n",
+          "to": "reference.n_date_stencils",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_age_or_grade_is_written_on_the_sheet",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "wording or a figure that names an age in days or weeks, or a grade",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "ag"
+        },
+        {
+          "fail_if": ["ag.unreadable"]
+        },
+        {
+          "compare": "ag.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

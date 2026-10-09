@@ -1,0 +1,274 @@
+{
+  "id": "logic_gate_symbol_output",
+  "axis": "symbolic_systems",
+  "prompt": "Render a clean, straight-on image of a printed LOGIC-GATE CIRCUIT SCHEMATIC (standard distinct gate symbols) next to its TRUTH TABLE.\n\nDraw a combinational logic circuit of THREE gates in series that computes output Y for:\n    Y = ((A AND B) XOR C) OR (NOT D)\nThe first gate combines A and B; its output feeds the second gate together with C; that gate's output feeds the third gate together with (NOT D). Use the standard distinct gate SHAPES (flat-backed D = AND, curved shield = OR, shield-with-extra-line = XOR, triangle+bubble = NOT). Bring the final output to a wire labelled Y.\n\nBeside the schematic, print the complete TRUTH TABLE for Y with one column per input (A B C D) and a final column headed Y. List ALL 16 input rows in standard binary counting order (all-0 at the top to all-1 at the bottom), and in the Y column write the correct 0 or 1 the circuit produces for each row. The Y column is what matters.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed three-gate logic circuit schematic beside its 16-row truth table with the output column filled in? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "hard_3stage": true,
+    "inputs": ["A", "B", "C", "D"],
+    "n": 4,
+    "n_rows": 16,
+    "out_col": [1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0],
+    "q_col": "This image contains a truth table with input columns (A B C D) and a final OUTPUT column headed Y. The rows are in binary counting order from all-0 at the top to all-1 at the bottom. Read ONLY the Y output column, top to bottom. Report it as 16 digits (each 0 or 1) separated by single spaces, in top-to-bottom row order. Output only the 16 digits and nothing else.",
+    "car_g1": "DSHAPE",
+    "car_gmid": "DOUBLE",
+    "car_g2": "SINGLE",
+    "q_car_g1_edge": "In the drawing on the LEFT of this picture, find the shape that the two wires labelled A and B run into. Ignore any small text written inside it. Look only at its BACK edge -- the left-hand edge, the side the wires enter from. Is that back edge a straight up-and-down line, or is it curved? Answer with exactly one word: STRAIGHT or CURVED.",
+    "q_car_g1_lines": "In the drawing on the LEFT of this picture, find the shape that the two wires labelled A and B run into. Ignore the wires and any small text. Look at the left-hand (back) edge of that shape. Sometimes there is an extra line drawn just outside that edge, parallel to it, like a second stroke shadowing the first. Is there such an extra parallel line, or is the back edge a single stroke? Answer with exactly one word: EXTRA or SINGLE.",
+    "q_car_gmid_edge": "In the drawing on the LEFT of this picture, find the MIDDLE one of the three shapes joined in a chain -- the shape that the wire labelled C runs into, sitting between the first shape and the last one. Ignore any small text written inside it. Look only at its BACK edge -- the left-hand edge, the side the wires enter from. Is that back edge a straight up-and-down line, or is it curved? Answer with exactly one word: STRAIGHT or CURVED.",
+    "q_car_gmid_lines": "In the drawing on the LEFT of this picture, find the MIDDLE one of the three shapes joined in a chain -- the shape that the wire labelled C runs into, sitting between the first shape and the last one. Ignore the wires and any small text. Look at the left-hand (back) edge of that shape. Sometimes there is an extra line drawn just outside that edge, parallel to it, like a second stroke shadowing the first. Is there such an extra parallel line, or is the back edge a single stroke? Answer with exactly one word: EXTRA or SINGLE.",
+    "q_car_g2_edge": "In the drawing on the LEFT of this picture, find the shape that the final output wire labelled Y comes out of. Ignore any small text written inside it. Look only at its BACK edge -- the left-hand edge, the side the wires enter from. Is that back edge a straight up-and-down line, or is it curved? Answer with exactly one word: STRAIGHT or CURVED.",
+    "q_car_g2_lines": "In the drawing on the LEFT of this picture, find the shape that the final output wire labelled Y comes out of. Ignore the wires and any small text. Look at the left-hand (back) edge of that shape. Sometimes there is an extra line drawn just outside that edge, parallel to it, like a second stroke shadowing the first. Is there such an extra parallel line, or is the back edge a single stroke? Answer with exactly one word: EXTRA or SINGLE."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "y_output_column",
+      "weight": 4.0,
+      "score": "col.frac",
+      "only_if": "reference.active_base",
+      "steps": [
+        {
+          "read_sequence": "reference.q_col",
+          "n": "reference.n_rows",
+          "digits_only": true,
+          "as_column": true,
+          "out": "vseq"
+        },
+        {
+          "read_crop": "Read out the truth table printed in this picture, row by row. Skip the header line, then for every data row copy the digits standing in that row from left to right -- the input columns first and then the value written in the final output column headed Y -- exactly as they are printed. Do not decide for yourself what the circuit should give, do not correct or complete a row, and do not leave a row out. Write one row per line, digits separated by single spaces, and write nothing else.",
+          "votes": 1,
+          "out": "r2"
+        },
+        {
+          "run": "score_output_column",
+          "args": ["vseq", "r2", "reference.out_col"],
+          "out": "col"
+        },
+        {
+          "fail_if": ["col.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "table_rows",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "only_if": "reference.active_base",
+      "steps": [
+        {
+          "read_number": "How many data rows (not counting the header row) does the truth table in this image have? Answer with the single integer only.",
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_band": "rd",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "carrier_glyphs",
+      "weight": 2.0,
+      "gate": true,
+      "only_if": "reference.active_base",
+      "steps": [
+        {
+          "ask": "reference.q_car_g1_edge",
+          "out": "cg1e"
+        },
+        {
+          "fail_if": ["cg1e.unreadable"]
+        },
+        {
+          "ask": "reference.q_car_g1_lines",
+          "out": "cg1l"
+        },
+        {
+          "fail_if": ["cg1l.unreadable"]
+        },
+        {
+          "run": "classify_symbol_outline",
+          "args": ["cg1e", "cg1l"],
+          "code": {
+            "inline": "code_d45709842058"
+          },
+          "out": "k1"
+        },
+        {
+          "compare": "k1",
+          "to": "reference.car_g1",
+          "out": "fg1"
+        },
+        {
+          "ask": "reference.q_car_g2_edge",
+          "out": "cg2e"
+        },
+        {
+          "fail_if": ["cg2e.unreadable"]
+        },
+        {
+          "ask": "reference.q_car_g2_lines",
+          "out": "cg2l"
+        },
+        {
+          "fail_if": ["cg2l.unreadable"]
+        },
+        {
+          "run": "classify_symbol_outline",
+          "args": ["cg2e", "cg2l"],
+          "out": "k2"
+        },
+        {
+          "compare": "k2",
+          "to": "reference.car_g2",
+          "out": "fg2"
+        },
+        {
+          "all": ["fg1", "fg2"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "carrier_glyphs_3stage",
+      "weight": 2.0,
+      "gate": true,
+      "only_if": "reference.hard_3stage",
+      "steps": [
+        {
+          "ask": "reference.q_car_g1_edge",
+          "out": "cg1e"
+        },
+        {
+          "fail_if": ["cg1e.unreadable"]
+        },
+        {
+          "ask": "reference.q_car_g1_lines",
+          "out": "cg1l"
+        },
+        {
+          "fail_if": ["cg1l.unreadable"]
+        },
+        {
+          "run": "classify_symbol_outline",
+          "args": ["cg1e", "cg1l"],
+          "code": {
+            "inline": "code_d45709842058"
+          },
+          "out": "k1"
+        },
+        {
+          "compare": "k1",
+          "to": "reference.car_g1",
+          "out": "fg1"
+        },
+        {
+          "ask": "reference.q_car_gmid_edge",
+          "out": "cgme"
+        },
+        {
+          "fail_if": ["cgme.unreadable"]
+        },
+        {
+          "ask": "reference.q_car_gmid_lines",
+          "out": "cgml"
+        },
+        {
+          "fail_if": ["cgml.unreadable"]
+        },
+        {
+          "run": "classify_symbol_outline",
+          "args": ["cgme", "cgml"],
+          "out": "km"
+        },
+        {
+          "compare": "km",
+          "to": "reference.car_gmid",
+          "out": "fgm"
+        },
+        {
+          "ask": "reference.q_car_g2_edge",
+          "out": "cg2e"
+        },
+        {
+          "fail_if": ["cg2e.unreadable"]
+        },
+        {
+          "ask": "reference.q_car_g2_lines",
+          "out": "cg2l"
+        },
+        {
+          "fail_if": ["cg2l.unreadable"]
+        },
+        {
+          "run": "classify_symbol_outline",
+          "args": ["cg2e", "cg2l"],
+          "out": "k2"
+        },
+        {
+          "compare": "k2",
+          "to": "reference.car_g2",
+          "out": "fg2"
+        },
+        {
+          "all": ["fg1", "fgm", "fg2"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "y_output_column_3stage",
+      "weight": 4.0,
+      "score": "col.frac",
+      "only_if": "reference.hard_3stage",
+      "steps": [
+        {
+          "read_sequence": "reference.q_col",
+          "n": "reference.n_rows",
+          "digits_only": true,
+          "as_column": true,
+          "out": "vseq"
+        },
+        {
+          "read_crop": "Read out the truth table printed in this picture, row by row. Skip the header line, then for every data row copy the digits standing in that row from left to right -- the input columns first and then the value written in the final output column headed Y -- exactly as they are printed. Do not decide for yourself what the circuit should give, do not correct or complete a row, and do not leave a row out. Write one row per line, digits separated by single spaces, and write nothing else.",
+          "votes": 1,
+          "out": "r2"
+        },
+        {
+          "run": "score_output_column",
+          "args": ["vseq", "r2", "reference.out_col"],
+          "out": "col"
+        },
+        {
+          "fail_if": ["col.no_read"]
+        }
+      ]
+    }
+  ]
+}

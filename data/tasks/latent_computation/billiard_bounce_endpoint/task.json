@@ -1,0 +1,164 @@
+{
+  "id": "billiard_bounce_endpoint",
+  "axis": "latent_computation",
+  "prompt": "A pool / billiards coaching diagram, drawn cleanly from directly above. A rectangular billiard table is 8 units wide and 5 units tall, with a POCKET at each of its four corners. A single ball sits on the LEFT rail, 2 units up from the bottom-left corner. It is struck (no spin) along a straight aim-line with slope 'go 2 units right for every 1 unit up' -- i.e. heading up and to the right. The ball rolls in a straight line and bounces off the rails with equal angles (angle in = angle out), losing no speed, until it drops into a corner pocket. It bounces off exactly TWO rails (cushions) before reaching a pocket. Draw the table from above with its four corner pockets, and draw the ball's full path as a straight-segment line from the start point, reflecting off the two cushions, ending exactly in the correct corner pocket. Mark the start point with a small solid white dot, and draw a clear bright-coloured RING (e.g. magenta) around the FINISHING corner pocket -- the single corner the path ends in. Do not ring any other corner. No text, no numbers, no grid.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn, and ignoring whether the details are right or wrong: does this picture show a rectangular billiard table drawn from directly above, with a pocket at each corner and a path line drawn across the table? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "W": 8,
+    "H": 5,
+    "pocket": "BL",
+    "bounces": 2,
+    "q_form": "Look at this image. Is it a top-down rectangular billiard table with pockets at the corners and a path line bouncing across it? Answer ONLY 'yes' or 'no'.",
+    "q_pocket": "On this billiard table, ONE corner pocket is circled with a clear HIGHLIGHTED RING (the finishing pocket). Report ONLY what is actually drawn in THIS image; do NOT trace the reflections yourself. Which corner has the highlighted ring drawn around its pocket? Answer with ONLY one of these exact labels: top-left, top-right, bottom-left, bottom-right.",
+    "pocket_count": 4.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "end_pocket",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_pocket",
+          "out": "ans"
+        },
+        {
+          "run": "corner_code",
+          "args": ["ans"],
+          "out": "read"
+        },
+        {
+          "run": "read_failed",
+          "args": ["read"],
+          "out": "read_bad"
+        },
+        {
+          "fail_if": ["read_bad"]
+        },
+        {
+          "compare": "read",
+          "to": "reference.pocket",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pocket_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one corner pocket drawn at a corner of the billiard table",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole pocket opening at a corner of the table rather than plain cloth or only a rail edge? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.pocket_count",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "one_ring",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a bright-coloured ring drawn around a corner pocket of the table",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 1,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "start_dot",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is the ball's start point marked with a small solid white dot on the left rail, with a straight-segment path drawn reflecting off the cushions? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

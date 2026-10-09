@@ -1,0 +1,84 @@
+{
+  "id": "riser_balance_far_end_temperature",
+  "axis": "long_range_consistency",
+  "prompt": "The block is being balanced this week, so the commissioning engineer shoots the whole riser up the stairwell before the next round of adjustment.\n\nOne riser feeds a cast iron radiator group on each of four landings of an old block. On every group's return pipe there is a balancing valve with the turns engraved round its cap, and beside it a five cell temperature strip with a number printed in each cell: 45, 50, 55, 60 and 65. The commissioning sheet taped to the wall by the ground floor group gives the flow temperature as 70 and the setting made at each landing: ground floor 1.0 turns, first floor 2.0, second floor 2.5, top floor 4.0. The wider a valve is opened, the more of the riser's water that group takes.\n\nWhat each strip shows at its own return is what the commissioning sheet does not give.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a heating riser up a stairwell with a radiator group on each landing? Answer yes or no only.",
+  "reference": {
+    "part1": "top_larger",
+    "part2": "all_different"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the temperature strip beside the ground floor group and the one beside the top floor group, each printed with its own row of numbers. Answer with one of: the darkened cell on the top floor strip carries the larger number of the two; the darkened cell on the ground floor strip carries the larger number of the two; the same printed number is darkened on both strips.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the temperature strips on all four landings and at which cell has darkened on each. Answer with one of: each of the four strips has a different cell darkened; all four strips have the same cell darkened; two of the strips have the same cell darkened and the other two are different.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

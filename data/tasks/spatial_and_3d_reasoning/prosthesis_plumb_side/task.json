@@ -1,0 +1,84 @@
+{
+  "id": "prosthesis_plumb_side",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The limb goes out to the rehabilitation centre this week, and nothing leaves this workshop until the bench set-up has been photographed for the file, so it is left clamped for one side-on frame.\n\nThe assembled above-knee limb hangs clamped in the alignment jig against a dark wall. The tower throws one thin bright vertical laser thread down the outer side of the limb, and it reads as one unbroken line. A small orange dot is stuck at the knee joint centre and a second at the ankle joint centre. The parts card taped to the jig column lists the socket, the knee unit, the tube and the foot shell, and prints the bench rule the workshop works to: standing on this limb, the wearer's knee has to hold itself straight without any effort from the wearer, and the shin has to carry the wearer on over the foot.\n\nWhere each dot lands against that thread is what the parts card does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show an artificial leg clamped upright in a workshop jig with a thin bright vertical line of laser light falling down its side and small coloured dots stuck on it? Answer yes or no only.",
+  "reference": {
+    "part1": "behind_the_thread",
+    "part2": "opposite_sides"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the orange dot on the knee unit and at the bright laser thread running down the limb. Answer with one of: the dot sits back from the thread, towards the calf; the dot sits out in front of the thread, towards the kneecap; the thread runs straight through the dot.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at both orange dots and at the bright laser thread running down the limb. Answer with one of: the two dots lie on opposite sides of the thread; the two dots lie on the same side of the thread; the thread passes through both dots.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "id": "lux_inverse_square_bench",
+  "axis": "physical_consistency",
+  "prompt": "A photograph from a lighting laboratory, the shot that goes into the calibration file after an inverse square check on the optical bench.\n\nOne small lamp stands at the end of the bench with nothing shading it. Two grey test cards stand further along the same bench, square on to the lamp, one of them 1.0 metre from the lamp and the other 2.0 metres, and a printed label at the foot of each card carries that card's own distance. In front of each card is a digital lux meter with its display turned towards the camera. The meter at the nearer card already reads 800 on its display; the meter at the further card is switched on but its reading has not been entered yet.\n\nThe photograph is filed as the record of the check, so the further display has to read what a meter at that distance really reads against 800 at the nearer one, and each card has to be lit the way a card at its own distance really is lit by one small lamp. What the second display reads, and how the two cards compare, is the laboratory's measurement -- I am deliberately not telling you the second reading and I am deliberately not telling you how the cards compare. No formula, no working and no note goes into the frame: apart from the two distance labels and the two displays, there is no text in the picture. Both meters, both cards and both labels are in the frame together and the displays are large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a bench with a lamp, two flat cards standing on it and a small display in front of each card? A photograph, a laboratory shot or a still life all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_meters": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_second_display_falls_by_the_inverse_square",
+      "weight": 2.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a digital meter display showing figures on the bench",
+          "sweep": true,
+          "out": "lx_r",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["lx_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the distance figure printed on the label at the foot of the card behind this display. Write digits and any decimal point only.",
+          "boxes": "lx_r",
+          "pad": 1.2,
+          "out": "lx_k"
+        },
+        {
+          "fail_if": ["lx_k.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure showing on this display. Write digits only, and write none if the display is blank.",
+          "boxes": "lx_r",
+          "pad": 0.3,
+          "out": "lx_q"
+        },
+        {
+          "fail_if": ["lx_q.unreadable"]
+        },
+        {
+          "run": "check_lux_readings",
+          "args": ["lx_k", "lx_q"],
+          "out": "lx_s"
+        },
+        {
+          "compare": "lx_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_further_card_is_lit_the_way_that_distance_lights_it",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a flat grey test card standing on the optical bench",
+          "sweep": true,
+          "out": "cd_r",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cd_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the distance figure printed on the label at the foot of this card. Write digits and any decimal point only.",
+          "boxes": "cd_r",
+          "pad": 0.6,
+          "out": "cd_k"
+        },
+        {
+          "fail_if": ["cd_k.unreadable"]
+        },
+        {
+          "read_crop": "Is the face of the card in this cut-out light or dark? Answer with one word: light or dark.",
+          "boxes": "cd_r",
+          "pad": 0.25,
+          "out": "cd_q"
+        },
+        {
+          "fail_if": ["cd_q.unreadable"]
+        },
+        {
+          "run": "check_target_tones",
+          "args": ["cd_k", "cd_q"],
+          "out": "cd_s"
+        },
+        {
+          "compare": "cd_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_meters_are_in_the_picture",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a digital meter display showing figures on the bench",
+          "sweep": true,
+          "out": "box_read",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole meter display, rather than part of one or more than one? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.3,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_meters",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_formula_was_placed_in_the_frame",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a formula, a line of working or a note placed in the frame",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

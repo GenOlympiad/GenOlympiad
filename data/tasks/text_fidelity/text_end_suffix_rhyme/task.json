@@ -1,0 +1,91 @@
+{
+  "id": "text_end_suffix_rhyme",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on photo of a printed verse card on cream stock, titled 'VERSE CARD - LONG ENDINGS', sub-heading 'Every line ends in -ation'. Print EXACTLY 12 numbered lines (1. to 12.), each at least FIVE words long.\n\nCRITICAL RHYME LAW: the LAST word of every line must end with the letters -ation (as in 'station'), and all twelve final words must be different from one another. Compose the lines yourself.\n\nBlack text on cream card, nothing else.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a printed verse sheet with numbered lines. Ignoring artistic quality and ignoring whether the wording is correct, does the image DEPICT that -- a printed page carrying a numbered list of text lines? A photo, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_lines": 12,
+    "suffix": "ation",
+    "min_words": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_crop": "This page carries a numbered list of written lines. Write those numbered lines out again, exactly as they are printed. Put each one on its own line, starting with the number it carries, then a full stop, then that line's words. Copy every word letter for letter, and keep each word's capital letters and small letters exactly as they are printed. Do not fix spelling, do not change the order of the words, do not add a word and do not leave one out. Leave out the title, any sub-heading, and any text that carries no number. Write out the list and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Look at every numbered line of text on this page and transcribe it word for word. Begin each transcribed line with its printed number followed by a full stop, then that line's words in the order they appear, with upper-case and lower-case letters exactly as printed. Reproduce anything that looks like a mistake just as it stands -- never correct it, complete it or tidy it up. Ignore the heading, the sub-heading and any line without a number. Output only the transcribed lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "score_line_endings",
+          "args": ["[t1, t2]", "reference.n_lines", "reference.suffix", "reference.min_words"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read_crop": "This page carries a numbered list of written lines. Write those numbered lines out again, exactly as they are printed. Put each one on its own line, starting with the number it carries, then a full stop, then that line's words. Copy every word letter for letter, and keep each word's capital letters and small letters exactly as they are printed. Do not fix spelling, do not change the order of the words, do not add a word and do not leave one out. Leave out the title, any sub-heading, and any text that carries no number. Write out the list and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Look at every numbered line of text on this page and transcribe it word for word. Begin each transcribed line with its printed number followed by a full stop, then that line's words in the order they appear, with upper-case and lower-case letters exactly as printed. Reproduce anything that looks like a mistake just as it stands -- never correct it, complete it or tidy it up. Ignore the heading, the sub-heading and any line without a number. Output only the transcribed lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "score_line_endings",
+          "args": ["[t1, t2]", "reference.n_lines", "reference.suffix", "reference.min_words"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

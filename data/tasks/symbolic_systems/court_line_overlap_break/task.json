@@ -1,0 +1,160 @@
+{
+  "id": "court_line_overlap_break",
+  "axis": "symbolic_systems",
+  "prompt": "A distribution centre is re-lined over the shutdown weekend, and the safety officer wants the four crossings photographed from the mezzanine before the racking goes back in.\n\nThree sets of markings run across this floor. A walkway for people on foot, an aisle for the trucks, and the outlines that show where each racking bay stands. The floor plan puts four crossings in this bay, and the safety officer has stuck a numbered inspection disc on the concrete beside each one:\n\n  disc 1   the walkway crosses the aisle\n  disc 2   the aisle crosses a bay outline\n  disc 3   the walkway crosses a bay outline\n  disc 4   the aisle crosses a bay outline\n\nThe site's marking standard is two sentences. Where two sets meet, the one with the higher standing runs through unbroken and the other is stopped short on both sides of it, so that anybody following a line can see at a glance which one gives way; the walkway stands above the aisle and the aisle above the bay outlines. And the gap left in the line that gives way is the same at every crossing on the floor, about as wide as the line itself, so that a gap is never mistaken for a worn patch.\n\nWhich line gives way at each crossing, and how it does it, is what the photograph is taken to record, and I am not saying. All four disc numbers stay legible from the mezzanine. No note about standing or priority is painted on any line.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a warehouse floor from above with painted lines running across it? A photograph or a scan of one both count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "crossing_plan": {
+      "1": ["walkway", "broken", "same"],
+      "2": ["aisle", "broken", "same"],
+      "3": ["walkway", "broken", "same"],
+      "4": ["aisle", "broken", "same"]
+    },
+    "disc_numbers": ["1", "2", "3", "4"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "at_each_crossing_the_line_with_the_higher_standing_runs_through_and_the_other_gives_way_by_the_same_gap",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered inspection disc stuck on the concrete floor together with the line crossing beside it",
+          "out": "cx_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["cx_r.unreadable"]
+        },
+        {
+          "read_crop": "What number is on the inspection disc in this cut-out? Answer with that number only.",
+          "boxes": "cx_r",
+          "pad": 0.3,
+          "out": "cx_n",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cx_n.unreadable"]
+        },
+        {
+          "read_crop": "At the crossing beside the disc in this cut-out, which marking runs through without a break: the walkway, the truck aisle, or a racking bay outline? Answer 'walkway', 'aisle' or 'outline'.",
+          "boxes": "cx_r",
+          "pad": 1.5,
+          "out": "cx_t",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cx_t.unreadable"]
+        },
+        {
+          "read_crop": "At the crossing beside the disc in this cut-out, is the other marking stopped short with a gap, or does it also run through without a break? Answer 'broken' or 'unbroken'.",
+          "boxes": "cx_r",
+          "pad": 1.5,
+          "out": "cx_b",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cx_b.unreadable"]
+        },
+        {
+          "read_crop": "At the crossing beside the disc in this cut-out, is the gap in the marking that stops short about as wide as that marking itself, or much wider than it? Answer 'same' or 'wider'.",
+          "boxes": "cx_r",
+          "pad": 1.5,
+          "out": "cx_g",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cx_g.unreadable"]
+        },
+        {
+          "run": "check_crossings",
+          "args": ["cx_n", "cx_t", "cx_b", "cx_g", "reference.crossing_plan"],
+          "out": "cx_x"
+        },
+        {
+          "compare_category": "cx_x.miss",
+          "to": 0,
+          "max_steps": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_floor_carries_the_four_numbered_inspection_discs_the_plan_lists",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered inspection disc stuck on the concrete floor",
+          "out": "ds_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["ds_r.unreadable"]
+        },
+        {
+          "read_crop": "What number is on the inspection disc in this cut-out? Answer with that number only.",
+          "boxes": "ds_r",
+          "pad": 0.3,
+          "out": "ds_n",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ds_n.unreadable"]
+        },
+        {
+          "run": "read_disc_labels",
+          "args": ["ds_n"],
+          "out": "ds_x"
+        },
+        {
+          "compare_set": "ds_x.seen",
+          "to": "reference.disc_numbers",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_note_about_standing_was_painted_on_any_floor_line",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a note about standing or priority painted on a floor line",
+          "out": "st_r",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["st_r.unreadable"]
+        },
+        {
+          "compare": "st_r.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

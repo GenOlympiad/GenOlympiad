@@ -1,0 +1,121 @@
+{
+  "id": "stock_shelf_restock",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photo of a single retail SHELF holding FOUR product slots side by side, numbered 1 to 4 from LEFT to right (the slot number printed under each slot). Each slot holds a vertical STACK of identical product boxes standing on the shelf; the number of boxes in a slot is its facing count. The shelf has a maximum capacity of 5 boxes per slot -- a slot can never hold more than 5 boxes.\n\nAt the start of the day the slots hold, from slot 1 to slot 4: 3, 5, 2, 4 boxes. During the day these stock events happen, in this exact order. 'Sell N' removes N boxes from that slot (a slot can go no lower than 0). 'Restock N' adds N boxes to that slot, but the slot is capped at 5 -- any boxes beyond 5 do not fit and are not added.\n  1. Sell slot 2, 3 facings.\n  2. Restock slot 3, 4 facings.\n  3. Sell slot 4, 1 facing.\n  4. Restock slot 1, 1 facing.\n  5. Sell slot 3, 2 facings.\n  6. Restock slot 2, 2 facings.\n\nWork out how many boxes remain in EACH of the four slots at the END of the day, then draw the shelf in that final state: for each slot, draw a vertical stack of exactly that many identical boxes standing on the shelf, with the slot numbers 1 to 4 under them. Respecting the cap of 5, no stack may be taller than 5 boxes. Do not print any count numbers, the event list, or any arithmetic on the shelf -- show the remaining stock only as the HEIGHT of each stack of boxes.",
+  "difficulty": "s2",
+  "easy_question": "This picture was supposed to show a retail shelf holding a number of product slots side by side, each slot a vertical stack of product boxes, with slot numbers printed underneath. Never mind how well it is drawn. Does the picture show a shelf of stacked product boxes in numbered slots? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      [4, 4, 3, 3]
+    ],
+    "n_slots": 4,
+    "has_tallest": false,
+    "q_grid": "the height of each of the 4 product slots read left to right (slot 1 first), giving for each slot the NUMBER of product boxes in its stack (count the boxes drawn standing in that slot)",
+    "q_nslots": "How many product slots (side-by-side stacks of boxes) are on the shelf? Give a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shelf_heights",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_grid": "reference.q_grid",
+          "rows": 1,
+          "cols": "reference.n_slots",
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "compare_grid": "cells.values",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tallest_slot",
+      "weight": 1.0,
+      "only_if": "reference.has_tallest",
+      "steps": [
+        {
+          "read_grid": "reference.q_grid",
+          "rows": 1,
+          "cols": "reference.n_slots",
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "run": "tallest_slot",
+          "args": ["cells"],
+          "out": "ts"
+        },
+        {
+          "compare": "ts",
+          "to": "reference.tallest",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_slot_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one upright stack of product boxes standing in its own numbered slot on the shelf",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_ns"
+        },
+        {
+          "fail_if": ["box_ns.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole upright stack of product boxes standing in a single slot, rather than bare shelf or only part of a stack? Answer yes or no only.",
+          "boxes": "box_ns",
+          "out": "crop_ns"
+        },
+        {
+          "fail_if": ["crop_ns.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_ns"],
+          "out": "cnt_ns"
+        },
+        {
+          "compare_band": "cnt_ns.n",
+          "to": "reference.n_slots",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

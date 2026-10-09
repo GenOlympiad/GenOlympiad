@@ -1,0 +1,84 @@
+{
+  "id": "radical_index_placement",
+  "axis": "symbolic_systems",
+  "prompt": "The index proof is back on the desk before the volume is plated, so the editor lays the marked-up slip beside the page and photographs the pair.\n\nThe proof page carries three columns, each headed by one radical printed large, and the slip fixes the order the columns run in: the water radical 氵 first, then the hand radical 扌, then the tree radical 木. Under each head the characters filed there are set one to a line, a small figure printed to the right of each. The slip lists the characters this page has to take: 汁, 泳, 材, 案, 扮, 扣. The rule printed at the foot of the slip is that a character is filed under its own radical, that the figure beside it counts what is left once that radical is taken away, and that a column runs in the order of those figures.\n\nWhich column each character has gone into, and what figure stands beside it, the slip does not settle.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a printed dictionary page with columns of Chinese characters set under large heading characters, and a marked-up slip of paper lying beside the page? Answer yes or no only.",
+  "reference": {
+    "part1": "rising",
+    "part2": "right_column"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the small figures printed beside the characters down the middle column, from the top of that column to the bottom. Answer with one of: the figures get larger as you go down the column; the figures get smaller as you go down the column; the figures run up and down with no settled order.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Find the character 案 on the proof page. Answer with one of: it is standing in the left-hand column; it is standing in the middle column; it is standing in the right-hand column; it is standing outside the three columns.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

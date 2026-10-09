@@ -1,0 +1,84 @@
+{
+  "id": "relay_setting_steps_down_through_the_ratio",
+  "axis": "long_range_consistency",
+  "prompt": "The protection team files a photograph of every cubicle it sets, so the relay, the panel meter, the inspection window and the setting sheet all fall into the one square-on shot.\n\nA 10 kV switchgear cubicle stands in a substation bay. A protection relay is let into the door and its screen carries the overcurrent setting on a line of its own, in amperes. Beside it a panel ammeter is let into the same door, the full-scale figure of its printed dial set in large type at the top of the dial face. Behind the inspection window the current transformer faces the glass; its nameplate prints the ratio taps 100/5, 200/5 and 400/5 alongside the 300/5 tap, which carries the solid mark for the tap in use. On the trolley below, the setting sheet gives the pickup current as 720 amperes. Protection is always set in secondary amperes, never in primary.\n\nWhat the screen reads, and what the dial reads, is what the setting sheet does not give.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a switchgear cubicle door with a relay screen and a panel meter above an inspection window, and paperwork on a trolley below it? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "300"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the overcurrent setting on the relay screen and give it in amperes.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "11.5", "12.5"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the full-scale figure set in large type at the top of the panel ammeter dial. Write the number only, with no unit after it.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

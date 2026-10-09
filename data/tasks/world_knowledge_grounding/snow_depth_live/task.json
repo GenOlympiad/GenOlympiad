@@ -1,0 +1,78 @@
+{
+  "id": "snow_depth_live",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A snow-report board at the base area of a ski resort in the Andes of Argentina during the July ski season, skiers and a chairlift behind it. Show the real snow conditions for Las Lenas on 2026-07-15 (the pinned date on this board). Design it as a resort snow-report sign: the resort name 'LAS LEÑAS' at the top, then in large clear numerals the current BASE SNOW DEPTH in centimetres for that day, plus 'cm' and the date. It is deep winter in the Southern Hemisphere, so the base is well over half a metre of snow -- print the REAL measured base depth in cm for that day (do NOT assume it is summer / bare ground; this is the Andes in July). One big legible depth number in centimetres, crisp lettering, no clutter over the number.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a Southern-Hemisphere ski resort base-area snow-report board in the July ski season? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "resort": "Las Lenas",
+    "lat": -35.15,
+    "lon": -70.08,
+    "date": "2026-07-15"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "snow_depth_cm",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big depth number printed in the middle of this snow-report board, right above the small letters cm",
+          "expected_n": 1,
+          "out": "a_box"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed board. One big number is printed in it. Write down just that number, digits only, and nothing else.",
+          "boxes": "a_box",
+          "pad": 0.25,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare_band": "a",
+          "to": "reference.snow.depth_cm",
+          "core": 8.0,
+          "margin": 8.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "run": "fetch_snow_depth",
+      "value": "gt",
+      "out": "snow"
+    }
+  ],
+  "grounding": "live"
+}

@@ -1,0 +1,84 @@
+{
+  "id": "section_arrow_sight_side",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The manifold goes to the drilling shop on Monday, so the detailer prints the sheet off and lays it flat on the plan chest to be checked before issue.\n\nThe plan view of a hydraulic manifold face carries four drilled holes, lettered P at the top left, Q at the top right, R at the bottom left and S at the bottom right. All four are 8 millimetres in bore and 25 millimetres deep. A cutting line lettered A-A runs across the face between the upper holes and the lower ones, with an arrowhead at each of its ends turned towards the bottom edge of the sheet. A second cutting line lettered B-B runs down the face between the left hand holes and the right hand ones, its arrowheads turned towards the left hand edge. Two panels are boxed off down the right of the sheet, titled SECTION A-A and SECTION B-B.\n\nWhich lettered holes belong in each of those panels is what the sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show an engineering print laid flat, with a lettered plan view of a drilled block on it and titled section panels boxed off at the side? Answer yes or no only.",
+  "reference": {
+    "part1": "lower_pair_rs",
+    "part2": "left_pair_pr"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the panel titled SECTION A-A down the right of the sheet. Answer with one of: it shows the holes lettered R and S; it shows the holes lettered P and Q; it shows all four holes P, Q, R and S.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Now look at the panel titled SECTION B-B down the right of the sheet. Answer with one of: it shows the holes lettered P and R; it shows the holes lettered Q and S; it shows all four holes P, Q, R and S.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

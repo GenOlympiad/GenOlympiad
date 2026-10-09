@@ -1,0 +1,195 @@
+{
+  "id": "felling_notch_hinge_lay",
+  "axis": "world_knowledge_grounding",
+  "prompt": "One stump in the foreground is what the audit is about: the ranger works a coupe a week and photographs a stump from each one for the certification file.\n\nA recently felled patch of conifer, brash on the ground, a fresh stump filling the foreground with all three of its cut faces in view. The work card lies open on the ground beside it, weighted with a stone. Printed on the card is the plan for this tree: the extraction rack, the escape route, and a heavy arrow for the lay that was agreed before the saw went in. The stem this stump came off is lying where it fell, further back in the same frame.\n\nDirectional felling is three cuts and they lock each other. The open face of the notch is cut on the side the tree is to go, so the tree folds into it. Behind the notch a band of uncut wood is left right across the stem and is never cut through, because that band is the hinge that steers the fall, and it runs square across the direction of the lay. The felling cut comes in from the back and finishes above the floor of the notch, never level with it and never below, so that the stem cannot slide backwards off the stump.\n\nWhat the three cut faces look like is the whole point of the frame and I am deliberately not telling you. Nothing is added to the picture: no angles chalked on the stump, no arrows on the ground, no annotation. Keep the whole top of the stump and the work card easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a fresh tree stump on felled ground with a work card lying beside it? A photograph, an illustration or a printed panel all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "faces": ["1", "2", "3"],
+    "n_units": 3,
+    "n_facts": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_notch_faces_the_agreed_lay_the_hinge_runs_square_across_it_and_the_back_cut_is_high",
+      "weight": 3.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the fresh stump in the foreground with its cut faces",
+          "out": "fs_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["fs_r.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out itself as a clock face: 12 is towards its top edge, 3 towards its right edge, 6 towards its bottom edge and 9 towards its left edge. Which hour does the open face of the notch point toward? Answer with a single number from 1 to 12.",
+          "boxes": "fs_r",
+          "pad": 0.2,
+          "out": "fs_n",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fs_n.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out itself as a clock face: 12 is towards its top edge, 3 towards its right edge, 6 towards its bottom edge and 9 towards its left edge. Which hour does the band of uncut wood left across the stump run toward? Answer with a single number from 1 to 12.",
+          "boxes": "fs_r",
+          "pad": 0.2,
+          "out": "fs_h",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fs_h.unreadable"]
+        },
+        {
+          "read_crop": "Where does the cut made from the back of the stump finish? Answer with one of: above the notch floor, level with the notch floor, below the notch floor.",
+          "boxes": "fs_r",
+          "pad": 0.2,
+          "out": "fs_b",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fs_b.unreadable"]
+        },
+        {
+          "read_crop": "Look at the band of uncut wood left across the top of the stump in this cut-out. Name what that band looks like, using one word from this list: continuous (it runs the whole way across the stump with no break in it) or broken (a cut goes through it somewhere along its length). Write that one word and nothing else.",
+          "boxes": "fs_r",
+          "pad": 0.2,
+          "out": "fs_u",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fs_u.unreadable"]
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["fs_u", "[[['continuous'],'yes'],[['broken'],'no']]"],
+          "out": "fs_u__mapped"
+        },
+        {
+          "read": "boxes",
+          "target": "the work card lying open on the ground",
+          "out": "fc_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["fc_r.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out itself as a clock face: 12 is towards its top edge, 3 towards its right edge, 6 towards its bottom edge and 9 towards its left edge. Which hour does the heavy arrow printed on this card point toward? Answer with a single number from 1 to 12.",
+          "boxes": "fc_r",
+          "pad": 0.2,
+          "out": "fc_l",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fc_l.unreadable"]
+        },
+        {
+          "run": "check_felling_cuts",
+          "args": ["fs_n", "fs_h", "fc_l", "fs_b", "fs_u__mapped"],
+          "out": "fl_s"
+        },
+        {
+          "compare_compass": "fl_s.obs",
+          "to": "fl_s.exp",
+          "core": 22.5,
+          "margin": 44.0,
+          "out": "f_geom"
+        },
+        {
+          "compare_band": "fl_s.facts",
+          "to": "reference.n_facts",
+          "core_abs": 0.499,
+          "margin_abs": 1.5,
+          "out": "f_fact"
+        },
+        {
+          "minimum": ["f_geom", "f_fact"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_stump_shows_its_three_cut_faces",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the fresh stump in the foreground with its cut faces",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Answer yes only if this cut-out holds ONE complete sawn face on the top of the stump, with the whole face inside the picture. Answer no if it holds two or more sawn faces, or only part of one, or none at all. Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.2,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_chalked_angle_ground_arrow_or_annotation_was_added_to_the_picture",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a chalked angle, an arrow drawn on the ground or an annotation added to the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

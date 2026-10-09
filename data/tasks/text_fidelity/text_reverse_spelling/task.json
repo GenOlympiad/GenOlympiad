@@ -1,0 +1,197 @@
+{
+  "id": "text_reverse_spelling",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on scan of a printed visitor worksheet from a museum of codes and ciphers -- off-white leaflet paper, deep violet monospaced type, heading left-aligned. Titled 'BACKWARDS WORD SHEET' with the small line 'Sixteen long words'. Print EXACTLY 16 numbered lines (1. to 16.). Line k prints its given word, an equals sign, then that word respelled backwards:\n1. playgrounds = ?\n2. thunderclaps = ?\n3. workmanship = ?\n4. lumberjacks = ?\n5. campgrounds = ?\n6. hydroplanes = ?\n7. playwrights = ?\n8. backgrounds = ?\n9. dumbwaiters = ?\n10. housewarming = ?\n11. cabinetwork = ?\n12. brainstormed = ?\n13. blacksmiths = ?\n14. handkerchief = ?\n15. thumbscrews = ?\n16. chalkboards = ?\n\nCRITICAL SPELLING LAW: replace every ? with the same word RESPELLED BACKWARDS -- the same letters read from the END to the START, printed as ordinary readable letters (nothing mirrored or flipped). These words run to eleven, twelve and thirteen letters, so work each one out one letter at a time from the last letter to the first, and check the length matches before you print it.\n\nNothing else on the sheet.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a printed drill sheet with numbered word pairs. Ignoring artistic quality and ignoring whether the wording is correct, does the image DEPICT that -- a printed page carrying a numbered list of text lines? A photo, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_lines": 16,
+    "sources": [
+      "playgrounds",
+      "thunderclaps",
+      "workmanship",
+      "lumberjacks",
+      "campgrounds",
+      "hydroplanes",
+      "playwrights",
+      "backgrounds",
+      "dumbwaiters",
+      "housewarming",
+      "cabinetwork",
+      "brainstormed",
+      "blacksmiths",
+      "handkerchief",
+      "thumbscrews",
+      "chalkboards"
+    ],
+    "spelled": 1,
+    "q_read": "This image is a printed worksheet with 16 numbered rows. On every row there is a word, then an equals sign, then a second printed string of letters. For each of the 16 rows, output the row number, a colon, and then the letters of that SECOND string separated by single spaces. Report the letters in PRINTED ORDER: begin with the letter nearest the equals sign, which is the LEFTMOST letter of that string, and move RIGHT one letter at a time to the last letter. Copy each letter exactly as it stands. Do not re-order the letters, do not rearrange them into a word, and do not add or drop a letter. Separate one row from the next with a single pipe character |. Output only the 16 rows, nothing else.",
+    "evidence": true,
+    "q_evidence": "This picture shows a printed page with hollow rectangles drawn on it, and a written list beside it. Is every hollow rectangle drawn around a numbered line of the page's own numbered list -- rather than around the heading, or sitting in blank paper with no text inside it? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "only_if": "reference.ocr_law",
+      "steps": [
+        {
+          "read_crop": "Copy out all the printed text on this page, exactly as it appears. Put each printed line on its own line of your answer, and keep that line's leading number (for example '3.') at the start of it. Copy every word letter for letter, even if a word looks misspelled, made-up or wrong -- do not correct it, complete it, translate it or improve it. Add nothing of your own and leave nothing out.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Transcribe this page word for word. Write one line of your answer for each line of printed text, beginning with that line's printed number. Spell every word exactly as it stands on the page, including any word that looks like nonsense or a mistake; never repair it. No commentary, no summary, no extra lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "read_crop": "Read the printed page out line by line and copy each line exactly as printed. When a line starts with a number that is PRINTED on the page, keep that printed number at the front of it; when a line carries no printed number -- a heading, for instance -- copy it with no number in front. Never number the lines of your answer yourself and never add a number the page does not print. Spell every word exactly as printed. Print what is on the paper, not what you think it should say. Output nothing else.",
+          "votes": 1,
+          "out": "t3"
+        },
+        {
+          "read_sequence": "This image is a printed worksheet whose numbered rows each carry a word, an equals sign, and a second printed string of letters. For each numbered row, output the row number, a colon, the first printed word of that row, a space, then the SECOND printed string SPELLED OUT one letter at a time with the letters separated by spaces -- read those letters strictly left to right off the paper, and never reorder them into something pronounceable. Separate the rows with the | character. Output nothing else.",
+          "n": "reference.n_lines",
+          "delimiter": "|",
+          "retries": 2,
+          "out": "v4"
+        },
+        {
+          "run": "score_reversed_words",
+          "args": ["_passes_sp(v4, t1, t2, t3)", "reference.n_lines", "reference.sources"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "only_if": "reference.ocr_law",
+      "steps": [
+        {
+          "read_crop": "Copy out all the printed text on this page, exactly as it appears. Put each printed line on its own line of your answer, and keep that line's leading number (for example '3.') at the start of it. Copy every word letter for letter, even if a word looks misspelled, made-up or wrong -- do not correct it, complete it, translate it or improve it. Add nothing of your own and leave nothing out.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Transcribe this page word for word. Write one line of your answer for each line of printed text, beginning with that line's printed number. Spell every word exactly as it stands on the page, including any word that looks like nonsense or a mistake; never repair it. No commentary, no summary, no extra lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "read_crop": "Read the printed page out line by line and copy each line exactly as printed. When a line starts with a number that is PRINTED on the page, keep that printed number at the front of it; when a line carries no printed number -- a heading, for instance -- copy it with no number in front. Never number the lines of your answer yourself and never add a number the page does not print. Spell every word exactly as printed. Print what is on the paper, not what you think it should say. Output nothing else.",
+          "votes": 1,
+          "out": "t3"
+        },
+        {
+          "read_sequence": "This image is a printed worksheet whose numbered rows each carry a word, an equals sign, and a second printed string of letters. For each numbered row, output the row number, a colon, the first printed word of that row, a space, then the SECOND printed string SPELLED OUT one letter at a time with the letters separated by spaces -- read those letters strictly left to right off the paper, and never reorder them into something pronounceable. Separate the rows with the | character. Output nothing else.",
+          "n": "reference.n_lines",
+          "delimiter": "|",
+          "retries": 2,
+          "out": "v4"
+        },
+        {
+          "run": "score_reversed_words",
+          "args": ["_passes_sp(v4, t1, t2, t3)", "reference.n_lines", "reference.sources"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds_spelled",
+      "weight": 1.0,
+      "only_if": "reference.spelled",
+      "steps": [
+        {
+          "read_sequence": "reference.q_read",
+          "n": "reference.n_lines",
+          "delimiter": "|",
+          "retries": 2,
+          "out": "v"
+        },
+        {
+          "fail_if": ["v.unreadable"]
+        },
+        {
+          "run": "score_reversed_spelled",
+          "args": ["v", "reference.n_lines", "reference.sources"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share_spelled",
+      "weight": 0.3,
+      "only_if": "reference.spelled",
+      "steps": [
+        {
+          "read_sequence": "reference.q_read",
+          "n": "reference.n_lines",
+          "delimiter": "|",
+          "retries": 2,
+          "out": "v"
+        },
+        {
+          "fail_if": ["v.unreadable"]
+        },
+        {
+          "run": "score_reversed_spelled",
+          "args": ["v", "reference.n_lines", "reference.sources"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

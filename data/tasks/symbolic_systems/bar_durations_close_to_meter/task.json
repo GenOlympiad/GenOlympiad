@@ -1,0 +1,84 @@
+{
+  "id": "bar_durations_close_to_meter",
+  "axis": "symbolic_systems",
+  "prompt": "The orchestra library needs this wind part on the stands before the morning call, so the copyist inks the passage at his desk and photographs the finished staff for the file.\n\nThe copy docket lying on the paper gives the job in full. The span to be inked is bars 12 to 15 of the second oboe part; the bar number goes in pencil above the staff at every barline, and the run closes on a double bar. The head of the staff carries the signature 6/8. The passage is a running figure in which every bar opens on a dotted quarter note and then goes on in eighth notes to the barline, with nothing tied over a barline and no dot anywhere but on that opening note. The copyist works in black ink on cream manuscript paper, the camera square over the desk.\n\nHow many symbols each bar takes, and how their tails are joined, is what the docket does not spell out.",
+  "difficulty": "s1",
+  "easy_question": "Does this show a sheet of hand-inked music with a written docket lying beside it on a desk? Answer yes or no only.",
+  "reference": {
+    "part1": "4",
+    "part2": "single_beam"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Count the round note-heads inked inside the bar numbered 12. Write the number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "In the bar numbered 12, look at the notes that carry tails. Answer with one of: the tailed notes run under a single beam; the tailed notes are split under two separate beams; each tailed note carries its own hooked tail.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

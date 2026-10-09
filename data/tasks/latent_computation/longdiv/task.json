@@ -1,0 +1,204 @@
+{
+  "id": "longdiv",
+  "axis": "latent_computation",
+  "prompt": "A sharp, well-lit real PHOTOGRAPH of a maths EXAM answer sheet: lined A4 paper on a wooden desk, on which a student has fully worked out, by hand in blue ballpoint pen, the LONG DIVISION of 539399277432911 / 5104 in the standard schoolbook layout: the dividend 539399277432911 inside the long-division bracket, the divisor 5104 to its left, the multi-digit QUOTIENT written on top of the bracket, and ALL the interior steps below -- each step multiplies a quotient digit by 5104, writes that product under the bracket, subtracts it, and brings down the next dividend digit, leaving a running remainder, all the way to the final remainder at the bottom. Every digit neat and legible, and EVERY line of the arithmetic CORRECT. A real photograph with real paper texture and pen ink, no digital overlay, no watermark, no extra captions.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn, and never mind whether the numbers written on it are right or wrong. Does this picture show a hand-worked long division on a lined A4 maths exam sheet photographed on a desk? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "quotient": 105681676613,
+    "final_remainder": 159,
+    "rr0": 289,
+    "rr1": 3479,
+    "rr2": 4168,
+    "divisor": 5104,
+    "dividend": 539399277432911
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "quotient",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "This exam sheet shows the LONG DIVISION worked out in the standard schoolbook layout. Read the QUOTIENT -- the whole number written ABOVE the horizontal bar / division bracket -- digit by digit from left to right, including any internal 0 digits. Answer with ONLY that whole number (digits only, no commas).",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare": "read",
+          "to": "reference.quotient",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "final_remainder",
+      "weight": 2.0,
+      "steps": [
+        {
+          "ask": "On this long-division exam sheet, read the FINAL REMAINDER -- the last number left at the very BOTTOM after the last subtraction, before nothing more can be brought down. Answer with ONLY that number (digits only, no commas).",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.final_remainder",
+          "core_abs": 0.999,
+          "margin_abs": 3,
+          "margin_rel": 0.01,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "running_rem_0",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "On this long-division exam sheet, find the 1st remainder line WRITTEN under the bracket after an actual product is subtracted. SKIP any dividend position where the quotient digit is 0 and no subtraction line appears (leading OR interior). Reading top to bottom, read that 1st written remainder. Digits only, no commas.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.rr0",
+          "core_abs": 0.999,
+          "margin_abs": 3,
+          "margin_rel": 0.01,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "running_rem_1",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "On this long-division exam sheet, find the 2nd remainder line WRITTEN under the bracket after an actual product is subtracted. SKIP any dividend position where the quotient digit is 0 and no subtraction line appears (leading OR interior). Reading top to bottom, read that 2nd written remainder. Digits only, no commas.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.rr1",
+          "core_abs": 0.999,
+          "margin_abs": 3,
+          "margin_rel": 0.01,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "running_rem_2",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "On this long-division exam sheet, find the 3rd remainder line WRITTEN under the bracket after an actual product is subtracted. SKIP any dividend position where the quotient digit is 0 and no subtraction line appears (leading OR interior). Reading top to bottom, read that 3rd written remainder. Digits only, no commas.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.rr2",
+          "core_abs": 0.999,
+          "margin_abs": 3,
+          "margin_rel": 0.01,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_divisor",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the DIVISOR written to the LEFT of the long-division bracket. Report the printed digits as a whole number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.divisor",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_dividend",
+      "weight": 0.75,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the DIVIDEND written INSIDE the long-division bracket (the number being divided). Report the printed digits as a whole number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.dividend",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "schoolbook_layout",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is the work laid out in standard schoolbook long-division form (divisor left of bracket, dividend inside, quotient on top of the bracket, subtraction steps below)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

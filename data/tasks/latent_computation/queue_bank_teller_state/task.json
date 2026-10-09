@@ -1,0 +1,140 @@
+{
+  "id": "queue_bank_teller_state",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photograph of the customer waiting line inside a bank branch: a single snake / rope queue on the floor with numbered floor spots and a row of teller windows at the head of the line. Each waiting customer wears a solid single-colour COAT (colours used are RED, BLUE, GREEN, YELLOW, ORANGE, PURPLE). When the branch opens the rope line is EMPTY. Then the following events happen ONE AFTER ANOTHER, strictly in this order:\n\n    1. a new customer wearing a GREEN coat arrives and joins the BACK of the line\n    2. a new customer wearing a RED coat arrives and joins the BACK of the line\n    3. the teller calls the NEXT customer, and the person at the FRONT of the line leaves the rope to be served at a window\n    4. a new customer wearing a YELLOW coat arrives and joins the BACK of the line\n    5. a new customer wearing a PURPLE coat arrives and joins the BACK of the line\n    6. a new customer wearing a BLUE coat arrives and joins the BACK of the line\n    7. the teller calls the NEXT customer, and the person at the FRONT of the line leaves the rope to be served at a window\n\nThe line is a first-come first-served queue: an arriving customer always stands at the very BACK, and only the customer at the very FRONT ever leaves (to a teller window). Work through the events in order and render the FINAL state of the rope line once all the events above have happened: show each remaining customer standing on a numbered floor spot, in the correct order from the FRONT of the line (nearest the teller windows) to the BACK. Spot number 1 is the FRONT. Draw one coated person per occupied spot, with the coat colour clearly visible, and no empty spots between people. Do NOT write the list of coat colours, the number of people, or any of these event steps anywhere in the image — the answer must be shown only by which coloured coat stands in which position along the line.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show the customer waiting line inside a bank branch: a snake / rope queue with numbered floor spots and teller windows, with waiting customers wearing solid single-colour coats? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      ["yellow"],
+      ["purple"],
+      ["blue"]
+    ],
+    "colors": ["YELLOW", "PURPLE", "BLUE"],
+    "front": "YELLOW",
+    "front_lc": "yellow",
+    "n_people": 3,
+    "q_front": "Look at the bank rope queue. What colour COAT is worn by the customer standing at the very FRONT of the line -- the one nearest the teller windows (floor spot number 1)? Answer with the single colour word only (one of: red, blue, green, yellow, orange, purple).",
+    "q_people": "Write down every customer standing in the bank rope queue, working from the front of the line to the back, each with a few plain words saying where they stand. Take only the people on the floor spots in the line. Separate one item from the next with a semicolon; write no running total and nothing else. If nobody is standing in the line, write the single word NONE."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "front_and_length",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_front",
+          "out": "fr"
+        },
+        {
+          "ask": "reference.q_people",
+          "out": "np"
+        },
+        {
+          "fail_if": ["fr.unreadable", "np.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["np", "empty_as='0'"],
+          "out": "np__std"
+        },
+        {
+          "fail_if": ["np__std.refused"]
+        },
+        {
+          "compare": "fr",
+          "to": "reference.front_lc",
+          "out": "ff"
+        },
+        {
+          "compare_band": "np__std.n",
+          "to": "reference.n_people",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "fl"
+        },
+        {
+          "all": ["ff", "fl"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "queue_grid",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read_sequence": "List the coat colour worn by each customer standing in the bank rope line, reading the customers strictly in order from the FRONT of the line (the floor spot marked number 1, nearest the teller windows) to the BACK of the line. Give exactly one lowercase colour word per customer (each is one of: red, blue, green, yellow, orange, purple), separated by spaces, front customer first. Report only the colour words in that order and nothing else.",
+          "n": "reference.n_people",
+          "as_column": true,
+          "out": "seq"
+        },
+        {
+          "fail_if": ["seq.unreadable", "seq.empty"]
+        },
+        {
+          "compare_grid": "seq",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_people_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one customer standing on a floor spot in the rope queue",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole person standing in the line wearing a solid single-colour coat, rather than empty floor or only part of a person? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n_people",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

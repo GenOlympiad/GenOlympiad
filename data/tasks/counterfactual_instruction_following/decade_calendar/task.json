@@ -1,0 +1,50 @@
+{
+  "id": "decade_calendar",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean, straight-on CALENDAR PAGE for a month called Nivose, filling most of the frame.\n\nIMPORTANT CALENDAR RULE: in this calendar a week is TEN days long (a 'decade'), NOT seven days. The page must be a grid with exactly TEN day-columns, and the column headings from left to right are: Primidi, Duodi, Tridi, Quartidi, Quintidi, Sextidi, Septidi, Octidi, Nonidi, Decadi. The dates run 1, 2, 3, ... filling the grid left to right and wrapping to a NEW ROW every TEN days (so date 1 is under Primidi, date 10 is under Decadi, date 11 starts the next row under Primidi again, and so on). The month has 30 days.\n\nDraw all 30 dates in the ten-column grid and draw a single red RING around the date 13. Do NOT use a seven-day week and do not add any caption naming the day — the answer is which of the ten day-columns the ringed date 13 falls under.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a CALENDAR PAGE: a grid of dates with named day-columns at the top. Ignoring the number of columns and ignoring artistic quality, does the image actually DEPICT a calendar grid (a table of dates with day-name column headings)? A photo, illustration or clean graphic all count as yes. Answer NO only if it is a blank panel, an unrelated object, or just prints a day-name with no grid. Answer yes or no only.",
+  "reference": {
+    "ring_date": 13,
+    "col_name": "Tridi"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ring_column_heading",
+      "weight": 5.0,
+      "steps": [
+        {
+          "ask": "This is a calendar grid with named day-columns across the top and a single date circled with a red ring. Look straight UP the column that the red-ringed date sits in and read the day-name HEADING at the top of that same column. Answer with just that one column heading word, exactly as printed.",
+          "out": "vr"
+        },
+        {
+          "fail_if": ["vr.unreadable"]
+        },
+        {
+          "run": "column_heading_matches",
+          "args": ["vr", "reference.col_name"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

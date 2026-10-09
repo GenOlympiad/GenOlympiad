@@ -1,0 +1,84 @@
+{
+  "id": "gallery_hang_centre_line",
+  "axis": "long_range_consistency",
+  "prompt": "The hanging team has to be off the wall before the private view, so the row is shot straight on with the cards still taped in place.\n\nA gallery wall carries four framed works of unequal height hung in a single row. A pale blue line has been snapped along the wall with its height above the floor, 1500 millimetres, printed beside it at intervals. The gallery hangs every show so that the middle of each work sits on that snapped line. The works carry catalogue numbers 41 to 44, and their frames measure 600, 900, 1200 and 1500 millimetres from bottom edge to top edge in that order. Each work hangs on a taut wire that pulls down 80 millimetres below the top edge of its own frame. A small card taped at the lower right of each frame gives that frame's hook height in millimetres.\n\nWhat each of those cards says, and how the row reads across, is not written on the wall.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a gallery wall with four framed works of different heights hung in one row and a small card taped beside each frame? Answer yes or no only.",
+  "reference": {
+    "part1": "through_every_middle",
+    "part2": "in_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look along the row of four framed works and follow the pale blue line printed with heights as it goes across them. Answer with one of: the line passes through the middle of every work; the line passes through the middle of some works and not others; the line passes below all four works.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the hook height printed on the small card taped beside the framed work numbered 43, and give it in millimetres.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part2", "1990", "2050"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

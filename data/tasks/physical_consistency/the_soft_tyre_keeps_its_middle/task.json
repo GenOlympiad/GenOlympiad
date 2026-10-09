@@ -1,0 +1,98 @@
+{
+  "id": "the_soft_tyre_keeps_its_middle",
+  "axis": "physical_consistency",
+  "prompt": "The fleet's tyre check goes on the vehicle file before the annual test, so the pair on the axle is photographed as found, gauges left in place.\n\nA panel van stands over the pit on its tyre check. Both tyres on the axle are the same size and pattern. A dial pressure gauge graduated in bar is screwed onto each valve and left there with its face to the camera, and a small tread gauge stands in the tread of each tyre at the inner shoulder, in the middle and at the outer shoulder. The placard on the driver's door pillar is in the frame and prints in bar the cold pressure the van is to run at. The near-side tyre was found more than a bar below that placard figure and the off-side more than a bar above it, and neither has been touched since.\n\nWhat all those gauges have come to read is what the check sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show both tyres on a van axle with a dial pressure gauge on each valve and tread gauges standing in each tread? Answer yes or no only.",
+  "reference": {
+    "part1": "middle_stands_proudest",
+    "part2": "neither_matches"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the three tread gauges standing in the near-side tyre and say how their figures stand. Answer with one of: the gauge in the middle of the tread reads a larger figure than the gauges at the two shoulders; the three gauges read the same figure; the gauges at the two shoulders read larger figures than the gauge in the middle of the tread.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the pressure the needle sits on, on the dial gauge screwed to the near-side wheel, and write that number only.",
+          "out": "m_bend"
+        },
+        {
+          "fail_if": ["m_bend.unreadable"]
+        },
+        {
+          "ask": "Read the pressure the needle sits on, on the dial gauge screwed to the off-side wheel, and write that number only.",
+          "out": "m_straight"
+        },
+        {
+          "fail_if": ["m_straight.unreadable"]
+        },
+        {
+          "ask": "Read the cold pressure figure printed on the placard on the door pillar and write that number only.",
+          "out": "m_sheet"
+        },
+        {
+          "fail_if": ["m_sheet.unreadable"]
+        },
+        {
+          "run": "which_matches",
+          "args": ["m_bend", "m_straight", "m_sheet"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

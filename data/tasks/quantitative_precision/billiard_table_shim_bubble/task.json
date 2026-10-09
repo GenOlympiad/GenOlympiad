@@ -1,0 +1,84 @@
+{
+  "id": "billiard_table_shim_bubble",
+  "axis": "quantitative_precision",
+  "prompt": "The table fitter has to leave a record of the levelling before the cloth goes back on, so the bare slate is photographed with the level lying on it and the four shim stacks set out along the rail.\n\nThe level lying on the slate is a bar level with a graduated glass. The card of readings propped beside it gives what each corner read before the packing went in: the corner nearest the camera read 6 divisions off, the corner behind it 8, and the two far corners 4 and 2. The card also gives the level as 0.1 mm of fall to a division, and gives the shims as 0.2 mm thick apiece. Each of the four stacks that went under a corner has been lifted out and set along the rail with that corner's own name written beside it, exactly as it came off the floor.\n\nHow many shims went under any one corner is what the card does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a bar level lying on a bare slate table bed with small stacks of shims set out along the rail beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "four_unlike_counts"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Count the shims in the stack set out beside the name of the corner nearest the camera. Write the number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the four shim stacks set out along the rail and say how their counts stand against one another. Answer with one of: the four stacks hold four different numbers of shims; all four stacks hold the same number of shims; two of the stacks hold one number and the other two hold another.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

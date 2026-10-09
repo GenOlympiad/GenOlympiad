@@ -1,0 +1,84 @@
+{
+  "id": "faraday_recess_film_thickness",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The batch cannot be released until the coating record is filled in, so the inspector photographs the gauge at every labelled point on the bracket in one go.\n\nOne powder-coated steel bracket lies on the inspection bench. It has a deep channel pressed down its middle, an inside corner where the web turns up, and two outward-turned edges along its flanks. Numbered labels 1 to 4 are stuck at the points the process card calls for: one down at the bottom of the channel, one in the inside corner, and one on each outward-turned edge. Around the bracket, in the same frame, sits a close-up panel for every label, each showing a magnetic thickness gauge held on that point with its display towards the camera. The process card lying on the bench gives the gun voltage as 70 kilovolts and the accepted film as 60 to 90 micrometres.\n\nWhat each gauge reads at its own point is what the process card does not fill in.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a metal bracket lying on a bench with numbered labels stuck on it and close-up panels around it showing a hand-held meter with a lit display? Answer yes or no only.",
+  "reference": {
+    "part1": "smallest_in_the_channel",
+    "part2": "in_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the numbers showing on the gauge displays in the close-up panels. Answer with one of: the numbers on the displays are all alike; the smallest number is on the display for the point down in the channel; the smallest number is on the display for a point on an outward-turned edge.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the number showing on the gauge display in the close-up panel for the point down in the channel, and give it in micrometres.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part2", "10", "55"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

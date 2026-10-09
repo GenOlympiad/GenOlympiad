@@ -1,0 +1,201 @@
+{
+  "id": "factual_grounding",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photorealistic 'INVESTOR SNAPSHOT' card for a stock-research mobile app, shown full-screen: a clean white card headed with the company name and logo of WEYCO GROUP, INC. (NASDAQ: WEYS), then a single vertical list of labelled rows -- Headquarters, Founded, Sector, Market Cap, Annual Revenue, Share Price -- each row printed with the company's REAL current value. Modern flat UI, crisp high-resolution text, every label and value sharply legible.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show stock-research mobile-app INVESTOR SNAPSHOT card for the micro-cap Weyco Group (NASDAQ WEYS), shown full-screen? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cik": "0000106532",
+    "ticker": "WEYS",
+    "qid": "Q22121873"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "card_legible",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "read_crop": "A blank or garbled image, or a crude sketch with no readable fields, does NOT count. Is this a legible company fact-sheet / profile card with clearly readable labelled fields? Answer with the single word yes or no only.",
+          "out": "lg"
+        },
+        {
+          "fail_if": ["lg.unreadable"]
+        },
+        {
+          "compare": "lg.answers.0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "market_cap_usd",
+      "weight": 0.45,
+      "pass_at": 0.85,
+      "steps": [
+        {
+          "read_crop": "This is a company fact sheet. Read the value printed on the MARKET CAP row. Reply with only the number and its unit exactly as printed (for example '$1.2B'), nothing else.",
+          "out": "raw"
+        },
+        {
+          "fail_if": ["raw.unreadable"]
+        },
+        {
+          "run": "money_in_usd",
+          "args": ["raw"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.bad"]
+        },
+        {
+          "compare_band": "m.usd",
+          "to": "reference.market_cap_usd",
+          "core_rel": 0.15,
+          "margin_rel": 0.3,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "revenue_ttm_usd",
+      "weight": 0.35,
+      "pass_at": 0.85,
+      "steps": [
+        {
+          "read_crop": "This is a company fact sheet. Read the value printed on the annual REVENUE row. Reply with only the number and its unit exactly as printed (for example '$68M'), nothing else.",
+          "out": "raw"
+        },
+        {
+          "fail_if": ["raw.unreadable"]
+        },
+        {
+          "run": "money_in_usd",
+          "args": ["raw"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.bad"]
+        },
+        {
+          "compare_band": "m.usd",
+          "to": "reference.revenue_ttm_usd",
+          "core_rel": 0.15,
+          "margin_rel": 0.3,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "hq_city",
+      "weight": 0.1,
+      "steps": [
+        {
+          "read_crop": "This is a company fact sheet. Read the HEADQUARTERS row. Report only the CITY name printed there, nothing else.",
+          "out": "raw"
+        },
+        {
+          "fail_if": ["raw.unreadable"]
+        },
+        {
+          "run": "answer_text",
+          "args": ["raw"],
+          "out": "w"
+        },
+        {
+          "fail_if": ["w.bad"]
+        },
+        {
+          "compare": "w.v",
+          "to": "reference.hq_city",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "founded_year",
+      "weight": 0.1,
+      "steps": [
+        {
+          "read_crop": "This is a company fact sheet. Read the FOUNDED row. Report only the 4-digit year printed there, nothing else.",
+          "out": "raw"
+        },
+        {
+          "fail_if": ["raw.unreadable"]
+        },
+        {
+          "run": "answer_text",
+          "args": ["raw"],
+          "out": "w"
+        },
+        {
+          "fail_if": ["w.bad"]
+        },
+        {
+          "compare": "w.v",
+          "to": "reference.founded_year",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "const": {
+        "program": "code_95d1dfb2a8c0"
+      },
+      "out": "code_95d1dfb2a8c0"
+    },
+    {
+      "run": "hq_city",
+      "args": ["reference.cik"],
+      "out": "hq_city"
+    },
+    {
+      "run": "revenue",
+      "args": ["reference.cik"],
+      "out": "revenue_ttm_usd"
+    },
+    {
+      "run": "shares",
+      "args": ["reference.cik"],
+      "out": "shares"
+    },
+    {
+      "run": "price",
+      "args": ["reference.ticker"],
+      "out": "price"
+    },
+    {
+      "run": "market_cap",
+      "args": ["price", "shares"],
+      "out": "market_cap_usd"
+    },
+    {
+      "run": "founded_year",
+      "args": ["reference.qid"],
+      "out": "founded_year"
+    }
+  ],
+  "grounding": "static"
+}

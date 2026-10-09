@@ -1,0 +1,217 @@
+{
+  "id": "withdrawal_two_clocks",
+  "axis": "text_fidelity",
+  "prompt": "A photograph taken in the milking parlour of a dairy farm during the morning milking, square on to the desk at the end of the parlour, so that the medicine record book lying open on it and the tag hanging on the milk room door behind it are both fully in the frame.\n\nThis is the entry the herdsman made, word for word:\n  28 AUG 2026   09:00   COW 14   INJECTION, RIGHT NECK\n  the bottle's label states: MILK 60 HOURS   MEAT 28 DAYS\n\nThe record book's row for that treatment has a column headed MEAT WITHHELD UNTIL and a column headed COW, and both are filled in. The tag on the milk room door has a line headed MILK FIT FROM with a date on it and the time of day written under that date.\n\nDates on this farm's paperwork are written the way the record entry is written: two figures, the month in three letters, the year in four figures.\n\nWhat goes on the tag and what goes in the record column are yours to work out. I am deliberately telling you neither, and the two do not come out the same way. The record row, both its filled columns and both lines on the tag have to be legible in the one frame. Nothing else is written on the record page or on the tag: no working, no second treatment, no note.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a written record book and a tag hanging on a door? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows nothing of the kind at all. Answer yes or no only.",
+  "reference": {
+    "meat_until": "25 sep 2026",
+    "milk_date": "30 aug 2026",
+    "milk_time": "21:00",
+    "cow": "14",
+    "clean_paper": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_record_column_carries_the_day_the_longer_clock_runs_out_on",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "row of the medicine record book that carries the day's treatment",
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "read_crop": "Copy what is written in the column headed MEAT WITHHELD UNTIL in this cut-out. Write it only. If that column is empty, answer none.",
+          "boxes": "rw",
+          "pad": 0.25,
+          "out": "rwv"
+        },
+        {
+          "run": "most_common_read",
+          "args": ["rwv", "'record column'"],
+          "out": "mt"
+        },
+        {
+          "fail_if": ["mt.refused"]
+        },
+        {
+          "compare": "mt.val",
+          "to": "reference.meat_until",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_door_tag_carries_the_day_the_shorter_clock_runs_out_on",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "tag hanging on the milk room door",
+          "out": "tg"
+        },
+        {
+          "fail_if": ["tg.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date written on the line headed MILK FIT FROM in this cut-out. Write the date only. If no date is written there, answer none.",
+          "boxes": "tg",
+          "pad": 0.3,
+          "out": "tgd"
+        },
+        {
+          "run": "most_common_read",
+          "args": ["tgd", "'milk tag date'"],
+          "out": "md"
+        },
+        {
+          "fail_if": ["md.refused"]
+        },
+        {
+          "compare": "md.val",
+          "to": "reference.milk_date",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_door_tag_carries_the_hour_as_well_as_the_day",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "tag hanging on the milk room door",
+          "out": "tg"
+        },
+        {
+          "fail_if": ["tg.unreadable"]
+        },
+        {
+          "read_crop": "Copy the time of day written under that date in this cut-out. Write the time only. If no time is written there, answer none.",
+          "boxes": "tg",
+          "pad": 0.3,
+          "out": "tgt"
+        },
+        {
+          "run": "most_common_read",
+          "args": ["tgt", "'milk tag time'"],
+          "out": "mh"
+        },
+        {
+          "fail_if": ["mh.refused"]
+        },
+        {
+          "compare": "mh.val",
+          "to": "reference.milk_time",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_record_row_still_names_the_animal_it_was_written_for",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "row of the medicine record book that carries the day's treatment",
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written in the column headed COW in this cut-out. Write the figure only. If that column is empty, answer none.",
+          "boxes": "rw",
+          "pad": 0.25,
+          "out": "rwc"
+        },
+        {
+          "run": "first_figure_read",
+          "args": ["rwc", "'cow column'"],
+          "out": "cw"
+        },
+        {
+          "fail_if": ["cw.refused"]
+        },
+        {
+          "compare": "cw.val",
+          "to": "reference.cow",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_is_left_on_the_record_page_or_the_tag",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a piece of written working on the record page or the tag, other than the treatment row with its columns, the ruled headings of the book and the tag's own lines",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "xg"
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a piece of written working on the record page or the tag? Answer yes or no. Answer no if the cut-out shows the one treatment row with its columns, the ruled headings of the book, the tag with its two lines, or the bare page.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "This is a wide cut-out: the thing asked about is in the middle, and what surrounds it shows what it sits on. Was it put there as arithmetic written on the record page or on the tag? Answer yes or no. Answer no if it is part of the medicine book and the tag as filled in -- the treatment row with its columns, the ruled headings, the tag with its lines, or the bare page.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_paper",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

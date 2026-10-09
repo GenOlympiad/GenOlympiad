@@ -1,0 +1,84 @@
+{
+  "id": "the_capped_pipe_stops_below_the_batten_its_twin_clears",
+  "axis": "physical_consistency",
+  "prompt": "Workshop record photograph, voicing room, Vollmer & Sons, organ builders. On the rack in front of the camera stands a short run of square wooden flue pipes, in this order from the left: the open tenor C, the capped tenor C, the open tenor D, the capped tenor D. The capped ones are closed at the top by driven wooden stoppers; the open ones are left plain. Every pipe is racked with its mouth on one line, and a stay batten is bolted right across the front of the run, 850 mm up from that mouth line, to hold the pipes steady. Each pipe is made to the speaking length its own note and its own kind of pipe call for; the rank has just been racked and waits to be voiced. Shoot from the side, square on, with the whole of every pipe from its foot to its top and the whole run of the batten inside one frame, the pipes filling the picture across. Shop daylight.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph show a run of square wooden organ pipes standing on a rack with a horizontal stay batten running right across the front of them, the whole length of every pipe and the whole batten inside the frame? Answer yes or no only.",
+  "reference": {
+    "part1": "below_batten",
+    "part2": "2"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Does the top of the capped pipe in the left-hand pair reach above the horizontal batten, or stop below it?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "How many of the pipe tops stand above the horizontal batten?",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

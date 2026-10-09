@@ -1,0 +1,201 @@
+{
+  "id": "flag_vertical_hoist_orientation",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The atrium of an exhibition centre on the morning a show opens, photographed from the floor looking toward the entrance wall so that both flags hang square to the camera.\n\nThe centre flies its own house flag. The design is fixed: a plain white field, a dark square in the corner of the hoist edge at the head of the flag carrying one pale star, and two narrow dark bars running the whole length of the opposite long edge.\n\nOne copy hangs flat against the wall over the entrance with its long side across and its hoist edge to the viewer's left. A second copy of the same flag hangs on the atrium wall beside it with its long side upright. The rigging brief the crew work to is taped to the ladder in shot and reads word for word: ATRIUM COPY -- HUNG PER THE VERTICAL HOIST CONVENTION -- SIGNED OFF BEFORE DOORS.\n\nWork out for yourself how the upright copy has to come out -- I am deliberately not telling you what that convention does to a flag, and I am not telling you where anything on it ends up. Both flags have to hang flat and unfurled, with the square, the star and the bars plainly visible on each. Nothing may be drawn onto the photograph beyond what the flags and the brief already carry: no captions, no arrows, no notes.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two flags hanging against a wall, one with its long side across and one with its long side upright? A photograph, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no flags in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "upright_corner": "top-left",
+    "upright_bars": "right"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_upright_copy_puts_the_square_and_the_bars_where_the_convention_puts_them",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the flag hanging with its long side upright on the atrium wall",
+          "sweep": true,
+          "out": "uc_box"
+        },
+        {
+          "fail_if": ["uc_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out a flag hangs with its long side upright. Is the small dark square on it at the top left, the top right, the bottom left or the bottom right? If the flag in this cut-out carries no dark square at all, answer the single word none. Answer top-left, top-right, bottom-left, bottom-right or none.",
+          "boxes": "uc_box",
+          "pad": 0.15,
+          "out": "uc"
+        },
+        {
+          "fail_if": ["uc.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out a flag hangs with its long side upright. Do the two narrow dark bars on it run along its top edge, its bottom edge, its left edge or its right edge? If the flag in this cut-out carries no such bars at all, answer the single word none. Answer top, bottom, left, right or none.",
+          "boxes": "uc_box",
+          "pad": 0.15,
+          "out": "ub"
+        },
+        {
+          "fail_if": ["ub.unreadable"]
+        },
+        {
+          "run": "upright_ok",
+          "args": ["uc", "ub", "reference.upright_corner", "reference.upright_bars"],
+          "out": "upv"
+        },
+        {
+          "compare": "upv.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_flat_copy_carried_through_the_convention_is_the_upright_copy",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the flag hanging flat with its long side across, over the entrance",
+          "sweep": true,
+          "out": "fc_box"
+        },
+        {
+          "fail_if": ["fc_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out a flag hangs with its long side across. Is the small dark square on it at the top left, the top right, the bottom left or the bottom right? If the flag in this cut-out carries no dark square at all, answer the single word none. Answer top-left, top-right, bottom-left, bottom-right or none.",
+          "boxes": "fc_box",
+          "pad": 0.15,
+          "out": "fc"
+        },
+        {
+          "fail_if": ["fc.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out a flag hangs with its long side across. Do the two narrow dark bars on it run along its top edge, its bottom edge, its left edge or its right edge? If the flag in this cut-out carries no such bars at all, answer the single word none. Answer top, bottom, left, right or none.",
+          "boxes": "fc_box",
+          "pad": 0.15,
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the flag hanging with its long side upright on the atrium wall",
+          "sweep": true,
+          "out": "uc_box2"
+        },
+        {
+          "fail_if": ["uc_box2.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out a flag hangs with its long side upright. Is the small dark square on it at the top left, the top right, the bottom left or the bottom right? If the flag in this cut-out carries no dark square at all, answer the single word none. Answer top-left, top-right, bottom-left, bottom-right or none.",
+          "boxes": "uc_box2",
+          "pad": 0.15,
+          "out": "uc2"
+        },
+        {
+          "fail_if": ["uc2.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out a flag hangs with its long side upright. Do the two narrow dark bars on it run along its top edge, its bottom edge, its left edge or its right edge? If the flag in this cut-out carries no such bars at all, answer the single word none. Answer top, bottom, left, right or none.",
+          "boxes": "uc_box2",
+          "pad": 0.15,
+          "out": "ub2"
+        },
+        {
+          "fail_if": ["ub2.unreadable"]
+        },
+        {
+          "run": "carried_through",
+          "args": ["fc", "fb", "uc2", "ub2"],
+          "out": "mirror"
+        },
+        {
+          "compare": "mirror.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "a_flag_hangs_with_its_long_side_upright_on_the_atrium_wall",
+      "weight": 0.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the atrium wall beside the entrance of the exhibition centre",
+          "sweep": false,
+          "out": "wall_box"
+        },
+        {
+          "fail_if": ["wall_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a flag hanging with its long side upright? Answer yes or no only.",
+          "boxes": "wall_box",
+          "pad": 0.15,
+          "out": "hang_rd"
+        },
+        {
+          "fail_if": ["hang_rd.unreadable"]
+        },
+        {
+          "run": "flag_hung_upright",
+          "args": ["hang_rd"],
+          "out": "hungv"
+        },
+        {
+          "compare": "hungv.s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_marks_drawn_onto_the_photograph",
+      "weight": 0.7,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a caption, an arrow or a note drawn onto the picture over the flags",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

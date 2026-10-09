@@ -1,0 +1,569 @@
+{
+  "id": "count_distinct_partition",
+  "axis": "quantitative_precision",
+  "prompt": "A photograph taken square-on of the front of a plain stainless-steel kitchen fridge door, covered with plain round fridge magnets that are all the same size and shape. The magnets come in three colours: red, blue and green.\n\nPut EXACTLY 23 magnets on the door in total. Each of the three colours has to be used at least five times. And no two colours may end up with the same number of magnets as each other -- the three colour totals must all be different. You decide how many magnets of each colour there are, so long as all three of those conditions are satisfied together.\n\nSpread the magnets unevenly over the whole door and keep the colours mingled: never a block of one colour, never a row, never a grid, never a ring or a border, and no two magnets touching. Nothing else anywhere in the picture is red, blue or green. Even, natural light, sharp focus. No text, no numerals, no labels, no captions.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show the front of a fridge door with lots of small round coloured magnets stuck all over it. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank panel, a page of text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "enforce_notext": true,
+    "q_notext": "Is there any printed writing, digit or caption visible anywhere in this picture, as opposed to a plain photograph of the scene with nothing written on it? Answer yes if you can see any writing or any digit at all, no if there is none. Answer yes or no only.",
+    "colours": ["red", "blue", "green"],
+    "total": 23,
+    "k": 3,
+    "floor": 5,
+    "ratio_cap": null,
+    "has_ratio": false,
+    "n_legal_partitions": 5,
+    "decoy_equal_split": [7, 8, 8],
+    "decoy_consecutive_from_floor": [5, 6, 7],
+    "decoy_consecutive_sum": 18
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "partition_total",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "red round chip, magnet or disc",
+          "out": "rr",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole red round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rr",
+          "out": "cr"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "yellow round chip, magnet or disc",
+          "out": "ry",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole yellow round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "ry",
+          "out": "cy"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "green round chip, magnet or disc",
+          "out": "rg",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole green round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rg",
+          "out": "cg"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "blue round chip, magnet or disc",
+          "out": "rb",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole blue round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "cb"
+        },
+        {
+          "run": "score_colour_counts",
+          "args": [
+            "reference.colours",
+            "reference.total",
+            "reference.floor",
+            "reference.ratio_cap",
+            "{'red': (rr, cr), 'yellow': (ry, cy), 'green': (rg, cg), 'blue': (rb, cb)}"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "const": "m.total_frac",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "partition_all_distinct",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "red round chip, magnet or disc",
+          "out": "rr",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole red round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rr",
+          "out": "cr"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "yellow round chip, magnet or disc",
+          "out": "ry",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole yellow round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "ry",
+          "out": "cy"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "green round chip, magnet or disc",
+          "out": "rg",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole green round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rg",
+          "out": "cg"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "blue round chip, magnet or disc",
+          "out": "rb",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole blue round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "cb"
+        },
+        {
+          "run": "score_colour_counts",
+          "args": [
+            "reference.colours",
+            "reference.total",
+            "reference.floor",
+            "reference.ratio_cap",
+            "{'red': (rr, cr), 'yellow': (ry, cy), 'green': (rg, cg), 'blue': (rb, cb)}"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "const": "m.distinct_frac",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "partition_floor",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "red round chip, magnet or disc",
+          "out": "rr",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole red round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rr",
+          "out": "cr"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "yellow round chip, magnet or disc",
+          "out": "ry",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole yellow round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "ry",
+          "out": "cy"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "green round chip, magnet or disc",
+          "out": "rg",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole green round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rg",
+          "out": "cg"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "blue round chip, magnet or disc",
+          "out": "rb",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole blue round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "cb"
+        },
+        {
+          "run": "score_colour_counts",
+          "args": [
+            "reference.colours",
+            "reference.total",
+            "reference.floor",
+            "reference.ratio_cap",
+            "{'red': (rr, cr), 'yellow': (ry, cy), 'green': (rg, cg), 'blue': (rb, cb)}"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "const": "m.floor_frac",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "partition_ratio",
+      "weight": 1.5,
+      "only_if": "reference.has_ratio",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "red round chip, magnet or disc",
+          "out": "rr",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole red round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rr",
+          "out": "cr"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "yellow round chip, magnet or disc",
+          "out": "ry",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole yellow round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "ry",
+          "out": "cy"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "green round chip, magnet or disc",
+          "out": "rg",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole green round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rg",
+          "out": "cg"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "blue round chip, magnet or disc",
+          "out": "rb",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole blue round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "cb"
+        },
+        {
+          "run": "score_colour_counts",
+          "args": [
+            "reference.colours",
+            "reference.total",
+            "reference.floor",
+            "reference.ratio_cap",
+            "{'red': (rr, cr), 'yellow': (ry, cy), 'green': (rg, cg), 'blue': (rb, cb)}"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "const": "m.ratio_frac",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "partition_legal",
+      "weight": 6.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "red round chip, magnet or disc",
+          "out": "rr",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole red round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rr",
+          "out": "cr"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "yellow round chip, magnet or disc",
+          "out": "ry",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole yellow round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "ry",
+          "out": "cy"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "green round chip, magnet or disc",
+          "out": "rg",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole green round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rg",
+          "out": "cg"
+        },
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "blue round chip, magnet or disc",
+          "out": "rb",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole blue round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "cb"
+        },
+        {
+          "run": "score_colour_counts",
+          "args": [
+            "reference.colours",
+            "reference.total",
+            "reference.floor",
+            "reference.ratio_cap",
+            "{'red': (rr, cr), 'yellow': (ry, cy), 'green': (rg, cg), 'blue': (rb, cb)}"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "const": "m.legal",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_partition_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "red round chip, magnet or disc",
+          "out": "rr",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole red round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rr",
+          "out": "cr"
+        },
+        {
+          "read": "boxes",
+          "target": "yellow round chip, magnet or disc",
+          "out": "ry",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole yellow round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "ry",
+          "out": "cy"
+        },
+        {
+          "read": "boxes",
+          "target": "green round chip, magnet or disc",
+          "out": "rg",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole green round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rg",
+          "out": "cg"
+        },
+        {
+          "read": "boxes",
+          "target": "blue round chip, magnet or disc",
+          "out": "rb",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole blue round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "cb"
+        },
+        {
+          "run": "score_colour_counts",
+          "args": [
+            "reference.colours",
+            "reference.total",
+            "reference.floor",
+            "reference.ratio_cap",
+            "{'red': (rr, cr), 'yellow': (ry, cy), 'green': (rg, cg), 'blue': (rb, cb)}"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "const": "m.legal",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_landed_on_equal_split",
+      "weight": 0.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "red round chip, magnet or disc",
+          "out": "rr",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole red round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rr",
+          "out": "cr"
+        },
+        {
+          "read": "boxes",
+          "target": "yellow round chip, magnet or disc",
+          "out": "ry",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole yellow round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "ry",
+          "out": "cy"
+        },
+        {
+          "read": "boxes",
+          "target": "green round chip, magnet or disc",
+          "out": "rg",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole green round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rg",
+          "out": "cg"
+        },
+        {
+          "read": "boxes",
+          "target": "blue round chip, magnet or disc",
+          "out": "rb",
+          "propose_boxes": "vlm"
+        },
+        {
+          "read_crop": "Does this picture show one whole blue round chip, magnet or disc? Answer yes or no only.",
+          "boxes": "rb",
+          "out": "cb"
+        },
+        {
+          "run": "score_colour_counts",
+          "args": [
+            "reference.colours",
+            "reference.total",
+            "reference.floor",
+            "reference.ratio_cap",
+            "{'red': (rr, cr), 'yellow': (ry, cy), 'green': (rg, cg), 'blue': (rb, cb)}"
+          ],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.unreadable"]
+        },
+        {
+          "run": "matches_equal_split",
+          "args": [
+            "reference.colours",
+            "reference.decoy_equal_split",
+            "{'red': (rr, cr), 'yellow': (ry, cy), 'green': (rg, cg), 'blue': (rb, cb)}"
+          ],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a round fridge magnet on the door",
+    "s2": "a plastic bingo chip on the table",
+    "s3": "an enamelled metal disc on the bench"
+  },
+  "aspect_ratio": "3:2"
+}

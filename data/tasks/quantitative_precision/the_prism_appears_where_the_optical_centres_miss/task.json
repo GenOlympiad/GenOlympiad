@@ -1,0 +1,84 @@
+{
+  "id": "the_prism_appears_where_the_optical_centres_miss",
+  "axis": "quantitative_precision",
+  "prompt": "The workshop photographs every job at the final check, so the frame, the rule and the paperwork reach the file together.\n\nA finished pair of spectacles lies face up on a dispensing bench. A cross has been marked on each lens at its optical centre. A dispensing rule lies across the top rims with its millimetre scale towards the camera and its zero end set on the cross of the right lens. The prescription sheet gives the wearer's centre distance as 64 millimetres and the sphere power of each lens as minus 2.50 dioptres. The inspection card is printed with the workshop's prism limit of 0.50 and with the release words PASS, HOLD and REMAKE, one of which the checker rings; the card also prints that work over the limit is held for the surfacing room. Its offset column has been filled in by hand as 3 millimetres.\n\nWhere the crosses come on the rule, and which word carries the ring, is what the card does not print.",
+  "difficulty": "s1",
+  "easy_question": "Is this photograph a close view of a finished pair of spectacles lying face up with a dispensing rule across the rims and the paperwork beside them? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "hold_ringed"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "The dispensing rule lying across the top rims has its zero end on the cross of the right lens. Read the millimetre figure on the printed scale of the rule that the cross of the left lens comes to.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "66", "68"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the release words printed on the inspection card. Answer with one of: pass is ringed; hold is ringed; remake is ringed.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,263 @@
+{
+  "id": "never_won",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photorealistic school sports-day results board: a white melamine board on an easel in a playing field, ruled with a black marker into a table of six named rows and four columns. The four column headings, written across the top, are HIGH JUMP, SPRINT, JAVELIN, RELAY. The six row labels down the left and their four scores, written in black marker, are exactly: WREN 62 48 55 71; FINCH 58 63 49 66; PIPIT 71 44 52 58; LARK 55 51 68 60; TEAL 49 57 47 74; MERLIN 66 40 61 63. In each event the HIGHEST of the six scores in that column wins that event. The rule the teacher is applying is this: a small green certificate sticker is stuck at the right-hand end of the row of every athlete who did NOT win a single one of the four events, and at the end of no other row. Stick the green stickers on exactly those rows; the rows of athletes who won an event get nothing.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a board on an easel ruled into a table of named rows and columns of numbers. Ignoring artistic quality, and ignoring WHICH rows are marked in any way, does the image DEPICT that? Answer NO only if it is blank or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_look": "Ignore everything about which rows are marked. Looking only at the picture itself, is this a tidy, well-lit picture of a results board whose ruled table is square and whose writing is sharp enough to read? Answer yes or no only.",
+    "q_verbatim": "Transcribe EVERY line of printed, painted, chalked or written text you can see anywhere in this picture, including text on cards, labels, tickets and small printed slips. Copy each line exactly as it appears, character by character. Do NOT correct spelling or arithmetic and do not leave any line out. Reply with the transcribed lines only, one per line, and no explanation.",
+    "exp_lines": [
+      "WREN 62 48 55 71",
+      "FINCH 58 63 49 66",
+      "PIPIT 71 44 52 58",
+      "LARK 55 51 68 60",
+      "TEAL 49 57 47 74",
+      "MERLIN 66 40 61 63"
+    ],
+    "rows": [
+      [62.0, 48.0, 55.0, 71.0],
+      [58.0, 63.0, 49.0, 66.0],
+      [71.0, 44.0, 52.0, 58.0],
+      [55.0, 51.0, 68.0, 60.0],
+      [49.0, 57.0, 47.0, 74.0],
+      [66.0, 40.0, 61.0, 63.0]
+    ],
+    "direction": 1,
+    "yes_word": "STICKER",
+    "no_word": "NONE",
+    "labels": ["WREN", "FINCH", "PIPIT", "LARK", "TEAL", "MERLIN"],
+    "nl": 3,
+    "nr": 3,
+    "qa": "Read the top three named rows of the table on the board, in order from the top down. For each row give the name printed at the start of the row, then its four figures in order, then one single word: STICKER if a small green certificate sticker sits at the right-hand end of that row, or NONE if that row's right-hand end is empty. Separate the three rows with semicolons. Reply with those three entries only, and no explanation.",
+    "qb": "Read the bottom three named rows of the table on the board, in order from the top down. For each row give the name printed at the start of the row, then its four figures in order, then one single word: STICKER if a small green certificate sticker sits at the right-hand end of that row, or NONE if that row's right-hand end is empty. Separate the three rows with semicolons. Reply with those three entries only, and no explanation.",
+    "qa2": "Take the first three named rows of the table, counting from the top. Report each one as: the name, then its figures, then the word STICKER when a small green certificate sticker sits at the right-hand end of that row, or the word NONE when that row's right-hand end is empty. Put a semicolon between one row and the next. Reply with that list only.",
+    "qb2": "Take the last three named rows of the table, counting from the top, and report them in top-to-bottom order. Report each one as: the name, then its figures, then the word STICKER when a small green certificate sticker sits at the right-hand end of that row, or the word NONE when that row's right-hand end is empty. Put a semicolon between one row and the next. Reply with that list only.",
+    "q_region_text": "This picture is one part cut out of a photograph of a results board ruled into a table. Copy out every name and every figure you can see written anywhere in this part, keeping each table row on its own line and keeping the figures in the order they are written. Copy each one exactly as it appears, character by character; do not correct the spelling, do not correct any figure and do not leave any out. Put a single space between one line and the next, and write nothing else.",
+    "q_look_separate": "Look at the table drawn on the board in this picture. Are its ruled lines straight, so that each row of the table is clearly separated from the row below it? Answer yes or no only.",
+    "q_look_legible": "Look at the writing in the table in this picture. Is every name and every figure sharp enough to read? Answer yes or no only.",
+    "q_rows": "The board carries a table in which every row starts with a name. Read EVERY named row of the table, going from the top row downwards, and leave none out. For each row give the name written at the start of the row, then all of that row's figures in the order they are written, then one single word: STICKER if a small green certificate sticker sits at the right-hand end of that row, or NONE if that row's right-hand end is empty. Put a semicolon between one row and the next. Reply with that list only, and no explanation."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "data_present",
+      "weight": 2.0,
+      "pass_at": 0.8,
+      "steps": [
+        {
+          "read_crop": "reference.q_region_text",
+          "boxes": [
+            [0.0, 0.0, 400.0, 1000.0],
+            [266.7, 0.0, 733.3, 1000.0],
+            [600.0, 0.0, 1000.0, 1000.0]
+          ],
+          "pad": 0.0,
+          "out": "rr"
+        },
+        {
+          "fail_if": ["rr.unreadable"]
+        },
+        {
+          "run": "region_text_coverage",
+          "args": ["rr", "reference.exp_lines"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "derived_object_set",
+      "weight": 7.0,
+      "score": "res.member",
+      "steps": [
+        {
+          "length": "reference.rows",
+          "out": "nn"
+        },
+        {
+          "read_sequence": "reference.q_rows",
+          "n": "nn",
+          "delimiter": ";",
+          "out": "rows_read"
+        },
+        {
+          "fail_if": ["rows_read.unreadable"]
+        },
+        {
+          "run": "score_rows",
+          "args": [
+            "[rows_read]",
+            "reference.rows",
+            "reference.direction",
+            "reference.yes_word",
+            "reference.no_word",
+            "reference.labels"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "set_boundary_size",
+      "weight": 1.0,
+      "score": "res.card",
+      "steps": [
+        {
+          "length": "reference.rows",
+          "out": "nn"
+        },
+        {
+          "read_sequence": "reference.q_rows",
+          "n": "nn",
+          "delimiter": ";",
+          "out": "rows_read"
+        },
+        {
+          "fail_if": ["rows_read.unreadable"]
+        },
+        {
+          "run": "score_rows",
+          "args": [
+            "[rows_read]",
+            "reference.rows",
+            "reference.direction",
+            "reference.yes_word",
+            "reference.no_word",
+            "reference.labels"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "binding_agreement",
+      "weight": 2.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "length": "reference.rows",
+          "out": "nn"
+        },
+        {
+          "read_sequence": "reference.q_rows",
+          "n": "nn",
+          "delimiter": ";",
+          "out": "rows_read"
+        },
+        {
+          "fail_if": ["rows_read.unreadable"]
+        },
+        {
+          "run": "score_rows",
+          "args": [
+            "[rows_read]",
+            "reference.rows",
+            "reference.direction",
+            "reference.yes_word",
+            "reference.no_word",
+            "reference.labels"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_read_ledger",
+      "weight": 0.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one named row of the table, from its name across to its right-hand end",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "rows_box"
+        },
+        {
+          "fail_if": ["rows_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a table. Give the name written at its start, then all of its figures in the order they are written, then one word: {gt.yes_word} if a mark sits at the right-hand end of this row, or {gt.no_word} if that end is empty. Write nothing else.",
+          "boxes": "rows_box",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "rows_read"
+        },
+        {
+          "fail_if": ["rows_read.unreadable"]
+        },
+        {
+          "run": "score_rows_with_labels",
+          "args": [
+            "image",
+            "[rows_read.answers]",
+            "reference.rows",
+            "reference.direction",
+            "reference.yes_word",
+            "reference.no_word",
+            "reference.labels"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d2_appearance_only",
+      "weight": 0.0,
+      "score": "res2.frac",
+      "steps": [
+        {
+          "ask": "reference.q_look_separate",
+          "out": "la"
+        },
+        {
+          "fail_if": ["la.unreadable"]
+        },
+        {
+          "ask": "reference.q_look_legible",
+          "out": "lb"
+        },
+        {
+          "fail_if": ["lb.unreadable"]
+        },
+        {
+          "run": "separate_and_legible",
+          "args": ["la", "lb"],
+          "out": "res2"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a marked row",
+  "aspect_ratio": "1:1"
+}

@@ -1,0 +1,255 @@
+{
+  "id": "tube_rack_crescent_field",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A steel trader's yard keeps a photographic record of every stock line for the audit file, and one line is due for its shot today.\n\nWhat is on the cradle, and how the shot is arranged -- this part is fixed, and it is what makes the picture usable as a record: nine identical spiral-welded pipes, 610 mm outside diameter and 12 m long, lie horizontally side by side in one straight row across the cradle, all of them cut square, all their open ends facing the camera; the tripod stands eight metres back from the row, directly opposite the fifth pipe of the row counting from the left, at the height of the row's axis; and it is late afternoon, so the light rakes across the yard from one side and the inside wall of a bore comes out at a plainly different brightness from the flat cut end of a pipe. Every one of the nine bores is wide open and unobstructed.\n\nAn auditor has to be able to tell from the photograph alone that these really are open pipes and not discs, so what each bore shows of its own inside wall matters, and each of the nine is its own case. That follows from where the tripod is standing, and I am not going to spell it out for you -- work the nine out for yourself. No stencilling, no chalk marks, no tags, no paint stripes and no yard numbers on the pipes or the cradle, and nothing written or printed anywhere in the picture.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a yard photograph of a row of large-bore steel pipes lying on a cradle with their open ends toward the camera? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      ["left", "left", "left", "left", "round", "right", "right", "right", "right"]
+    ],
+    "n_pipes": 9,
+    "on_axis_index": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sliver_field",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of open pipe mouths facing the camera",
+          "expected_n": 1,
+          "out": "anc_box_bores",
+          "context": "the row of pipes on the cradle, seen end-on"
+        },
+        {
+          "fail_if": ["anc_box_bores.unreadable"]
+        },
+        {
+          "run": "plan_pinned_grid",
+          "args": ["image", "anc_box_bores", "rows=1", "cols=reference.n_pipes"],
+          "out": "pl_box_bores"
+        },
+        {
+          "fail_if": ["pl_box_bores.no_plan"]
+        },
+        {
+          "read_crop": "This cut-out shows the open end of one pipe. Inside the mouth, the lit strip of inside wall is either on the left side, on the right side, or it goes all the way round. Which is it? Answer with one word: left, right or round.",
+          "boxes": "pl_box_bores.cells",
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "cs_bores",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["cs_bores.unreadable"]
+        },
+        {
+          "run": "bore_row",
+          "args": ["cs_bores"],
+          "out": "row"
+        },
+        {
+          "compare_grid": "row",
+          "to": "reference.grid",
+          "out": "frac"
+        },
+        {
+          "run": "paint_cells_by_fraction",
+          "args": ["pl_box_bores", "frac"],
+          "out": "pa_box_bores"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_box_bores.hit",
+          "ref_anchors": "pa_box_bores.ref_anchors",
+          "found_anchors": "pa_box_bores.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_box_bores_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_bores_hit.path",
+          "rects": "pa_box_bores.miss",
+          "ref_anchors": "pa_box_bores.ref_anchors",
+          "found_anchors": "pa_box_bores.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_box_bores_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_bores_miss.path",
+          "rects": "pa_box_bores.edge",
+          "ref_anchors": "pa_box_bores.ref_anchors",
+          "found_anchors": "pa_box_bores.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_box_bores_edge"
+        }
+      ]
+    },
+    {
+      "name": "single_side_change",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of open pipe mouths facing the camera",
+          "expected_n": 1,
+          "out": "anc_box_bores2",
+          "context": "the row of pipes on the cradle, seen end-on"
+        },
+        {
+          "fail_if": ["anc_box_bores2.unreadable"]
+        },
+        {
+          "run": "plan_pinned_grid",
+          "args": ["image", "anc_box_bores2", "rows=1", "cols=reference.n_pipes"],
+          "out": "pl_box_bores2"
+        },
+        {
+          "fail_if": ["pl_box_bores2.no_plan"]
+        },
+        {
+          "read_crop": "This cut-out shows the open end of one pipe. Inside the mouth, is the lit strip of inside wall on the left side, on the right side, or does it go all the way round? Answer with one word: left, right or round.",
+          "boxes": "pl_box_bores2.cells",
+          "layout": "row",
+          "sort": "reading_order",
+          "out": "cs_bores2",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["cs_bores2.unreadable"]
+        },
+        {
+          "run": "check_single_flip",
+          "args": ["cs_bores2", "reference.on_axis_index"],
+          "out": "fl"
+        },
+        {
+          "compare": "fl.ok",
+          "to": "yes",
+          "out": "frac"
+        },
+        {
+          "run": "paint_cells_by_fraction",
+          "args": ["pl_box_bores2", "frac"],
+          "out": "pa_box_bores2"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_box_bores2.hit",
+          "ref_anchors": "pa_box_bores2.ref_anchors",
+          "found_anchors": "pa_box_bores2.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_box_bores2_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_bores2_hit.path",
+          "rects": "pa_box_bores2.miss",
+          "ref_anchors": "pa_box_bores2.ref_anchors",
+          "found_anchors": "pa_box_bores2.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_box_bores2_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_bores2_miss.path",
+          "rects": "pa_box_bores2.edge",
+          "ref_anchors": "pa_box_bores2.ref_anchors",
+          "found_anchors": "pa_box_bores2.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_box_bores2_edge"
+        }
+      ]
+    },
+    {
+      "name": "pipe_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the open bore end of one pipe in the row on the cradle",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole open pipe end, rather than the cradle, the ground, or only part of a pipe end? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_pipes",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_yard_markings",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "any painted stripe, chalk mark, stencilled number, tag or printed word on a pipe or the cradle",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

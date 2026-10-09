@@ -1,0 +1,246 @@
+{
+  "id": "grating_order_existence",
+  "axis": "physical_consistency",
+  "prompt": "A bench photograph for the incoming inspection file at a machine-vision integrator: the check a QA technician runs on a diffractive beam splitter before it goes into a dot-projector build.\n\nOn the optical rail, in this order along the beam, a laser diode module, then the splitter under test standing upright in its mount, then a white target card clamped square across the beam 150 mm past it. The bench room is dark apart from the laser. The photograph is taken from behind and a little above the rail so the whole face of the card is in view.\n\nThe paperwork on the bench, all of it fixed by the parts on the rail: the laser module is 640 nm; the splitter's data sheet gives it 600 lines per millimetre, with its rulings running vertically so the beam is split out sideways across the card; the card is 500 mm wide and the straight-through beam lands at the middle of it; the card face is square to the beam.\n\nHow many bright spots end up on that card, and how they sit across it, are for you to work out -- I am deliberately not telling you how many there are and I am not telling you how they are spaced. Do not print a spot count, an order number, a scale or any note on the card or on the bench: the only lettering in the frame is what is moulded on the laser module and on the mount.\n\nThe whole face of the card must be in the frame with every spot on it separated from its neighbours, and the room dark enough that nothing else on the bench is bright.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an optical bench carrying a laser, a flat optical part upright in a mount, and a target card with bright spots on it? A photograph, an illustration or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel with none of that, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_spots": 5,
+    "m_max": 2,
+    "spot_spacing": "wider",
+    "spot_layout": "row",
+    "wavelength_nm": 640,
+    "lines_per_mm": 600,
+    "standoff_mm": 150,
+    "card_width_mm": 500
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "order_count_on_the_card",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of bright spots on the white target card",
+          "expected_n": 1,
+          "out": "anc_box_read",
+          "context": "the white target card"
+        },
+        {
+          "fail_if": ["anc_box_read.unreadable"]
+        },
+        {
+          "read_crop": "This is the row of bright spots cut out of the bench photograph. Write down every separate bright spot in this cut-out, working from left to right, each with a few plain words saying where it sits and how bright it looks. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no bright spot here, write the single word NONE.",
+          "boxes": "anc_box_read",
+          "pad": 0.02,
+          "out": "n_box_read"
+        },
+        {
+          "fail_if": ["n_box_read.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["n_box_read", "empty_as='0'"],
+          "out": "n_box_read__std"
+        },
+        {
+          "fail_if": ["n_box_read__std.refused"]
+        },
+        {
+          "run": "plan_counted_columns",
+          "args": ["image", "anc_box_read", "n_box_read__std"],
+          "out": "pl_box_read"
+        },
+        {
+          "fail_if": ["pl_box_read.no_plan"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole bright laser spot on the card, rather than bare card or only part of a spot? Answer yes or no only.",
+          "boxes": "pl_box_read.cells",
+          "out": "crop_read",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_spots",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["pl_box_read", "frac"],
+          "out": "pa_box_read"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_box_read.hit",
+          "ref_anchors": "pa_box_read.ref_anchors",
+          "found_anchors": "pa_box_read.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_box_read_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_read_hit.path",
+          "rects": "pa_box_read.miss",
+          "ref_anchors": "pa_box_read.ref_anchors",
+          "found_anchors": "pa_box_read.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_box_read_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_box_read_miss.path",
+          "rects": "pa_box_read.edge",
+          "ref_anchors": "pa_box_read.ref_anchors",
+          "found_anchors": "pa_box_read.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_box_read_edge"
+        }
+      ]
+    },
+    {
+      "name": "spot_spacing_widens_outward",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the white target card standing on the optical rail",
+          "out": "cd_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["cd_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a card with a row of bright spots on it. Are the gaps between neighbouring spots all about the same, or do they get wider away from the middle? Answer with one word: same or wider.",
+          "boxes": "cd_box",
+          "out": "cd_gap"
+        },
+        {
+          "fail_if": ["cd_gap.unreadable"]
+        },
+        {
+          "compare": "cd_gap.answers.0",
+          "to": "reference.spot_spacing",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_spots_in_one_row",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the white target card standing on the optical rail",
+          "out": "rw_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["rw_box.unreadable"]
+        },
+        {
+          "read_crop": "Are the bright spots in this cut-out arranged in one straight row, or scattered about the card? Answer with one word: row or scattered.",
+          "boxes": "rw_box",
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "compare": "rw.answers.0",
+          "to": "reference.spot_layout",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_splitter_on_the_rail",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the beam splitter standing in its mount on the optical rail",
+          "out": "sp_box",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["sp_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show a flat optical part held upright in a mount? Answer yes or no only.",
+          "boxes": "sp_box",
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "compare": "sp.answers.0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_written_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a spot count, an order number or a printed scale written on the target card",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "id": "round_table_ellipse_consistency",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "a photorealistic photograph of a GARDEN patio with three round bistro tables at different distances from the camera, all seen from ONE fixed camera at a moderate downward angle. Every tabletop is a real CIRCLE. PERSPECTIVE IS THE SUBJECT and must be EXACT (do NOT default to drawing any tabletop as a full head-on circle): because the camera looks down at ONE consistent angle, all three circular tabletops must be foreshortened by the SAME amount -- each tabletop must render as an ellipse whose vertical height is about 60% of its width (the same squashed aspect for every table, regardless of the table's size or where it sits in the frame). Photoreal wood, soft daylight, no text, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show three round tables seen at an angle so each tabletop looks like an ellipse. Ignoring quality, does it depict three round tabletops (elliptical rims)? A photo or render both count. Answer NO only for a blank panel or no tables. Answer yes or no only.",
+  "reference": {
+    "core": 0.1,
+    "margin": 0.12,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "n_tables": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "aspect_consistency",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "oval tabletop of a round table",
+          "expected_n": "reference.n_tables",
+          "retries": 4,
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "ellipse_aspects",
+          "args": ["rd", "src"],
+          "out": "cv"
+        },
+        {
+          "fail_if": ["cv.unreadable"]
+        },
+        {
+          "compare_band": "cv.spread",
+          "to": 0.0,
+          "core": "reference.core",
+          "margin": "reference.margin",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

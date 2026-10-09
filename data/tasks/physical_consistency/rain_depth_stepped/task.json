@@ -1,0 +1,174 @@
+{
+  "id": "rain_depth_stepped",
+  "axis": "physical_consistency",
+  "prompt": "A photorealistic square-on photograph of a weather-station wall inside an open shed, shot from the side with a long lens so there is no perspective convergence. Five open-topped glass measuring jars of very different heights and widths stand on five separate wall brackets, and the brackets are deliberately NOT evenly spaced up the wall: counting from the left, the first bracket is at floor level, the second one is a hand's width above the first, the third one is three hand-widths above the second, the fourth one is one hand-width above the third, and the fifth one is four hand-widths above the fourth. Every jar was left out through the same rainstorm and every jar still holds the rainwater it caught, dyed a strong flat BLUE. Floating flat on the water inside each jar is one straight bright MAGENTA marker rod, lying horizontally right across that jar's inside width.\n\nObey the rain-gauge law exactly: rain falls at the same rate everywhere, so over one storm every open jar collects the same DEPTH of water, whatever its own height or width and whatever it stands on. Measure each jar's water from that jar's OWN base: the height of the blue water inside all five jars must be exactly the same, so the tallest jar is left mostly empty above its water while the smallest is nearly full. Do NOT fill the jars to the same fraction of their own heights and do NOT put more water into the taller or the wider ones.\n\nWork out for yourself where each magenta rod ends up, jar by jar: take how high that jar's own bracket sits, add the one common depth, and put that jar's rod there. Do not copy one rod's height across to the others and do not set the rod heights by eye.\n\nAll five water surfaces are flat and horizontal, the glass is clean. Sharp focus, plain shed wall, no text, no numerals, no printed scales on the jars.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict glass jars sitting on wall brackets at different heights, each holding blue water with a straight brightly painted rod floating on its surface. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "k": 5,
+    "gap_ratios": [1, 3, 1, 4],
+    "min_spread": 0.05
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "gauges_readable",
+      "weight": 1.0,
+      "score": "gr.frac",
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "blue water inside a vessel",
+          "out": "wat",
+          "sweep": true
+        },
+        {
+          "fail_if": ["wat.unreadable"]
+        },
+        {
+          "run": "water_read",
+          "args": ["wat"],
+          "out": "w"
+        },
+        {
+          "read_crop": "Does this picture show blue water standing inside an open container? Answer yes or no only.",
+          "boxes": "w",
+          "pad": 0.06,
+          "out": "cw"
+        },
+        {
+          "fail_if": ["cw.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "magenta marker rod",
+          "out": "rod",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rod.unreadable"]
+        },
+        {
+          "run": "rod_read",
+          "args": ["rod"],
+          "out": "r"
+        },
+        {
+          "read_crop": "Does this picture show a straight bright magenta (hot pink) bar lying flat and horizontal? Answer yes or no only.",
+          "boxes": "r",
+          "pad": 0.06,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "gauges_readable_frac",
+          "args": ["cw", "cr", "reference.k"],
+          "out": "gr"
+        }
+      ]
+    },
+    {
+      "name": "rods_not_one_level_line",
+      "weight": 1.0,
+      "score": "st.frac",
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "magenta marker rod",
+          "out": "rod",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rod.unreadable"]
+        },
+        {
+          "run": "rod_read",
+          "args": ["rod"],
+          "out": "r"
+        },
+        {
+          "run": "stepped_frac",
+          "args": ["r", "reference.min_spread"],
+          "out": "st"
+        }
+      ]
+    },
+    {
+      "name": "equal_depth_in_each_own_base_frame",
+      "weight": 1.0,
+      "score": "eq.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "blue water inside a vessel",
+          "out": "wat",
+          "sweep": true
+        },
+        {
+          "fail_if": ["wat.unreadable"]
+        },
+        {
+          "run": "water_read",
+          "args": ["wat"],
+          "out": "w"
+        },
+        {
+          "run": "equal_depth_frac",
+          "args": ["w"],
+          "out": "eq"
+        }
+      ]
+    },
+    {
+      "name": "rod_ladder_matches_the_rises",
+      "weight": 1.0,
+      "score": "ld.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "magenta marker rod",
+          "out": "rod",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rod.unreadable"]
+        },
+        {
+          "run": "rod_read",
+          "args": ["rod"],
+          "out": "r"
+        },
+        {
+          "run": "rod_ladder_frac",
+          "args": ["r", "reference.gap_ratios"],
+          "out": "ld"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

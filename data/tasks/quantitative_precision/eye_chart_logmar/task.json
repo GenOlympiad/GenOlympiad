@@ -1,0 +1,229 @@
+{
+  "id": "eye_chart_logmar",
+  "axis": "quantitative_precision",
+  "prompt": "A clean, front-on photograph of a standard wall-mounted logMAR eye-test chart (the kind used by opticians), with 7 rows of black capital letters on a white chart, the top row a single large letter and each row below it holding more, smaller letters. The letter sizes follow the logMAR standard: going DOWN the chart, each row's letters are smaller than the row above by a CONSTANT ratio — every row is exactly 10^0.1 (about 1.259) times the height of the row below it, a fixed geometric shrink from row to row (NOT a constant step, and NOT a guessed amount). So the seven rows form a precise geometric progression of letter heights. A genuine chart photograph: crisp black letters, white background, even lighting, no numbers or acuity fractions printed beside the rows, no other text.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a wall-mounted logMAR eye chart whose letter rows shrink down the chart by a constant ratio. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 7,
+    "target_ratio": 1.2589,
+    "d2_q_feature": "This image was supposed to depict: an eye chart with rows of letters shrinking down the chart. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This image should depict: a wall-mounted eye-test chart with rows of capital letters. Is what is shown actually the KIND of thing described (an optician's letter chart), rather than a different object or a generic placeholder? Answer with the single word yes or no only.",
+    "d2_q_single": "This image should depict: one eye chart, and only that. Is the chart shown cleanly on its own, WITHOUT extra distracting objects, clutter, or duplicate charts that are not part of the described scene? Answer yes if only the intended subject is present, no if there is distracting clutter. Answer with the single word yes or no only.",
+    "d2_q_precise": "Does this image look like a PRECISE, deliberately constructed chart -- crisp clean letters laid out in neat rows -- as opposed to a rough, wobbly, sketchy or clearly-approximate rendering? Answer yes if it looks precisely constructed, no if it looks rough or freehand. Answer with the single word yes or no only.",
+    "d2_q_rows": "This image should depict: an eye chart with multiple rows of letters of DIFFERENT sizes stacked vertically. Does it actually show several rows of letters at visibly different sizes (a large row and progressively smaller rows), rather than a single size or a blank chart? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_row_count",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "row of printed black capital letters on the eye chart -- one tight box around each horizontal row of letters, from the top of the letters to their baseline",
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show printed black capital letters standing side by side on ONE single line of an eye chart? A line holding just one single big letter counts as yes. Answer no if there are no letters at all, or if letters from a second line above or below are also in the picture. Answer yes or no only.",
+          "boxes": "rw",
+          "pad": 0.02,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_rows",
+          "args": ["cr"],
+          "out": "e"
+        },
+        {
+          "compare_band": "e.n_rows",
+          "to": "reference.n",
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cv_geometric_ratio",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "row of printed black capital letters on the eye chart -- one tight box around each horizontal row of letters, from the top of the letters to their baseline",
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show printed black capital letters standing side by side on ONE single line of an eye chart? A line holding just one single big letter counts as yes. Answer no if there are no letters at all, or if letters from a second line above or below are also in the picture. Answer yes or no only.",
+          "boxes": "rw",
+          "pad": 0.02,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "row_size_ratios",
+          "args": ["rw", "cr", "reference.target_ratio", "reference.n"],
+          "out": "e2"
+        },
+        {
+          "fail_if": ["e2.degenerate"]
+        },
+        {
+          "compare_band": "e2.max_ratio_err",
+          "to": 0.0,
+          "core": 0.09,
+          "margin": 0.11,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_rows_present",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_rows",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

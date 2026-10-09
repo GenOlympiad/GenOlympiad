@@ -1,0 +1,181 @@
+{
+  "id": "beer_nucleation_etch_point",
+  "axis": "physical_consistency",
+  "prompt": "New etched glasses arrived at the taproom this morning and the brewery wants the first-article shot.\n\nAlready fixed and not yours to move: two glasses of the same pattern stand side by side on the bar; one of them carries a laser-etched line up the inside of its wall, running from the foot of the bowl to the printed fill line, and the other has nothing on it at all; a sticker on the foot of each glass gives its letter, E for the etched one and P for the plain one. Both were filled from the same tap.\n\nWhat the taproom's pour record says:\nthe plain glass was filled first;\nthe etched glass was filled two minutes later, and the shot is taken as soon as it is full;\nthe head on this beer stands up for about a minute and then falls back to a skim.\n\nWhere the strings of bubbles rise from in each glass, and how much head each glass is left with, is the part I am deliberately not telling you, and no third glass is on the bar to copy. Light it from behind the two glasses so the bubbles read against the beer. Nothing is written on the bar beyond the two stickers.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two drinking glasses standing side by side with liquid in them? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no glasses in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "chain_state": "E=along the etched line|P=no rising string",
+    "head_state": "E=a thick collar|P=a thin skim",
+    "n_glasses": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_strings_start_on_the_scored_glass_and_nowhere_on_the_plain_one",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a filled glass standing on the bar with its lettered sticker",
+          "sweep": true,
+          "out": "cb_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cb_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what letter is on the sticker on the foot of the glass? Answer with the letter exactly as it is printed, or none if no letter is printed here.",
+          "boxes": "cb_box",
+          "pad": 0.4,
+          "out": "cb_key"
+        },
+        {
+          "fail_if": ["cb_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, where do the strings of bubbles in this glass rise from? Answer with one of: along the etched line on the wall, from the very bottom of the glass, from all over the inside of the glass, no rising string of bubbles, or none if the glass cannot be made out.",
+          "boxes": "cb_box",
+          "pad": 0.4,
+          "out": "cb_val"
+        },
+        {
+          "fail_if": ["cb_val.unreadable"]
+        },
+        {
+          "run": "match_pinned_states",
+          "args": ["cb_key", "cb_val", "reference.chain_state"],
+          "out": "cb_v"
+        },
+        {
+          "minimum": ["cb_v.a", "cb_v.b"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_glass_carries_the_head_its_own_pour_time_leaves_it",
+      "weight": 1.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a filled glass standing on the bar with its lettered sticker",
+          "sweep": true,
+          "out": "hd_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["hd_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what letter is on the sticker on the foot of the glass? Answer with the letter exactly as it is printed, or none if no letter is printed here.",
+          "boxes": "hd_box",
+          "pad": 0.4,
+          "out": "hd_key"
+        },
+        {
+          "fail_if": ["hd_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how much foam is on top of the beer? Answer with one of: a thick collar of foam, a thin skim of foam, no foam at all, or none if the top of the glass cannot be made out.",
+          "boxes": "hd_box",
+          "pad": 0.4,
+          "out": "hd_val"
+        },
+        {
+          "fail_if": ["hd_val.unreadable"]
+        },
+        {
+          "run": "count_key_matches",
+          "args": ["hd_key", "hd_val", "reference.head_state"],
+          "out": "hd_v"
+        },
+        {
+          "compare_band": "hd_v.n",
+          "to": "reference.n_glasses",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_glass_on_the_bar_carries_its_lettered_sticker",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a filled glass standing on the bar with its lettered sticker",
+          "sweep": true,
+          "out": "st_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["st_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a letter printed on the sticker on the foot of the glass? Answer yes or no only.",
+          "boxes": "st_box",
+          "pad": 0.4,
+          "out": "st_rd"
+        },
+        {
+          "fail_if": ["st_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["st_rd"],
+          "out": "st_v"
+        },
+        {
+          "compare_band": "st_v.n",
+          "to": "reference.n_glasses",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_word_or_arrow_is_added_to_the_bar",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word or arrow on the bar or on a glass beyond the two lettered stickers",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "pr_sw"
+        },
+        {
+          "fail_if": ["pr_sw.unreadable"]
+        },
+        {
+          "compare": "pr_sw.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "id": "exam_cover_struck_answer_tick",
+  "axis": "text_fidelity",
+  "prompt": "A photograph taken at the invigilator's desk after an examination, of one candidate's answer book lying open on the desk. The cover is folded right back so that both the cover and the opened inner pages face the camera in the one frame.\n\nAcross the cover, under the printed heading QUESTIONS ATTEMPTED, runs a row of six small squares, one for each question, with the figures 1 to 6 printed under them. The candidate ticks the squares for the questions attempted.\n\nWhat this candidate did is on record: written answers to questions 2, 3 and 5, and nothing at all for questions 1, 4 and 6. Part way through, the candidate scored a single heavy diagonal line right through the whole of the answer to question 3 and left it there.\n\nThe examination regulations are the ordinary ones, and the candidate knew them. Fill in the cover the way this candidate's book would actually have been handed in -- I am deliberately not telling you how many squares end up ticked or which ones.\n\nThe handwriting on the inner pages does not need to be readable prose, but each answer must sit under its own question number, written large. All six squares with their figures, and every answer on the open pages, have to be legible in the one frame. Nothing else is written anywhere: no total, no count of questions attempted, no note by the invigilator.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a booklet lying open, with a row of small squares under printed figures on one part of it and handwriting on another? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no booklet at all. Answer yes or no only.",
+  "reference": {
+    "tick_map": "1=no|2=yes|3=no|4=no|5=yes|6=no",
+    "struck_map": "2=no|3=yes|5=no",
+    "clean_no_tally": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_ticked_squares_are_the_answers_that_still_stand",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one small square of the row of tick squares on the answer book cover",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "tk"
+        },
+        {
+          "fail_if": ["tk.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure printed under the square in this cut-out. Write the figure only.",
+          "boxes": "tk",
+          "pad": 0.35,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "tkk"
+        },
+        {
+          "read_crop": "Is there a tick or any pen mark inside the square in this cut-out? Answer yes or no.",
+          "boxes": "tk",
+          "pad": 0.35,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "tkv"
+        },
+        {
+          "run": "map_number_to_word",
+          "args": ["tkk", "tkv"],
+          "out": "tm"
+        },
+        {
+          "fail_if": ["tm.refused"]
+        },
+        {
+          "compare": "tm.seq",
+          "to": "reference.tick_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_struck_out_answer_is_still_there_on_the_page",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one handwritten answer on the open pages together with the question number above it",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "column",
+          "out": "aw"
+        },
+        {
+          "fail_if": ["aw.unreadable"]
+        },
+        {
+          "read_crop": "Copy the question number written above the answer in this cut-out. Write the figure only.",
+          "boxes": "aw",
+          "pad": 0.12,
+          "sort": "reading_order",
+          "layout": "column",
+          "out": "awk"
+        },
+        {
+          "read_crop": "Has the handwriting in this cut-out been scored through with a line? Answer yes or no.",
+          "boxes": "aw",
+          "pad": 0.12,
+          "sort": "reading_order",
+          "layout": "column",
+          "out": "awv"
+        },
+        {
+          "run": "map_number_to_word",
+          "args": ["awk", "awv"],
+          "out": "am"
+        },
+        {
+          "fail_if": ["am.refused"]
+        },
+        {
+          "compare": "am.seq",
+          "to": "reference.struck_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_tally_or_count_written_on_the_book",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written total, a count of questions attempted or a note by the invigilator",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "xg"
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a written total, a count of how many questions were attempted, or a note written by the invigilator? Answer yes or no. Answer no if the cut-out shows a numbered tick square on the cover, a question number, a candidate's handwritten answer, or an answer that has been scored through.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "run": "sweep_holds_nothing_banned",
+          "args": ["xg", "xgw", "xgy"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_no_tally",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "id": "luhn_card_register",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed REGISTER titled 'HARBOUR CLUB -- ACCOUNT NUMBER REGISTER': a numbered list of 42 sixteen-digit membership/account numbers, printed one per line as four groups of four digits (e.g. '1234 5678 9012 3456'). CRITICAL validity rule: EVERY number must be a valid LUHN number -- under the standard Luhn (mod-10) checksum (double every second digit from the right, sum all the digits, the total must be a multiple of 10), the printed 16th digit is the correct check digit for the first 15. Print 42 numbers that each pass the Luhn check exactly as their check digit requires. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed register of 16-digit membership/account numbers, each carrying a Luhn check digit. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 42,
+    "r0": 16,
+    "r1": 34,
+    "q_num0": "Read the full 16-digit number printed on row 16 of the register (row number 16 counting from the top). Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give all 16 digits, digits only, no spaces.",
+    "q_num1": "Read the full 16-digit number printed on row 34 of the register. Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Give all 16 digits, digits only, no spaces."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "luhn_register_law",
+      "weight": 1.0,
+      "score": "res.all_ok",
+      "steps": [
+        {
+          "read_crop": "This register prints a list of long account numbers, one per numbered row. Write out every row, one per line, as the row number, then a colon, then that row's account number with all sixteen digits and no spaces. Copy the digits exactly as printed, even if a number looks wrong. Answer with the rows only.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Read this register of account numbers row by row from the top. For every numbered row write one line: the row number, a colon, then that row's full account number as sixteen digits with no spaces between them. Copy the printed digits exactly, do not fix anything. Answer with the lines only.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "read_crop": "Go down this list of printed account numbers and transcribe all of them. Put each row on its own line as: the row's number, a colon, then the sixteen digits of that row's account number run together with no spaces. Write the digits exactly as they appear on the page, including any that look mistaken. Answer with the lines only.",
+          "votes": 1,
+          "out": "t3"
+        },
+        {
+          "run": "all_luhn_valid",
+          "args": ["t1", "t2", "t3", "reference.n"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.q_num1",
+          "out": "gd"
+        },
+        {
+          "fail_if": ["gd.unreadable"]
+        },
+        {
+          "run": "luhn_row_check",
+          "args": ["gd"],
+          "out": "gdv"
+        },
+        {
+          "compare_token": "gdv",
+          "to": "valid",
+          "keep": "alpha",
+          "mode": "equals",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

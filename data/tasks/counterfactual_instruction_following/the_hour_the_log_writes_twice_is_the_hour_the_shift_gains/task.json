@@ -1,0 +1,208 @@
+{
+  "id": "the_hour_the_log_writes_twice_is_the_hour_the_shift_gains",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The night the clocks go back, a keeper is working the swing bridge on a ship canal, and the navigation authority wants one photograph for the night's file: the bridge log open at that night's page on the cabin desk, with the keeper's own timesheet lying beside it, both square on and readable.\n\nThe log is a ruled book with one line to each opening of the bridge, and every line begins with the time by the cabin clock. The control clock in the bridge cabin never changes through the year, and the six openings of this night stood at these times by it: 21:15, 22:40, 00:30, 01:30, 01:45, 04:20. Summer time ends at 01:00 by that control clock, so up to that instant the cabin clock is one hour ahead of the control clock, and from that instant on the two agree.\n\nThis authority's standing rule for a night like this is the one keepers get wrong: an opening worked in the hour of the cabin clock that comes round twice carries a letter after its time, A the first time round and B the second, and no other opening in the book carries a letter at all.\n\nThe keeper's timesheet is a printed slip with a single box headed HOURS WORKED. The keeper came on at 22:00 and went off at 06:00, both by the cabin clock.\n\nWhich time stands on each line of the log, which lines carry a letter and what figure goes in the HOURS WORKED box are for you to work out. I am deliberately telling you none of them. Nothing else belongs in the picture: no note about the clock change, no line of arithmetic and no figure beyond the log's own times, its letters and the one box.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is made. Does this picture show a ruled logbook lying open with a printed slip of paper beside it? A photograph, a scan or an illustration ALL count as yes. Answer NO only if the image is a blank sheet that just states an answer, or shows nothing of the kind at all. Answer yes or no only.",
+  "reference": {
+    "hours_worked": 9,
+    "half_one_lines": 2,
+    "half_one_letters": "different",
+    "clean_frame": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_timesheet_box_carries_the_hour_the_night_gains",
+      "weight": 2.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the HOURS WORKED box on the keeper's printed timesheet slip",
+          "out": "hw"
+        },
+        {
+          "fail_if": ["hw.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, copy the figure written in this box. Write the figure only. If the box has been left empty, answer none.",
+          "boxes": "hw",
+          "pad": 0.15,
+          "out": "hwv"
+        },
+        {
+          "run": "read_figure",
+          "args": ["hwv", "'the HOURS WORKED box'"],
+          "out": "hwr"
+        },
+        {
+          "fail_if": ["hwr.refused"]
+        },
+        {
+          "compare": "hwr.n",
+          "to": "reference.hours_worked",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_log_writes_the_same_cabin_time_on_two_separate_lines",
+      "weight": 2.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of timed lines on the open page of the bridge log",
+          "out": "lg"
+        },
+        {
+          "fail_if": ["lg.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, write down every line that begins with the time 01:30, each copying a word or two of what is printed after that time on it. Separate one item from the next with a semicolon; write no running total and nothing else. If no line begins with that time, write the single word NONE.",
+          "boxes": "lg",
+          "pad": 0.2,
+          "out": "lgv"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["lgv", "empty_as='0'"],
+          "out": "lgv__std"
+        },
+        {
+          "fail_if": ["lgv__std.refused"]
+        },
+        {
+          "run": "read_count",
+          "args": ["lgv__std", "'the log lines that begin at 01:30'"],
+          "out": "lgr"
+        },
+        {
+          "fail_if": ["lgr.refused"]
+        },
+        {
+          "compare": "lgr.n",
+          "to": "reference.half_one_lines",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_lines_that_share_an_hour_are_told_apart_by_their_letters",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of timed lines on the open page of the bridge log",
+          "out": "lt"
+        },
+        {
+          "fail_if": ["lt.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, look at the ruled lines of the log that begin with the time 01:30. Write one item for each such line: copy exactly what is printed immediately after the time on that line, or write NOTHING-AFTER-THE-TIME if nothing is printed there. Write NO-SUCH-LINE if no line here begins with that time. Separate one item from the next with a semicolon, and add nothing else.",
+          "boxes": "lt",
+          "pad": 0.2,
+          "out": "ltv"
+        },
+        {
+          "run": "compare_transcribed_marks",
+          "args": [
+            "ltv",
+            "'plain'",
+            "'single'",
+            "'matching'",
+            "'different'",
+            "'NOTHING-AFTER-THE-TIME'",
+            "'plain'"
+          ],
+          "out": "ltv__mapped"
+        },
+        {
+          "run": "match_offered_word",
+          "args": [
+            "ltv__mapped",
+            "'different|matching|plain|single'",
+            "'the letters on the 01:30 lines'"
+          ],
+          "out": "ltr"
+        },
+        {
+          "fail_if": ["ltr.refused"]
+        },
+        {
+          "compare": "ltr.tag",
+          "to": "reference.half_one_letters",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_on_the_desk_works_the_change_out_for_the_keeper",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a note about the clock change, a line of arithmetic, or a second figure",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a note about the clock change, a line of arithmetic, or a second figure? Answer yes or no. Answer no if the cut-out shows a timed line of the log, a letter written after a time, the HOURS WORKED box and its figure, the printed headings, or the logbook and the slip themselves.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as a note about the clock change, a line of arithmetic, or a second figure? Answer yes or no. Answer no if it belongs there -- a timed line of the log, a letter written after a time, the HOURS WORKED box and its figure, the printed headings, or the logbook and the slip themselves.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_frame",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

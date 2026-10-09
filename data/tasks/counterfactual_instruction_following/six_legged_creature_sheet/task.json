@@ -1,0 +1,96 @@
+{
+  "id": "six_legged_creature_sheet",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A clean CREATURE CONCEPT sheet (game / animation concept art) for a fictional beast named 'Grendleback', drawn as ONE clear SIDE-VIEW of the whole creature standing on a plain ground line, facing right, on a plain studio background. DESIGN SPEC -- draw this body plan exactly, even though it is unlike a normal animal: the 'Grendleback' is a large dog-sized walking beast that stands on EXACTLY 6 LEGS. Draw all 6 legs clearly, each as a separate limb dropping from the body down to the ground, well spaced along the length of the body so every leg is countable (NOT four legs like an ordinary animal -- exactly 6). Flat clean concept-art style, one creature, side view, legs reaching the ground. Do NOT write the number of legs or any count anywhere on the sheet; just draw the creature with the correct number of legs.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a creature concept-art sheet showing a fictional beast in side view? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "legs": 6,
+    "q_legs": "This is a side-view drawing of ONE fictional creature standing on a ground line. Ignore any printed text or numbers. Write down every leg that drops from the creature's body down to the ground, each with a few plain words saying where it leaves the body and where its foot lands. Two legs are two separate legs only if you can see background between them all the way down; a limb that leaves the body as one and splits only at the foot is one leg. Separate one item from the next with a semicolon; write no running total and nothing else. If no leg reaches the ground, write the single word NONE.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed NUMBER or digit written on it (for example a caption stating how many legs the creature has)? Answer yes if you can see any printed number, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.5,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "leg_count",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the whole creature drawn on this sheet",
+          "expected_n": 1,
+          "propose_boxes": "vlm",
+          "out": "box_la"
+        },
+        {
+          "fail_if": ["box_la.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_legs",
+          "boxes": "box_la",
+          "pad": 0.04,
+          "out": "crop_la"
+        },
+        {
+          "fail_if": ["crop_la.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["crop_la", "empty_as='0'"],
+          "out": "crop_la__std"
+        },
+        {
+          "fail_if": ["crop_la__std.refused"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "crop_la__std",
+          "out": "as_la"
+        },
+        {
+          "run": "leg_count_matches",
+          "args": ["as_la", "reference.legs"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

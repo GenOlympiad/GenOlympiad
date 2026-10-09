@@ -1,0 +1,218 @@
+{
+  "id": "downward_arrows_world",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean, straight-on illustration of a lift button board with 6 square arrow buttons laid out in a grid. IMPORTANT RULE: EVERY arrow on this panel must point DOWNWARD (toward the bottom of the panel). For every one of the 6 buttons, draw an arrow whose head points straight DOWN. All 6 arrows must point down; do not draw any arrow pointing up, left or right. Draw 6 arrow buttons, every arrow pointing down. Add no caption or extra text.",
+  "difficulty": "s1",
+  "easy_question": "This picture was supposed to show a control panel / button board with several arrow buttons. Never mind how well it is drawn, and never mind which way the arrows point. Does the picture show several arrow buttons? A photo, illustration or clean diagram all count as yes. Answer NO only if it shows a blank card, a plain panel printing an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "exp_0": "down",
+    "exp_1": "down",
+    "exp_2": "down",
+    "exp_3": "down",
+    "exp_4": "down",
+    "exp_5": "down",
+    "q0": "This is a small cropped picture of a single button with an arrow on it. Which way does the arrow point? Look at which end has the arrowHEAD (the pointed triangle). Answer with exactly one word: up, down, left or right.",
+    "bb0": [0.0515, 0.1439, 0.3185, 0.5085],
+    "q1": "This is a small cropped picture of a single button with an arrow on it. Which way does the arrow point? Look at which end has the arrowHEAD (the pointed triangle). Answer with exactly one word: up, down, left or right.",
+    "bb1": [0.3665, 0.1439, 0.6335, 0.5085],
+    "q2": "This is a small cropped picture of a single button with an arrow on it. Which way does the arrow point? Look at which end has the arrowHEAD (the pointed triangle). Answer with exactly one word: up, down, left or right.",
+    "bb2": [0.6815, 0.1439, 0.9485, 0.5085],
+    "q3": "This is a small cropped picture of a single button with an arrow on it. Which way does the arrow point? Look at which end has the arrowHEAD (the pointed triangle). Answer with exactly one word: up, down, left or right.",
+    "bb3": [0.0515, 0.5749, 0.3185, 0.9394],
+    "q4": "This is a small cropped picture of a single button with an arrow on it. Which way does the arrow point? Look at which end has the arrowHEAD (the pointed triangle). Answer with exactly one word: up, down, left or right.",
+    "bb4": [0.3665, 0.5749, 0.6335, 0.9394],
+    "q5": "This is a small cropped picture of a single button with an arrow on it. Which way does the arrow point? Look at which end has the arrowHEAD (the pointed triangle). Answer with exactly one word: up, down, left or right.",
+    "bb5": [0.6815, 0.5749, 0.9485, 0.9394]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "down_arrows_count",
+      "weight": 6.0,
+      "steps": [
+        {
+          "crop": "reference.bb0",
+          "out": "c0"
+        },
+        {
+          "ask": "reference.q0",
+          "image": "c0",
+          "out": "a0"
+        },
+        {
+          "crop": "reference.bb1",
+          "out": "c1"
+        },
+        {
+          "ask": "reference.q1",
+          "image": "c1",
+          "out": "a1"
+        },
+        {
+          "crop": "reference.bb2",
+          "out": "c2"
+        },
+        {
+          "ask": "reference.q2",
+          "image": "c2",
+          "out": "a2"
+        },
+        {
+          "crop": "reference.bb3",
+          "out": "c3"
+        },
+        {
+          "ask": "reference.q3",
+          "image": "c3",
+          "out": "a3"
+        },
+        {
+          "crop": "reference.bb4",
+          "out": "c4"
+        },
+        {
+          "ask": "reference.q4",
+          "image": "c4",
+          "out": "a4"
+        },
+        {
+          "crop": "reference.bb5",
+          "out": "c5"
+        },
+        {
+          "ask": "reference.q5",
+          "image": "c5",
+          "out": "a5"
+        },
+        {
+          "fail_if": [
+            "a0.unreadable",
+            "a1.unreadable",
+            "a2.unreadable",
+            "a3.unreadable",
+            "a4.unreadable",
+            "a5.unreadable"
+          ]
+        },
+        {
+          "run": "arrow_points_expected",
+          "args": ["a0", "reference.exp_0"],
+          "out": "s0"
+        },
+        {
+          "run": "arrow_points_expected",
+          "args": ["a1", "reference.exp_1"],
+          "out": "s1"
+        },
+        {
+          "run": "arrow_points_expected",
+          "args": ["a2", "reference.exp_2"],
+          "out": "s2"
+        },
+        {
+          "run": "arrow_points_expected",
+          "args": ["a3", "reference.exp_3"],
+          "out": "s3"
+        },
+        {
+          "run": "arrow_points_expected",
+          "args": ["a4", "reference.exp_4"],
+          "out": "s4"
+        },
+        {
+          "run": "arrow_points_expected",
+          "args": ["a5", "reference.exp_5"],
+          "out": "s5"
+        },
+        {
+          "product": ["s0", "s1", "s2", "s3", "s4", "s5"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "down_arrows_count_pot6",
+      "weight": 1.0,
+      "gate": true,
+      "only_if": "reference.bb6",
+      "steps": [
+        {
+          "crop": "reference.bb6",
+          "out": "c6"
+        },
+        {
+          "ask": "reference.q6",
+          "image": "c6",
+          "out": "a6"
+        },
+        {
+          "run": "arrow_points_expected",
+          "args": ["a6", "reference.exp_6"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "down_arrows_count_pot7",
+      "weight": 1.0,
+      "gate": true,
+      "only_if": "reference.bb7",
+      "steps": [
+        {
+          "crop": "reference.bb7",
+          "out": "c7"
+        },
+        {
+          "ask": "reference.q7",
+          "image": "c7",
+          "out": "a7"
+        },
+        {
+          "run": "arrow_points_expected",
+          "args": ["a7", "reference.exp_7"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "down_arrows_count_pot8",
+      "weight": 1.0,
+      "gate": true,
+      "only_if": "reference.bb8",
+      "steps": [
+        {
+          "crop": "reference.bb8",
+          "out": "c8"
+        },
+        {
+          "ask": "reference.q8",
+          "image": "c8",
+          "out": "a8"
+        },
+        {
+          "run": "arrow_points_expected",
+          "args": ["a8", "reference.exp_8"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

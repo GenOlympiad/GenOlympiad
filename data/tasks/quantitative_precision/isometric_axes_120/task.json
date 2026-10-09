@@ -1,0 +1,89 @@
+{
+  "id": "isometric_axes_120",
+  "axis": "quantitative_precision",
+  "prompt": "A a clean ISOMETRIC drawing of the three edges meeting at the near bottom corner of a room/box, drawn as three bold blue lines from one corner. Use TRUE ISOMETRIC projection: the two receding (side) edges must each go up at EXACTLY 30 degrees above the horizontal (one to the upper-right, one to the upper-left), and the third edge must be perfectly VERTICAL. Do NOT draw the side edges at a shallow casual angle or make them unequal -- both must be 30 degrees, giving the even 120-degree isometric spread. Plain background, no other lines or text.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a clean ISOMETRIC drawing of the three edges meeting at the near bottom corner of a room/box, drawn as three bold blue lines from one corner -- three blue lines from a single corner. Ignoring artistic quality, does the image actually DEPICT three blue lines meeting at one common corner point? Answer NO only if there are not three blue lines from a common point, or it is something unrelated. Answer yes or no.",
+  "reference": {
+    "seg_lo": [100, 90, 60],
+    "seg_hi": [130, 255, 255],
+    "target_angles": [30.0, 90.0, 150.0],
+    "tol": 7.0,
+    "n_expect": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "iso_angle_set",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "line",
+          "target": "blue edge that leaves the corner where the bold blue edges of the drawing meet each other and runs UP TOWARDS THE LEFT",
+          "out": "l1"
+        },
+        {
+          "fail_if": ["l1.unreadable"]
+        },
+        {
+          "read": "line",
+          "target": "blue edge that leaves the corner where the bold blue edges of the drawing meet each other and runs UP TOWARDS THE RIGHT",
+          "out": "l2"
+        },
+        {
+          "fail_if": ["l2.unreadable"]
+        },
+        {
+          "read": "line",
+          "target": "blue edge that leaves the corner where the bold blue edges of the drawing meet each other and runs STRAIGHT UP AND DOWN, the upright one",
+          "out": "l3"
+        },
+        {
+          "fail_if": ["l3.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "isometric_angle_score",
+          "args": ["l1", "l2", "l3", "src", "reference"],
+          "out": "ia"
+        },
+        {
+          "fail_if": ["ia.degenerate"]
+        },
+        {
+          "compare_band": "ia.frac",
+          "to": 1.0,
+          "core": 0.2,
+          "margin": 0.8,
+          "out": "frac"
+        },
+        {
+          "compose_ray": "ia",
+          "caption": "ia",
+          "out": "viz"
+        }
+      ]
+    }
+  ]
+}

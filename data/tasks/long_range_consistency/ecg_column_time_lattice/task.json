@@ -1,0 +1,185 @@
+{
+  "id": "ecg_column_time_lattice",
+  "axis": "long_range_consistency",
+  "prompt": "This is the sheet the duty seismologist pulls off the plotter after an event, lying square to the camera on the observatory bench, ready for her to pick the phases on in the morning.\n\nThe sheet is the standard four-window review sheet for one three-component station. Four windows stand side by side across it, numbered 1, 2, 3 and 4 above them, and they are the first, the second, the third and the fourth minute after the event's origin time, in that order. Every window holds three traces one above another, lettered Z, N and E down its left side, and those three are the same ground moving, recorded at the same moment by the three components of the one instrument. Along the foot of the sheet runs a single trace of the whole four minutes without a break.\n\nThe recording gives this and nothing else:\n  station KRD, three components, origin time 04:12:07\n  the P phase reached the station 38 seconds after the origin\n  the S phase reached the station 146 seconds after the origin\n  before the P phase the traces carry nothing but the ordinary sea and wind noise of a quiet station\n\nWhere on the sheet each arrival falls, and how the three traces of a window sit against one another, follow from the recording -- I am deliberately not telling you which windows the arrivals land in, nor anything about the shape of the traces. Draw the traces heavy enough and far enough apart to be read one from another, and let the four windows be plainly separate. Apart from the four window numbers, the three component letters in each window, the station and origin line at the top and the trace at the foot, no further figure, arrow or caption belongs on the sheet.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a sheet with wavy recorded traces printed across it? A photograph, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no traces on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "window_keys": ["1", "2", "3", "4"],
+    "lattice_expected": "1=burst/aligned,2=quiet,3=burst/aligned,4=quiet",
+    "n_windows": 4,
+    "n_bursts": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_arrival_falls_in_the_window_its_clock_time_puts_it_in_and_stands_at_one_position_on_all_three_traces",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the numbered time windows printed across the sheet",
+          "sweep": true,
+          "out": "lt_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["lt_box.unreadable"]
+        },
+        {
+          "read_crop": "What window number is printed above the traces in this cut-out? Answer with that number only.",
+          "boxes": "lt_box",
+          "pad": 0.15,
+          "out": "lt_key"
+        },
+        {
+          "fail_if": ["lt_key.unreadable"]
+        },
+        {
+          "read_crop": "Do the traces in this cut-out break into a sudden large burst somewhere along them, or do they run on at much the same size throughout? Answer burst or steady.",
+          "boxes": "lt_box",
+          "pad": 0.15,
+          "out": "lt_burst"
+        },
+        {
+          "fail_if": ["lt_burst.unreadable"]
+        },
+        {
+          "read_crop": "Would one straight up-and-down line pass through the place where the burst starts on all three traces in this cut-out? Answer yes or no, or none if no burst starts here.",
+          "boxes": "lt_box",
+          "pad": 0.15,
+          "out": "lt_align"
+        },
+        {
+          "fail_if": ["lt_align.unreadable"]
+        },
+        {
+          "run": "read_window_states",
+          "args": ["lt_key", "lt_burst", "lt_align", "reference.window_keys"],
+          "out": "ltv"
+        },
+        {
+          "compare": "ltv.s",
+          "to": "reference.lattice_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_unbroken_trace_at_the_foot_carries_the_same_two_arrivals",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the long trace running the whole width of the foot of the sheet",
+          "out": "ft_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["ft_box.unreadable"]
+        },
+        {
+          "read_crop": "Write down every separate sudden burst that begins on the trace in this cut-out, each with a few plain words saying where along the trace it begins. Separate one item from the next with a semicolon; write no running total and nothing else. If no burst begins on the trace here, write the single word NONE.",
+          "boxes": "ft_box",
+          "pad": 0.1,
+          "out": "ft_n"
+        },
+        {
+          "fail_if": ["ft_n.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["ft_n", "empty_as='0'"],
+          "out": "ft_n__std"
+        },
+        {
+          "fail_if": ["ft_n__std.refused"]
+        },
+        {
+          "compare_band": "ft_n__std.n",
+          "to": "reference.n_bursts",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sheet_carries_its_four_numbered_windows",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the numbered time windows printed across the sheet",
+          "sweep": true,
+          "out": "wc_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["wc_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE numbered window with three traces one above another in it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "wc_box",
+          "pad": 0.15,
+          "out": "wc_q"
+        },
+        {
+          "fail_if": ["wc_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["wc_q"],
+          "out": "wc_n"
+        },
+        {
+          "compare_band": "wc_n.n",
+          "to": "reference.n_windows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_time_figure_or_arrow_is_drawn_on_the_traces",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a figure or an arrow drawn on the traces themselves",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_tr"
+        },
+        {
+          "fail_if": ["sweep_tr.unreadable"]
+        },
+        {
+          "compare": "sweep_tr.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

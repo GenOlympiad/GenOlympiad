@@ -1,0 +1,245 @@
+{
+  "id": "bfs_visit_order",
+  "axis": "latent_computation",
+  "prompt": "An algorithms lecture slide shows a small undirected graph of 7 nodes labelled with letters A through G, drawn as circles connected by edges. The edges are: A-B, A-D, A-E, B-C, C-F, D-F, E-G, F-G. Run a BREADTH-FIRST SEARCH starting from node A. When exploring a node's neighbours, always visit them in ALPHABETICAL order. Number the nodes 1, 2, 3 ... in the exact ORDER that BFS first visits them (A is visited first, so A gets 1). Render the same graph and write the BFS visit-order NUMBER large inside each node's circle, keeping the node letter small in a corner. Do NOT write the adjacency list, a queue, or any other numbers on the slide.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show algorithms lecture slide of a 7-node letter-labelled graph with each node's breadth-first visit-order number written large inside its circle? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "num_A": 1,
+    "num_B": 2,
+    "num_C": 5,
+    "num_D": 3,
+    "num_E": 4,
+    "num_F": 6,
+    "num_G": 7,
+    "order_str": "1,2,5,3,4,6,7",
+    "q_form": "Look at this image. Is it a graph of about 7 lettered circle-nodes connected by edges, with a number written inside each circle? Answer ONLY 'yes' or 'no'.",
+    "n_nodes": 7
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bfs_order_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_number": "In this graph, find the circle that has the small letter 'A' printed at its corner. Read ONLY the large number printed INSIDE that one circle. If that letter sits between two circles, take the circle it touches. Copy only the digits actually printed; do not add anything up and do not work anything out. Output only digits.",
+          "out": "nA"
+        },
+        {
+          "read_number": "In this graph, find the circle that has the small letter 'B' printed at its corner. Read ONLY the large number printed INSIDE that one circle. If that letter sits between two circles, take the circle it touches. Copy only the digits actually printed; do not add anything up and do not work anything out. Output only digits.",
+          "out": "nB"
+        },
+        {
+          "read_number": "In this graph, find the circle that has the small letter 'C' printed at its corner. Read ONLY the large number printed INSIDE that one circle. If that letter sits between two circles, take the circle it touches. Copy only the digits actually printed; do not add anything up and do not work anything out. Output only digits.",
+          "out": "nC"
+        },
+        {
+          "read_number": "In this graph, find the circle that has the small letter 'D' printed at its corner. Read ONLY the large number printed INSIDE that one circle. If that letter sits between two circles, take the circle it touches. Copy only the digits actually printed; do not add anything up and do not work anything out. Output only digits.",
+          "out": "nD"
+        },
+        {
+          "read_number": "In this graph, find the circle that has the small letter 'E' printed at its corner. Read ONLY the large number printed INSIDE that one circle. If that letter sits between two circles, take the circle it touches. Copy only the digits actually printed; do not add anything up and do not work anything out. Output only digits.",
+          "out": "nE"
+        },
+        {
+          "read_number": "In this graph, find the circle that has the small letter 'F' printed at its corner. Read ONLY the large number printed INSIDE that one circle. If that letter sits between two circles, take the circle it touches. Copy only the digits actually printed; do not add anything up and do not work anything out. Output only digits.",
+          "out": "nF"
+        },
+        {
+          "read_number": "In this graph, find the circle that has the small letter 'G' printed at its corner. Read ONLY the large number printed INSIDE that one circle. If that letter sits between two circles, take the circle it touches. Copy only the digits actually printed; do not add anything up and do not work anything out. Output only digits.",
+          "out": "nG"
+        },
+        {
+          "run": null,
+          "expression": "joint(nA,nB,nC,nD,nE,nF,nG, reference.num_A,reference.num_B,reference.num_C,reference.num_D,reference.num_E,reference.num_F,reference.num_G)",
+          "code": {
+            "inline": "joint_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bfs_partial",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "In this graph, find the circle whose small corner letter is 'A'. Read ONLY the large number inside that circle. Output only digits.",
+          "out": "pA"
+        },
+        {
+          "read_number": "In this graph, find the circle whose small corner letter is 'B'. Read ONLY the large number inside that circle. Output only digits.",
+          "out": "pB"
+        },
+        {
+          "read_number": "In this graph, find the circle whose small corner letter is 'C'. Read ONLY the large number inside that circle. Output only digits.",
+          "out": "pC"
+        },
+        {
+          "read_number": "In this graph, find the circle whose small corner letter is 'D'. Read ONLY the large number inside that circle. Output only digits.",
+          "out": "pD"
+        },
+        {
+          "read_number": "In this graph, find the circle whose small corner letter is 'E'. Read ONLY the large number inside that circle. Output only digits.",
+          "out": "pE"
+        },
+        {
+          "read_number": "In this graph, find the circle whose small corner letter is 'F'. Read ONLY the large number inside that circle. Output only digits.",
+          "out": "pF"
+        },
+        {
+          "read_number": "In this graph, find the circle whose small corner letter is 'G'. Read ONLY the large number inside that circle. Output only digits.",
+          "out": "pG"
+        },
+        {
+          "run": null,
+          "expression": "frac(pA,pB,pC,pD,pE,pF,pG, reference.num_A,reference.num_B,reference.num_C,reference.num_D,reference.num_E,reference.num_F,reference.num_G)",
+          "code": {
+            "inline": "frac_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_node_a_num",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the large BFS visit-order number printed inside the circle for node A (the node lettered A). Read only that printed number.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.num_A",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_node_d_num",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the large BFS visit-order number printed inside the circle for node D (the node lettered D). Read only that printed number.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.num_D",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_node_g_num",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the large BFS visit-order number printed inside the circle for node G (the node lettered G). Read only that printed number.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.num_G",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_node_total",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one circle drawn as a node of the graph, with a number written inside it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole circle drawn as a graph node rather than a bare connecting line or only part of a circle? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_nodes",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

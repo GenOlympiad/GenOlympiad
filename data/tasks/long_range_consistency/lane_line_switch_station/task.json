@@ -1,0 +1,84 @@
+{
+  "id": "lane_line_switch_station",
+  "axis": "long_range_consistency",
+  "prompt": "The centre line on this stretch was re-marked overnight and the acceptance crew has to photograph it before the road is handed back, so the shot is taken from the verge looking along the running lane.\n\nThe road runs away from the camera and swings into a bend. Verge posts stand at one hundred metre spacing, stencilled 14, 15 and 16, and a peg beside the post stencilled 16 is tagged CS for the start of the curve. A speed limit plate reads 60. The curve element table on the surveyor's board gives the reaction time as two point five seconds and the rule the marking is set out to: the centre line is laid in strokes with gaps between them while overtaking is open, and in one line with no gaps once it is barred, and the barred length must begin one reaction distance ahead of the driver losing his forward view.\n\nWhere the marking changes over is what the board does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a road running away from the camera into a bend, with stencilled posts standing along the verge and a centre line painted down the carriageway? Answer yes or no only.",
+  "reference": {
+    "part1": "one_line_through_the_bend",
+    "part2": "between_15_and_16"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Follow the centre line along the road as it goes round the bend, and look at how it is marked there. Answer with one of: it runs as one line all the way round the bend, with no breaks in it; it is still made of separate strokes with gaps as it goes round the bend; the strokes get shorter but keep their gaps round the bend.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the stencilled posts along the verge and at the last of the separate strokes on the centre line. Answer with one of: the strokes give out between the post marked 15 and the post marked 16; the strokes give out at the post marked 16 itself; the strokes carry on past the post marked 16.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

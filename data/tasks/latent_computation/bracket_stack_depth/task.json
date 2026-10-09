@@ -1,0 +1,230 @@
+{
+  "id": "bracket_stack_depth",
+  "axis": "latent_computation",
+  "prompt": "A code-review whiteboard photo: at the top, this 18-character bracket string is written out, one character per column, evenly spaced left to right:\n    ( ( ) ( ( ) ) ( ) ) ( ( ) ( ) ) ( )\n\nBelow the string, draw the running STACK-DEPTH trace as a connected step line-graph. Reading the string left to right, keep a running depth that starts at 0: each '(' PUSHES (depth goes up by 1) and each ')' POPS (depth goes down by 1). Plot the depth AFTER each character, one point per column directly under that character, and connect consecutive points with straight line segments. The vertical axis is depth (0 at the baseline, going up); label the y-axis ticks 0,1,2,3,4. The line must sit at the correct integer depth under every one of the 18 characters. Draw only the bracket string, the axis with its 0-4 ticks, and the depth step-line. No other numbers or text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show code-review whiteboard photo of an 18-character bracket string with its running stack-depth plotted as a step line-graph underneath? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "string": "(()(())())(()())()",
+    "depths": [
+      [1],
+      [2],
+      [1],
+      [2],
+      [3],
+      [2],
+      [1],
+      [2],
+      [1],
+      [0],
+      [1],
+      [2],
+      [1],
+      [2],
+      [1],
+      [0],
+      [1],
+      [0]
+    ],
+    "n": 18,
+    "q_form": "Look at this image. Is it a bracket string above a connected step line-graph (a trace that goes up and down) plotted underneath it? Answer ONLY 'yes' or 'no'.",
+    "q_seq": "Below the bracket string is a step line-graph of the running depth, one point per character column, left to right. Report ONLY the heights actually DRAWN by the line in THIS image; do NOT do the bracket depths yourself. Read the DEPTH VALUE (a small whole number 0-4) that the plotted line actually sits at under each of the 18 columns, in left-to-right order. Output the 18 depth numbers separated by single spaces, nothing else.",
+    "depth_first": 1,
+    "depth_last": 0,
+    "depth_max": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "depth_trace",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_sequence": "reference.q_seq",
+          "n": 18,
+          "digits_only": true,
+          "as_column": true,
+          "out": "seq"
+        },
+        {
+          "fail_if": ["seq.unreadable"]
+        },
+        {
+          "compare_grid": "seq",
+          "to": "reference.depths",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_columns",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one bracket character written across the top of the board, one per column",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "chars_box"
+        },
+        {
+          "fail_if": ["chars_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole bracket character, rather than bare board or only part of one? Answer yes or no only.",
+          "boxes": "chars_box",
+          "out": "chars_chk"
+        },
+        {
+          "fail_if": ["chars_chk.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["chars_chk"],
+          "out": "cnt_chars"
+        },
+        {
+          "compare_band": "cnt_chars.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_depth_first",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the step line-graph, read the plotted depth value AT the FIRST (leftmost) character column. Report only that whole-number depth. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.depth_first",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_depth_last",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "On the step line-graph, read the plotted depth value AT the LAST (rightmost) character column. Report only that whole-number depth. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.depth_last",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_depth_max",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the step line-graph panel, with its vertical axis and its plotted line",
+          "propose_boxes": "vlm",
+          "expected_n": 1,
+          "out": "graph_box"
+        },
+        {
+          "fail_if": ["graph_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a step line-graph with a vertical axis. What is the highest value on that axis that the plotted line reaches? Answer with digits only.",
+          "boxes": "graph_box",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read.answers.0",
+          "to": "reference.depth_max",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_yaxis_ticks",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does the y-axis of the depth graph show tick labels 0, 1, 2, 3, 4? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

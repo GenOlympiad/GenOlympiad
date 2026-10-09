@@ -1,0 +1,89 @@
+{
+  "id": "sag_span_ratio",
+  "axis": "physical_consistency",
+  "prompt": "A clean flat-colour engineering elevation drawing on a plain white page, drawn as simple vector artwork with thick outlines, flat colours, no shading. Four suspension footbridges are drawn one above another down the page, well separated, each spanning its own pair of grey towers, and each bridge's main cable drawn as a smooth curve in its own strong flat colour. The four gaps the bridges span are deliberately very different widths. Counting the bridges from the top of the page: the first is RED and spans a short gap of 4 units; the second is BLUE and spans a gap of 9 units; the third is GREEN and spans a gap of 14 units; the fourth is PURPLE and spans a long gap of 20 units. Draw the four gaps at those widths, so the top bridge is much narrower than the bottom one.\n\nEach cable's mid-point drop answers to that cable's own gap and to nothing else: red drops 26 per cent of the gap it crosses, blue 10 per cent of the gap it crosses, green 4 per cent of the gap it crosses, purple 1.5 per cent of the gap it crosses. Both anchor points of any one cable sit level with each other, and the curve it makes is symmetric, bottoming out halfway between that cable's own pair of towers.\n\nHandle them one at a time: read off the gap a cable crosses, apply that cable's own percentage to it, and lower that cable's middle by the figure you get. Never fix one cable's droop by eye against a neighbour's, and never reuse a single droop shape across the set.\n\nCables clearly separated, none crossing or touching another, flat strongly saturated colours, no text, no numerals, no dimension lines.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict several suspension footbridges one above another, each with a smooth cable of its own strong colour hanging between two towers. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "k": 4,
+    "cable_colours": ["red", "blue", "green", "purple"],
+    "targets": [0.26, 0.1, 0.04, 0.015]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cables_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "sag_read",
+          "args": ["image", "reference.cable_colours"],
+          "code": "code_9979297637ea",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "check_cable_count",
+          "args": ["m", "reference.k"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "per_cable_dip_over_own_span",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "sag_read",
+          "args": ["image", "reference.cable_colours"],
+          "code": "code_9979297637ea",
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "score_dip_ratios",
+          "args": ["m", "reference.targets"],
+          "code": "code_d899ea7c9dff",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_dip_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "overlay_frac",
+          "args": ["image", "reference.cable_colours", "reference.targets"],
+          "code": "code_9979297637ea",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

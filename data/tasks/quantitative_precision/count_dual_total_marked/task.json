@@ -1,0 +1,169 @@
+{
+  "id": "count_dual_total_marked",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic photograph looking straight down on a plain concrete locker-room floor covered with yellow safety helmets. There are EXACTLY 34 helmets, and EXACTLY 13 of those 34 carry ONE small round blue sticker in the middle of the shell; the other 21 helmets are bare. Each sticker is small -- it covers only a small patch in the centre, leaving the yellow shell showing all round it. 34 helmets in total, 13 of them stickered -- not 12, not 14. Scatter them irregularly with uneven gaps -- never in rows, never in a grid, never arranged as a ring or a decorative border. Even light, sharp focus. No text, no numerals, no labels.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a locker-room floor covered with yellow safety helmets, some of which carry a small blue sticker? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q": "Count all the yellow safety helmets in this image. Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This picture should show these countable objects: a locker-room floor covered with yellow safety helmets, some of which carry a small blue sticker. Look at the individual objects being counted. Is each one a yellow safety helmet, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "n": 34,
+    "k": 13,
+    "qk": "Count only the yellow safety helmets that carry a small blue sticker. Answer with the integer number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "total_count",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "yellow object",
+          "out": "bx",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Is there one whole yellow object in the middle of this picture, rather than bare background or just a piece of one? A small blue sticker or dot on it does not matter. Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_boxes",
+          "args": ["cr"],
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "marked_subset_count",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "yellow object",
+          "out": "bx",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This picture shows one yellow object. Does it carry a small round BLUE sticker or blue dot on it? Answer yes if a blue mark is stuck on it, no if it is bare. Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_boxes",
+          "args": ["cr"],
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.k",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one safety helmet lying on the locker-room floor",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_g"
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole yellow safety helmet, rather than some other object, a shapeless blob, or only part of a helmet? A small round blue sticker stuck on the helmet still counts as a helmet. Answer yes or no only.",
+          "boxes": "box_g",
+          "out": "crop_g"
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a yellow lemon",
+    "s2": "a yellow tennis ball",
+    "s3": "a yellow safety helmet"
+  },
+  "count_total": "reference.n"
+}

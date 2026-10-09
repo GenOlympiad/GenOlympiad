@@ -1,0 +1,11 @@
+{
+  "name": "an OpenAI compatible image API",
+  "format": "openai",
+  "endpoint": "https://api.openai.com/v1/images/generations",
+  "method": "POST",
+  "headers": {"Authorization": "Bearer ${MY_CUSTOM_API_TOKEN}"},
+  "request": {"model": "${MODEL}", "prompt": "${PROMPT}", "size": "${SIZE}", "n": 1},
+  "response": {"image_base64": "data[0].b64_json", "image_url": "data[0].url"},
+  "timeout": 420,
+  "retries": 5
+}

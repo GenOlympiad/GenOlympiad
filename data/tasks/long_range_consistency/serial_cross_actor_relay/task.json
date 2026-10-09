@@ -1,0 +1,232 @@
+{
+  "id": "serial_cross_actor_relay",
+  "axis": "long_range_consistency",
+  "prompt": "A six-frame storyboard on grey paper, TWO ROWS OF THREE panels, loose pencil-and-wash style. Two sign-writers appear in every frame: a TALL one in a WHITE coat with glasses on the left, and a much SHORTER one in a BROWN coat on the right. Both wear plain woolly hats.\n\nTHE WHITE-COAT ONE'S HAT, frame by frame: 1 ORANGE, 2 WHITE, 3 GREEN, 4 PURPLE, 5 BLUE, 6 RED.\n\nTHE BROWN-COAT ONE'S HAT IS ALWAYS THE WHITE-COAT ONE'S HAT FROM THE FRAME BEFORE: in frame 1 the brown-coat one's hat is BLACK, and from frame 2 onwards it is whatever colour the WHITE-COAT one was wearing in the PREVIOUS frame. The two of them never wear the same colour in the same frame — the colour is always one frame behind.\n\nBoth are fully visible side by side in every frame. Six different places, a different pose and framing each time. No text, no captions, no lettering.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a comic strip: several separate panels, drawn side by side, with the same person appearing in each panel. Ignoring artistic quality and ignoring whether the story is right, does the image DEPICT that — a strip of separate panels with a recurring figure? A comic page, a storyboard or a picture-book strip all count as yes. Answer NO only if it is blank, a single picture with no panels, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 6,
+    "na": 6,
+    "qa": "This picture is a comic strip of 6 panels arranged as two rows of three panels. Look at every panel in reading order (the top row left to right, then the bottom row left to right). For EACH panel in that order, report what colour hat the person in the WHITE coat is wearing. Use only these words: orange, white, green, purple, blue, red, black. The panels do not have to agree with one another — report what each panel actually shows, one answer per panel, even if the answer repeats or changes from panel to panel. Answer with exactly 6 answers separated by commas, in panel order, and nothing else.",
+    "qa2": "The picture is a strip of separate drawings arranged as two rows of three panels. Going through them in the top row left to right, then the bottom row left to right order, tell me, for each drawing in turn, what colour hat the person in the WHITE coat is wearing. Allowed answers: orange, white, green, purple, blue, red, black. Judge each drawing on its own — two drawings may well disagree, so do not assume the strip is consistent. Reply with exactly 6 comma-separated answers and nothing else.",
+    "seq_a": ["orange", "white", "green", "purple", "blue", "red"],
+    "nb": 6,
+    "qb": "This picture is a comic strip of 6 panels arranged as two rows of three panels. Look at every panel in reading order (the top row left to right, then the bottom row left to right). For EACH panel in that order, report what colour hat the person in the BROWN coat is wearing. Use only these words: orange, white, green, purple, blue, red, black. The panels do not have to agree with one another — report what each panel actually shows, one answer per panel, even if the answer repeats or changes from panel to panel. Answer with exactly 6 answers separated by commas, in panel order, and nothing else.",
+    "qb2": "The picture is a strip of separate drawings arranged as two rows of three panels. Going through them in the top row left to right, then the bottom row left to right order, tell me, for each drawing in turn, what colour hat the person in the BROWN coat is wearing. Allowed answers: orange, white, green, purple, blue, red, black. Judge each drawing on its own — two drawings may well disagree, so do not assume the strip is consistent. Reply with exactly 6 comma-separated answers and nothing else.",
+    "seq_b": ["black", "orange", "white", "green", "purple", "blue"],
+    "pn_rows": 2,
+    "pn_cols": 3,
+    "qa_cell": "This is ONE panel cut out of a storyboard strip. Two people stand side by side in this panel: a TALLER one in a WHITE coat on the left and a much SHORTER one in a BROWN coat on the right, and both are wearing a plain woolly hat. What colour is the woolly hat on the head of the person in the WHITE coat? Answer with just one word from this list: orange, white, green, purple, blue, red, black. If this panel does not show that person at all, answer the single word missing. Nothing else.",
+    "qb_cell": "This is ONE panel cut out of a storyboard strip. Two people stand side by side in this panel: a TALLER one in a WHITE coat on the left and a much SHORTER one in a BROWN coat on the right, and both are wearing a plain woolly hat. What colour is the woolly hat on the head of the person in the BROWN coat? Answer with just one word from this list: orange, white, green, purple, blue, red, black. If this panel does not show that person at all, answer the single word missing. Nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of comic panels itself -- the outer edge of the whole row or grid of drawn panels, counting all of the panels together as one single block; not one panel on its own, and not the paper margin, table or wall around the strip",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "panel_plan",
+          "args": ["image", "anc", "reference.na", "reference.pn_rows", "reference.pn_cols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.qa_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rda"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rda", "pl", "PN_WORDS_A"],
+          "out": "sqa"
+        },
+        {
+          "fail_if": ["sqa.no_read"]
+        },
+        {
+          "read_crop": "reference.qb_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rdb"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rdb", "pl", "PN_WORDS_B"],
+          "out": "sqb"
+        },
+        {
+          "fail_if": ["sqb.no_read"]
+        },
+        {
+          "run": "compare_sequences",
+          "args": ["[sqa.seq, sqb.seq]", "[reference.seq_a, reference.seq_b]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "paint_panels",
+          "args": ["pl", "res", "[sqa, sqb]"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "panel_share",
+      "weight": 0.3,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of comic panels itself -- the outer edge of the whole row or grid of drawn panels, counting all of the panels together as one single block; not one panel on its own, and not the paper margin, table or wall around the strip",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "panel_plan",
+          "args": ["image", "anc", "reference.na", "reference.pn_rows", "reference.pn_cols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.qa_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rda"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rda", "pl", "PN_WORDS_A"],
+          "out": "sqa"
+        },
+        {
+          "fail_if": ["sqa.no_read"]
+        },
+        {
+          "read_crop": "reference.qb_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rdb"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rdb", "pl", "PN_WORDS_B"],
+          "out": "sqb"
+        },
+        {
+          "fail_if": ["sqb.no_read"]
+        },
+        {
+          "run": "compare_sequences",
+          "args": ["[sqa.seq, sqb.seq]", "[reference.seq_a, reference.seq_b]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "paint_panels",
+          "args": ["pl", "res", "[sqa, sqb]"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

@@ -1,0 +1,174 @@
+{
+  "id": "figured_bass",
+  "axis": "symbolic_systems",
+  "prompt": "A flat, straight-on scan of one page from an old ENGRAVED keyboard score: yellowed, lightly foxed paper, heavy black plate-printed notation, one system filling the frame.\n\nThe system is a single grand staff: a five-line treble staff above a five-line bass staff, joined by a curly brace at the left, with a treble clef on the upper staff and a bass clef on the lower one, a barline at each end, no key signature and no time signature.\n\nOn the BASS staff print ONE whole note -- an open oval note head with no stem -- centred exactly in the top space of that staff (the space lying between its fourth and fifth lines, counted upwards from the bottom). Directly BELOW that note head, just clear of the staff, print its figured-bass figure as a stack of two arabic numerals: a 4 with a 2 under it.\n\nOn the TREBLE staff, in the same vertical column as that bass note, engrave the chord this figured bass calls for: exactly THREE whole notes, stacked one above another in a single column. Work out for yourself, from the printed figure and from the bass note you have just printed, which three notes the figure asks for, and centre each note head exactly on its own line or in its own space. Choose the octave so that all three upper note heads sit inside the treble staff itself, with no ledger lines.\n\nNothing else on the page: no letter names, no words, no accidentals, no rests, no other numerals, no page number.",
+  "difficulty": "s4",
+  "easy_question": "This image was supposed to show a scan of an old yellowed printed music page carrying two five-line musical staves one above the other and joined at their left-hand ends, oval note heads sitting on them, and printed numbers below the lower staff. Ignoring artistic quality, does the image actually show that? Answer NO only if it shows something else entirely -- a blank sheet, a page of prose, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "required": [1, 3, 5],
+    "n_upper": 3,
+    "n_fig": 2,
+    "figure": "4 over 2",
+    "bass_pos_asked": 7,
+    "bass_anchor_words": "the top (fourth) space of the bass staff"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "system_readable",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "run": "read_figured_bass",
+          "args": ["image", "reference.n_upper"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": null,
+          "expression": "1.0 if not m.no_read else 0.0",
+          "code": "code_45e0025b631e",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "figure_realization_exact",
+      "weight": 7.0,
+      "steps": [
+        {
+          "run": "read_figured_bass",
+          "args": ["image", "reference.n_upper"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "exact_interval_score",
+          "args": ["m", "reference.required"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "voices_matched_partial",
+      "weight": 1.2,
+      "steps": [
+        {
+          "run": "read_figured_bass",
+          "args": ["image", "reference.n_upper"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "interval_match_share",
+          "args": ["m", "reference.required"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "upper_voice_count",
+      "weight": 0.8,
+      "steps": [
+        {
+          "run": "read_figured_bass",
+          "args": ["image", "reference.n_upper"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "upper_count_score",
+          "args": ["m", "reference.n_upper"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chord_stacked_one_column",
+      "weight": 0.4,
+      "steps": [
+        {
+          "run": "read_figured_bass",
+          "args": ["image", "reference.n_upper"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "stacked_chord_score",
+          "args": ["m"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "figure_printed_under_bass",
+      "weight": 0.8,
+      "steps": [
+        {
+          "run": "read_figured_bass",
+          "args": ["image", "reference.n_upper"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "figure_count_score",
+          "args": ["m", "reference.n_fig"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_interval_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "read_figured_bass",
+          "args": ["image", "reference.n_upper"],
+          "out": "m"
+        },
+        {
+          "run": "reference_overlay",
+          "args": ["image", "m", "reference.required", "reference.bass_pos_asked"],
+          "out": "ov"
+        },
+        {
+          "const": 1.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

@@ -1,0 +1,135 @@
+{
+  "id": "calculator_display",
+  "axis": "latent_computation",
+  "prompt": "A close, straight-on photo of the small paper slip printed by a self-service BUS-TERMINAL ticket-and-fare kiosk. A basic add-on fare processor with NO operator precedence tallies the button presses strictly LEFT TO RIGHT, each operator acting at once on the amount currently shown; the divide key does whole-number division that drops any fraction (truncates toward zero). A passenger presses exactly this button sequence, in order:\n\n    7 x 8 + 15 ÷ 2\n\nthen presses 'TOTAL'. Work out the final whole number this left-to-right rule produces (NOT standard math order-of-operations) and render the kiosk slip showing that single figure as the FARE TOTAL, printed large in an ordinary plain numeral font (an everyday printed typeface, NOT a seven-segment / segmented-LCD style). Print the button sequence above on a taped strip beside the kiosk. The slip shows only that one final number as the total; no other numbers anywhere except the taped button sequence.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show self-service bus-terminal ticket-and-fare kiosk paper slip photographed straight-on, its fare total in plain printed numerals? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "tokens": ["7", "*", "8", "+", "15", "/", "2"],
+    "result": 35,
+    "precedence_decoy": 63,
+    "seq_str": "7 x 8 + 15 ÷ 2",
+    "first_op": "*"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "display_result",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "This is a photo of a printed ticket-kiosk fare slip. Read the single whole number printed as the FARE TOTAL, ignoring the taped button-sequence strip. Answer with that integer only.",
+          "out": "val"
+        },
+        {
+          "fail_if": ["val.unreadable"]
+        },
+        {
+          "compare_band": "val",
+          "to": "reference.result",
+          "core": 0.5,
+          "margin": 4.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_button_seq",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Read the button sequence printed on the taped strip beside the kiosk. Answer with exactly the characters printed there (the digits and operator symbols in order).",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.seq_str",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_plain_font",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is the large FARE TOTAL numeral printed in an ordinary plain typeface (NOT a seven-segment / segmented-LCD style)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_single_total",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does the slip show exactly ONE final total number (with no other numbers on the slip apart from the taped button sequence)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_first_operator",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "This kiosk slip prints a sequence of button presses (numbers and operators). Read the FIRST operator symbol that appears between the first two numbers. Answer with just the symbol (x, +, - or /).",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "reference.first_op",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

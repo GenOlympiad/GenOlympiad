@@ -1,0 +1,221 @@
+{
+  "id": "yield_backsolve_rounding",
+  "axis": "long_range_consistency",
+  "prompt": "A photograph of the works order card for one job, clipped to the planning board on the wall of a small sheet-metal works, taken square-on with the shop floor out of focus behind it.\n\nThe card is a printed A4 card. Across the middle of it runs the job's process chart, drawn as four panels side by side in the order the work flows, left to right: CUTTING, then PRESSING, then WELDING, then PAINTING. Solid arrows between the panels run the way the work flows. Each panel carries its stage name, that stage's good-parts rate printed underneath the name, and an ISSUE box in which the planner writes the number of parts that stage is given.\n\nThis job is an order for 500 finished parts. The good-parts rates are CUTTING 96 per cent, PRESSING 95 per cent, WELDING 98 per cent, PAINTING 90 per cent. Material leaves the store only in boxes of 25 parts, so every ISSUE figure is a whole number of boxes. The planning rule printed at the foot of the card reads: every stage has to be given enough that what survives it is at least what the next stage needs, and the last stage has to leave at least the order quantity; any shortfall is made up to the next whole box.\n\nThe card also carries the works' own drafting convention for showing which way a calculation ran: a dashed calculation line is drawn along the chart with a small arrowhead inside every panel, so its direction can be read anywhere along it. The planner has filled the card in and drawn that line.\n\nWork the job out from the order quantity yourself -- I am deliberately not telling you what any ISSUE figure comes to, nor which way the calculation ran. Nothing on the card may carry a division sum, a percentage worked out longhand or a note explaining the rule: the only writing on the card is the stage names, the rates given above, the ISSUE figures, the order quantity and the printed planning rule. Every stage name and every ISSUE figure must be easy to read, and the arrowheads on both the solid arrows and the dashed line must be easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed works card carrying a chart of four panels side by side, each with a name and a box for a figure, with arrows running between the panels? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "stage_order": ["cutting", "pressing", "welding", "painting"],
+    "issue_grid": [
+      ["700", "650", "600", "575"]
+    ],
+    "n_stages": 4,
+    "falls_expected": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "issue_figures_on_the_card",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one stage panel of the process chart, with its stage name and its ISSUE box",
+          "sweep": true,
+          "out": "panels"
+        },
+        {
+          "fail_if": ["panels.unreadable"]
+        },
+        {
+          "read_crop": "Copy the stage name printed at the top of this panel. Write nothing else.",
+          "boxes": "panels",
+          "pad": 0.2,
+          "out": "sn"
+        },
+        {
+          "fail_if": ["sn.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written in the ISSUE box of this panel. Write the number only.",
+          "boxes": "panels",
+          "pad": 0.2,
+          "out": "iq"
+        },
+        {
+          "fail_if": ["iq.unreadable"]
+        },
+        {
+          "run": "issue_figures_in_order",
+          "args": ["sn", "iq", "reference.stage_order"],
+          "out": "iss"
+        },
+        {
+          "compare_grid": "iss.grid",
+          "to": "reference.issue_grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "calculation_line_runs_upstream",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one stage panel of the process chart, with its stage name and its ISSUE box",
+          "sweep": true,
+          "out": "panels"
+        },
+        {
+          "fail_if": ["panels.unreadable"]
+        },
+        {
+          "read_crop": "Does the dashed line in this cut-out carry a small arrowhead pointing to the left-hand side, to the right-hand side, or is there no dashed arrowhead in this cut-out? Answer with one word: left, right, or none.",
+          "boxes": "panels",
+          "pad": 0.2,
+          "out": "dr"
+        },
+        {
+          "fail_if": ["dr.unreadable"]
+        },
+        {
+          "run": "count_upstream_arrows",
+          "args": ["dr"],
+          "out": "up"
+        },
+        {
+          "compare_band": "up.n",
+          "to": "reference.n_stages",
+          "core_abs": 0.499,
+          "margin_abs": 3.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "issue_falls_along_the_flow",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one stage panel of the process chart, with its stage name and its ISSUE box",
+          "sweep": true,
+          "out": "panels"
+        },
+        {
+          "fail_if": ["panels.unreadable"]
+        },
+        {
+          "read_crop": "Copy the stage name printed at the top of this panel. Write nothing else.",
+          "boxes": "panels",
+          "pad": 0.2,
+          "out": "sn"
+        },
+        {
+          "fail_if": ["sn.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written in the ISSUE box of this panel. Write the number only.",
+          "boxes": "panels",
+          "pad": 0.2,
+          "out": "iq"
+        },
+        {
+          "fail_if": ["iq.unreadable"]
+        },
+        {
+          "run": "issues_fall_along_flow",
+          "args": ["sn", "iq", "reference.stage_order"],
+          "out": "fl"
+        },
+        {
+          "compare": "fl.falls",
+          "to": "reference.falls_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "stage_panels_present",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one stage panel of the process chart, with its stage name and its ISSUE box",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole stage panel with a name at the top and a box for a figure, rather than the printed rule at the foot or only part of a panel? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.2,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_stages",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_longhand_working",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a division sum or a percentage worked out longhand anywhere on the card",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

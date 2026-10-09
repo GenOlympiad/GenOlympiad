@@ -1,0 +1,180 @@
+{
+  "id": "depression_contour_hachure",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The borrow pit and the spoil heap beside it were flown last week, and the survey office has to issue the earthworks sheet the contractor sets out from. The picture is that plotted sheet on the site cabin desk, square to the camera, north to the top of the sheet.\n\nTwo features go on it, each around its own stake, one lettered P1 and one lettered P2. The ground survey gives this and nothing else:\ncontour interval 1.0 m\nP1 -- four closed contour rings carrying the heights 93.0, 94.0, 95.0 and 96.0 m, and a spot height of 92.4 m stamped at the stake itself\nP2 -- three closed contour rings carrying the heights 71.0, 72.0 and 73.0 m, and a spot height of 73.6 m stamped at the stake itself\n\nNote 3 in the title block, which every sheet on this contract carries: every closed contour on the sheet is drawn with short hachure ticks across it, and those ticks lie on the downhill side of the contour they belong to.\n\nEach of the seven heights goes on the ring it belongs to, and the ticks go where note 3 sends them. I am deliberately not telling you which of the two features stands up out of the ground and which one is dug into it, nor which way the ticks go at either stake -- the survey figures above settle both. Draw the rings far enough apart, and the ticks long enough, to be read one from another. Apart from the two stake letters, the ring heights, the two spot heights and the title block, no further word, number or arrow belongs on the sheet face.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a survey drawing with closed contour rings on it? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no drawing on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "tick_senses": "P1=towards,P2=away",
+    "inner_heights": "P1=93,P2=73",
+    "n_features": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_ticks_at_each_stake_lie_on_that_stake_s_own_downhill_side",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the set of closed contour rings drawn around a lettered stake",
+          "sweep": true,
+          "out": "grp_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["grp_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which stake letter is printed at the middle of the rings? Answer with the letter exactly as it is printed.",
+          "boxes": "grp_box",
+          "pad": 0.25,
+          "out": "key_rd"
+        },
+        {
+          "fail_if": ["key_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, do the short ticks on the rings point towards the middle of the rings or away from the middle? Answer towards or away, or none if no ticks are drawn here.",
+          "boxes": "grp_box",
+          "pad": 0.25,
+          "out": "sense_rd"
+        },
+        {
+          "fail_if": ["sense_rd.unreadable"]
+        },
+        {
+          "run": "read_tick_directions",
+          "args": ["key_rd", "sense_rd"],
+          "out": "sensev"
+        },
+        {
+          "compare": "sensev.s",
+          "to": "reference.tick_senses",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_innermost_ring_at_each_stake_carries_the_height_the_survey_gives_it",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the set of closed contour rings drawn around a lettered stake",
+          "sweep": true,
+          "out": "h_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["h_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which stake letter is printed at the middle of the rings? Answer with the letter exactly as it is printed.",
+          "boxes": "h_box",
+          "pad": 0.25,
+          "out": "hkey_rd"
+        },
+        {
+          "fail_if": ["hkey_rd.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what height figure is written on the innermost ring, the smallest one around the stake? Answer with the figure exactly as it is written.",
+          "boxes": "h_box",
+          "pad": 0.25,
+          "out": "h_rd"
+        },
+        {
+          "fail_if": ["h_rd.unreadable"]
+        },
+        {
+          "run": "read_innermost_heights",
+          "args": ["hkey_rd", "h_rd"],
+          "out": "innv"
+        },
+        {
+          "compare": "innv.s",
+          "to": "reference.inner_heights",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_stakes_have_ticks_drawn_on_their_rings_at_all",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the set of closed contour rings drawn around a lettered stake",
+          "sweep": true,
+          "out": "pres_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["pres_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, are there short ticks drawn across the rings? Answer yes or no only.",
+          "boxes": "pres_box",
+          "pad": 0.25,
+          "out": "pres_rd"
+        },
+        {
+          "fail_if": ["pres_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["pres_rd"],
+          "out": "presn"
+        },
+        {
+          "compare_band": "presn.n",
+          "to": "reference.n_features",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_word_number_or_arrow_is_added_to_the_sheet_face",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a word, number or arrow on the sheet beyond the stake letters, the heights and the title block",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

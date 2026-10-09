@@ -1,0 +1,103 @@
+{
+  "id": "full_moon_next_date",
+  "axis": "latent_computation",
+  "prompt": "A dark almanac moon-phase card headed 'HARBOUR ALMANAC -- LUNAR TABLE', with a subtitle 'Synodic month = 29.53 days' and a drawn full-moon disc. It states the last recorded FULL MOON was 'Tue 18 Mar 2031'. Below, in a clearly labelled answer block headed '6th FULL MOON', print the DATE of the SIXTH full moon that occurs AFTER that last recorded full moon. Work it out properly: consecutive full moons are one synodic month (29.53 days) apart, so the 6th full moon after is 6 times 29.53 days later; add that many days to the last full-moon date, counting the real calendar with its different month lengths (do NOT approximate a month as a round 29 or 30 days -- the fractional 0.53 day per cycle accumulates over the six cycles). Print the resulting date as 'Www dd Mon yyyy' (weekday, day, month, year) in the answer block. Print only the last-full-moon date and the single 6th-full-moon date; do NOT print any working, day counts, or intermediate full-moon dates.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an almanac lunar/moon-phase card giving a last full-moon date and a computed next full-moon date? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "target_wd": "Thursday",
+    "target_dom": 11,
+    "target_mon": "Sep",
+    "last_dom": 18,
+    "last_mon": "Mar",
+    "q_date": "This is an almanac lunar card. In the answer block headed '6th FULL MOON' it prints a DATE in the form 'Weekday DD Mon YYYY'. Read ONLY the date printed in that '6th FULL MOON' block; do NOT recompute or correct it. Report the weekday word, the day-of-month number, and the month. Answer strictly as 'weekday=<word> day=<number> month=<Mon>' and nothing else.",
+    "q_last": "On this almanac card, read the 'Last recorded FULL MOON' date (form 'Weekday DD Mon YYYY'). Report the day-of-month number and month printed there. Answer strictly as 'day=<number> month=<Mon>' and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "moon_date",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_date",
+          "out": "ans"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "next_full_moon_match",
+          "args": ["ans", "reference.target_wd", "reference.target_dom", "reference.target_mon"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_last_date",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.q_last",
+          "out": "ans"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "last_full_moon_match",
+          "args": ["ans", "reference.last_dom", "reference.last_mon"],
+          "code": {
+            "inline": "chk_code_2"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_no_working",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "arithmetic working, a day count, or a line of explanation printed anywhere on the card",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

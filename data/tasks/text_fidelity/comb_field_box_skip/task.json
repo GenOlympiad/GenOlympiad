@@ -1,0 +1,136 @@
+{
+  "id": "comb_field_box_skip",
+  "axis": "text_fidelity",
+  "prompt": "A benefits office is proofing the printed application form it is about to send to press, and what is wanted is the photograph of the top of that form as it comes off the proofing press, lying square on to the camera with the two name fields filled in by hand in the way the office trains its counter staff to fill them.\n\nBoth name fields are combs: a row of separate square boxes, one character to a box, capitals throughout. The SURNAME comb has sixteen boxes. The FORENAMES comb below it has twelve boxes. Each comb has its box count printed as a small figure at its right-hand end.\n\nThe applicant on this proof is a real one from the office's test set. Her surname is FITZGERALD-OKONKWO and her forenames are MARY ANNE PATRICIA.\n\nThe office's filling rules, which is what the proof is being checked against: one character to a box and never two; a hyphen takes a box of its own; one box is left empty between two words; a surname that will not fit its comb is entered as far as the boxes allow and simply stops there; and forenames that will not fit their comb are entered as the first forename in full, then each remaining forename as a single initial, with one empty box before each initial.\n\nWhat actually ends up in the boxes is deliberately not being written out for you -- fitting the names to the combs under those rules is exactly what the proof is being read for.\n\nNothing else is filled in on the form, and no note, working or count is to appear beside either comb.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed form with rows of separate square boxes on it, with handwritten capital letters in some of the boxes? A photograph, a scan or a document mockup ALL count as yes. Answer NO only if the image instead shows a blank card that just states an answer, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "surname_row": "fitzgeraldokonk",
+    "forenames_row": "mary a p",
+    "n_forename_boxes": 12
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_forenames_comb_holds_what_the_fitting_rule_leaves",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of square boxes of the FORENAMES field on the form",
+          "out": "fc"
+        },
+        {
+          "fail_if": ["fc.unreadable"]
+        },
+        {
+          "read_crop": "Copy what is written in the boxes of this row, from left to right. Run the letters of each word together as one word, and leave a single space wherever a box is empty. Write the characters only.",
+          "boxes": "fc",
+          "pad": 0.2,
+          "out": "fcr"
+        },
+        {
+          "run": "first_reading_text",
+          "args": ["fcr"],
+          "out": "ft"
+        },
+        {
+          "fail_if": ["ft.refused"]
+        },
+        {
+          "compare": "ft.v",
+          "to": "reference.forenames_row",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_surname_comb_stops_where_its_boxes_stop",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of square boxes of the SURNAME field on the form",
+          "out": "sc2"
+        },
+        {
+          "fail_if": ["sc2.unreadable"]
+        },
+        {
+          "read_crop": "Copy what is written in the boxes of this row, from left to right, running the characters together. Write the characters only.",
+          "boxes": "sc2",
+          "pad": 0.2,
+          "out": "scr"
+        },
+        {
+          "run": "lettersonly",
+          "args": ["scr"],
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.refused"]
+        },
+        {
+          "compare": "st.v",
+          "to": "reference.surname_row",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_twelve_forename_boxes",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of square boxes of the FORENAMES field on the form",
+          "out": "cz"
+        },
+        {
+          "fail_if": ["cz.unreadable"]
+        },
+        {
+          "read_crop": "How many square boxes are printed in this row? Two boxes count as two only if you can see a printed line or a gap between them. Count every box, whether or not a letter is written in it. If a number is printed here, ignore it -- count the boxes themselves. Answer with just the number.",
+          "boxes": "cz",
+          "pad": 0.2,
+          "out": "czc"
+        },
+        {
+          "run": "sum_counts",
+          "args": ["czc"],
+          "out": "czn"
+        },
+        {
+          "fail_if": ["czn.refused"]
+        },
+        {
+          "compare_band": "czn.n",
+          "to": "reference.n_forename_boxes",
+          "core_abs": 1.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

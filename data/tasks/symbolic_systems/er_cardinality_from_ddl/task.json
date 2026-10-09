@@ -1,0 +1,179 @@
+{
+  "id": "er_cardinality_from_ddl",
+  "axis": "symbolic_systems",
+  "prompt": "A team is reviewing a small schema before it is built, and the reviewer wants the picture on the wall, not the script. What is wanted is the review sheet taped to the whiteboard: one box per table with its name across the top, and one line joining each pair of tables that the script relates.\n\nThe script, which is the whole of what the reviewer was given, is this:\nCREATE TABLE customer (id INT PRIMARY KEY, name TEXT NOT NULL);\nCREATE TABLE address (id INT PRIMARY KEY, customer_id INT NOT NULL REFERENCES customer(id), line1 TEXT NOT NULL);\nCREATE TABLE sales_order (id INT PRIMARY KEY, customer_id INT NULL REFERENCES customer(id), placed DATE NOT NULL);\nCREATE TABLE invoice (id INT PRIMARY KEY, order_id INT NOT NULL UNIQUE REFERENCES sales_order(id), total INT NOT NULL);\n\nHow the sheet has to be labelled: tag the relationship lines R1, R2 and R3 in the order their REFERENCES clauses appear in the script above, and at EACH end of every line print the line's tag, a colon and how many rows of the table at that end may take part, written in one of these four forms only: 0..1, 1..1, 0..N, 1..N. Head the sheet ORDERS V2.\n\nWhich of the four forms belongs at each end is for you to read out of the script -- I am deliberately not telling you any of them, and not one of them is written in the script. Do not copy the script onto the sheet and do not write any other note on it: apart from the heading, the table names, the column names inside the boxes and the six end labels, the sheet carries no writing at all.\n\nEvery end label must be large enough to read, and no label may sit on top of a line or a box.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show boxes joined by lines, with short labels printed at the ends of those lines? A photograph, a drawing or a document mockup all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "card_seq": "r1:0..n|r1:1..1|r2:0..1|r2:0..n|r3:0..1|r3:1..1",
+    "table_seq": "address|customer|invoice|salesorder",
+    "clean_token": "yes",
+    "title_token": "ordersv2",
+    "q_card": "Copy the short label printed in this cut-out exactly as it appears, and add nothing else.",
+    "q_table": "Copy the name printed across the top of the box in this cut-out.",
+    "q_title": "Copy the heading printed in this cut-out.",
+    "end_map": "r1:address=0..n|r1:customer=1..1|r2:customer=0..1|r2:salesorder=0..n|r3:invoice=0..1|r3:salesorder=1..1",
+    "q_end_table": "This cut-out shows the end of a line where it meets a box. Copy the name printed across the top of that box. Write the name only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_six_end_labels_the_script_forces",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a short label printed where a line meets a box on the schema sheet",
+          "out": "ce",
+          "sweep": true
+        },
+        {
+          "fail_if": ["ce.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_card",
+          "boxes": "ce",
+          "pad": 0.3,
+          "out": "cq"
+        },
+        {
+          "fail_if": ["cq.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_end_table",
+          "boxes": "ce",
+          "pad": 1.5,
+          "out": "ctb"
+        },
+        {
+          "run": "end_labels_by_table",
+          "args": ["cq", "ctb"],
+          "out": "cs"
+        },
+        {
+          "fail_if": ["cs.refused"]
+        },
+        {
+          "compare": "cs.seq",
+          "to": "reference.end_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_four_table_boxes_the_script_asks_for",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one box on the sheet with a name printed across its top",
+          "out": "tb",
+          "sweep": true
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_table",
+          "boxes": "tb",
+          "pad": 0.3,
+          "out": "tq",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["tq.unreadable"]
+        },
+        {
+          "run": "wordset",
+          "args": ["tq"],
+          "out": "ts"
+        },
+        {
+          "fail_if": ["ts.unreadable"]
+        },
+        {
+          "compare": "ts.seq",
+          "to": "reference.table_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_line_of_the_script_is_copied_onto_the_sheet",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of database script printed on the review sheet",
+          "out": "sc2",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["sc2.unreadable"]
+        },
+        {
+          "compare": "sc2.clean",
+          "to": "reference.clean_token",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sheet_carries_the_heading_it_was_given",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the heading printed across the top of the review sheet",
+          "out": "hd"
+        },
+        {
+          "fail_if": ["hd.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_title",
+          "boxes": "hd",
+          "pad": 0.2,
+          "out": "hq",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["hq.unreadable"]
+        },
+        {
+          "run": "wordset",
+          "args": ["hq"],
+          "out": "hs"
+        },
+        {
+          "fail_if": ["hs.unreadable"]
+        },
+        {
+          "compare": "hs.seq",
+          "to": "reference.title_token",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

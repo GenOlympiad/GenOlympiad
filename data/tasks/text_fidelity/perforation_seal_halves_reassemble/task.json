@@ -1,0 +1,84 @@
+{
+  "id": "perforation_seal_halves_reassemble",
+  "axis": "text_fidelity",
+  "prompt": "Finance signs the duplicate set this afternoon, so the clerk has photographed the sealing step for the audit file, two frames stacked in one print.\n\nThe upper frame catches the moment of stamping: two copies of the same voucher lie overlapped along their perforated seam, and the round red seal is being struck over that seam in one press of the handle. The lower frame shows the same two copies after the perforation has been pulled apart, laid flat side by side on the desk, each still bearing whatever red ink it took. The office rule card weighted down at the edge of the desk gives the seal as a 40 mm circle with four characters ringed inside it and one star at the centre, and it states that a set counts as matched only when the seal was struck once over the seam.\n\nWhat red ink each copy ends up carrying is what the rule card does not show.",
+  "difficulty": "s1",
+  "easy_question": "Is this a two-frame print of a red office seal being struck on overlapped vouchers and of those vouchers pulled apart afterwards Answer yes or no only.",
+  "reference": {
+    "part1": "each_carries_part",
+    "part2": "across_seam"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the lower frame, where the two copies lie side by side on the desk. Answer with one of: In the lower frame there is part of one round seal on each copy; In the lower frame there is a complete round seal on each copy; In the lower frame there is red ink on only one of the two copies.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Now look at the upper frame, at the moment the red seal is being pressed down. Answer with one of: In the upper frame the seal is straddling the seam; In the upper frame the seal is set down entirely on one copy; In the upper frame there is a separate round stamp on each copy.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "id": "adjacent_word_disjoint",
+  "axis": "text_fidelity",
+  "prompt": "A straight-on photograph of a printed puzzle page on pale graph-ruled stock, dark teal type, heading at the top left with a rule beneath. Headed 'SEVEN APART' with the small line 'Club final - eight rows, long words only'. Lay out EXACTLY 8 numbered rows (1. to 8.), each carrying exactly SEVEN words separated by generous spaces.\n\nCRITICAL WRITING LAW: any two words standing side by side in a row must be built from completely separate letters -- go through the letters of one and the letters of the other and find nothing in common, not even one. This has to hold for every neighbouring pair right along a row of seven, and it gets harder as the row goes on. Additionally every word must be FIVE letters or longer, so nothing short can be used to slip between two awkward neighbours, and no word may appear twice on the page. The rows are lists of words, not sentences; choose them yourself.\n\nNothing else on the page.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a printed puzzle page carrying a numbered list of rows of separate words. Ignoring artistic quality and ignoring whether the words are the right ones, does the image DEPICT that -- a printed page carrying a numbered list of lines of text? A photograph, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_read": "This image is a card carrying 8 numbered rows, and each row is a plain list of separate words with wide spaces between them. Transcribe the 8 numbered rows EXACTLY as written, in order. Copy every word, keep the original spelling, and keep the spaces between the words -- do not join two words together and do not leave one out. Separate one numbered row from the next with a single pipe character | and nothing else. Do NOT transcribe the title or any heading. Do not add commentary, row numbers or quotation marks. Output only the transcribed rows separated by |.",
+    "n_lines": 8,
+    "per_line": 7,
+    "min_letters": 5,
+    "evidence": true,
+    "q_evidence": "This picture shows a printed page with hollow rectangles drawn on it, and a written list beside it. Is every hollow rectangle drawn around a numbered line of the page's own numbered list -- rather than around the heading, or sitting in blank paper with no text inside it? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_sequence": "reference.q_read",
+          "n": "reference.n_lines",
+          "delimiter": "|",
+          "retries": 2,
+          "out": "v"
+        },
+        {
+          "read_crop": "This card carries a numbered list of rows, and every numbered row is a list of separate words with wide spaces between them. Write those numbered rows out again, exactly as they are printed. Put each row on its own line, starting with the number it carries, then a full stop, then that row's words with one space between neighbouring words. Copy every word letter for letter and keep the words in the order they are printed: never join two words into one, never split one word into two, and never leave a word out. Leave out the title, any sub-heading and any text that carries no number. Write out the rows and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Look at every numbered row of words on this page and transcribe it word for word. Begin each transcribed row with its printed number followed by a full stop, then the row's words in the order they appear, with a single space between one word and the next. Reproduce anything that looks like a mistake or an odd spelling just as it stands -- never correct it, complete it or tidy it up, and never run two neighbouring words together. Ignore the heading, the sub-heading and any line that carries no number. Output only the transcribed rows.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "check_neighbour_words_disjoint",
+          "args": [
+            "v",
+            "[t1, t2]",
+            "reference.n_lines",
+            "reference.per_line",
+            "reference.min_letters"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read_sequence": "reference.q_read",
+          "n": "reference.n_lines",
+          "delimiter": "|",
+          "retries": 2,
+          "out": "v"
+        },
+        {
+          "read_crop": "This card carries a numbered list of rows, and every numbered row is a list of separate words with wide spaces between them. Write those numbered rows out again, exactly as they are printed. Put each row on its own line, starting with the number it carries, then a full stop, then that row's words with one space between neighbouring words. Copy every word letter for letter and keep the words in the order they are printed: never join two words into one, never split one word into two, and never leave a word out. Leave out the title, any sub-heading and any text that carries no number. Write out the rows and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Look at every numbered row of words on this page and transcribe it word for word. Begin each transcribed row with its printed number followed by a full stop, then the row's words in the order they appear, with a single space between one word and the next. Reproduce anything that looks like a mistake or an odd spelling just as it stands -- never correct it, complete it or tidy it up, and never run two neighbouring words together. Ignore the heading, the sub-heading and any line that carries no number. Output only the transcribed rows.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "check_neighbour_words_disjoint",
+          "args": [
+            "v",
+            "[t1, t2]",
+            "reference.n_lines",
+            "reference.per_line",
+            "reference.min_letters"
+          ],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_repeat_token",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read_sequence": "reference.q_read",
+          "n": "reference.n_lines",
+          "delimiter": "|",
+          "retries": 2,
+          "out": "v"
+        },
+        {
+          "read_crop": "This card carries a numbered list of rows, and every numbered row is a list of separate words with wide spaces between them. Write those numbered rows out again, exactly as they are printed. Put each row on its own line, starting with the number it carries, then a full stop, then that row's words with one space between neighbouring words. Copy every word letter for letter and keep the words in the order they are printed: never join two words into one, never split one word into two, and never leave a word out. Leave out the title, any sub-heading and any text that carries no number. Write out the rows and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Look at every numbered row of words on this page and transcribe it word for word. Begin each transcribed row with its printed number followed by a full stop, then the row's words in the order they appear, with a single space between one word and the next. Reproduce anything that looks like a mistake or an odd spelling just as it stands -- never correct it, complete it or tidy it up, and never run two neighbouring words together. Ignore the heading, the sub-heading and any line that carries no number. Output only the transcribed rows.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "check_no_repeated_words",
+          "args": ["v", "[t1, t2]", "reference.n_lines"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

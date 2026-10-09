@@ -1,0 +1,237 @@
+{
+  "id": "count_shadow_pairs",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic outdoor photograph of flat pale ground under a low bright sun, scattered with EXACTLY 24 identical red traffic cones at random positions, well separated so each cone is fully visible. Because the sun is low, EACH cone casts ONE long dark shadow across the ground, so the number of dark shadows must equal the number of red cones exactly -- one shadow per cone, no cone without a shadow and no shadow without a cone. There must be EXACTLY 24 red cones (and therefore exactly 24 shadows) -- not 23, not 25, exactly 24. No text, no numerals.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show flat ground scattered with a number of red cones each casting one shadow (object-shadow pairing)? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 24,
+    "q": "How many red cones are standing on this ground? Count each red cone one by one. Answer with the integer number of red cones only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This picture should show these countable objects: red traffic cones standing on flat ground, each casting one shadow. Look at the individual objects being counted. Is each one a red traffic cone, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "d2_q_arrange": "Look at where the many similar objects sit in this picture. Are they spread out in an IRREGULAR, scattered way (uneven gaps, some objects clumped together, no repeating pattern), rather than lined up in a tidy row, an evenly-spaced ring or a rectangular grid? Answer yes if the arrangement is irregular and scattered, no if it is a neat regular row, grid or evenly-spaced pattern. Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them fully visible and clearly separate from its neighbours -- none hidden behind another, none merged or overlapping into a single blob, none cut off by the edge of the frame -- so that each one could be counted individually? Answer yes if every object is fully visible and separate, no if objects overlap, merge, are hidden or are cut off. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cone_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a red traffic cone standing on the ground",
+          "out": "bx",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show a solid RED cone-shaped marker (a traffic cone, seen from the side it looks like a red triangle)? Answer no if you see only pale bare ground or only a grey shadow with no red object. Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cr"],
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shadow_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show several red cones on the ground, each with a dark shadow beside it? Answer with the single word yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_objform",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_arrangement",
+      "weight": 0.8,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_arrange",
+          "out": "g1"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g1",
+          "out": "yn1"
+        },
+        {
+          "compare": "yn1",
+          "to": "yes",
+          "out": "f1"
+        },
+        {
+          "ask": "Look at the overall layout of the many similar items in this image. Are their positions irregular and unaligned -- i.e. NOT organized into neat rows, columns, a grid, or one regular repeating pattern? Judge the layout as a whole. Answer yes or no only.",
+          "out": "g2"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g2",
+          "out": "yn2"
+        },
+        {
+          "compare": "yn2",
+          "to": "yes",
+          "out": "f2"
+        },
+        {
+          "any": ["f1", "f2"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a red cone that is hidden behind another cone, merged into a neighbour, or cut off by the edge of the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g1"
+        },
+        {
+          "fail_if": ["sweep_g1.unreadable"]
+        },
+        {
+          "compare": "sweep_g1.clean",
+          "to": "yes",
+          "out": "f1"
+        },
+        {
+          "read": "boxes",
+          "target": "a clump where several red cones merge together so badly they cannot be told apart",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g2"
+        },
+        {
+          "fail_if": ["sweep_g2.unreadable"]
+        },
+        {
+          "compare": "sweep_g2.clean",
+          "to": "yes",
+          "out": "f2"
+        },
+        {
+          "any": ["f1", "f2"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a red traffic cone",
+  "count_total": "reference.n"
+}

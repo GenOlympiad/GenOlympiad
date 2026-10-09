@@ -1,0 +1,209 @@
+{
+  "id": "the_riser_keeps_its_grid_node",
+  "axis": "long_range_consistency",
+  "prompt": "One drawing sheet from a hospital refurbishment package, photographed flat under a lamp.\n\nThe sheet carries four floor plans of the same block, side by side in one row, left to right: LEVEL 1, LEVEL 2, LEVEL 3, LEVEL 4. Each plan has its own level tag printed under it.\n\nEvery level stands on the same structural grid. The gridlines running up the page are lettered A to F, left to right. The gridlines running across the page are numbered 1 to 5, top to bottom. Every one of the four plans has that grid drawn on it with its letters and numbers printed at the ends of the lines.\n\nThe partitions are not the same from level to level: this block was fitted out floor by floor over thirty years, so each plan has its own arrangement of rooms, corridors and doors.\n\nOne new pneumatic-tube riser runs the full height of the block. The riser is drawn on each plan as a small square hatched box with the tag PT-1 beside it.\n\nThe plans are to be drawn to the same scale with the grid readable on each, and the level tags and the PT-1 tags readable. Nothing on the sheet says which gridline crossing the riser is on, and there is no note, arrow or leader tying one plan to another.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a drawing sheet carrying several floor plans side by side? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows nothing of the kind at all. Answer yes or no only.",
+  "reference": {
+    "node_seq": "level 1=b3|level 2=b3|level 3=b3|level 4=b3",
+    "tag_count_all": "yes",
+    "straddle_all": "yes",
+    "clean_sheet": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_riser_lands_on_one_grid_crossing_on_every_level",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "floor plan drawn on the sheet",
+          "out": "nd",
+          "ring": true
+        },
+        {
+          "fail_if": ["nd.unreadable"]
+        },
+        {
+          "read_crop": "Is a level tag printed under this plan? Answer yes or no.",
+          "boxes": "nd",
+          "pad": 0.2,
+          "out": "ndp"
+        },
+        {
+          "read_crop": "Read the level tag printed under this plan and copy it. Write the tag only.",
+          "boxes": "nd",
+          "pad": 0.2,
+          "out": "ndk"
+        },
+        {
+          "read_crop": "On this plan, is a small hatched box tagged PT-1 drawn with gridlines running across it? Answer yes or no.",
+          "boxes": "nd",
+          "pad": 0.2,
+          "out": "ndq"
+        },
+        {
+          "read_crop": "On this plan, find the small hatched box tagged PT-1. Which lettered gridline and which numbered gridline cross at that box? Write the letter and the number together, with nothing else.",
+          "boxes": "nd",
+          "pad": 0.2,
+          "out": "ndv"
+        },
+        {
+          "run": "pairs",
+          "args": [
+            "seen(ndp, ndk, '(no tag)')",
+            "seen(ndq, ndv, '(absent)')",
+            "'level tags printed under the plans'",
+            "4"
+          ],
+          "out": "ndf"
+        },
+        {
+          "fail_if": ["ndf.refused"]
+        },
+        {
+          "compare": "ndf.seq",
+          "to": "reference.node_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_level_carries_the_riser_once",
+      "weight": 3.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "floor plan drawn on the sheet",
+          "out": "tc",
+          "ring": true
+        },
+        {
+          "fail_if": ["tc.unreadable"]
+        },
+        {
+          "read_crop": "On this plan, how many small hatched boxes tagged PT-1 are drawn? Answer with one word: none, one, or more than one.",
+          "boxes": "tc",
+          "pad": 0.2,
+          "out": "tcv"
+        },
+        {
+          "run": "every",
+          "args": ["tcv", "'one'", "'plans'", "4"],
+          "out": "tcf"
+        },
+        {
+          "fail_if": ["tcf.refused"]
+        },
+        {
+          "compare": "tcf.all",
+          "to": "reference.tag_count_all",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_riser_box_straddles_a_gridline_crossing_on_every_level",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "floor plan drawn on the sheet",
+          "out": "st",
+          "ring": true
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "read_crop": "Is a small hatched box tagged PT-1 drawn on this plan? Answer yes or no.",
+          "boxes": "st",
+          "pad": 0.2,
+          "out": "stp"
+        },
+        {
+          "read_crop": "On this plan, does a lettered gridline and a numbered gridline pass through the hatched box tagged PT-1? Answer yes or no.",
+          "boxes": "st",
+          "pad": 0.2,
+          "out": "stv"
+        },
+        {
+          "run": "every",
+          "args": ["seen(stp, stv, '(absent)')", "'yes'", "'plans'", "4"],
+          "out": "stf"
+        },
+        {
+          "fail_if": ["stf.refused"]
+        },
+        {
+          "compare": "stf.all",
+          "to": "reference.straddle_all",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_page_carries_nothing_it_is_barred_from_carrying",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "note or leader line naming the gridline crossing of the riser, added to the drawing sheet",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a written note saying which gridline crossing the riser is on, or a leader line or arrow drawn between two of the plans? Answer yes or no. Answer no if the cut-out shows a level tag, a grid letter or number at the end of a gridline, a partition, a door, the PT-1 tag, the desk or blank paper.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "run": "sweep_holds_nothing_banned",
+          "args": ["xg", "xgw", "xgy"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_sheet",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

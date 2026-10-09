@@ -1,0 +1,212 @@
+{
+  "id": "conway_life_steps",
+  "axis": "latent_computation",
+  "prompt": "Generate the 'puzzle of the day' card pinned to a station concourse community NOTICE BOARD: a printed Conway's Game of Life card that must show the board's final state after exactly 4 generations. Use standard Conway rules (B3/S23) on a finite 13x13 grid with everything outside the boundary permanently dead. Filled BLACK squares are live cells and plain WHITE squares are dead cells. The card's starting grid (13x13, 1 = live, 0 = dead) is printed as:\n0100000010000\n0000000001000\n1000000100001\n0000001100000\n1010000000010\n1001001000000\n0000000001000\n1000000001000\n1001000000010\n0101000000000\n0010000001000\n0000000110111\n0001010000000\n\nRender ONLY the final 13x13 grid after exactly 4 generations, printed on the card as a sharp array of square cells separated by thin light-gray gridlines, solid black for live and pure white for dead. No coordinates, no labels, no text, no arrows, no decorations, nothing outside the grid.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict printed 'puzzle of the day' Conway Game-of-Life card pinned to a station concourse community notice board. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 13,
+    "steps": 4,
+    "grid": [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+      [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+      [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0]
+    ],
+    "n_live": 23
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "final_grid_cells",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "expected_n": 1,
+          "target": "the printed grid of square cells -- the gridded array itself, from the outer edge of the top-left cell to the outer edge of the bottom-right cell, NOT the card, pin, notice board or any margin around it",
+          "out": "gb"
+        },
+        {
+          "fail_if": ["gb.unreadable"]
+        },
+        {
+          "run": "board_cell_boxes",
+          "args": ["gb", "reference.n", "0.15"],
+          "out": "cs"
+        },
+        {
+          "fail_if": ["cs.unreadable"]
+        },
+        {
+          "read_crop": "This picture is a close-up of ONE square cell cut out of a printed grid; thin slivers of the neighbouring cells may show along the edges. Look at the SQUARE IN THE MIDDLE of the picture. Is that middle square filled solid BLACK, or is it white/blank? Answer with a single digit: 1 if the middle square is solid black, 0 if it is white. Digit only.",
+          "boxes": "cs",
+          "pad": 0,
+          "out": "cd"
+        },
+        {
+          "run": "read_life_grid",
+          "args": ["cd", "reference.n"],
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "run": "live_cell_f1",
+          "args": ["read.grid", "reference.grid"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_grid_rows",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square cell in the left-hand column of the printed grid on the card",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole square cell of a printed grid, solid black or plain white, rather than a thin grey gridline, a piece of the card, or only part of a cell? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_live_cells",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square cell of the printed grid filled solid black",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole square cell filled solid black, rather than a plain white cell, a thin grey gridline, or only part of a cell? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_live",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_labels",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a coordinate, a label, a word, a number, an arrow or a decoration printed on the card outside the grid of cells",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_generations_label",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "This Conway Game-of-Life card states how many generations (steps) were applied. Read that number of generations printed on the card. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.steps",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "id": "wine_glass_transmit_caustic",
+  "axis": "physical_consistency",
+  "prompt": "A clean still-life on a pale table: a lit candle stands behind a glass of deep RED wine, so the candlelight shines THROUGH the wine and lands on the table on the far side of the glass. Obey the optics of coloured transmission and lensing: the light that passes through the wine is TINTED RED, and the curved glass+wine focuses it into a BRIGHT RED PATCH (a caustic) on the tablecloth just beyond the glass, surrounded by a darker shadow ring. Draw a bright RED concentrated light patch on the table beyond the wine glass -- not a plain grey shadow. No text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a candle shining through a glass of red wine, casting a coloured focused light patch on the table beyond it? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel printing an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_caustic_color": "A candle and a glass of wine stand on a table. Look at the patch of TABLE SURFACE immediately beyond the glass, on the side of the glass away from the candle. What colour is that patch of table as it is actually drawn? Answer with exactly one word: red, blue, or grey.",
+    "q_caustic_bright": "Look at the patch of table immediately beyond the wine glass, on the side of the glass away from the candle. Compare its brightness with the surrounding tablecloth further away. Is that patch brighter than the surrounding cloth, or darker than it? Answer with exactly one word: bright or dark."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "wine_glass_transmit_caustic_point",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "reference.q_caustic_color",
+          "out": "raw_f0"
+        },
+        {
+          "fail_if": ["raw_f0.unreadable"]
+        },
+        {
+          "compare": "raw_f0",
+          "to": "red",
+          "out": "f0"
+        },
+        {
+          "ask": "reference.q_caustic_bright",
+          "out": "raw_f1"
+        },
+        {
+          "fail_if": ["raw_f1.unreadable"]
+        },
+        {
+          "compare": "raw_f1",
+          "to": "bright",
+          "out": "f1"
+        },
+        {
+          "all": ["f0", "f1"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_q_caustic_bright",
+      "weight": 0.6,
+      "not_scored": true,
+      "steps": [
+        {
+          "ask": "reference.q_caustic_bright",
+          "out": "raw_frac"
+        },
+        {
+          "fail_if": ["raw_frac.unreadable"]
+        },
+        {
+          "compare": "raw_frac",
+          "to": "bright",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

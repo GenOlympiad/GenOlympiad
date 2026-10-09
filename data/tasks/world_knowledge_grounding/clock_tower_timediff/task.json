@@ -1,0 +1,129 @@
+{
+  "id": "clock_tower_timediff",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A clean travel-poster illustration of TWO clock towers side by side. The LEFT tower is labelled 'LONDON' and the RIGHT tower is labelled 'TOKYO', each with a big round ANALOG clock with clear numerals 1-12 and hour+minute hands. Tokyo's civil time is 9 hours AHEAD of London's (Tokyo is UTC+9, London UTC+0). Set the two clocks to a consistent SAME instant: draw the London clock reading 3:00 and the Tokyo clock reading the matching Tokyo time, which is 9 hours later. Do NOT draw both clocks showing the same time; the two faces must differ by the 9-hour offset. Do NOT print the times as digits; the analog hands must convey them.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a scene with two captioned city clock towers each showing an analog clock face? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "offset": 9,
+    "q_a": "This image shows two clock towers. Look at the LEFT tower's analog clock (the LONDON tower). What hour is its HOUR HAND (the short thick hand) pointing to? Answer with just the hour number 1 to 12.",
+    "q_b": "This image shows two clock towers. Look at the RIGHT tower's analog clock (the TOKYO tower). What hour is its HOUR HAND (the short thick hand) pointing to? Answer with just the hour number 1 to 12."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "clock_offset",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the round clock face on the LEFT tower -- the dial of the tower captioned LONDON. ONE box round that dial alone, its edges on the rim of the round face so the printed numerals and both hands are inside it. Do not box the other tower's clock, the masonry below the face, or the caption.",
+          "propose_boxes": "vlm",
+          "expected_n": 1,
+          "out": "fa_box"
+        },
+        {
+          "fail_if": ["fa_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one analogue clock face. Which hour number is its short thick hour hand pointing at? Answer with just that hour number, 1 to 12.",
+          "boxes": "fa_box",
+          "out": "ra"
+        },
+        {
+          "fail_if": ["ra.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the round clock face on the RIGHT tower -- the dial of the tower captioned TOKYO. ONE box round that dial alone, its edges on the rim of the round face so the printed numerals and both hands are inside it. Do not box the other tower's clock, the masonry below the face, or the caption.",
+          "propose_boxes": "vlm",
+          "expected_n": 1,
+          "out": "fb_box"
+        },
+        {
+          "fail_if": ["fb_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one analogue clock face. Which hour number is its short thick hour hand pointing at? Answer with just that hour number, 1 to 12.",
+          "boxes": "fb_box",
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "run": "hour_offset_matches",
+          "args": ["ra.answers[0]", "rb.answers[0]", "reference.offset"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "clock_offset_confirm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the round clock face on the LEFT tower -- the dial of the tower captioned LONDON. ONE box round that dial alone, its edges on the rim of the round face so the printed numerals and both hands are inside it. Do not box the other tower's clock, the masonry below the face, or the caption.",
+          "propose_boxes": "vlm",
+          "expected_n": 1,
+          "out": "fa_box"
+        },
+        {
+          "fail_if": ["fa_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a clock face. Follow the shorter, thicker of its two hands out from the centre. Which of the printed hour numbers does it reach? Answer with that number only.",
+          "boxes": "fa_box",
+          "out": "ra"
+        },
+        {
+          "fail_if": ["ra.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the round clock face on the RIGHT tower -- the dial of the tower captioned TOKYO. ONE box round that dial alone, its edges on the rim of the round face so the printed numerals and both hands are inside it. Do not box the other tower's clock, the masonry below the face, or the caption.",
+          "propose_boxes": "vlm",
+          "expected_n": 1,
+          "out": "fb_box"
+        },
+        {
+          "fail_if": ["fb_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows a clock face. Follow the shorter, thicker of its two hands out from the centre. Which of the printed hour numbers does it reach? Answer with that number only.",
+          "boxes": "fb_box",
+          "out": "rb"
+        },
+        {
+          "fail_if": ["rb.unreadable"]
+        },
+        {
+          "run": "hour_offset_matches",
+          "args": ["ra.answers[0]", "rb.answers[0]", "reference.offset"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "source": "Time zones: Tokyo is UTC+9 and London is UTC+0, so the clocks differ by 9 hours.",
+  "grounding": "static"
+}

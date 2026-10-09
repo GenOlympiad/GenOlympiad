@@ -1,0 +1,84 @@
+{
+  "id": "thermal_label_latched_peak",
+  "axis": "physical_consistency",
+  "prompt": "The route has to be signed off before the shutdown list is closed, so the patrol brings back one sheet with all three of the labelled places on it, shot close.\n\nThe run photographed is a steam main working at 165 degrees. Three places on it are shown: one where the lagging is sound and unbroken, one where the lagging has been torn open and the bare pipe shows, and a bend that was never lagged at all. A small white label is stuck to the pipe at each of the three, and the labels are all of one make: a column of eight dots, with a temperature printed beside each dot, running 100, 110, 120 and so on up to 170. The patrol card says only that a dot on such a label goes dark for good once its own figure has been reached, and never goes back.\n\nHow far the dots have gone dark at any of the three is what the patrol card does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show three close views of a lagged steam main, each with a small dotted label stuck to the pipe? Answer yes or no only.",
+  "reference": {
+    "part1": "last_dark_is_160",
+    "part2": "longest_at_the_bare_bend"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the label on the bend that was never lagged, and say which is the last dark dot down its column. Answer with one of: the last dark dot beside it is the one printed 160; the last dark dot beside it is the one printed 100; every dot on that label has gone dark.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the three labels and say how the runs of dark dots stand against one another. Answer with one of: the run of dark dots is longest on the label at the unlagged bend and shortest on the label where the lagging is sound; the run of dark dots is longest on the label where the lagging is sound and shortest on the label at the unlagged bend; all three labels carry the same run of dark dots.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

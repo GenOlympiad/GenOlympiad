@@ -1,0 +1,124 @@
+{
+  "id": "fuel_price_sign",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photorealistic roadside GAS STATION price sign, photographed straight on, showing the average fuel prices in California, USA as of the evaluation week of 2026-07-17. The sign is a tall illuminated board headed 'GAS STATION' with three fuel grades listed vertically -- REGULAR, MID-GRADE and PREMIUM -- each with its price in large digits in dollars per gallon. Show the correct average California prices for each grade, with Premium higher than Mid-Grade and Mid-Grade higher than Regular, as they are that week. Big clear illuminated digits, three grades, sharp and readable.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show roadside gas-station price sign showing today's real average Regular/Mid/Premium fuel prices for a US state? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "state_code": "CA",
+    "state_name": "California",
+    "q_reg": "This is a gas-station price sign showing three fuel grades (Regular, Mid-Grade, Premium) with a price for each. Read ONLY the number printed next to REGULAR. Answer with just the price as a number in dollars per gallon (for example 4.29). Do not do any sums -- just read the printed Regular price.",
+    "q_prem": "This is a gas-station price sign showing three fuel grades. Read ONLY the number printed next to PREMIUM. Answer with just the price as a number in dollars per gallon. Do not do any sums -- just read the printed Premium price."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "regular_price",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "price row of this fuel sign labelled REGULAR -- ONE box on that single row only, running from the left edge of the word REGULAR across to the right edge of its big price digits, and only as tall as that one row, so that no part of the MID-GRADE or PREMIUM row and none of the sign's heading is inside it.",
+          "expected_n": 1,
+          "out": "v_box"
+        },
+        {
+          "fail_if": ["v_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit fuel price sign, showing one row of it. A price in dollars per gallon is printed in it. Copy that price exactly as it is printed, for example 4.29, and write nothing else.",
+          "boxes": "v_box",
+          "pad": 0.15,
+          "out": "v_cr"
+        },
+        {
+          "fail_if": ["v_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "v_cr",
+          "out": "v"
+        },
+        {
+          "compare_band": "v",
+          "to": "reference.fuel.regular",
+          "core": 0.1,
+          "margin": 0.2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "premium_price",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "price row of this fuel sign labelled PREMIUM -- that word and the big price digits printed beside it",
+          "expected_n": 1,
+          "out": "v_box"
+        },
+        {
+          "fail_if": ["v_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a lit fuel price sign, showing one row of it. A price in dollars per gallon is printed in it. Copy that price exactly as it is printed, for example 4.29, and write nothing else.",
+          "boxes": "v_box",
+          "pad": 0.15,
+          "out": "v_cr"
+        },
+        {
+          "fail_if": ["v_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "v_cr",
+          "out": "v"
+        },
+        {
+          "compare_band": "v",
+          "to": "reference.fuel.premium",
+          "core": 0.1,
+          "margin": 0.2,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "run": "price_page_url",
+      "args": ["reference.state_code"],
+      "out": "url"
+    },
+    {
+      "fetch": "url",
+      "out": "raw"
+    },
+    {
+      "run": "read_fuel_prices",
+      "args": ["raw"],
+      "out": "fuel"
+    }
+  ],
+  "grounding": "live",
+  "aspect_ratio": "3:4"
+}

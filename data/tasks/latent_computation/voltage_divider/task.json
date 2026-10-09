@@ -1,0 +1,286 @@
+{
+  "id": "voltage_divider",
+  "axis": "latent_computation",
+  "prompt": "A photorealistic straight-on electronics photo: a LOADED two-resistor VOLTAGE DIVIDER built on a breadboard, powered by a battery, with a LOAD resistor connected across the output and a digital MULTIMETER set to volts whose probes read the divider's OUTPUT voltage (across the lower resistor R2). The parts are labelled: supply Vin = 9 V, top resistor R1 = 6800 ohms, bottom resistor R2 = 4700 ohms, and a LOAD resistor RL = 10000 ohms wired across the output in parallel with R2. Compute the loaded output voltage in two steps: first combine R2 and RL in PARALLEL (one over the effective lower resistance equals one over R2 plus one over RL), then apply the divider rule Vout equals Vin times that effective lower resistance divided by (R1 plus the effective lower resistance). Show that computed voltage on the multimeter's LCD in volts, as a clear number (two decimal places). The load pulls the output LOWER than the unloaded divider would give. Crisp bench lighting; the battery voltage, the three resistor values and the meter's numeric readout all sharp and legible, no other numbers anywhere.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show LOADED two-resistor voltage-divider (with a load resistor across the output) on a breadboard with a battery, its output read by a digital multimeter, straight-on bench photo? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "Vin": 9.0,
+    "R1": 6800.0,
+    "R2": 4700.0,
+    "RL": 10000.0,
+    "vout": 2.8783,
+    "display": 2.88,
+    "decoy_half": 3.68,
+    "q_val": "This is a digital multimeter set to volts, its probes across the OUTPUT of a resistor voltage-divider on a breadboard. Read the single voltage value shown on the meter's LCD, in volts. Answer with the number only (as digits, no unit).",
+    "q_vin": "A battery labelled with its voltage powers the divider. Read the printed supply voltage (Vin) of the battery, in volts. Answer with the number only.",
+    "q_form": "Does this image show a meter with a numeric voltage display together with resistors or a battery (a voltage-divider circuit)? A diagram, illustration or photo all count. Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fm"
+        },
+        {
+          "fail_if": ["fm.unreadable"]
+        },
+        {
+          "compare": "fm",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "meter_vout",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "small lit display panel of this hand-held meter, with a number showing on it",
+          "expected_n": 1,
+          "out": "mv_box"
+        },
+        {
+          "fail_if": ["mv_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from the display screen of a hand-held meter. One number is showing on it. Write down just that number, digits and the decimal point only, without any unit letter, and nothing else.",
+          "boxes": "mv_box",
+          "pad": 0.15,
+          "out": "mv_cr"
+        },
+        {
+          "fail_if": ["mv_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "mv_cr",
+          "out": "mv"
+        },
+        {
+          "compare_band": "mv",
+          "to": "reference.display",
+          "core": 0.12,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "vin_printed",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed marking on this circuit that gives the supply voltage Vin in volts",
+          "expected_n": 1,
+          "out": "vinv_box"
+        },
+        {
+          "fail_if": ["vinv_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed marking on an electronics photograph. One number is printed in it. Write down just that number, digits and the decimal point only, without any unit letter, and nothing else.",
+          "boxes": "vinv_box",
+          "pad": 0.25,
+          "out": "vinv_cr"
+        },
+        {
+          "fail_if": ["vinv_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "vinv_cr",
+          "out": "vinv"
+        },
+        {
+          "compare_band": "vinv",
+          "to": "reference.Vin",
+          "core": 0.1,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_vin_val",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed marking on this circuit that gives the supply voltage Vin in volts",
+          "expected_n": 1,
+          "out": "read_box"
+        },
+        {
+          "fail_if": ["read_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed marking on an electronics photograph. One number is printed in it. Write down just that number, digits and the decimal point only, without any unit letter, and nothing else.",
+          "boxes": "read_box",
+          "pad": 0.25,
+          "out": "read_cr"
+        },
+        {
+          "fail_if": ["read_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "read_cr",
+          "out": "read"
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.Vin",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_r1_val",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "label printed on this circuit giving the value in ohms of the resistor named R1",
+          "expected_n": 1,
+          "out": "read_box"
+        },
+        {
+          "fail_if": ["read_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed label on an electronics board. One number is printed on it. Write down just that number, digits only, without any unit, and nothing else.",
+          "boxes": "read_box",
+          "pad": 0.25,
+          "out": "read_cr"
+        },
+        {
+          "fail_if": ["read_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "read_cr",
+          "out": "read"
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.R1",
+          "core_abs": 0.499,
+          "margin_abs": 50.0,
+          "out": "frac",
+          "margin_rel": 0.02
+        }
+      ]
+    },
+    {
+      "name": "d1_r2_val",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "label printed on this circuit giving the value in ohms of the resistor named R2",
+          "expected_n": 1,
+          "out": "read_box"
+        },
+        {
+          "fail_if": ["read_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed label on an electronics board. One number is printed on it. Write down just that number, digits only, without any unit, and nothing else.",
+          "boxes": "read_box",
+          "pad": 0.25,
+          "out": "read_cr"
+        },
+        {
+          "fail_if": ["read_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "read_cr",
+          "out": "read"
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.R2",
+          "core_abs": 0.499,
+          "margin_abs": 50.0,
+          "out": "frac",
+          "margin_rel": 0.02
+        }
+      ]
+    },
+    {
+      "name": "d1_rl_val",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "label printed on this circuit giving the value in ohms of the load resistor named RL",
+          "expected_n": 1,
+          "out": "read_box"
+        },
+        {
+          "fail_if": ["read_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed label on an electronics board. One number is printed on it. Write down just that number, digits only, without any unit, and nothing else.",
+          "boxes": "read_box",
+          "pad": 0.25,
+          "out": "read_cr"
+        },
+        {
+          "fail_if": ["read_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "read_cr",
+          "out": "read"
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.RL",
+          "core_abs": 0.499,
+          "margin_abs": 50.0,
+          "out": "frac",
+          "margin_rel": 0.02
+        }
+      ]
+    }
+  ]
+}

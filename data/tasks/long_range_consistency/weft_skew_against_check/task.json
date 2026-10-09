@@ -1,0 +1,84 @@
+{
+  "id": "weft_skew_against_check",
+  "axis": "long_range_consistency",
+  "prompt": "A roll has come in from the setting machine and the inspector has to clear it before it goes to the cutting room, so it is run over the light table and stopped for the record.\n\nThe cloth is a light check and lies flat across the lit table with both woven edges inside the frame. The table top is printed with its own straight base lines running up the table, and the roll is laid so its woven edges follow them. Clipped to the machine rail is the setting record for this piece, showing the tension held at the left-hand rail as 3.4 kilonewtons and at the right-hand rail as 2.6, under the mill's standing note: the weft runs lower on whichever side ran at the greater tension, and a piece is passed only if the wander it has leans one way all along the roll.\n\nHow the check sits on the cloth is not in the record.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a checked cloth spread flat across a lit inspection table with both of its woven edges in the frame? Answer yes or no only.",
+  "reference": {
+    "part1": "lower_at_the_left",
+    "part2": "all_lean_alike"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the check lines that cross the cloth from one woven edge to the other, and at the height each of them reaches on each side. Answer with one of: those cross lines sit lower at the left-hand woven edge than at the right-hand one; those cross lines sit lower at the right-hand woven edge than at the left-hand one; those cross lines sit at one height at both woven edges.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the check lines near the top of the piece on the table and at the check lines near the bottom of it. Answer with one of: they all lean over the same way as one another; they lean over different ways in different places; the ones near the top lean over while the ones near the bottom sit straight.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

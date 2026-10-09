@@ -1,0 +1,251 @@
+{
+  "id": "lens_image_distance",
+  "axis": "latent_computation",
+  "prompt": "A clean physics-exam RAY DIAGRAM drawn along a horizontal ruled optical bench marked in centimetres, showing a TWO-LENS system. A thin CONVERGING lens L1 (focal length f1 = 12 cm) stands on the left; an upright object arrow is placed to its LEFT at object distance u1 = 30 cm. A second thin CONVERGING lens L2 (focal length f2 = 10 cm) stands to the RIGHT of L1, separated from it by 32 cm. Work the light through BOTH lenses in order: first use the thin-lens equation one over f equals one over u plus one over v to find the image distance v1 formed by L1; that image acts as the OBJECT for L2 at object distance u2 = (32 cm minus v1); then apply the thin-lens equation again with f2 and u2 to find the FINAL image distance to the right of L2. Place the final image arrow at that computed distance to the right of L2, with the final image distance clearly LABELLED and marked against the ruler in centimetres. Neat black-on-white exam figure, both focal lengths, the object distance u1, the lens separation and the final image distance all labelled, the ruler ticks legible, no worked steps or extra text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show physics-exam two-lens ray diagram drawn along a ruled centimetre optical bench, the computed final image distance from the second lens marked, straight-on? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "f1": 12.0,
+    "u1": 30.0,
+    "sep": 32.0,
+    "f2": 10.0,
+    "v": 60.0,
+    "v1": 20.0,
+    "display": 60.0,
+    "decoy_vf": 20.0,
+    "q_val": "This is a physics ray-diagram on a ruled optical bench with TWO lenses in a row. The FINAL image is formed where the rays converge after the SECOND lens, and its distance from the second lens is marked on the ruler in centimetres. Read the FINAL image distance (the ruler distance from the SECOND lens to the final image), in centimetres. Answer with the number only (as digits, no unit).",
+    "q_u": "The object distance u1 for the FIRST lens is labelled on the diagram in centimetres (the distance from the object to the first lens). Read the printed object distance u1. Answer with the number only.",
+    "q_form": "Does this image show a lens ray diagram with an object arrow and lenses along a distance scale? A schematic diagram counts. Answer yes or no.",
+    "n_lenses": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fm"
+        },
+        {
+          "fail_if": ["fm.unreadable"]
+        },
+        {
+          "compare": "fm",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "image_distance_v",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read_number": "reference.q_val",
+          "out": "vv"
+        },
+        {
+          "fail_if": ["vv.unreadable"]
+        },
+        {
+          "compare_band": "vv",
+          "to": "reference.v",
+          "core": 1.0,
+          "margin": 5.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "object_distance_u",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read_number": "reference.q_u",
+          "out": "uu"
+        },
+        {
+          "fail_if": ["uu.unreadable"]
+        },
+        {
+          "compare_band": "uu",
+          "to": "reference.u1",
+          "core": 0.5,
+          "margin": 3.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_f1",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the focal length labelled for lens L1 (f1, in cm). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.f1",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_u1",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the object distance u1 labelled between the object arrow and lens L1 (in cm). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.u1",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_f2",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the focal length labelled for lens L2 (f2, in cm). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.f2",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "operand_sep",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the lens separation distance labelled between L1 and L2 (in cm). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.sep",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "layout_lenses",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "converging lens standing upright on the optical bench",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole lens standing upright on a bench rather than bare background or only part of a lens? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_lenses",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_extra_working",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "worked-out arithmetic, a written formula, or an explanation of how a value was worked out, in the diagram",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

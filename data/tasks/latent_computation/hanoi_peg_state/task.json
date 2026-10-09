@@ -1,0 +1,192 @@
+{
+  "id": "hanoi_peg_state",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on photograph of a child's wooden PEG-AND-DISK STACKING TOY: a flat wooden base with THREE upright pegs standing on it, labelled A, B and C from left to right. The toy has 4 graduated round disks of different sizes and colours -- from smallest to largest the disks are: red (smallest), orange, yellow, green (largest). A disk may only rest on the base or on a LARGER disk (never on a smaller one), so each peg's disks are always widest at the bottom and get smaller going up.\n\nAt the START the disks are arranged like this:\n    - peg A holds, from the BOTTOM upward: green, then orange\n    - peg B holds, from the BOTTOM upward: yellow, then red\n    - peg C is EMPTY\n\nNow perform the following moves ONE AFTER ANOTHER, strictly in this order. Each move means: lift the single TOP disk off the first peg and drop it onto the second peg (it lands on top of whatever is already there, and it is always legal):\n\n    1. take the TOP disk off peg B and place it on peg C\n    2. take the TOP disk off peg A and place it on peg B\n    3. take the TOP disk off peg C and place it on peg B\n    4. take the TOP disk off peg A and place it on peg C\n    5. take the TOP disk off peg B and place it on peg C\n\nWork through the moves in order and render the FINAL state of the toy after ALL the moves above have been made: draw the three pegs A, B and C with their disks stacked in the correct order, largest at the bottom, in the correct colours, with the correct NUMBER of disks on each peg. A peg with no disks left should be drawn empty. Do NOT write the move list, the disk counts, or any numbers anywhere in the image -- the answer must be shown only by which disks are stacked on which peg and how tall each stack is.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a wooden peg-and-disk stacking toy: a base with three upright pegs labelled A, B, C carrying graduated coloured disks (largest at the bottom)? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      [0],
+      [2],
+      [2]
+    ],
+    "count_a": 0,
+    "count_b": 2,
+    "count_c": 2,
+    "top_a": "empty",
+    "n_pegs": 3,
+    "n_disks_total": 4,
+    "q_count_a": "Look at the peg-and-disk toy. Write down every disk stacked on peg A (the LEFT peg) right now, working from the top of that peg downwards, each with a few plain words saying how wide it is or what colour it is. Take only disks actually drawn on that peg. Separate one item from the next with a semicolon; write no running total and nothing else. If that peg carries no disk, write the single word NONE.",
+    "q_count_b": "Look at the peg-and-disk toy. Write down every disk stacked on peg B (the MIDDLE peg) right now, working from the top of that peg downwards, each with a few plain words saying how wide it is or what colour it is. Take only disks actually drawn on that peg. Separate one item from the next with a semicolon; write no running total and nothing else. If that peg carries no disk, write the single word NONE.",
+    "q_count_c": "Look at the peg-and-disk toy. Write down every disk stacked on peg C (the RIGHT peg) right now, working from the top of that peg downwards, each with a few plain words saying how wide it is or what colour it is. Take only disks actually drawn on that peg. Separate one item from the next with a semicolon; write no running total and nothing else. If that peg carries no disk, write the single word NONE.",
+    "q_top_a": "Look at the peg-and-disk toy. What COLOUR is the TOP disk on peg A (the LEFT peg) -- the smallest, uppermost disk on that peg? If peg A has no disks, answer 'empty'. Answer with a single colour word (one of: red, orange, yellow, green, blue) or 'empty'.",
+    "q_pegs": "How many upright pegs are standing on the base of this stacking toy? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "peg_count_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_count_a",
+          "out": "na"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["na", "empty_as='0'"],
+          "out": "na__std"
+        },
+        {
+          "fail_if": ["na__std.refused"]
+        },
+        {
+          "ask": "reference.q_count_b",
+          "out": "nb"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["nb", "empty_as='0'"],
+          "out": "nb__std"
+        },
+        {
+          "fail_if": ["nb__std.refused"]
+        },
+        {
+          "ask": "reference.q_count_c",
+          "out": "nc"
+        },
+        {
+          "fail_if": ["na.unreadable", "nb.unreadable", "nc.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["nc", "empty_as='0'"],
+          "out": "nc__std"
+        },
+        {
+          "fail_if": ["nc__std.refused"]
+        },
+        {
+          "compare_band": "na__std.n",
+          "to": "reference.count_a",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "fa"
+        },
+        {
+          "compare_band": "nb__std.n",
+          "to": "reference.count_b",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "fb"
+        },
+        {
+          "compare_band": "nc__std.n",
+          "to": "reference.count_c",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "fc"
+        },
+        {
+          "all": ["fa", "fb", "fc"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "top_disk_a",
+      "weight": 0.8,
+      "steps": [
+        {
+          "ask": "reference.q_top_a",
+          "out": "ta"
+        },
+        {
+          "fail_if": ["ta.unreadable"]
+        },
+        {
+          "compare": "ta",
+          "to": "reference.top_a",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "counts_grid",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read_grid": "the number of disks stacked on each peg, giving one whole number per row in the order peg A (left) on the top row, peg B (middle) on the middle row, peg C (right) on the bottom row",
+          "rows": 3,
+          "cols": 1,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "compare_grid": "cells.values",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_peg_count",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "upright peg standing on the wooden base of the stacking toy",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_npg"
+        },
+        {
+          "fail_if": ["box_npg.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole upright peg standing on the base of a toy rather than bare background or only part of a peg? Answer yes or no only.",
+          "boxes": "box_npg",
+          "out": "crop_npg"
+        },
+        {
+          "fail_if": ["crop_npg.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_npg"],
+          "out": "cnt_npg"
+        },
+        {
+          "compare_band": "cnt_npg.n",
+          "to": "reference.n_pegs",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

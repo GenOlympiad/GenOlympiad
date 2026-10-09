@@ -1,0 +1,85 @@
+{
+  "id": "tactile_paving_hazard_pattern",
+  "axis": "symbolic_systems",
+  "prompt": "The contractor has to get the corner signed off by the access officer before the hoardings come down, so the whole corner is photographed in one frame from the window above.\n\nThe rebuilt corner takes in three places where a blind pedestrian has to be warned. There is the mouth of a controlled crossing with its push-button box, a flight of 8 steps going down to the subway, and the edge of the tram platform where it runs along the pavement. Each of the three has had its patch of tactile paving laid flush into the footway, and each patch is a different buff colour from the paving around it. The site drawing the access officer holds shows the extent of the works and nothing about the paving.\n\nWhat is moulded into each of those three patches is what the drawing does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a rebuilt street corner with a crossing, a flight of steps and a tram platform edge, each with a patch of tactile paving laid into the footway? Answer yes or no only.",
+  "reference": {
+    "part1": "rounded_bars",
+    "part2": "no_two_alike",
+    "vocab": ["domes", "bars", "diamonds"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the patch of tactile paving laid at the head of the steps and say what is moulded into it. Answer with one of: rows of rounded bars run across it; rows of round domes stand up from it; rows of flat diamonds are set into it.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at each of the three patches of tactile paving in turn — the one at the crossing, the one at the steps, the one at the tram platform edge — and say which of these each carries: domes, bars or diamonds. Write the three words in that order separated by commas.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "neighbours_alike",
+          "args": ["a_part2", "reference.vocab"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

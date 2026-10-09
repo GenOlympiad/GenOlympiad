@@ -1,0 +1,167 @@
+{
+  "id": "fresnel_zone_clearance",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A photograph of one page out of a microwave link acceptance folder, lying on the radio planner's desk, taken face on and big enough to read.\n\nThe page covers a single hop 12 km long at 7 GHz, between a hilltop repeater and a quarry weighbridge. Chainage runs from the repeater at 0 km to the weighbridge at 12 km. The repeater antenna stands 44 m above ground, the weighbridge antenna 26 m above ground, and 8 km along the path there is a spoil heap. On this hop the spoil heap crest sits exactly on the limit the operator accepts, neither inside it nor clear of it.\n\nThe page carries the ground profile of the hop with the antenna-to-antenna sight line over it, the first Fresnel zone of the hop as a tinted band around that sight line, and under the profile a clearance schedule of three rows, one for each of the checked chainages 2 km, 6 km and 8 km. A row gives its chainage, the first Fresnel zone radius in metres at that chainage, and the clearance in metres the operator requires there.\n\nThe acceptance wording on the page header is fixed, word for word: 'The hop passes when no obstacle comes inside the clearance figure quoted against its chainage.'\n\nRadii, clearances and the outline of the zone are the whole point of the page and I am not giving you any of them. Nothing else belongs on the sheet: no working, no formula, and no figure anywhere apart from the heights and chainages I have given, the three schedule rows and the profile's own scale.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a technical sheet carrying a long profile drawing with a band running along it and a small table of figures underneath? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "radii_verdict": "lens",
+    "clearance_m": 6.41,
+    "n_pinch": 2,
+    "q_row_cert": "Does this cut-out show one row of the small table under the profile, rather than its heading or the profile drawing? Answer yes or no only.",
+    "q_row_copy": "This cut-out is one row of a table. Copy the chainage figure printed on that row, then a single space, then the zone radius figure printed on it. Ignore anything printed on a row above or below it. Write nothing else.",
+    "q_cl_cert": "Does this cut-out show the table row whose chainage figure is 8? Answer yes or no only.",
+    "q_cl_copy": "Copy the last figure printed in this row. Write only the number.",
+    "q_pinch": "This cut-out shows an antenna mast with a tinted band running away from it. Look at the two edges of that tinted band where they reach the mast. Name the shape they make there, using one word from this list: point (the two edges meet at a single point on the mast) or open (the two edges are still apart at the mast, with a gap left between them). Write that one word and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_zone_half_width_swells_to_its_maximum_at_mid_hop",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the clearance schedule under the profile",
+          "sweep": true,
+          "out": "rd_ring"
+        },
+        {
+          "fail_if": ["rd_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_cert",
+          "boxes": "rd_ring",
+          "pad": 0.25,
+          "out": "rd_cert"
+        },
+        {
+          "fail_if": ["rd_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_copy",
+          "boxes": "rd_ring",
+          "pad": 0.25,
+          "out": "rd_txt"
+        },
+        {
+          "fail_if": ["rd_txt.unreadable"]
+        },
+        {
+          "run": "zone_radii_shape",
+          "args": ["rd_cert", "rd_txt"],
+          "out": "rd_v"
+        },
+        {
+          "compare": "rd_v.val",
+          "to": "reference.radii_verdict",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_clearance_the_spoil_heap_grazes_is_a_fraction_of_the_local_radius",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the schedule row for the spoil heap chainage",
+          "sweep": true,
+          "out": "cl_ring"
+        },
+        {
+          "fail_if": ["cl_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_cl_cert",
+          "boxes": "cl_ring",
+          "pad": 0.25,
+          "out": "cl_cert"
+        },
+        {
+          "fail_if": ["cl_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_cl_copy",
+          "boxes": "cl_ring",
+          "pad": 0.25,
+          "out": "cl_txt"
+        },
+        {
+          "fail_if": ["cl_txt.unreadable"]
+        },
+        {
+          "run": "most_common_figure",
+          "args": ["cl_cert", "cl_txt"],
+          "out": "cl_v"
+        },
+        {
+          "compare_band": "cl_v.val",
+          "to": "reference.clearance_m",
+          "core_abs": 0.2,
+          "margin_abs": 0.35,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_band_pinches_shut_at_both_antennas",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an antenna mast head where the tinted band meets the sight line",
+          "sweep": true,
+          "out": "pn_ring"
+        },
+        {
+          "fail_if": ["pn_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_pinch",
+          "boxes": "pn_ring",
+          "pad": 0.3,
+          "out": "pn_cert"
+        },
+        {
+          "fail_if": ["pn_cert.unreadable"]
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["pn_cert", "[[['point'],'yes'],[['open'],'no']]"],
+          "out": "pn_cert__mapped"
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["pn_cert__mapped"],
+          "out": "pn_n"
+        },
+        {
+          "compare_band": "pn_n.n",
+          "to": "reference.n_pinch",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

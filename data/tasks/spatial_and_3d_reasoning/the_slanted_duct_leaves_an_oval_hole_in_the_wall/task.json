@@ -1,0 +1,118 @@
+{
+  "id": "the_slanted_duct_leaves_an_oval_hole_in_the_wall",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Fenwick Bruce are the services engineers on the new records store at Aldgate, and the builder's work drawings have to reach the frame contractor before the wall panels are cast. Sheet BW-14 is the internal elevation of gridline 3 seen from the east, drawn at 1:20, carrying the slab soffit, the floor and the gridlines. Duct D-14 is a round galvanised duct 500 mm in diameter; it crosses the room on a steady rise and goes through this wall at 42 degrees to the wall face, its centreline meeting the wall 2.10 m above finished floor level. The duct itself is on the elevation for the length it runs in front of the wall, and the builder's work opening for it is the true theoretical outline of the duct through the wall face, with no builder's tolerance and nothing added round it. The practice photographs the finished sheet flat on the plan chest, camera square above, the whole sheet with its title block inside the frame.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph show one sheet of a technical drawing carrying an elevation of a wall or panel, with a round duct drawn passing through that wall on a slant, and the whole sheet with its title block inside the frame? Answer yes or no only.",
+  "reference": {
+    "part1": "oval_opening",
+    "part2": "long_way_along_duct"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "On this drawing there is an opening in the wall for the round duct. Answer with one of: an oval, longer one way than the other; a circle; a rectangle; the wall is drawn solid with nothing through it.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "run": "derive_part1",
+          "args": ["reference.premises"],
+          "out": "want_part1"
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "want_part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 0.5,
+      "steps": [
+        {
+          "ask": "Look at the opening drawn in the wall for the duct, and at the duct drawn on the same elevation. Answer with one of: the long way of the opening runs the same way the duct runs; the long way of the opening runs across the duct; the opening is as wide one way as the other; the wall is drawn solid with nothing through it.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "run": "derive_part2",
+          "args": ["reference.premises"],
+          "out": "want_part2"
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "want_part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "const": {
+        "program": "map_code"
+      },
+      "out": "map_code"
+    },
+    {
+      "const": {
+        "duct_is_round_and_sized": "round duct, 500 mm diameter",
+        "oblique_crossing_angle": "42 degrees to the wall/panel face (non-perpendicular)",
+        "opening_is_theoretical_outline": "the opening is the true theoretical outline of the duct through the face; no tolerance, nothing added",
+        "duct_run_is_drawn_on_the_same_face": "the duct's run appears on the same elevation as the opening, so both figures are on one sheet",
+        "camera_station": "square to the sheet, whole sheet plus title block in frame"
+      },
+      "out": "premises"
+    },
+    {
+      "const": {
+        "program": "derive_code"
+      },
+      "out": "derive_code"
+    }
+  ]
+}

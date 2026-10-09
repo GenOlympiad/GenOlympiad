@@ -1,0 +1,260 @@
+{
+  "id": "smiles_decode",
+  "axis": "symbolic_systems",
+  "prompt": "Render a flat, straight-on scan of a cream-coloured supplementary-information page from a chemistry journal, the structure printed on it as a figure, carrying ONE molecule drawn as a line-angle (skeletal) structural formula.\n\nThe molecule is given to you ONLY by this SMILES string:\n\n    ClCCC1CCC(CC(=O)C2CCC(C(C)CC)C2)CC1\n\nRead the string and draw exactly the molecule it defines -- atom for atom, bond for bond. In a line-angle drawing every free line end and every bend is a carbon atom, hydrogens on carbon are not drawn, and any other element is written as its letter at that atom's position. Each pair of round brackets is a branch that hangs off the atom immediately before it, and it is exactly as long as the letters inside it say; each ring-closure digit joins the two atoms that carry that digit, so the ring it makes is exactly as big as the string makes it; '=' is drawn as two parallel lines between the two atoms and '#' as three.\n\nDraw it in even, fine black printed lines of equal length, large and well spread out across the page as a clear zig-zag, so that every corner is easy to see. Plain cream paper, no shading, no colour, no three-dimensional effect.\n\nDo not draw a circle inside any ring. Do not write the SMILES string, the molecule's name, its molecular formula, a caption, a title or any number anywhere in the picture -- the only text in the drawing is the element letters written at atom positions.\n",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a cream-coloured printed journal page carrying one chemical structure as a figure made of straight lines. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank page, a page of prose, a photograph of laboratory glassware, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "q_letters": "Some atom positions in this chemical structure drawing are labelled with an element symbol. Reading left to right, write down every element symbol written on the structure, copying it exactly and writing one item each time a symbol appears, even where the same symbol appears more than once. Separate one item from the next with a semicolon; write no running total and nothing else. If no atom is labelled, write the single word NONE.",
+    "heavy_atoms": 21,
+    "rings": 2,
+    "largest_ring": 6,
+    "branch_chain_lengths": [1, 1, 2, 3],
+    "ring_attachment_gaps": [
+      [2, 3],
+      [3, 3]
+    ],
+    "multiple_bond_orders": [2],
+    "hetero_letters": ["Cl", "O"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "structure_is_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "skeleton_graph",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "enough_atoms_and_bonds",
+          "args": ["m", "reference"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "heteroatom_letters",
+      "weight": 0.75,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the whole drawn chemical structure taken together as ONE shape",
+          "out": "box_ans",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_ans.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_letters",
+          "boxes": "box_ans",
+          "out": "crop_ans"
+        },
+        {
+          "fail_if": ["crop_ans.unreadable"]
+        },
+        {
+          "run": "list_items_per_box",
+          "args": ["crop_ans"],
+          "out": "crop_ans__std"
+        },
+        {
+          "fail_if": ["crop_ans__std.refused"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_ans__std", "\", \""],
+          "out": "txt_ans"
+        },
+        {
+          "run": "hetero_atoms_match",
+          "args": ["txt_ans.text", "reference"],
+          "code": {
+            "inline": "cmp_code_2"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ring_count",
+      "weight": 0.75,
+      "steps": [
+        {
+          "run": "skeleton_graph",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "ring_count_matches",
+          "args": ["m", "reference"],
+          "code": {
+            "inline": "cmp_code_3"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "largest_ring_size",
+      "weight": 0.75,
+      "steps": [
+        {
+          "run": "skeleton_graph",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "largest_ring_matches",
+          "args": ["m", "reference"],
+          "code": {
+            "inline": "cmp_code_4"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "multiple_bond_orders",
+      "weight": 0.75,
+      "steps": [
+        {
+          "run": "skeleton_graph",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "bond_orders_match",
+          "args": ["m", "reference"],
+          "code": {
+            "inline": "cmp_code_5"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "heavy_atom_count",
+      "weight": 2.0,
+      "steps": [
+        {
+          "run": "skeleton_graph",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "atom_count_matches",
+          "args": ["m", "reference"],
+          "code": {
+            "inline": "cmp_code_6"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ring_attachment_spacing",
+      "weight": 1.5,
+      "steps": [
+        {
+          "run": "skeleton_graph",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "ring_gaps_match",
+          "args": ["m", "reference"],
+          "code": {
+            "inline": "cmp_code_7"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "branch_chain_lengths",
+      "weight": 10.0,
+      "steps": [
+        {
+          "run": "skeleton_graph",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "branch_lengths_match",
+          "args": ["m", "reference"],
+          "code": {
+            "inline": "cmp_code_8"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_skeleton_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "draw_skeleton_overlay",
+          "args": ["image", "'skeleton'"],
+          "out": "ov"
+        },
+        {
+          "run": "overlay_was_drawn",
+          "args": ["ov"],
+          "code": {
+            "inline": "cmp_code_9"
+          },
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

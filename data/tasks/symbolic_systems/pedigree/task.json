@@ -1,0 +1,491 @@
+{
+  "id": "pedigree",
+  "axis": "symbolic_systems",
+  "prompt": "A scan of a page clipped into a hospital chart: off-white paper, laser-printed in dark grey, carrying one family tree drawn to the usual clinical conventions -- men are squares, women are circles, a solid shape marks somebody who is affected, partners are linked by a short horizontal line, and a vertical line drops from that link to a horizontal bar from which their children hang. Roman numerals I, II and III run down the left edge, and each person has a small printed number under the shape, counted from the left of their own row.\n\nPrint this family. Generation I: I-1 a man and I-2 a woman, married, neither affected. Generation II holds four people in this left-to-right order: II-1, a daughter of the generation I couple; II-2, the man she married, who came from outside the family; II-3, a son of the generation I couple, and he is the one who is affected; II-4, the woman he married, also from outside the family, not affected. Generation III holds four young people in this left-to-right order: III-1, the son of II-1 and II-2; then III-2 a daughter, III-3 a son and III-4 a daughter, and those last three are all children of II-3 and II-4. Nobody in generation III is affected.\n\nThe illness is recessive and the gene behind it sits on the X chromosome. Mark with one small solid dot in the middle of the shape every single person on this page whose two gene copies are fixed by the tree at one faulty copy and one sound copy -- and nobody else -- leaving all the other shapes clear in the middle. Do not print genotypes, a key, a heading or any note.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a printed page carrying a diagram of squares and circles, one of them solid, set out in three horizontal rows and linked together by straight lines. Ignoring artistic quality and styling, does the picture actually show that? Answer NO only if it shows something else entirely -- a blank page, a page of prose, a table of numbers, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "mode": "XLR",
+    "x_linked": true,
+    "sexes": {
+      "I-1": "M",
+      "I-2": "F",
+      "II-1": "F",
+      "II-2": "M",
+      "II-3": "M",
+      "II-4": "F",
+      "III-1": "M",
+      "III-2": "F",
+      "III-3": "M",
+      "III-4": "F"
+    },
+    "parents": {
+      "II-1": ["I-1", "I-2"],
+      "II-3": ["I-1", "I-2"],
+      "III-1": ["II-1", "II-2"],
+      "III-2": ["II-3", "II-4"],
+      "III-3": ["II-3", "II-4"],
+      "III-4": ["II-3", "II-4"]
+    },
+    "affected": ["II-3"],
+    "layout": [
+      "I-1:square:0",
+      "I-2:circle:0",
+      "II-1:circle:0",
+      "II-2:square:0",
+      "II-3:square:1",
+      "II-4:circle:0",
+      "III-1:square:0",
+      "III-2:circle:0",
+      "III-3:square:0",
+      "III-4:circle:0"
+    ],
+    "carriers": ["I-2", "III-2", "III-4"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "chart_readable",
+      "weight": 1.0,
+      "gate": true,
+      "score": "rd.frac",
+      "steps": [
+        {
+          "run": "n_people",
+          "args": ["reference.layout"],
+          "out": "np"
+        },
+        {
+          "read": "boxes",
+          "target": "family-chart symbol: a single square or circle standing for one person",
+          "out": "sy",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sy.unreadable"]
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is there ONE small solid dot drawn inside that shape, near the middle of it, with the rest of the inside left blank? Answer no if the inside of the shape is completely empty, and answer no if the whole shape is coloured in solid instead. Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "dots"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is that shape a square or a circle? Answer with one word: square or circle.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "shapes"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is the whole inside of that shape coloured in solid dark, rather than left blank or holding only a small dot? Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "fills"
+        },
+        {
+          "run": "symbols_readable",
+          "args": [
+            "sy",
+            "dots",
+            "shapes",
+            "fills",
+            "reference.carriers",
+            "reference.layout",
+            "reference.x_linked"
+          ],
+          "out": "rd0"
+        },
+        {
+          "run": "chart_readable_frac",
+          "args": ["rd0", "np"],
+          "out": "rd"
+        }
+      ]
+    },
+    {
+      "name": "carrier_set_exact",
+      "weight": 5.5,
+      "score": "m0.set_frac",
+      "steps": [
+        {
+          "run": "n_people",
+          "args": ["reference.layout"],
+          "out": "np"
+        },
+        {
+          "read": "boxes",
+          "target": "family-chart symbol: a single square or circle standing for one person",
+          "out": "sy",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sy.unreadable"]
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is there ONE small solid dot drawn inside that shape, near the middle of it, with the rest of the inside left blank? Answer no if the inside of the shape is completely empty, and answer no if the whole shape is coloured in solid instead. Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "dots"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is that shape a square or a circle? Answer with one word: square or circle.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "shapes"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is the whole inside of that shape coloured in solid dark, rather than left blank or holding only a small dot? Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "fills"
+        },
+        {
+          "run": "measure_pedigree",
+          "args": [
+            "sy",
+            "dots",
+            "shapes",
+            "fills",
+            "reference.carriers",
+            "reference.layout",
+            "reference.x_linked"
+          ],
+          "out": "m0"
+        }
+      ]
+    },
+    {
+      "name": "carrier_set_overlap",
+      "weight": 3.5,
+      "score": "m1.overlap_frac",
+      "steps": [
+        {
+          "run": "n_people",
+          "args": ["reference.layout"],
+          "out": "np"
+        },
+        {
+          "read": "boxes",
+          "target": "family-chart symbol: a single square or circle standing for one person",
+          "out": "sy",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sy.unreadable"]
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is there ONE small solid dot drawn inside that shape, near the middle of it, with the rest of the inside left blank? Answer no if the inside of the shape is completely empty, and answer no if the whole shape is coloured in solid instead. Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "dots"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is that shape a square or a circle? Answer with one word: square or circle.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "shapes"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is the whole inside of that shape coloured in solid dark, rather than left blank or holding only a small dot? Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "fills"
+        },
+        {
+          "run": "measure_pedigree",
+          "args": [
+            "sy",
+            "dots",
+            "shapes",
+            "fills",
+            "reference.carriers",
+            "reference.layout",
+            "reference.x_linked"
+          ],
+          "out": "m1"
+        }
+      ]
+    },
+    {
+      "name": "carrier_count",
+      "weight": 1.5,
+      "score": "m2.count_frac",
+      "steps": [
+        {
+          "run": "n_people",
+          "args": ["reference.layout"],
+          "out": "np"
+        },
+        {
+          "read": "boxes",
+          "target": "family-chart symbol: a single square or circle standing for one person",
+          "out": "sy",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sy.unreadable"]
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is there ONE small solid dot drawn inside that shape, near the middle of it, with the rest of the inside left blank? Answer no if the inside of the shape is completely empty, and answer no if the whole shape is coloured in solid instead. Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "dots"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is that shape a square or a circle? Answer with one word: square or circle.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "shapes"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is the whole inside of that shape coloured in solid dark, rather than left blank or holding only a small dot? Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "fills"
+        },
+        {
+          "run": "measure_pedigree",
+          "args": [
+            "sy",
+            "dots",
+            "shapes",
+            "fills",
+            "reference.carriers",
+            "reference.layout",
+            "reference.x_linked"
+          ],
+          "out": "m2"
+        }
+      ]
+    },
+    {
+      "name": "no_impossible_male_carrier",
+      "weight": 1.0,
+      "gate": true,
+      "score": "m3.legal_frac",
+      "steps": [
+        {
+          "run": "n_people",
+          "args": ["reference.layout"],
+          "out": "np"
+        },
+        {
+          "read": "boxes",
+          "target": "family-chart symbol: a single square or circle standing for one person",
+          "out": "sy",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sy.unreadable"]
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is there ONE small solid dot drawn inside that shape, near the middle of it, with the rest of the inside left blank? Answer no if the inside of the shape is completely empty, and answer no if the whole shape is coloured in solid instead. Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "dots"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is that shape a square or a circle? Answer with one word: square or circle.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "shapes"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is the whole inside of that shape coloured in solid dark, rather than left blank or holding only a small dot? Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "fills"
+        },
+        {
+          "run": "measure_pedigree",
+          "args": [
+            "sy",
+            "dots",
+            "shapes",
+            "fills",
+            "reference.carriers",
+            "reference.layout",
+            "reference.x_linked"
+          ],
+          "out": "m3"
+        }
+      ]
+    },
+    {
+      "name": "d1_pedigree_overlay",
+      "weight": 0.0,
+      "score": "m4.set_frac",
+      "steps": [
+        {
+          "run": "n_people",
+          "args": ["reference.layout"],
+          "out": "np"
+        },
+        {
+          "read": "boxes",
+          "target": "family-chart symbol: a single square or circle standing for one person",
+          "out": "sy",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sy.unreadable"]
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is there ONE small solid dot drawn inside that shape, near the middle of it, with the rest of the inside left blank? Answer no if the inside of the shape is completely empty, and answer no if the whole shape is coloured in solid instead. Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "dots"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is that shape a square or a circle? Answer with one word: square or circle.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "shapes"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is the whole inside of that shape coloured in solid dark, rather than left blank or holding only a small dot? Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "fills"
+        },
+        {
+          "run": "measure_pedigree",
+          "args": [
+            "sy",
+            "dots",
+            "shapes",
+            "fills",
+            "reference.carriers",
+            "reference.layout",
+            "reference.x_linked"
+          ],
+          "out": "m4"
+        }
+      ]
+    },
+    {
+      "name": "d2_symbol_convention",
+      "weight": 0.0,
+      "score": "m5.convention_frac",
+      "steps": [
+        {
+          "run": "n_people",
+          "args": ["reference.layout"],
+          "out": "np"
+        },
+        {
+          "read": "boxes",
+          "target": "family-chart symbol: a single square or circle standing for one person",
+          "out": "sy",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sy.unreadable"]
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is there ONE small solid dot drawn inside that shape, near the middle of it, with the rest of the inside left blank? Answer no if the inside of the shape is completely empty, and answer no if the whole shape is coloured in solid instead. Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "dots"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is that shape a square or a circle? Answer with one word: square or circle.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "shapes"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is the whole inside of that shape coloured in solid dark, rather than left blank or holding only a small dot? Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "fills"
+        },
+        {
+          "run": "measure_pedigree",
+          "args": [
+            "sy",
+            "dots",
+            "shapes",
+            "fills",
+            "reference.carriers",
+            "reference.layout",
+            "reference.x_linked"
+          ],
+          "out": "m5"
+        }
+      ]
+    },
+    {
+      "name": "d3_any_dot_drawn",
+      "weight": 0.0,
+      "score": "m6.dot_present_frac",
+      "steps": [
+        {
+          "run": "n_people",
+          "args": ["reference.layout"],
+          "out": "np"
+        },
+        {
+          "read": "boxes",
+          "target": "family-chart symbol: a single square or circle standing for one person",
+          "out": "sy",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sy.unreadable"]
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is there ONE small solid dot drawn inside that shape, near the middle of it, with the rest of the inside left blank? Answer no if the inside of the shape is completely empty, and answer no if the whole shape is coloured in solid instead. Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "dots"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is that shape a square or a circle? Answer with one word: square or circle.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "shapes"
+        },
+        {
+          "read_crop": "This crop shows one shape from a family chart. Is the whole inside of that shape coloured in solid dark, rather than left blank or holding only a small dot? Answer yes or no only.",
+          "boxes": "sy.geometry",
+          "pad": 0.2,
+          "out": "fills"
+        },
+        {
+          "run": "measure_pedigree",
+          "args": [
+            "sy",
+            "dots",
+            "shapes",
+            "fills",
+            "reference.carriers",
+            "reference.layout",
+            "reference.x_linked"
+          ],
+          "out": "m6"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

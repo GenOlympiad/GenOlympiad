@@ -1,0 +1,162 @@
+{
+  "id": "banquet_layout_capacity",
+  "axis": "long_range_consistency",
+  "prompt": "The banqueting office of a city hotel has taken a booking for one hundred and eighty delegates, and the setting plan has to go down to the floor tonight. What is wanted is the pair of documents the banqueting manager sends: the setting plan of the room seen from above, chairs drawn in rows across it with a letter at the end of each row, and beside it the function sheet the floor team works from.\n\nThe room, cleared: 13.2 metres across and 12.0 metres from the platform wall to the back. Theatre style, so the chairs are 0.55 metres wide and the rows go in at 1.0 metre centres. The house keeps 2.0 metres clear across the front of the room for the platform, and a gangway 1.1 metres wide has to stay clear along each side wall for the whole depth of the seating. Rows are lettered from the front, A first.\n\nThe house fills each row to the seats the room's width allows and then lays only as many rows as the booking needs. The function sheet carries the number of seats in each row.\n\nWork the setting out for yourself -- I am deliberately not telling you how many rows go in, how many chairs go in a row, or whether it fits at all. A plan whose back row is drawn into the platform space, or whose chairs run to the walls, is the one the floor team cannot lay. Nothing on either document may carry working: no arithmetic, no capacity note, no dimension chain across the seating. The row letters and every figure on the function sheet have to be readable in the frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a plan of a room seen from above with rows of chairs drawn in it, next to a printed sheet of text? A photograph, a document mockup or an illustration all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "row_letters": "a|b|c|d|e|f|g|h|i",
+    "seats_per_row": "20",
+    "n_gangways": 2,
+    "q_row_letter": "This cut-out shows one row of chairs with a letter printed at the end of the row. Copy that letter. If more than one letter is printed in this cut-out, copy the one nearest the middle of it. Write the one letter only and nothing else.",
+    "q_seats": "Copy the number of seats in each row given in this cut-out of the function sheet. Write the number only.",
+    "q_gangway": "Does this cut-out show a clear gangway running between the ends of the rows and the wall, with no chair standing in it? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_plan_lays_the_rows_the_booking_needs_and_no_more",
+      "weight": 2.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one row of chairs drawn on the setting plan",
+          "sweep": true,
+          "out": "rw"
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_letter",
+          "boxes": "rw",
+          "pad": 0.3,
+          "out": "rwq"
+        },
+        {
+          "fail_if": ["rwq.unreadable"]
+        },
+        {
+          "run": "row_letters",
+          "args": ["rwq"],
+          "out": "rww"
+        },
+        {
+          "compare": "rww.seq",
+          "to": "reference.row_letters",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "a_row_holds_what_the_cleared_width_allows",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the seats per row entry on the function sheet",
+          "sweep": true,
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_seats",
+          "boxes": "sp",
+          "pad": 0.3,
+          "out": "spq"
+        },
+        {
+          "fail_if": ["spq.unreadable"]
+        },
+        {
+          "run": "read_decimal",
+          "args": ["spq"],
+          "out": "spd"
+        },
+        {
+          "compare": "spd.txt",
+          "to": "reference.seats_per_row",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_side_gangways_survived_the_setting",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a clear gangway between the ends of the rows and a side wall of the room",
+          "sweep": true,
+          "out": "gw"
+        },
+        {
+          "fail_if": ["gw.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_gangway",
+          "boxes": "gw",
+          "pad": 0.3,
+          "out": "gwq"
+        },
+        {
+          "fail_if": ["gwq.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["gwq"],
+          "out": "gwn"
+        },
+        {
+          "compare_band": "gwn.n",
+          "to": "reference.n_gangways",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_was_added_to_the_plan",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of arithmetic or a dimension chain added across the seating on the plan",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

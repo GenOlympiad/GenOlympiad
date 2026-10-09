@@ -1,0 +1,204 @@
+{
+  "id": "river_meander_erosion_bank",
+  "axis": "world_knowledge_grounding",
+  "prompt": "a geography-textbook oblique diagram of a river meander. At the bend, the river current erodes the OUTER bank and deposits sediment on the INNER bank. Draw the OUTER bank of the bend as a STEEP ERODED CUT BANK -- a dark steep river cliff with hatching / shadow along the water edge -- and draw the INNER bank as a GENTLE SANDY POINT BAR -- a pale low crescent of sand (a beach). Label the two banks at the bend with a big letter A and a big letter B. Key fact: the OUTER bank of a meander is the steep eroded cut bank and the INNER bank is the gentle sandy point bar. Do NOT reverse them (the bend does NOT erode the inside). Make the steep cliff and the sandy beach clearly, unmistakably different. Clean, readable diagram.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a labelled river-meander (river-bend) diagram whose two banks at the bend are marked A and B? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "outer_letter": "B",
+    "inner_letter": "A",
+    "q_cut": "This is a diagram of a river bend (meander). The two banks at the bend are labelled with a big A and a big B. One bank is a STEEP ERODED CUT BANK -- a river cliff with a hard dark steep edge and hatching marks; the other bank is a gentle low sandy beach. Which labelled bank is the STEEP ERODED CUT BANK (the river cliff / steep edge)? Answer with just the letter A or B.",
+    "q_bar": "This is a diagram of a river bend (meander). The two banks at the bend are labelled with a big A and a big B. One bank is a gentle low SANDY POINT BAR -- a pale crescent of sand / a deposition beach; the other bank is a steep dark cliff. Which labelled bank is the GENTLE SANDY POINT BAR (the low deposition beach)? Answer with just the letter A or B."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "meander_banks",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big printed capital letter A on the picture",
+          "expected_n": 1,
+          "out": "acut_box"
+        },
+        {
+          "fail_if": ["acut_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture of a river, showing one stretch of bank where the land meets the water. If the bank here is a steep dark drop with a hard edge falling straight into the water, answer cliff. If the bank here is a low pale sandy slope running gently into the water, answer beach. Answer with exactly one word: cliff or beach.",
+          "boxes": "acut_box",
+          "pad": 2.0,
+          "out": "acut_cr"
+        },
+        {
+          "fail_if": ["acut_cr.unreadable"]
+        },
+        {
+          "run": "cut_letter",
+          "args": ["acut_cr.answers[0]"],
+          "out": "acut"
+        },
+        {
+          "extract": "(?i)\\b([AB])\\b",
+          "value": "acut",
+          "out": "lcut",
+          "pick": "last"
+        },
+        {
+          "fail_if": ["lcut.none"]
+        },
+        {
+          "compare": "lcut",
+          "to": "reference.outer_letter",
+          "out": "f1"
+        },
+        {
+          "read": "boxes",
+          "target": "big printed capital letter B on the picture",
+          "expected_n": 1,
+          "out": "abar_box"
+        },
+        {
+          "fail_if": ["abar_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture of a river, showing one stretch of bank where the land meets the water. If the bank here is a steep dark drop with a hard edge falling straight into the water, answer cliff. If the bank here is a low pale sandy slope running gently into the water, answer beach. Answer with exactly one word: cliff or beach.",
+          "boxes": "abar_box",
+          "pad": 2.0,
+          "out": "abar_cr"
+        },
+        {
+          "fail_if": ["abar_cr.unreadable"]
+        },
+        {
+          "run": "bar_letter",
+          "args": ["abar_cr.answers[0]"],
+          "out": "abar"
+        },
+        {
+          "extract": "(?i)\\b([AB])\\b",
+          "value": "abar",
+          "out": "lbar",
+          "pick": "last"
+        },
+        {
+          "fail_if": ["lbar.none"]
+        },
+        {
+          "compare": "lbar",
+          "to": "reference.inner_letter",
+          "out": "f2"
+        },
+        {
+          "minimum": ["f1", "f2"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "meander_banks_confirm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big printed capital letter A on the picture",
+          "expected_n": 1,
+          "out": "acut_box"
+        },
+        {
+          "fail_if": ["acut_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture of a river, showing one stretch of bank where the land meets the water. If the bank here is a steep dark drop with a hard edge falling straight into the water, answer cliff. If the bank here is a low pale sandy slope running gently into the water, answer beach. Answer with exactly one word: cliff or beach.",
+          "boxes": "acut_box",
+          "pad": 2.0,
+          "out": "acut_cr"
+        },
+        {
+          "fail_if": ["acut_cr.unreadable"]
+        },
+        {
+          "run": "cut_letter",
+          "args": ["acut_cr.answers[0]"],
+          "out": "acut"
+        },
+        {
+          "extract": "(?i)\\b([AB])\\b",
+          "value": "acut",
+          "out": "lcut",
+          "pick": "last"
+        },
+        {
+          "fail_if": ["lcut.none"]
+        },
+        {
+          "compare": "lcut",
+          "to": "reference.outer_letter",
+          "out": "f1"
+        },
+        {
+          "read": "boxes",
+          "target": "big printed capital letter B on the picture",
+          "expected_n": 1,
+          "out": "abar_box"
+        },
+        {
+          "fail_if": ["abar_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a picture of a river, showing one stretch of bank where the land meets the water. If the bank here is a steep dark drop with a hard edge falling straight into the water, answer cliff. If the bank here is a low pale sandy slope running gently into the water, answer beach. Answer with exactly one word: cliff or beach.",
+          "boxes": "abar_box",
+          "pad": 2.0,
+          "out": "abar_cr"
+        },
+        {
+          "fail_if": ["abar_cr.unreadable"]
+        },
+        {
+          "run": "bar_letter",
+          "args": ["abar_cr.answers[0]"],
+          "out": "abar"
+        },
+        {
+          "extract": "(?i)\\b([AB])\\b",
+          "value": "abar",
+          "out": "lbar",
+          "pick": "last"
+        },
+        {
+          "fail_if": ["lbar.none"]
+        },
+        {
+          "compare": "lbar",
+          "to": "reference.inner_letter",
+          "out": "f2"
+        },
+        {
+          "minimum": ["f1", "f2"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "source": "At a river bend, the outer bank is worn away into a steep cut bank and the inner bank builds up a point bar.",
+  "grounding": "static"
+}

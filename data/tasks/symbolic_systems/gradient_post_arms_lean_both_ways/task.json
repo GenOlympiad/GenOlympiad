@@ -1,0 +1,84 @@
+{
+  "id": "gradient_post_arms_lean_both_ways",
+  "axis": "symbolic_systems",
+  "prompt": "The post is due its yearly check, so the gang shoot it from the cess with the works board standing behind them.\n\nThe post is a white board on a short steel stem at the lineside, with an arm out to each side of the stem, figured in black. The works board propped on the ballast gives the profile either side: behind the post the line climbs 4 mm in every metre, and ahead of the post it runs level. The lettering standard is printed under those figures: the left-hand arm stands for the line behind the post, the right-hand arm for the line ahead. An arm whose outer end stands above its inner end is a climbing stretch, one whose outer end stands below is a falling one, and a flat arm is a level stretch. Each arm carries the number of metres run for every metre of climb or fall.\n\nWhat those arms come to look like is what the works board does not draw.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a lineside post carrying a white board with an arm out to each side of it and figures lettered on the arms? Answer yes or no only.",
+  "reference": {
+    "part1": "right_arm_flat",
+    "part2": "in_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the arm on the right-hand side of the board. Answer with one of: the right-hand arm runs flat across the post; the right-hand arm rises towards its outer end; the right-hand arm falls towards its outer end.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the figure lettered on the left-hand arm of the board. Write the number only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part2", "248", "252"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

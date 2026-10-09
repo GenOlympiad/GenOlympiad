@@ -1,0 +1,275 @@
+{
+  "id": "interval_max_bookings",
+  "axis": "latent_computation",
+  "prompt": "A close, square-on photograph of a metal job board bolted beside a lathe in a small machine shop, filling the frame. Punched job cards hang in eight rows under four printed headings: JOB, FROM, TO and LATHE 3. Reading down, the rows are: JOB P from 11:00 to 15:00; JOB Q from 09:00 to 13:00; JOB R from 12:00 to 15:00; JOB S from 10:00 to 11:00; JOB T from 10:00 to 13:00; JOB U from 11:00 to 14:00; JOB V from 06:00 to 10:00; JOB W from 14:00 to 17:00. One lathe cannot cut two jobs at once, so any two jobs that are actually run must not overlap; a job finishing exactly as the next one starts is acceptable. Put as many jobs as can possibly share the lathe on the schedule: mark the LATHE 3 box of every scheduled row RUN and the LATHE 3 box of every other row HOLD. One word per row, inside that row's own box, clear of the rows above and below, all eight rows marked. I am not saying which jobs make the cut; work it out from the printed hours.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a board of hanging cards ruled into rows under printed headings, each row bearing a code, two times, and a word in its last box. Ignoring artistic quality, and ignoring whether the words are right or wrong, does the image actually show that? Answer NO only if it shows something else entirely -- a bare board, a photograph, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "names": ["p", "q", "r", "s", "t", "u", "v", "w"],
+    "n_rows": 8,
+    "yes_word": "run",
+    "q_times": "This picture is a sheet with one row per entry, each row named JOB followed by a single capital letter, and each row printing a FROM time and a TO time. Going down the sheet row by row, report each row as LETTER=FROM-TO using 24-hour times. Answer with exactly 8 such items separated by semicolons, top row first, and no other text.",
+    "q_times2": "Read the rows of this sheet from the top down. Each row carries a capital letter and two clock times. For every row give the letter, then an equals sign, then the earlier time, a hyphen and the later time, all on the 24-hour clock. Answer with exactly 8 items separated by semicolons and no other text.",
+    "q_marks": "This picture is a sheet with one row per entry, each row named JOB followed by a single capital letter, and each row carrying one word in its LATHE 3 box: either RUN or HOLD. Going down the sheet row by row, report each row as LETTER=WORD. Judge every row on its own -- the rows do not have to agree with one another, and the same word may come up many times. Answer with exactly 8 such items separated by semicolons, top row first, and no other text.",
+    "q_marks2": "Look at the final column of this sheet, the one headed LATHE 3. Working from the top row to the bottom row, give that row's capital letter, an equals sign, and the single word written in that column for that row, which is either RUN or HOLD. Judge every row separately. Answer with exactly 8 items separated by semicolons and no other text.",
+    "q_verbatim": "Transcribe EVERY line of printed, stamped, written or punched text you can see anywhere in this picture -- including the column headings, every row of the sheet and every mark in the decision column. Copy each line exactly as it appears, character by character. Do NOT correct anything and do not leave any line out. Separate the lines with spaces. Answer with the transcribed lines only.",
+    "exp_lines": [
+      "JOB P 11:00 15:00",
+      "JOB Q 09:00 13:00",
+      "JOB R 12:00 15:00",
+      "JOB S 10:00 11:00",
+      "JOB T 10:00 13:00",
+      "JOB U 11:00 14:00",
+      "JOB V 06:00 10:00",
+      "JOB W 14:00 17:00",
+      "JOB",
+      "FROM",
+      "TO",
+      "LATHE 3"
+    ],
+    "exp_times": [
+      "P=11:00-15:00",
+      "Q=09:00-13:00",
+      "R=12:00-15:00",
+      "S=10:00-11:00",
+      "T=10:00-13:00",
+      "U=11:00-14:00",
+      "V=06:00-10:00",
+      "W=14:00-17:00"
+    ],
+    "opt_set": ["S", "U", "V", "W"],
+    "opt_count": 4,
+    "shortcuts": {
+      "greedy_earliest_start": {
+        "set": ["P", "S", "V"],
+        "count": 3
+      },
+      "greedy_longest_first": {
+        "set": ["P", "S", "V"],
+        "count": 3
+      },
+      "greedy_shortest_first": {
+        "set": ["R", "S", "V"],
+        "count": 3
+      },
+      "greedy_listed_order": {
+        "set": ["P", "S", "V"],
+        "count": 3
+      }
+    },
+    "shortcut_exists": "earliest_finish_greedy"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 14.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read_sequence": "reference.q_times",
+          "n": "reference.n_rows",
+          "delimiter": ";",
+          "out": "times"
+        },
+        {
+          "read_sequence": "reference.q_marks",
+          "n": "reference.n_rows",
+          "delimiter": ";",
+          "out": "marks"
+        },
+        {
+          "fail_if": ["times.unreadable", "marks.unreadable"]
+        },
+        {
+          "run": "booking_verdict",
+          "args": ["times", "marks", "reference.names", "reference.yes_word"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "feasible",
+      "weight": 2.0,
+      "score": "res.feasible",
+      "steps": [
+        {
+          "read_sequence": "reference.q_times",
+          "n": "reference.n_rows",
+          "delimiter": ";",
+          "out": "times"
+        },
+        {
+          "read_sequence": "reference.q_marks",
+          "n": "reference.n_rows",
+          "delimiter": ";",
+          "out": "marks"
+        },
+        {
+          "fail_if": ["times.unreadable", "marks.unreadable"]
+        },
+        {
+          "run": "booking_verdict",
+          "args": ["times", "marks", "reference.names", "reference.yes_word"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "count_ok",
+      "weight": 1.5,
+      "score": "res.count_ok",
+      "steps": [
+        {
+          "read_sequence": "reference.q_times",
+          "n": "reference.n_rows",
+          "delimiter": ";",
+          "out": "times"
+        },
+        {
+          "read_sequence": "reference.q_marks",
+          "n": "reference.n_rows",
+          "delimiter": ";",
+          "out": "marks"
+        },
+        {
+          "fail_if": ["times.unreadable", "marks.unreadable"]
+        },
+        {
+          "run": "booking_verdict",
+          "args": ["times", "marks", "reference.names", "reference.yes_word"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "row_agreement",
+      "weight": 1.5,
+      "score": "res.share",
+      "steps": [
+        {
+          "read_sequence": "reference.q_times",
+          "n": "reference.n_rows",
+          "delimiter": ";",
+          "out": "times"
+        },
+        {
+          "read_sequence": "reference.q_marks",
+          "n": "reference.n_rows",
+          "delimiter": ";",
+          "out": "marks"
+        },
+        {
+          "fail_if": ["times.unreadable", "marks.unreadable"]
+        },
+        {
+          "run": "booking_verdict",
+          "args": ["times", "marks", "reference.names", "reference.yes_word"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "data_present",
+      "weight": 1.0,
+      "pass_at": 0.8,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read_crop": "Copy out every line of writing you can see in this picture, one line after another, exactly as it is printed. If a line is cut off by the edge of this picture, copy the characters you can actually see and do not guess the rest. Do not correct anything, do not tidy anything up and do not leave a line out. Put a single space between one line and the next, and write nothing else. If there is no writing at all in this picture, answer 'none'.",
+          "boxes": [
+            [0, 0, 400, 1000],
+            [300, 0, 700, 1000],
+            [600, 0, 1000, 1000]
+          ],
+          "pad": 0.01,
+          "out": "rr"
+        },
+        {
+          "run": "cover",
+          "args": ["rr", "reference.exp_lines"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_booking_trace",
+      "weight": 0.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one entry row of the ruled sheet, from its name at the left to its last column",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "rows_box"
+        },
+        {
+          "fail_if": ["rows_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a booking sheet. Give the capital letter that names the row, then an equals sign, then its earlier time, a hyphen, and its later time, both on the 24-hour clock. Write nothing else.",
+          "boxes": "rows_box",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "times"
+        },
+        {
+          "fail_if": ["times.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a booking sheet. Give the capital letter that names the row, then an equals sign, then the single word written in its last column. Write nothing else.",
+          "boxes": "rows_box",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "marks"
+        },
+        {
+          "fail_if": ["marks.unreadable"]
+        },
+        {
+          "run": "booking_verdict",
+          "args": ["times.answers", "marks.answers", "reference.names", "reference.yes_word"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

@@ -1,0 +1,91 @@
+{
+  "id": "parallel_stiffness_reciprocal",
+  "axis": "quantitative_precision",
+  "prompt": "A clean a diagram of two shock absorbers in PARALLEL: a GREEN bar for the first shock's travel, an ORANGE bar for the second shock's travel, and a BLUE bar for the combined travel of the parallel pair under the same load. Two springs in PARALLEL share the load and are stiffer together, so the combined stretch is a RECIPROCAL sum of the two single stretches: 1/combined = 1/first + 1/second. That makes the BLUE combined bar SHORTER than both the green and the orange bars. Size the blue bar to the reciprocal-sum value. Do NOT draw the combined bar as long as the green and orange bars added together. Plain background, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a diagram of two shock absorbers in PARALLEL: a GREEN bar for the first shock's travel, an ORANGE bar for the second shock's travel, and a BLUE bar for the combined travel of the parallel pair under the same load. Ignoring artistic quality, does the image show three separate coloured measure bars or arrows -- one GREEN, one ORANGE and one BLUE -- each drawn to show a length? They may be drawn lying across the picture or standing up and down; either counts as yes. Answer NO only if one of those three coloured bars/arrows is missing, or the picture is something unrelated. Answer yes or no.",
+  "reference": {
+    "x1_lo": [40, 70, 50],
+    "x1_hi": [85, 255, 255],
+    "x2_lo": [10, 120, 120],
+    "x2_hi": [25, 255, 255],
+    "eq_lo": [100, 90, 60],
+    "eq_hi": [130, 255, 255],
+    "orient": "h",
+    "tol": 0.12,
+    "min_frac": 0.0003
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "parallel_recip",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the GREEN arrow that shows the first spring's stretch -- one tight box around the whole green arrow, not the short green line in the legend key",
+          "expected_n": 1,
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the ORANGE arrow that shows the second spring's stretch -- one tight box around the whole orange arrow, not the short orange line in the legend key",
+          "expected_n": 1,
+          "out": "o"
+        },
+        {
+          "fail_if": ["o.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the BLUE arrow that shows the combined stretch -- one tight box around the whole blue arrow, not the short blue line in the legend key",
+          "expected_n": 1,
+          "out": "b"
+        },
+        {
+          "fail_if": ["b.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "combined_travel_score",
+          "args": ["g", "o", "b", "src", "reference"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.degenerate"]
+        },
+        {
+          "compare_band": "rd.frac",
+          "to": 1.0,
+          "core": 0.15,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

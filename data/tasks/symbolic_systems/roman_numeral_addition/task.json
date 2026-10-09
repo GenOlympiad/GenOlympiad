@@ -1,0 +1,238 @@
+{
+  "id": "roman_numeral_addition",
+  "axis": "symbolic_systems",
+  "prompt": "A photorealistic straight-on close-up of a granite FOUNDATION CORNERSTONE set into the wall of a university courtyard building, its face engraved with a SINGLE Roman numeral: the SUM of MCCLXXXVIII and CMLXXVI added together. Engrave ONLY the resulting Roman numeral in large deep-cut serif capitals (using only the letters I, V, X, L, C, D, M and the standard subtractive rules such as IV, IX, XL, XC, CD, CM); do NOT engrave the two numbers being added, any '+' or '=' sign, or any Arabic digits (0-9). Crisp incised lettering with soft courtyard daylight, high contrast, no other text, dates, names or symbols anywhere in the image.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show granite university-courtyard foundation cornerstone engraved straight-on with a single summed Roman numeral? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "operand_a": 1288,
+    "operand_b": 976,
+    "a_roman": "MCCLXXXVIII",
+    "b_roman": "CMLXXVI",
+    "result_int": 2264,
+    "result_roman": "MMCCLXIV",
+    "n_numerals": 1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "Is the main subject of this image a Roman numeral inscription -- an engraved sequence of the capital letters I, V, X, L, C, D, M (as on a stone cornerstone or plaque)? Answer yes or no.",
+          "out": "fm"
+        },
+        {
+          "fail_if": ["fm.unreadable"]
+        },
+        {
+          "compare": "fm",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_arabic_guard",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a printed, carved or written Arabic digit anywhere in the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_dg"
+        },
+        {
+          "fail_if": ["sweep_dg.unreadable"]
+        },
+        {
+          "compare": "sweep_dg.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "result_string",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_crop": "This is a carved stone cornerstone engraved with a single Roman numeral (only the letters I V X L C D M). Transcribe EXACTLY the letters carved on it, in order, as one word. If nothing legible is carved, answer exactly 'unreadable'. Answer with ONLY the Roman-numeral letters, nothing else.",
+          "out": "raw_s"
+        },
+        {
+          "fail_if": ["raw_s.unreadable"]
+        },
+        {
+          "run": "read_roman",
+          "args": ["raw_s"],
+          "out": "read_s"
+        },
+        {
+          "compare": "read_s",
+          "to": "reference.result_roman",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "numeric_equiv",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read_crop": "This is a carved stone cornerstone engraved with a single Roman numeral (only the letters I V X L C D M). Transcribe EXACTLY the letters carved on it, in order, as one word. If nothing legible is carved, answer exactly 'unreadable'. Answer with ONLY the Roman-numeral letters, nothing else.",
+          "out": "raw_n"
+        },
+        {
+          "fail_if": ["raw_n.unreadable"]
+        },
+        {
+          "run": "read_roman",
+          "args": ["raw_n"],
+          "out": "read_n"
+        },
+        {
+          "run": "roman_int",
+          "args": ["read_n"],
+          "out": "read_val"
+        },
+        {
+          "compare_band": "read_val",
+          "to": "reference.result_int",
+          "core": 0.0,
+          "margin": 1e-09,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_lines",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one engraved line of Roman-numeral capital letters on the cornerstone face",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole engraved line of Roman-numeral capital letters, rather than bare stone or only part of a line? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_numerals",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_plus_equals",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a carved plus sign or equals sign anywhere in the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_op_sign"
+        },
+        {
+          "fail_if": ["sweep_op_sign.unreadable"]
+        },
+        {
+          "compare": "sweep_op_sign.clean",
+          "to": "yes",
+          "out": "f_sign"
+        },
+        {
+          "read": "boxes",
+          "target": "a carved number anywhere on the stone apart from the main numeral carved across its face",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_op_other"
+        },
+        {
+          "fail_if": ["sweep_op_other.unreadable"]
+        },
+        {
+          "compare": "sweep_op_other.clean",
+          "to": "yes",
+          "out": "f_other"
+        },
+        {
+          "all": ["f_sign", "f_other"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_arabic_only_roman",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a carved or printed character anywhere in the picture that is not one of the letters I, V, X, L, C, D or M",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

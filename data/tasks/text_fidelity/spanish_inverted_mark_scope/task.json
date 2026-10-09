@@ -1,0 +1,253 @@
+{
+  "id": "spanish_inverted_mark_scope",
+  "axis": "text_fidelity",
+  "prompt": "A regional health authority is sending three advice lines to its print unit for the autumn campaign, and this is the proof taped up on the proofing wall over the press colour bar while the duty officer reads it.\n\nThe three lines are settled and must appear word for word, one under the other, in Spanish:\n\nSi esta noche tiene fiebre, debe llamar primero al centro de salud\n\nCuando el aviso sea de nivel dos, cierre las ventanas ahora mismo\n\nVecinos de la calle del Puerto, si el aviso pasa a nivel tres, tienen ustedes la llave de paso a mano\n\nThe first line is a question, the second is an instruction and the third is a question again, and Spanish punctuates all of them at each end: an upside-down mark opens them and an upright mark closes them. The rule the duty officer is reading against, and the reason the proof comes back to her at all, is where the upside-down mark goes. It does not go at the head of the line. It goes at the point where the asking or the ordering actually begins, so whatever leads in -- a condition, a person being addressed, or both one after the other -- stays outside the pair of marks altogether. Where each of those three points falls is deliberately being kept from you: that is the whole of the read, and the third line is not settled by the same count of commas as the first two.\n\nGive me the proof square to the camera, all three lines in one frame in the same size of type, big enough that every mark of punctuation is unmistakable. Nothing may be added to the proof: no note about the punctuation, and no arrow, ring or correction mark anywhere on it.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed sheet carrying three lines of Spanish text? A realistic photo, a document mockup or an illustration ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "fever_line_span": "fiebre>debe",
+    "level_line_span": "dos>cierre",
+    "neighbour_line_span": "tres>tienen",
+    "n_lines": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_fever_line_opens_its_mark_where_the_asking_begins",
+      "weight": 2.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the line of the proof that ends with the word salud",
+          "sweep": true,
+          "out": "ql"
+        },
+        {
+          "fail_if": ["ql.unreadable"]
+        },
+        {
+          "read_crop": "Copy the word printed immediately before the upside-down question mark in this cut-out. Write one word only, exactly as it is printed; write the word none if no upside-down question mark is printed here, or if nothing is printed before it.",
+          "boxes": "ql",
+          "pad": 0.2,
+          "out": "qb"
+        },
+        {
+          "fail_if": ["qb.unreadable"]
+        },
+        {
+          "read_crop": "Copy the word printed immediately after the upside-down question mark in this cut-out. Write one word only, exactly as it is printed, and write the word none if no upside-down question mark is printed here.",
+          "boxes": "ql",
+          "pad": 0.2,
+          "out": "qa"
+        },
+        {
+          "fail_if": ["qa.unreadable"]
+        },
+        {
+          "run": "words_around_mark",
+          "args": ["qb", "qa"],
+          "out": "qsp"
+        },
+        {
+          "fail_if": ["qsp.unreadable"]
+        },
+        {
+          "compare": "qsp.txt",
+          "to": "reference.fever_line_span",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_level_line_opens_its_mark_where_the_ordering_begins",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the line of the proof that ends with the words ahora mismo",
+          "sweep": true,
+          "out": "el"
+        },
+        {
+          "fail_if": ["el.unreadable"]
+        },
+        {
+          "read_crop": "Copy the word printed immediately before the upside-down exclamation mark in this cut-out. Write one word only, exactly as it is printed; write the word none if no upside-down exclamation mark is printed here, or if nothing is printed before it.",
+          "boxes": "el",
+          "pad": 0.2,
+          "out": "eb"
+        },
+        {
+          "fail_if": ["eb.unreadable"]
+        },
+        {
+          "read_crop": "Copy the word printed immediately after the upside-down exclamation mark in this cut-out. Write one word only, exactly as it is printed, and write the word none if no upside-down exclamation mark is printed here.",
+          "boxes": "el",
+          "pad": 0.2,
+          "out": "ea"
+        },
+        {
+          "fail_if": ["ea.unreadable"]
+        },
+        {
+          "run": "words_around_mark",
+          "args": ["eb", "ea"],
+          "out": "esp"
+        },
+        {
+          "fail_if": ["esp.unreadable"]
+        },
+        {
+          "compare": "esp.txt",
+          "to": "reference.level_line_span",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_neighbour_line_clears_the_people_addressed_as_well_as_the_condition",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the line of the proof that ends with the words a mano",
+          "sweep": true,
+          "out": "nl"
+        },
+        {
+          "fail_if": ["nl.unreadable"]
+        },
+        {
+          "read_crop": "Copy the word printed immediately before the upside-down question mark in this cut-out. Write one word only, exactly as it is printed; write the word none if no upside-down question mark is printed here, or if nothing is printed before it.",
+          "boxes": "nl",
+          "pad": 0.2,
+          "out": "nb"
+        },
+        {
+          "fail_if": ["nb.unreadable"]
+        },
+        {
+          "read_crop": "Copy the word printed immediately after the upside-down question mark in this cut-out. Write one word only, exactly as it is printed, and write the word none if no upside-down question mark is printed here.",
+          "boxes": "nl",
+          "pad": 0.2,
+          "out": "na"
+        },
+        {
+          "fail_if": ["na.unreadable"]
+        },
+        {
+          "run": "words_around_mark",
+          "args": ["nb", "na"],
+          "out": "nsp"
+        },
+        {
+          "fail_if": ["nsp.unreadable"]
+        },
+        {
+          "compare": "nsp.txt",
+          "to": "reference.neighbour_line_span",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_line_carries_an_upside_down_opening_mark",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole line of Spanish text on the proof",
+          "sweep": true,
+          "out": "ln"
+        },
+        {
+          "fail_if": ["ln.unreadable"]
+        },
+        {
+          "read_crop": "Is an upside-down question mark or an upside-down exclamation mark printed anywhere in this cut-out? Answer yes or no only.",
+          "boxes": "ln",
+          "pad": 0.1,
+          "out": "lnm"
+        },
+        {
+          "fail_if": ["lnm.unreadable"]
+        },
+        {
+          "run": "all_lines_marked",
+          "args": ["lnm", "reference.n_lines"],
+          "out": "lnv"
+        },
+        {
+          "fail_if": ["lnv.unreadable"]
+        },
+        {
+          "compare": "lnv.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_line_opens_on_an_upside_down_mark",
+      "weight": 0.15,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of the proof whose very first character is an upside-down mark",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "hd"
+        },
+        {
+          "fail_if": ["hd.unreadable"]
+        },
+        {
+          "compare": "hd.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_note_or_correction_is_marked_on_the_proof",
+      "weight": 0.15,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a note, an arrow, a ring or a correction mark added onto the proof",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "mk"
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "compare": "mk.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

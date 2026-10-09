@@ -1,0 +1,389 @@
+{
+  "id": "diagonal_equal_check",
+  "axis": "quantitative_precision",
+  "prompt": "A flat top-down photograph of a picture-framer's squaring board: a matte grey worktop with a sheet of pale paper taped down, on which twelve small round black studs mark the four corners of THREE separate rectangular frames laid out side by side in a row (a left frame, a middle frame, and a right frame), each a different shape -- one tall, one wide, one narrow. Position the studs so that EACH of the three frames is a TRUE, PERFECTLY RECTANGULAR shape with square corners: within every frame, its two diagonals -- the line from its top-left stud to its bottom-right stud, and the line from its top-right stud to its bottom-left stud -- must be EXACTLY the SAME length as each other (that is what makes each one a true rectangle, not a leaning parallelogram). The three frames do not overlap and stand clearly apart. You may join each frame's studs with very faint pale guide lines, but the twelve SOLID BLACK studs are the important marks. Only the twelve black corner studs (optionally joined by faint pale lines); no measurements, no numbers, no text, evenly lit, studs clearly and solidly darker than the paper and the lines.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict picture-framer's squaring board photographed top-down with twelve black corner studs marking THREE side-by-side rectangles, each of which must have equal diagonals. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_marks": 12,
+    "nrect": 3,
+    "d2_q_feature": "This image was supposed to depict: a picture-framer's squaring board photographed top-down with twelve black corner studs marking THREE side-by-side rectangles, each of which must have equal diagonals. Ignoring artistic quality, and ignoring whether any of the marks, measurements or values shown are correct, does the image actually DEPICT that subject? A photo, an illustration, a schematic or a clean diagram all count as yes. Answer NO only if it is blank, or shows something completely different. Answer yes or no only.",
+    "d2_q_carrier": "This image should depict: a picture-framer's squaring board photographed top-down with twelve black corner studs marking THREE side-by-side rectangles, each of which must have equal diagonals. Is the object / instrument / worksheet actually shown the KIND of thing described (the right carrier for the measurement), rather than a different object or a generic placeholder? Answer with the single word yes or no only.",
+    "d2_q_single": "This image should depict: a picture-framer's squaring board photographed top-down with twelve black corner studs marking THREE side-by-side rectangles, each of which must have equal diagonals, and only that. Is the measured object / construction shown cleanly on its own, WITHOUT extra distracting objects, clutter, or duplicate copies that are not part of the described scene? Answer yes if only the intended subject is present, no if there is distracting clutter or extra objects. Answer with the single word yes or no only.",
+    "d2_q_precise": "Does this image look like a PRECISE, deliberately constructed measurement or technical drawing -- crisp straight lines, sharp marks, cleanly drawn scale divisions, the look of something laid out with instruments -- as opposed to a rough, wobbly, freehand or sketchy rendering where the geometry is clearly approximate? Answer yes if it looks precisely / deliberately constructed, no if it looks rough or freehand. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "mark_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the three rectangular frames on the pale paper: the rectangle whose four corners are each marked by a small solid black round stud (box the whole rectangle, corner studs included) -- one frame is tall, one is wide and one is narrow, so box each of the three separately, one box per frame, from its own top-left stud to its own bottom-right stud; do not box a neighbouring frame's studs and do not box the bare paper.",
+          "expected_n": "reference.nrect",
+          "out": "fr"
+        },
+        {
+          "fail_if": ["fr.unreadable"]
+        },
+        {
+          "run": "frame_crop_boxes",
+          "args": ["fr", "reference.nrect"],
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.no_frames"]
+        },
+        {
+          "crop": "fb.b0",
+          "out": "c0"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "k0",
+          "context": "rectangle of four black corner studs together with the pale paper around it"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "n0"
+        },
+        {
+          "crop": "fb.b1",
+          "out": "c1"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "k1",
+          "context": "rectangle of four black corner studs together with the pale paper around it"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "n1"
+        },
+        {
+          "crop": "fb.b2",
+          "out": "c2"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "k2",
+          "context": "rectangle of four black corner studs together with the pale paper around it"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "n2"
+        },
+        {
+          "run": "map_studs_to_image",
+          "args": ["fb", "[k0, k1, k2]", "[n0, n1, n2]"],
+          "out": "mb"
+        },
+        {
+          "fail_if": ["mb.none"]
+        },
+        {
+          "read_crop": "Does this cut-out show one small solid black round stud -- a single dark round dot -- on pale paper? Answer no if it shows no dot at all, or if it shows two or more dots. Answer yes or no only.",
+          "boxes": "mb",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "select_confirmed_studs",
+          "args": ["mb", "cr", "reference.nrect"],
+          "out": "sel"
+        },
+        {
+          "fail_if": ["sel.none"]
+        },
+        {
+          "compare_band": "sel.n",
+          "to": 12,
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the three rectangular frames on the pale paper: the rectangle whose four corners are each marked by a small solid black round stud (box the whole rectangle, corner studs included) -- one frame is tall, one is wide and one is narrow, so box each of the three separately, one box per frame, from its own top-left stud to its own bottom-right stud; do not box a neighbouring frame's studs and do not box the bare paper.",
+          "expected_n": "reference.nrect",
+          "out": "fr"
+        },
+        {
+          "fail_if": ["fr.unreadable"]
+        },
+        {
+          "run": "frame_crop_boxes",
+          "args": ["fr", "reference.nrect"],
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.no_frames"]
+        },
+        {
+          "crop": "fb.b0",
+          "out": "c0"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "k0",
+          "context": "rectangle of four black corner studs together with the pale paper around it"
+        },
+        {
+          "read": "boxes",
+          "image": "c0",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "n0"
+        },
+        {
+          "crop": "fb.b1",
+          "out": "c1"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "k1",
+          "context": "rectangle of four black corner studs together with the pale paper around it"
+        },
+        {
+          "read": "boxes",
+          "image": "c1",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "n1"
+        },
+        {
+          "crop": "fb.b2",
+          "out": "c2"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "k2",
+          "context": "rectangle of four black corner studs together with the pale paper around it"
+        },
+        {
+          "read": "boxes",
+          "image": "c2",
+          "target": "a small solid black round stud: one of the dark round dots marking a corner of the rectangle on the pale paper (do NOT box the faint guide lines or the paper)",
+          "expected_n": 4,
+          "out": "n2"
+        },
+        {
+          "run": "map_studs_to_image",
+          "args": ["fb", "[k0, k1, k2]", "[n0, n1, n2]"],
+          "out": "mb"
+        },
+        {
+          "fail_if": ["mb.none"]
+        },
+        {
+          "read_crop": "Does this cut-out show one small solid black round stud -- a single dark round dot -- on pale paper? Answer no if it shows no dot at all, or if it shows two or more dots. Answer yes or no only.",
+          "boxes": "mb",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "select_confirmed_studs",
+          "args": ["mb", "cr", "reference.nrect"],
+          "out": "sel"
+        },
+        {
+          "fail_if": ["sel.none"]
+        },
+        {
+          "run": "stud_centers",
+          "args": ["sel"],
+          "out": "hg"
+        },
+        {
+          "fail_if": ["hg.no_centers"]
+        },
+        {
+          "run": "worst_diagonal_mismatch",
+          "args": ["hg['centers']", "reference['nrect']"],
+          "out": "err"
+        },
+        {
+          "compare_band": "err",
+          "to": 0.0,
+          "core": 0.03,
+          "margin": 0.08,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_feature_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_feature",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_carrier_match",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_carrier",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_single_subject",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_single",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "measure_precision_deliberate",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_precise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static",
+  "count_noun": "a corner stud"
+}

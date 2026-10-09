@@ -1,0 +1,49 @@
+{
+  "id": "glassware_meniscus_read",
+  "axis": "symbolic_systems",
+  "prompt": "I'm setting up a chemistry lab worksheet. Please draw a clear, straight-on illustration of two pieces of glassware side by side on a bench: on the LEFT a tall narrow GRADUATED CYLINDER, and on the RIGHT a wide short BEAKER, both holding blue liquid, each with printed mL scale numbers up the side.\n\nThe graduated cylinder's scale runs 10 at the bottom up to 60 at the top. Fill it with blue liquid and draw a realistic CONCAVE MENISCUS at the surface (the liquid curves UP where it touches the glass and DIPS DOWN in the middle). The lowest point of that curved surface (the bottom of the meniscus) must sit exactly on the 40 mL line, while the liquid clinging up the glass reaches the 50 mL line.\n\nThe correct way to read a graduated cylinder is at the BOTTOM of the meniscus, NOT at the high liquid edge. So draw a small red READ ARROW pointing horizontally at the graduation line that gives the correct reading: the 40 mL line (the bottom of the meniscus). Do NOT put the arrow on the higher liquid edge and do NOT put the reading arrow on the beaker. Keep all text and numbers in English. Make the scale numbers and the arrow large and clearly legible.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict laboratory glassware for measuring a liquid volume: a graduated cylinder and/or a beaker with printed scale numbers, holding coloured liquid, with a small arrow pointing at a scale line. Ignoring artistic quality, does the image DEPICT such measuring glassware with a scale and liquid? A clean diagram or a photo both count as yes. Answer NO only if it is blank, plain text, or unrelated. Answer yes or no only.",
+  "reference": {
+    "reading": 40
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "meniscus_bottom_reading",
+      "weight": 5.0,
+      "steps": [
+        {
+          "ask": "This image shows laboratory glassware. Look ONLY at the tall narrow GRADUATED CYLINDER (the slim tube on the left, NOT the wide beaker). A small red ARROW points horizontally at exactly one graduation line on the cylinder. Under the standard convention you read a graduated cylinder at the BOTTOM of the curved liquid surface (the meniscus), which is exactly where this arrow points. Read the printed graduation NUMBER (in mL) on the line the red arrow points at on the cylinder. Answer with just that number (you may include 'mL').",
+          "out": "ans"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "reading_matches",
+          "args": ["ans", "reference.reading"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

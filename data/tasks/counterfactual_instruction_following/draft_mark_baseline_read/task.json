@@ -1,0 +1,206 @@
+{
+  "id": "draft_mark_baseline_read",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A draught surveyor needs this morning's record page made up before the barge comes alongside. The page holds three close-ups of the painted draught marks along one side of a bulk carrier, each close-up captioned with one word, FORWARD, MIDSHIP or AFT, and the survey table ruled down the right hand side of the page.\n\nWhat the survey pins. On this hull the marks are painted in decimetres: each figure is 10 cm tall, there are 10 cm of bare plate between one figure and the next, and the foot of a figure is the height that figure stands for. The strake carries the figures 60, 62, 64, 66, 68, 70, 72 and 74. The survey table is already filled in with FORWARD 6.43 m and AFT 7.31 m, and with the surveyor's note that the hull is neither hogged nor sagged, so the midship draught is the mean of those two. All three close-ups are taken square on from the same distance, so the figures come out the same size in each one.\n\nWhere the water surface crosses the painted figures in each close-up is the surveyor's own reading, and I am deliberately not telling you any of it, nor which way along the plate the figures grow. Apart from the painted figures, the three captions and the survey table, nothing else goes on the page: no draught figure beside a waterline, no arrow, no working. Keep the water surface and at least four painted figures easy to make out in every close-up.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a working record page with close-up views of a ship's side plating carrying large painted figures, together with a ruled table beside them? A photograph of such a page, an illustration or a plain diagram all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "marks": ["FORWARD", "MIDSHIP", "AFT"],
+    "draught_m": [6.43, 6.87, 7.31],
+    "ladder_state": "match",
+    "n_marks": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_water_cuts_each_painted_ladder_where_the_recorded_draught_puts_it",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the captioned close-ups of the painted draught marks on the page",
+          "out": "dm_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["dm_r.unreadable"]
+        },
+        {
+          "read_crop": "Which single word is printed as the caption of this cut-out? Answer with that word only.",
+          "boxes": "dm_r",
+          "pad": 0.35,
+          "out": "dm_cp",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["dm_cp.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out the water surface crosses a column of large painted figures. What is the painted figure immediately below the place where the water crosses? Answer with that figure only.",
+          "boxes": "dm_r",
+          "pad": 0.12,
+          "out": "dm_fg",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["dm_fg.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out take the large painted figure immediately below the place where the water surface crosses the column. Where does the water sit above the foot of that figure? Answer with one of these four: lower half of the figure, upper half of the figure, lower half of the bare gap, upper half of the bare gap.",
+          "boxes": "dm_r",
+          "pad": 0.12,
+          "out": "dm_qt",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["dm_qt.unreadable"]
+        },
+        {
+          "run": "check_draught_readings",
+          "args": ["dm_cp", "dm_fg", "dm_qt", "reference.marks", "reference.draught_m"],
+          "out": "dm_s"
+        },
+        {
+          "compare_band": "dm_s.obs",
+          "to": "dm_s.exp",
+          "core_abs": 0.025,
+          "margin_abs": 0.05,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_painted_ladder_is_built_the_way_the_survey_specification_pins_it",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the captioned close-ups of the painted draught marks on the page",
+          "out": "db_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["db_r.unreadable"]
+        },
+        {
+          "read_crop": "Which single word is printed as the caption of this cut-out? Answer with that word only.",
+          "boxes": "db_r",
+          "pad": 0.35,
+          "out": "db_cp",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["db_cp.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how tall is the bare plate between two painted figures beside the height of the figures themselves? Answer with one of these three: taller, about the same, shorter.",
+          "boxes": "db_r",
+          "pad": 0.12,
+          "out": "db_gp",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["db_gp.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, do the painted figures grow towards the top of the cut-out or towards the bottom? Answer with one of these two: towards the top, towards the bottom.",
+          "boxes": "db_r",
+          "pad": 0.12,
+          "out": "db_dr",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["db_dr.unreadable"]
+        },
+        {
+          "run": "check_ladder_painting",
+          "args": ["db_cp", "db_gp", "db_dr", "reference.marks"],
+          "out": "db_s"
+        },
+        {
+          "compare": "db_s.state",
+          "to": "reference.ladder_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_page_carries_its_three_captioned_close_ups",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the captioned close-ups of the painted draught marks on the page",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole close-up of painted draught marks with a single word captioning it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.4,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_marks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_draught_figure_or_arrow_was_added_beside_a_waterline",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a draught figure in metres or an arrow added beside the water surface",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

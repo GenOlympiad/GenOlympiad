@@ -1,0 +1,64 @@
+{
+  "id": "road_centreline_overtake_side",
+  "axis": "symbolic_systems",
+  "prompt": "Render a straight-down AERIAL (top-down) view of a straight two-lane country road running from the bottom of the picture to the top, with green verges on both sides and a solid white edge line along each side of the tarmac.\nTRAFFIC DIRECTION: the LEFT-hand lane carries traffic travelling toward the TOP of the picture; the RIGHT-hand lane carries traffic travelling toward the BOTTOM. Make that obvious on the road itself - paint a large white direction arrow on the road surface in each lane, the one in the left lane pointing to the top of the picture and the one in the right lane pointing to the bottom - and draw every car facing the way it travels.\nDown the middle of the road paint TWO long yellow lines side by side, one for each direction of traffic, leaving a CLEARLY VISIBLE gap between them - wide enough that the two lines read as unmistakably separate lines from above, not as one thick line.\nTHE MARKING RULE, which you must apply: a driver may cross the centre lines to overtake only when the yellow line on their own side of the pair is BROKEN into separate dashes; a continuous unbroken yellow line on their side forbids overtaking. On this road, only the traffic travelling toward the TOP of the picture is allowed to overtake. Paint the two yellow lines so that this comes out right: one of the pair must be broken and the other must be continuous. Do NOT paint two identical lines.\nDraw exactly three cars: a slow blue car, a red car overtaking it - the red car has pulled out and is straddling the yellow lines, but most of its body is still in its own lane - and one grey car coming the other way in the other lane. Print no text, no labels and no road signs.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a top-down view of a road with painted markings and a few cars on it. Ignoring artistic quality, does the image actually DEPICT a road seen from above with painted lines on it? A photo, an illustration or a clean diagram all count as yes. Answer NO only if it is blank, a panel of plain text, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "overtaking_travel": "top",
+    "q_broken_side": "Down the middle of this road two long yellow lines run side by side, a gap apart. Compare those two lines with each other and answer with exactly one word: 'left' if the left-hand one is broken into separate dashes while the right-hand one is a single continuous unbroken line; 'right' if the right-hand one is broken into dashes while the left-hand one is continuous; 'both' if BOTH lines are broken into dashes; 'neither' if BOTH lines are continuous unbroken lines.",
+    "q_arrow_left": "On the road surface in the LEFT-hand lane of this picture there is a big white arrow painted on the tarmac. Does that arrow point toward the TOP of the picture or toward the BOTTOM of the picture? Answer with exactly one word: top or bottom.",
+    "q_car_side": "One red car in this picture is sitting across the yellow lines in the middle of the road. Is most of that red car's body on the LEFT of the yellow lines or on the RIGHT of them? Answer with exactly one word: left or right."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "overtaking_side_coupling",
+      "weight": 4.0,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read_crop": "reference.q_broken_side",
+          "out": "bs"
+        },
+        {
+          "read_crop": "reference.q_arrow_left",
+          "out": "ar"
+        },
+        {
+          "read_crop": "reference.q_car_side",
+          "out": "cs"
+        },
+        {
+          "fail_if": ["bs.unreadable", "ar.unreadable", "cs.unreadable"]
+        },
+        {
+          "run": "overtake_side_score",
+          "args": ["bs", "ar", "cs", "reference"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        }
+      ]
+    }
+  ]
+}

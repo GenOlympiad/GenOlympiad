@@ -1,0 +1,84 @@
+{
+  "id": "the_longer_round_trip_stands_one_more_bus_on_the_line",
+  "axis": "quantitative_precision",
+  "prompt": "Traffic office record photograph, Bank Lane garage, before the first departures of the morning peak. Two marked queueing lines are painted on the yard, each with its route post at the head; the left-hand line in the frame is route 7's, the right-hand one is route 9's. Route 7's full round trip, counting the shortest stand time booked at each end, takes 54 minutes; route 9's takes 36. Both routes run a bus off the stand every 12 minutes right through the day, and every bus returning to the stand goes straight out again on the next departure due. Standing on these lines are exactly the buses rostered to work those routes today; the spares are parked in another part of the yard and stay out of shot. Shoot from the garage roof, high enough that each line is complete end to end in the frame and every bus reads as its own vehicle rather than merging into the one in front. Floodlit, before dawn.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph show a bus depot yard from high above, with buses standing on two marked queueing lines and each line complete end to end inside the frame? Answer yes or no only.",
+  "reference": {
+    "part1": "5",
+    "part2": "3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 2.0,
+      "steps": [
+        {
+          "ask": "How many buses are standing on the left-hand queueing line?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "How many buses are standing on the right-hand queueing line?",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

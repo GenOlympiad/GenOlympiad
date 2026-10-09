@@ -1,0 +1,223 @@
+{
+  "id": "anamorph_road",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A photograph taken from the lighting bridge of a theatre, camera pointing straight down at the matt black stage floor, so the floor lies flat across the whole frame. Even white work light, dull black boards, the board seams running out of the edges of the picture.\n\nPainted on the boards in white scenic paint is one single word: DRUM. Nothing else is painted anywhere -- no tape marks, no numbers, no other lettering. Frame it so the whole of the painted word is inside the picture with bare black floor all around it.\n\nThe paint is being set out for one particular person: a member of the audience in the front row, whose eye is 1.10 m above the level of the stage floor, seated out beyond the LEFT-HAND edge of this photograph, on the centre line of the word, looking horizontally across the floor towards it. From that eye point the near end of the paint is 3.5 m away and the far end of the paint is 11 m away, and from there the four letters have to look like an ordinary, correctly proportioned word -- upright block capitals of normal letter shape, standing side by side in a single line, reading DRUM.\n\nWork out for yourself what shape the paint therefore has to be on the floor, and paint that shape. Do not paint a word that already looks like an ordinary word when it is seen from straight above.\n",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a photograph looking straight down at a dark theatre stage floor with pale paint marked on it. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank panel, a view taken from the side, a page of printed text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "payload": "DRUM",
+    "eye_h": 1.1,
+    "d_near": 3.5,
+    "d_far": 11.0,
+    "far_edge": "right",
+    "elong_target": 1.352,
+    "elong_core": 0.579,
+    "elong_margin": 0.41,
+    "taper_target": 3.1429,
+    "taper_core": 0.433,
+    "taper_margin": 0.539,
+    "taper_gate": 1.5357
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "not_flat_readable",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "read_text": true,
+          "out": "o0"
+        },
+        {
+          "run": "not_flat_readable",
+          "args": ["o0.text", "reference.payload"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "footprint_widens_not_narrows",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "road_read",
+          "args": ["image", "reference.far_edge", "reference.d_near", "reference.d_far"],
+          "out": "r"
+        },
+        {
+          "fail_if": ["r.no_read"]
+        },
+        {
+          "run": "widens",
+          "args": ["r.taper", "reference.taper_gate"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rectifies_to_the_word",
+      "weight": 2.5,
+      "steps": [
+        {
+          "run": "road_warp",
+          "args": [
+            "image",
+            "reference.far_edge",
+            "reference.d_near",
+            "reference.d_far",
+            "reference.eye_h"
+          ],
+          "out": "wp"
+        },
+        {
+          "fail_if": ["wp.no_read"]
+        },
+        {
+          "read_text": true,
+          "image": "wp.path",
+          "out": "o1"
+        },
+        {
+          "run": "find_word",
+          "args": ["o1.text", "reference.payload"],
+          "out": "hit"
+        },
+        {
+          "read_fallback": "hit.word",
+          "primary_flags": ["hit.miss"],
+          "else": [
+            {
+              "ask": "What word is written in this image? Give the single word only, no explanation.",
+              "image": "wp.path",
+              "out": "a"
+            },
+            {
+              "extract": "[A-Za-z]+",
+              "value": "a",
+              "pick": "last",
+              "out": "aw"
+            }
+          ],
+          "else_value": "aw",
+          "else_flags": ["a.unreadable"],
+          "out": "word"
+        },
+        {
+          "run": "word_matches",
+          "args": ["word", "reference.payload"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "stretch_magnitude",
+      "weight": 2.5,
+      "steps": [
+        {
+          "run": "road_read",
+          "args": ["image", "reference.far_edge", "reference.d_near", "reference.d_far"],
+          "out": "r"
+        },
+        {
+          "fail_if": ["r.no_read"]
+        },
+        {
+          "compare_band": "r.word_elong",
+          "to": "reference.elong_target",
+          "core_abs": "reference.elong_core",
+          "margin_abs": "reference.elong_margin",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "widening_magnitude",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "road_read",
+          "args": ["image", "reference.far_edge", "reference.d_near", "reference.d_far"],
+          "out": "r"
+        },
+        {
+          "fail_if": ["r.no_read"]
+        },
+        {
+          "compare_band": "r.taper",
+          "to": "reference.taper_target",
+          "core_abs": "reference.taper_core",
+          "margin_abs": "reference.taper_margin",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "letters_fan_with_distance",
+      "weight": 2.0,
+      "steps": [
+        {
+          "run": "road_read",
+          "args": ["image", "reference.far_edge", "reference.d_near", "reference.d_far"],
+          "out": "r"
+        },
+        {
+          "fail_if": ["r.no_read"]
+        },
+        {
+          "compare_band": "r.spread",
+          "to": "reference.taper_target",
+          "core_abs": "reference.taper_core",
+          "margin_abs": "reference.taper_margin",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_footprint_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "road_overlay",
+          "args": [
+            "image",
+            "reference.far_edge",
+            "reference.d_near",
+            "reference.d_far",
+            "reference.eye_h",
+            "reference.elong_target",
+            "reference.taper_target"
+          ],
+          "out": "ov"
+        },
+        {
+          "run": "was_read",
+          "args": ["ov"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "1:1"
+}

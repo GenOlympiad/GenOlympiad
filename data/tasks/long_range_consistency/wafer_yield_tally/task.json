@@ -1,0 +1,84 @@
+{
+  "id": "wafer_yield_tally",
+  "axis": "long_range_consistency",
+  "prompt": "The probe operator has to close the lot out before it goes to assembly, so the map sheet is photographed on the bench with the log and the board in the same frame.\n\nThe wafer is ruled by its scribe lanes into six rows and six columns of dies, with the row letters running down one edge of the sheet and the column numbers along the other, and it has one flat ground on its edge. The probe log weighted down beside it lists the dies that failed test: C3, D4 and E2. Anything that has to be scrapped gets a solid dot of ink put on the die itself, and the hand-written yield board propped behind the bench is where the pass count for the lot goes.\n\nWhich dies take a dot, and what the board says, is what the log does not tell you.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a wafer map ruled into rows and columns of dies, with a probe log and a hand-written yield board in the same frame? Answer yes or no only.",
+  "reference": {
+    "part1": "die_carries_a_solid_dot",
+    "part2": "in_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the die that sits in the top row of the map at column one, and say what has been put on it. Answer with one of: it carries a solid dot of ink; it is clean, with no mark on it; it is crossed through with a pen stroke.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the number written on the yield board propped behind the bench and write that number.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part2", "12.5", "13.5"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

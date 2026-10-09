@@ -1,0 +1,406 @@
+{
+  "id": "count_nesting_depth",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic photograph taken from directly overhead of a school playground of plain grey asphalt on which a large concentric target has been painted flat: EXACTLY 16 concentric painted rings, from a wide outer ring in to a small painted disc at the centre, so the target is exactly 16 rings deep -- not 15, not 17. The rings ALTERNATE in colour going inwards: outermost RED, then GREEN, then RED, then GREEN, and so on for all 16 rings. Every ring lies completely inside the ring outside it, concentric and evenly painted, none broken and none overlapping. Flat matte paint, even daylight. Nothing else anywhere in the picture is red or green. No text, no numerals, no labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a concentric target roundel painted flat on a playground floor. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q": "Counting from the outermost layer inwards, how many nested layers deep is this stack? Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This image should show the countable objects described as: a concentric target roundel painted flat on a playground floor. Look at the individual objects being counted. Are they clearly the correct KIND of object (the right thing, of the right colour where a colour was specified) rather than some other object, blobs, or a mix that does not match the description? Answer with the single word yes or no only.",
+    "n": 16,
+    "is_ab": "red|green",
+    "is_red_green": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nesting_depth_orange_blue",
+      "weight": 3.5,
+      "only_if": "reference.is_orange_blue",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "stack of nested coloured layers",
+          "expected_n": 1,
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "radius_strips",
+          "args": ["st"],
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.degenerate"]
+        },
+        {
+          "read_crop": "Reading from LEFT to RIGHT along this narrow strip, name the colour of every coloured band you meet, in order. Answer as a plain comma-separated list of colour words and nothing else.",
+          "boxes": "sb",
+          "pad": 0.0,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "depth_from_words",
+          "args": ["cr", "'orange'", "'blue'"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_band": "rd.depth",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_alternation_parity_orange_blue",
+      "weight": 1.5,
+      "only_if": "reference.is_orange_blue",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "stack of nested coloured layers",
+          "expected_n": 1,
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "radius_strips",
+          "args": ["st"],
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.degenerate"]
+        },
+        {
+          "read_crop": "Reading from LEFT to RIGHT along this narrow strip, name the colour of every coloured band you meet, in order. Answer as a plain comma-separated list of colour words and nothing else.",
+          "boxes": "sb",
+          "pad": 0.0,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "depth_from_words",
+          "args": ["cr", "'orange'", "'blue'"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_band": "rd.parity",
+          "to": 0,
+          "core": 0,
+          "margin": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nesting_depth_yellow_purple",
+      "weight": 3.5,
+      "only_if": "reference.is_yellow_purple",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "stack of nested coloured layers",
+          "expected_n": 1,
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "radius_strips",
+          "args": ["st"],
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.degenerate"]
+        },
+        {
+          "read_crop": "Reading from LEFT to RIGHT along this narrow strip, name the colour of every coloured band you meet, in order. Answer as a plain comma-separated list of colour words and nothing else.",
+          "boxes": "sb",
+          "pad": 0.0,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "depth_from_words",
+          "args": ["cr", "'yellow'", "'purple'"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_band": "rd.depth",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_alternation_parity_yellow_purple",
+      "weight": 1.5,
+      "only_if": "reference.is_yellow_purple",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "stack of nested coloured layers",
+          "expected_n": 1,
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "radius_strips",
+          "args": ["st"],
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.degenerate"]
+        },
+        {
+          "read_crop": "Reading from LEFT to RIGHT along this narrow strip, name the colour of every coloured band you meet, in order. Answer as a plain comma-separated list of colour words and nothing else.",
+          "boxes": "sb",
+          "pad": 0.0,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "depth_from_words",
+          "args": ["cr", "'yellow'", "'purple'"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_band": "rd.parity",
+          "to": 0,
+          "core": 0,
+          "margin": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nesting_depth_red_green",
+      "weight": 3.5,
+      "only_if": "reference.is_red_green",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "stack of nested coloured layers",
+          "expected_n": 1,
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "radius_strips",
+          "args": ["st"],
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.degenerate"]
+        },
+        {
+          "read_crop": "Reading from LEFT to RIGHT along this narrow strip, name the colour of every coloured band you meet, in order. Answer as a plain comma-separated list of colour words and nothing else.",
+          "boxes": "sb",
+          "pad": 0.0,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "depth_from_words",
+          "args": ["cr", "'red'", "'green'"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_band": "rd.depth",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d3_alternation_parity_red_green",
+      "weight": 1.5,
+      "only_if": "reference.is_red_green",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "stack of nested coloured layers",
+          "expected_n": 1,
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "radius_strips",
+          "args": ["st"],
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.degenerate"]
+        },
+        {
+          "read_crop": "Reading from LEFT to RIGHT along this narrow strip, name the colour of every coloured band you meet, in order. Answer as a plain comma-separated list of colour words and nothing else.",
+          "boxes": "sb",
+          "pad": 0.0,
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "depth_from_words",
+          "args": ["cr", "'red'", "'green'"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "compare_band": "rd.parity",
+          "to": 0,
+          "core": 0,
+          "margin": 1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "strict_containment",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Look at the nested layers in this image. Does EVERY layer lie completely inside the layer outside it -- one strictly inside the next all the way to the centre, with no layer crossing, overlapping or sitting beside another? Answer with the single word yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_objform",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a concentric paper ring",
+    "s2": "a rectangular card mount",
+    "s3": "a concentric painted ring"
+  }
+}

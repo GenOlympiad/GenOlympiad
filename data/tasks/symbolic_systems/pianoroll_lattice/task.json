@@ -1,0 +1,298 @@
+{
+  "id": "pianoroll_lattice",
+  "axis": "symbolic_systems",
+  "prompt": "A straight-on photograph of a classroom whiteboard, the board filling the frame, with one exercise drawn on it in marker and nothing else -- no other writing, no heading, no numbers, no hands, no pens on the tray.\n\nDown the left-hand edge a narrow name strip has been ruled, giving the pitch of each lane, one letter per lane, written in black marker. Reading that strip from its BOTTOM entry upwards, the letters are C, D, E, F, G, A, B: the bottom lane is the lowest pitch and each lane above it is the next letter up.\n\nTo the right of the name strip a time grid has been ruled in black marker against a straight edge: a rectangle of equal cells with a clear outer border, one row per lane -- each row lining up exactly with its letter in the name strip -- and one column per step of the line below.\n\nWork along the line below from left to right, one step per time column. Where the step is a note letter, shade the cell in that letter's lane solid with a red marker. Where the step is a dash, that whole time column stays completely empty: it is a silence, and it still takes up a column of its own.\n\nE, B, F, D, -, G, B, E, A, C, G, -, E, A, C, G\n\nGive the grid exactly as many time columns as that line has steps, dashes included, and no more. Shade only the cells the line calls for and leave every other cell blank.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a whiteboard on which someone has ruled a rectangular grid of equal cells, written a strip of single letters down the left-hand edge of that grid, and shaded a scattering of individual cells in colour. Ignoring artistic quality and styling, does the image actually show that? Answer NO only if it shows something else entirely -- a blank board, a page of text, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "n_lanes": 7,
+    "lane_letters": ["C", "D", "E", "F", "G", "A", "B"],
+    "seq_lanes": [2, 6, 3, 1, -1, 4, 6, 2, 5, 0, 4, -1, 2, 5, 0, 4],
+    "seq_names": ["E", "B", "F", "D", "-", "G", "B", "E", "A", "C", "G", "-", "E", "A", "C", "G"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lattice_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "read_roll",
+          "args": ["image", "reference.seq_lanes", "reference.n_lanes"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "grid_size_ok",
+          "args": ["m.n_rows", "m.n_cols"],
+          "code": {
+            "inline": "f_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lattice_dimensions",
+      "weight": 1.5,
+      "steps": [
+        {
+          "run": "read_roll",
+          "args": ["image", "reference.seq_lanes", "reference.n_lanes"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": null,
+          "expression": "(_prep(image) and list(_SKEW.values()))",
+          "code": {
+            "inline": "read_roll_code"
+          },
+          "out": "sk"
+        },
+        {
+          "run": "pr_paint",
+          "args": ["m", "sk", "image", "reference.seq_lanes"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        },
+        {
+          "run": "dims_score",
+          "args": ["m.dims_ok"],
+          "code": {
+            "inline": "f_code_2"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "one_mark_per_time_column",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "read_roll",
+          "args": ["image", "reference.seq_lanes", "reference.n_lanes"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": null,
+          "expression": "(_prep(image) and list(_SKEW.values()))",
+          "code": {
+            "inline": "read_roll_code"
+          },
+          "out": "sk"
+        },
+        {
+          "run": "pr_paint",
+          "args": ["m", "sk", "image", "reference.seq_lanes"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        },
+        {
+          "run": "to_float",
+          "args": ["m.mark_frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "pitch_lane_per_time_column",
+      "weight": 10.0,
+      "steps": [
+        {
+          "run": "read_roll",
+          "args": ["image", "reference.seq_lanes", "reference.n_lanes"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": null,
+          "expression": "(_prep(image) and list(_SKEW.values()))",
+          "code": {
+            "inline": "read_roll_code"
+          },
+          "out": "sk"
+        },
+        {
+          "run": "pr_paint",
+          "args": ["m", "sk", "image", "reference.seq_lanes"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_edge.path",
+          "polylines": "pa.frame_lines",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 150, 235],
+          "out": "ovp_frame"
+        },
+        {
+          "run": "to_float",
+          "args": ["m.col_frac"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_lattice_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "roll_overlay",
+          "args": ["image", "reference.seq_lanes", "reference.n_lanes"],
+          "out": "ov"
+        },
+        {
+          "fail_if": ["ov.no_read"]
+        },
+        {
+          "run": "column_share",
+          "args": ["ov.col_frac"],
+          "code": {
+            "inline": "f_code_3"
+          },
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

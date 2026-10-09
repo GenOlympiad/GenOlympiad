@@ -1,0 +1,193 @@
+{
+  "id": "the_last_tube_in_the_rack_is_the_one_kept_back",
+  "axis": "long_range_consistency",
+  "prompt": "A photograph taken over a bench in a hospital laboratory's specimen reception, looking straight down at the rack a technician has just finished loading, with the stock tube standing on the bench beside the rack.\n\nToday's request card for this patient, lying open on the bench, asks for four tests, and the department's portion sizes are the usual ones:\n\n  - liver function, which the analyser takes in two separate portions;\n  - urea and electrolytes, which the analyser also takes in two separate portions;\n  - thyroid function, one portion;\n  - C-reactive protein, one portion.\n\nEvery portion the technician draws off is one millilitre. The stock tube came up from phlebotomy holding ten millilitres and is a graduated tube, its scale running from nought to ten with every millilitre numbered up the glass, so how much is left in it can be seen against the graduations. Each small tube in the rack carries a handwritten label saying what it is for.\n\nThe technician has finished the whole job and this photograph is the one that goes into the record. How many tubes ended up in the rack, what each of them says, and where the surface in the stock tube ended up are all consequences of doing the job properly, and I am deliberately not telling you any of them.\n\nThe photograph is a record, so nothing may be added that does the reader's work: no arrow, no ring drawn round a tube, no sticky note, no marker line on the glass and no wording anywhere except the labels on the tubes and the printing already on the request card.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is lit. Does this picture show small tubes standing in a rack with a taller tube beside them. A photograph, a scan or an illustration ALL count as yes. Answer NO only if the image shows a blank sheet that just states an answer, or shows no tubes at all. Answer yes or no only.",
+  "reference": {
+    "portion_tag": "yes",
+    "retain_tag": "yes",
+    "level_tag": "yes",
+    "clean_frame": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "there_is_one_tube_for_every_portion_the_days_tests_take",
+      "weight": 2.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one small tube standing in the rack",
+          "out": "tb",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the label written on this tube. Write the letters and figures only.",
+          "boxes": "tb",
+          "pad": 0.15,
+          "out": "lb",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "run": "test_tubes_match",
+          "args": ["lb"],
+          "out": "po"
+        },
+        {
+          "fail_if": ["po.refused"]
+        },
+        {
+          "compare": "po.tag",
+          "to": "reference.portion_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "one_tube_no_request_asked_for_stands_in_the_rack",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one small tube standing in the rack",
+          "out": "tb",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "fail_if": ["tb.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the label written on this tube. Write the letters and figures only.",
+          "boxes": "tb",
+          "pad": 0.15,
+          "out": "lb",
+          "sort": "reading_order",
+          "layout": "row"
+        },
+        {
+          "run": "one_retained_tube",
+          "args": ["lb"],
+          "out": "re"
+        },
+        {
+          "fail_if": ["re.refused"]
+        },
+        {
+          "compare": "re.tag",
+          "to": "reference.retain_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_surface_left_in_the_stock_tube_answers_for_all_of_it",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the tall graduated stock tube standing on the bench",
+          "out": "sk"
+        },
+        {
+          "fail_if": ["sk.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the figure printed beside the graduation line that the bottom of the liquid surface is sitting on. Write the figure only.",
+          "boxes": "sk",
+          "pad": 0.15,
+          "out": "lv"
+        },
+        {
+          "run": "stock_level_matches",
+          "args": ["lv"],
+          "out": "lo"
+        },
+        {
+          "fail_if": ["lo.refused"]
+        },
+        {
+          "compare": "lo.tag",
+          "to": "reference.level_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_on_the_bench_points_out_the_extra_tube",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, a ring drawn round a tube, a sticky note, or a marker line on the glass",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: an arrow, a ring drawn round a tube, a sticky note, or a marker line on the glass? Answer yes or no. Answer no if the cut-out shows a tube, a handwritten label on a tube, a graduation line on the glass, the rack itself, the printed request card, or the bench top.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as an arrow, a ring drawn round a tube, a sticky note, or a marker line on the glass? Answer yes or no. Answer no if it belongs there -- a tube, a handwritten label on a tube, a graduation line on the glass, the rack itself, the printed request card, or the bench top.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_frame",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

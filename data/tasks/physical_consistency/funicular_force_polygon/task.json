@@ -1,0 +1,170 @@
+{
+  "id": "funicular_force_polygon",
+  "axis": "physical_consistency",
+  "prompt": "A photograph of a structural engineer's form-finding sheet for one station canopy, lying on the drawing table, taken face on and big enough to read every figure on it.\n\nThe sheet works out one hanger cable. The cable spans 12.0 m between two mast heads that stand at the same height, and three canopy panels hang from it at 3.0 m, 6.0 m and 9.0 m along the span. The panel loads, word for word and figure for figure, are 4 kN at 3.0 m, 2 kN at 6.0 m and 16 kN at 9.0 m. The tie rod across the canopy has already been sized, so the horizontal pull in the cable is fixed at 12 kN.\n\nTwo things belong on the sheet. On the left, the cable in elevation against the dip ladder this office uses on every canopy sheet: horizontal lines every 0.5 m below the mast heads, each lettered with its own dip from 0.5 down to 4.0. Beside each of the three hanger points a callout carries the hanger tag H1, H2 or H3 and the dip that hanger point hangs at. On the right, the force polygon for the same cable, to the office convention: the three panel loads stacked head to tail down one vertical load line, a pole point out sideways from that line, one ray from the pole to each division of the stack, and the closing line back from the pole. Where the closing line cuts the load line, the two mast reactions are lettered in kN.\n\nOne more thing about cables, since it decides the whole elevation: a cable carrying hanging weights runs dead straight from one weight to the next and changes direction only where a weight hangs on it.\n\nThe three hanger dips and the two mast reactions you work out for yourself -- I am deliberately telling you neither. Nothing else belongs on the sheet: no arithmetic, no formula, and no figures anywhere except the dip ladder, the three hanger callouts, the three panel loads on the load line and the two reactions.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an engineering sheet carrying a cable hung between two supports with weights on it and a separate figure made of straight lines beside it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "reactions_expected": "8, 14",
+    "hanger_dips": "h1 2, h2 3, h3 3.5",
+    "n_straight_lengths": 4,
+    "q_react_cert": "Does this cut-out show a figure lettered where a sloping line meets the vertical stack of loads? Answer yes or no only.",
+    "q_react_copy": "Copy the reaction figure in kilonewtons lettered in this cut-out. Write only the number.",
+    "q_dip_cert": "Does this cut-out show a callout carrying a hanger tag? Answer yes or no only.",
+    "q_dip_tag": "This cut-out is one callout from a diagram, with a hanger tag printed in it. Copy that tag exactly as printed. If more than one tag is printed in this cut-out, copy the one nearest its middle. Write only that tag and nothing else.",
+    "q_dip_val": "Copy the dip figure in metres printed in this callout. Write only the number.",
+    "q_straight": "Does this cut-out show one length of cable that runs dead straight with no curve in it? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_closing_line_cuts_the_load_line_at_the_two_reactions",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a figure lettered where a sloping line meets the vertical load line",
+          "sweep": true,
+          "out": "rc_box"
+        },
+        {
+          "fail_if": ["rc_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_react_cert",
+          "boxes": "rc_box",
+          "pad": 0.4,
+          "out": "rc_cert"
+        },
+        {
+          "fail_if": ["rc_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_react_copy",
+          "boxes": "rc_box",
+          "pad": 0.4,
+          "out": "rc_txt"
+        },
+        {
+          "fail_if": ["rc_txt.unreadable"]
+        },
+        {
+          "run": "read_number_set",
+          "args": ["rc_cert", "rc_txt"],
+          "out": "reacts"
+        },
+        {
+          "compare_set": "reacts.seq",
+          "to": "reference.reactions_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_hanger_hangs_at_the_dip_the_horizontal_pull_allows",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a hanger callout beside the cable on the elevation",
+          "sweep": true,
+          "out": "dp_box"
+        },
+        {
+          "fail_if": ["dp_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_dip_cert",
+          "boxes": "dp_box",
+          "pad": 0.35,
+          "out": "dp_cert"
+        },
+        {
+          "fail_if": ["dp_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_dip_tag",
+          "boxes": "dp_box",
+          "pad": 0.35,
+          "out": "dp_tag"
+        },
+        {
+          "fail_if": ["dp_tag.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_dip_val",
+          "boxes": "dp_box",
+          "pad": 0.35,
+          "out": "dp_val"
+        },
+        {
+          "fail_if": ["dp_val.unreadable"]
+        },
+        {
+          "run": "read_tagged_numbers",
+          "args": ["dp_cert", "dp_tag", "dp_val"],
+          "out": "dips"
+        },
+        {
+          "compare_set": "dips.seq",
+          "to": "reference.hanger_dips",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_cable_is_four_straight_lengths_not_one_smooth_curve",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a length of cable between two neighbouring supports or hangers",
+          "sweep": true,
+          "out": "st_box"
+        },
+        {
+          "fail_if": ["st_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_straight",
+          "boxes": "st_box",
+          "pad": 0.25,
+          "out": "st_cert"
+        },
+        {
+          "fail_if": ["st_cert.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["st_cert"],
+          "out": "st_cnt"
+        },
+        {
+          "compare_band": "st_cnt.n",
+          "to": "reference.n_straight_lengths",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

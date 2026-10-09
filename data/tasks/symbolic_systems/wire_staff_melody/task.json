@@ -1,0 +1,77 @@
+{
+  "id": "wire_staff_melody",
+  "axis": "symbolic_systems",
+  "prompt": "A clean, minimalist photograph looking up at FIVE parallel horizontal power WIRES against a bright overcast sky, evenly stacked so they read as the FIVE LINES of a musical staff (lowest wire = bottom staff line). Perch small dark birds on the wires and in the gaps between them so that, read LEFT to RIGHT, the birds spell the melody 'G4 B4 A4 D5 C5' on a treble staff: each bird sits exactly ON the wire OR in the SPACE for its note's pitch (bottom line = E4, space above = F4, next line = G4, and so on upward; middle C is C4). Place EXACTLY 5 birds, one per note, evenly spaced left to right, each at the correct height for its pitch and in this order. Do NOT print any note names or letters -- the pitch is shown only by the bird's height on the wires. Photorealistic, soft flat light, no text.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict FIVE parallel power WIRES across the sky with small birds perched on and between them (the wires read like a musical staff). Ignoring artistic quality, does the image actually DEPICT that requested subject -- several parallel horizontal wires with perched birds? A photo or illustration both count as yes. Answer NO only if it instead shows a blank panel, a printed music staff with drawn note-heads, plain text, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "melody": ["G4", "B4", "A4", "D5", "C5"],
+    "n": 5,
+    "bands": ["F5", "E5", "D5", "C5", "B4", "A4", "G4", "F4", "E4"],
+    "wire_ys": [0.4, 0.475, 0.55, 0.625, 0.7],
+    "zone": [0.2, 0.8, 0.03, 0.99]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "melody_pitches",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "overhead cable",
+          "expected_n": 5,
+          "out": "wires"
+        },
+        {
+          "fail_if": ["wires.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "small dark bird perched on or between the wires (one tight box per bird, around that bird's body)",
+          "expected_n": "reference.n",
+          "out": "birds"
+        },
+        {
+          "fail_if": ["birds.unreadable"]
+        },
+        {
+          "run": "read_bird_pitches",
+          "args": ["wires", "birds", "reference"],
+          "out": "pg"
+        },
+        {
+          "fail_if": ["pg.degenerate"]
+        },
+        {
+          "run": "melody_grid",
+          "args": ["reference.melody"],
+          "out": "gt_grid"
+        },
+        {
+          "compare_grid": "pg.grid",
+          "to": "gt_grid",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

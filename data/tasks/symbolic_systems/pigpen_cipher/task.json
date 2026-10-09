@@ -1,0 +1,189 @@
+{
+  "id": "pigpen_cipher",
+  "axis": "symbolic_systems",
+  "prompt": "A clean, straight-on GRAPHIC of a short secret word written in the PIGPEN (Freemason) CIPHER: a single horizontal row of exactly six pigpen glyphs, left to right, one glyph per letter, dark strokes on a plain light card. In the pigpen cipher each letter is drawn as a fragment of a grid: a bracket made of straight line segments (some combination of a top, bottom, left and/or right side, forming an open-cornered box) for the tic-tac-toe letters, or a V-shaped wedge for the X-grid letters, and some letters additionally carry a single DOT inside the glyph. Encode the plaintext word \"PLACID\" glyph by glyph using the standard pigpen cipher, drawing each letter's exact glyph: the correct combination of sides (and the dot where the letter requires one). Draw the six glyphs evenly spaced in one row, each glyph clearly separated, thick clean strokes, high contrast. Do not draw any letters of the alphabet or any other text — only the six pigpen glyphs.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a short word written in the pigpen (Freemason) cipher: a row of pigpen glyphs (open-cornered bracket shapes and/or V-wedges, some with a dot). Ignoring artistic quality, does the image actually DEPICT that requested subject / scene -- a row of pigpen-style glyphs? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "target": "PLACID",
+    "n_letters": 6,
+    "sig_table": {
+      "A": "B|R",
+      "B": "B|L|R",
+      "C": "B|L",
+      "D": "B|R|T",
+      "E": "B|L|R|T",
+      "F": "B|L|T",
+      "G": "R|T",
+      "H": "L|R|T",
+      "I": "L|T",
+      "J": "B|R|dot",
+      "K": "B|L|R|dot",
+      "L": "B|L|dot",
+      "M": "B|R|T|dot",
+      "N": "B|L|R|T|dot",
+      "O": "B|L|T|dot",
+      "P": "R|T|dot",
+      "Q": "L|R|T|dot",
+      "R": "L|T|dot",
+      "S": "wedge:up",
+      "T": "wedge:left",
+      "U": "wedge:right",
+      "V": "wedge:down",
+      "W": "wedge:up|dot",
+      "X": "wedge:left|dot",
+      "Y": "wedge:right|dot",
+      "Z": "wedge:down|dot"
+    },
+    "glyph_sigs": ["R|T|dot", "B|L|dot", "B|R", "B|L", "L|T", "B|R|T"],
+    "q_glyphs": "This image shows a row of exactly 6 pigpen-cipher glyphs, left to right. Each glyph is a bracket of straight line segments (some combination of a TOP side, BOTTOM side, LEFT side, RIGHT side, forming an open-cornered box) OR a V-shaped wedge, and it may or may not have a DOT inside. Ignore any printed alphabet letters or words that may also appear — describe only the 6 pigpen glyph SHAPES. For each glyph in order, on its own line, list exactly which sides are drawn from {top, bottom, left, right} (or say 'wedge opening up/down/left/right' if it is a V-shape), then 'dot' or 'no dot'. Give one line per glyph, 6 lines total. Example line: 'top, left, bottom, no dot'.",
+    "aspect_min": 2.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "word_decodes_to_target",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "expected_n": "reference.n_letters",
+          "target": "one pigpen cipher glyph -- a mark made of straight dark strokes forming an open-cornered bracket (some of the four sides of a square), or a V-shaped wedge, sometimes with a small dot inside it",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "run": "order_glyph_boxes",
+          "args": ["bx.geometry", "reference.n_letters"],
+          "out": "ord"
+        },
+        {
+          "fail_if": ["ord.no_read"]
+        },
+        {
+          "read_crop": "This is a cropped picture of ONE pigpen-cipher glyph, drawn with straight strokes. It is either a bracket made of some of the four sides of a square -- a TOP side, a BOTTOM side, a LEFT side, a RIGHT side, leaving at least one corner open -- or a V-shaped wedge. It may also carry a single small DOT inside it. Say which of the four sides are actually drawn, using the words top, bottom, left, right (or write 'wedge opening up', 'wedge opening down', 'wedge opening left' or 'wedge opening right' if it is a V-shape), and then write 'dot' if a dot is inside it or 'no dot' if there is none. Describe only the strokes you can see; ignore any printed alphabet letters. Answer on ONE line, for example: top, left, bottom, no dot",
+          "boxes": "ord.boxes",
+          "out": "gl"
+        },
+        {
+          "run": "decode_glyphs",
+          "args": ["gl", "reference"],
+          "out": "dec"
+        },
+        {
+          "fail_if": ["dec.unreadable"]
+        },
+        {
+          "run": "score_decoded_word",
+          "args": ["dec", "reference"],
+          "out": "scored"
+        },
+        {
+          "const": "scored.frac",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "per_glyph_correct",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "expected_n": "reference.n_letters",
+          "target": "one pigpen cipher glyph -- a mark made of straight dark strokes forming an open-cornered bracket (some of the four sides of a square), or a V-shaped wedge, sometimes with a small dot inside it",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "run": "order_glyph_boxes",
+          "args": ["bx.geometry", "reference.n_letters"],
+          "out": "ord"
+        },
+        {
+          "fail_if": ["ord.no_read"]
+        },
+        {
+          "read_crop": "This is a cropped picture of ONE pigpen-cipher glyph, drawn with straight strokes. It is either a bracket made of some of the four sides of a square -- a TOP side, a BOTTOM side, a LEFT side, a RIGHT side, leaving at least one corner open -- or a V-shaped wedge. It may also carry a single small DOT inside it. Say which of the four sides are actually drawn, using the words top, bottom, left, right (or write 'wedge opening up', 'wedge opening down', 'wedge opening left' or 'wedge opening right' if it is a V-shape), and then write 'dot' if a dot is inside it or 'no dot' if there is none. Describe only the strokes you can see; ignore any printed alphabet letters. Answer on ONE line, for example: top, left, bottom, no dot",
+          "boxes": "ord.boxes",
+          "out": "gl"
+        },
+        {
+          "run": "decode_glyphs",
+          "args": ["gl", "reference"],
+          "out": "dec"
+        },
+        {
+          "fail_if": ["dec.unreadable"]
+        },
+        {
+          "run": "score_decoded_word",
+          "args": ["dec", "reference"],
+          "out": "scored"
+        },
+        {
+          "const": "scored.per_glyph",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "n_letters_correct",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one pigpen glyph in the row -- one bracket of straight strokes or one V-shaped wedge, dot included",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nfb"
+        },
+        {
+          "fail_if": ["box_nfb.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole cipher glyph -- a complete bracket of straight strokes or a complete V-shaped wedge, together with any dot sitting inside it -- rather than a single stroke, part of a glyph, or two glyphs side by side? Answer yes or no only.",
+          "boxes": "box_nfb",
+          "out": "crop_nfb"
+        },
+        {
+          "fail_if": ["crop_nfb.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nfb"],
+          "out": "cnt_nfb"
+        },
+        {
+          "compare_band": "cnt_nfb.n",
+          "to": "reference.n_letters",
+          "core": 1.0,
+          "margin": 1e-09,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

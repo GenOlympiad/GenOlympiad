@@ -1,0 +1,175 @@
+{
+  "id": "portion_rule_conditional_label",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of three packs of the same oat biscuit standing side by side on the label compliance desk of a food company, taken square on so that the front of every pack and the whole of its nutrition label are readable. The three are the pocket pack of 40 g, the sharing pack of 120 g and the family pack of 250 g, and every pack carries its net weight on the front in the usual place.\n\nThe laboratory report for this biscuit gives 480 kcal per 100 g, and the same figure holds for all three packs because it is the same biscuit.\n\nThis country's scheme declares nutrition by the serving, and it defines a serving conditionally: a pack whose net weight is under 150 g counts as one serving in its entirety, while a pack of 150 g or more takes a serving of 30 g. Every label has to carry a serving line saying which of those two applies to that pack, and beneath it the energy one serving of that pack gives, in kilocalories.\n\nThe compliance officer signs this artwork off before it goes to plate, and a label that carries the wrong serving line is a recall. Work out for yourself what belongs on each of the three labels -- I am deliberately not telling you which serving line goes on which pack, nor any energy figure. The net weights, the serving lines and the energy figures must be large and sharp. Nothing may appear beyond the three packs and their labels: no working, no rule table, no note about the scheme.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show packaged food carrying printed labels, with words and figures on those labels? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "branch_map": "120:pack 250:grams 40:pack",
+    "energies": "144 192 576",
+    "n_labels": 3,
+    "q_label_cert": "Does this cut-out show ONE whole nutrition label on a pack, rather than the pack alone or only part of a label? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_label_carries_the_serving_line_its_own_net_weight_calls_for",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a pack of biscuits with its nutrition label showing",
+          "sweep": true,
+          "out": "pk_ring"
+        },
+        {
+          "fail_if": ["pk_ring.unreadable"]
+        },
+        {
+          "read_crop": "Copy the net weight printed on this pack. Write the number only.",
+          "boxes": "pk_ring",
+          "pad": 0.15,
+          "out": "pk_net"
+        },
+        {
+          "fail_if": ["pk_net.unreadable"]
+        },
+        {
+          "read_crop": "On this label, does the serving line say the whole pack is one serving, or does it give a serving weight in grams? Answer with one word: pack or grams.",
+          "boxes": "pk_ring",
+          "pad": 0.15,
+          "out": "pk_branch"
+        },
+        {
+          "fail_if": ["pk_branch.unreadable"]
+        },
+        {
+          "run": "weight_to_serving_pairs",
+          "args": ["pk_net", "pk_branch"],
+          "out": "branches"
+        },
+        {
+          "fail_if": ["branches.unreadable"]
+        },
+        {
+          "compare": "branches.canon",
+          "to": "reference.branch_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_energy_one_serving_gives_on_each_pack",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a pack of biscuits with its nutrition label showing",
+          "sweep": true,
+          "out": "en_ring"
+        },
+        {
+          "fail_if": ["en_ring.unreadable"]
+        },
+        {
+          "read_crop": "Copy the energy figure in kilocalories printed under the serving line on this label. Write the number only.",
+          "boxes": "en_ring",
+          "pad": 0.15,
+          "out": "en_txt"
+        },
+        {
+          "fail_if": ["en_txt.unreadable"]
+        },
+        {
+          "run": "number_list",
+          "args": ["en_txt"],
+          "out": "kcals"
+        },
+        {
+          "compare": "kcals.seq",
+          "to": "reference.energies",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "three_labels_stand_on_the_desk",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a nutrition label on a pack of biscuits",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_label_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_labels",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_was_added_to_the_compliance_desk",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of arithmetic, a rule table or a note laid on the desk",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,203 @@
+{
+  "id": "progressive_die_strip_accumulation",
+  "axis": "long_range_consistency",
+  "prompt": "A close photograph of an inspection bench in a metal stamping shop: one continuous steel strip from a progressive die lies flat under the lamp, photographed from above after the press stopped, with four stations tagged along it by printed number cards 1, 2, 3 and 4 fixed above the strip, left to right in press order.\n\nThe process card for this die is exact and is the only process information: Station 1 punches the two round pilot holes. Station 2 cuts the notches into the strip's side edges. Station 3 cuts the open slot through the centre of the blank. Station 4 bends the small tab upward. The strip is one ribbon, so the blank beneath each numbered station shows every feature that station and all earlier stations have made, and no feature from any later station; the carrier edges of the ribbon run unbroken from end to end. Carry the accumulation through yourself -- I am deliberately not telling you what any individual blank must look like; the four blanks are four different states of the same part, and that difference is the point. The four station numbers are the only text in the picture; no captions, arrows, dimension figures or extra markings of any kind may appear on or beside the strip.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a metal strip with several shaped blanks lying beneath numbered tags? A realistic photo, an illustration or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "notch_seq": "no|yes|yes|yes",
+    "slot_seq": "no|no|yes|yes",
+    "tab_seq": "no|no|no|yes",
+    "n_stations": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "slot_first_appears_at_station_three",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one workpiece blank on the strip beneath a printed station number",
+          "sweep": true,
+          "out": "b1"
+        },
+        {
+          "fail_if": ["b1.unreadable"]
+        },
+        {
+          "read_crop": "Does the workpiece blank in this cut-out have an open slot cut through its centre? Answer yes or no only.",
+          "boxes": "b1",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "s1r"
+        },
+        {
+          "fail_if": ["s1r.unreadable"]
+        },
+        {
+          "run": "station_yes_no_sequence",
+          "args": ["s1r"],
+          "out": "sv"
+        },
+        {
+          "compare": "sv.seq",
+          "to": "reference.slot_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "notches_first_appear_at_station_two",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one workpiece blank on the strip beneath a printed station number",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "b2"
+        },
+        {
+          "fail_if": ["b2.unreadable"]
+        },
+        {
+          "read_crop": "Does the workpiece blank in this cut-out have notches cut into its side edges? Answer yes or no only.",
+          "boxes": "b2",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "n2r"
+        },
+        {
+          "fail_if": ["n2r.unreadable"]
+        },
+        {
+          "run": "station_yes_no_sequence",
+          "args": ["n2r"],
+          "out": "nv"
+        },
+        {
+          "compare": "nv.seq",
+          "to": "reference.notch_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tab_only_at_the_last_station",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one workpiece blank on the strip beneath a printed station number",
+          "sweep": true,
+          "out": "b3"
+        },
+        {
+          "fail_if": ["b3.unreadable"]
+        },
+        {
+          "read_crop": "Does the workpiece blank in this cut-out have a small tab bent upward out of its surface? Answer yes or no only.",
+          "boxes": "b3",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "t3r"
+        },
+        {
+          "fail_if": ["t3r.unreadable"]
+        },
+        {
+          "run": "station_yes_no_sequence",
+          "args": ["t3r"],
+          "out": "tv"
+        },
+        {
+          "compare": "tv.seq",
+          "to": "reference.tab_seq",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "station_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one workpiece blank on the strip beneath a printed station number",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "b4"
+        },
+        {
+          "fail_if": ["b4.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole workpiece blank on the strip, rather than a station number card or only part of one? Answer yes or no only.",
+          "boxes": "b4",
+          "pad": 0.3,
+          "out": "b4c"
+        },
+        {
+          "fail_if": ["b4c.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["b4c"],
+          "out": "b4n"
+        },
+        {
+          "compare_band": "b4n.n",
+          "to": "reference.n_stations",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_extra_markings",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a caption, arrow, dimension figure or extra marking added on or beside the strip",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

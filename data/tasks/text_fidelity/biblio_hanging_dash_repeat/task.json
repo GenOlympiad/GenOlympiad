@@ -1,0 +1,169 @@
+{
+  "id": "biblio_hanging_dash_repeat",
+  "axis": "text_fidelity",
+  "prompt": "Before a doctoral thesis is accepted for deposit, a university library checks the format of its bibliography, and this is that counter: the candidate's typed working copy of the sources lies on the left of the lamp and the bibliography page from the bound thesis lies on the right, both square on to the camera.\n\nThe bibliography page carries these eight sources, in this order, with these words and these figures:\n\nAldridge, P. (1987). Salt marsh accretion on the Ribble. Journal of Coastal Studies 12, 88-104.\nBramwell, J. (1994). Tidal creek networks. Estuarine Review 3, 17-29.\nBramwell, J. (1998). Sediment budgets of the outer estuary. Estuarine Review 7, 55-71.\nCornish, R. (2003). Grazing and sward height. Wetland Management 21, 210-224.\nDeakin, M. (2006). Saltings and sea walls. Coastal Engineering Notes 9, 3-15.\nFenwick, A. (2009). Overwash deposits at Hesketh. Journal of Coastal Studies 34, 121-138.\nFenwick, A. (2011). Managed realignment after ten years. Journal of Coastal Studies 36, 44-60.\nGowland, T. (2015). Vegetation mapping from the air. Remote Sensing Letters 6, 902-911.\n\nThe page in the thesis is not the typed copy: it has been made up to the house format the library will accept, and the checker is looking at exactly the two things that format governs -- how an entry that runs over one line carries on, and what happens to a heading name that the reader has just met. Work out for yourself which entries that touches -- I am deliberately not telling you which of the eight it is, and I am deliberately not telling you what the format does to them. Nothing else goes on either sheet: no pencilled queries, no highlighting, no numbering down the margin, no note of the format rules.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed page carrying a run of bibliography entries, each with an author, a year and a title? A photograph of a page, a scan, a flat artwork or a screen grab ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer, or shows something with no printed entries in it. Answer yes or no only.",
+  "reference": {
+    "n_entries": 8,
+    "stood_down_years": ["1998", "2011"],
+    "pages_by_year": {
+      "1987": "88-104",
+      "1994": "17-29",
+      "1998": "55-71",
+      "2003": "210-224",
+      "2006": "3-15",
+      "2009": "121-138",
+      "2011": "44-60",
+      "2015": "902-911"
+    },
+    "turnover_key": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_entry_carries_its_own_pages_and_is_ruled_only_where_the_name_repeats",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an entry of the bibliography on the page from the bound thesis",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "row_box"
+        },
+        {
+          "fail_if": ["row_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the four-figure year printed on this entry, and write nothing else. If no year is printed on this entry, answer the single word blank.",
+          "boxes": "row_box",
+          "pad": 0.25,
+          "out": "e_year"
+        },
+        {
+          "fail_if": ["e_year.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figures that stand at the very end of this entry, and write nothing else. If no figures stand at the end of this entry, answer the single word blank.",
+          "boxes": "row_box",
+          "pad": 0.25,
+          "out": "e_pages"
+        },
+        {
+          "fail_if": ["e_pages.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show a bibliography entry that opens with a long horizontal rule where a name would be? Answer yes or no only.",
+          "boxes": "row_box",
+          "pad": 0.25,
+          "out": "e_rule"
+        },
+        {
+          "fail_if": ["e_rule.unreadable"]
+        },
+        {
+          "read_crop": "Does a person's surname stand before the year on this entry? Answer yes or no only.",
+          "boxes": "row_box",
+          "pad": 0.25,
+          "out": "e_name"
+        },
+        {
+          "fail_if": ["e_name.unreadable"]
+        },
+        {
+          "run": "entry_rows",
+          "args": [
+            "e_year",
+            "e_pages",
+            "e_rule",
+            "e_name",
+            "reference.pages_by_year",
+            "reference.stood_down_years"
+          ],
+          "out": "rows"
+        },
+        {
+          "compare_band": "rows.ok",
+          "to": "reference.n_entries",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "an_entry_that_runs_on_carries_on_further_right",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of bibliography entries on the sheet lying to the right of the lamp",
+          "out": "block_box"
+        },
+        {
+          "fail_if": ["block_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, do the lines that carry an entry on begin further to the right than the lines that open an entry? Answer yes or no only.",
+          "boxes": "block_box",
+          "pad": 0.12,
+          "out": "turnover"
+        },
+        {
+          "fail_if": ["turnover.unreadable"]
+        },
+        {
+          "run": "yes_vote",
+          "args": ["turnover"],
+          "out": "turn_v"
+        },
+        {
+          "compare": "turn_v.v",
+          "to": "reference.turnover_key",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_else_stands_on_the_two_sheets",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a pencilled query, a highlighted stretch or a margin number added beside the entries",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "extras"
+        },
+        {
+          "fail_if": ["extras.unreadable"]
+        },
+        {
+          "compare": "extras.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

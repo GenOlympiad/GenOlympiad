@@ -1,0 +1,205 @@
+{
+  "id": "plss_section_serpentine",
+  "axis": "world_knowledge_grounding",
+  "prompt": "For the county's land records we need one page of a township plat drawn up. The page holds the whole township as a six by six grid of square sections with every section numbered, the true north arrow, and the township and range designation lettered along the bottom.\n\nWhat the records office pins. The sheet is turned so that the true north arrow points towards the right hand edge of the page, which is how this township fits the paper. The sections are numbered by the ordinary practice of the public land survey. By long standing practice the section reserved for the schools is the one numbered 16, and SCHOOL LAND is lettered across that square. The designation along the bottom reads T. 4 N., R. 7 W.\n\nWhere each of the thirty six numbers falls on the sheet is the draughtsman's own work and I am deliberately not telling you any of it. Apart from the thirty six numbers, the SCHOOL LAND lettering, the north arrow and the designation along the bottom, nothing else goes on the page: no note about how the numbering runs, no second arrow, no working. Keep the numbers in the squares around SCHOOL LAND easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a land record page with a grid of square parcels, most of them carrying a number, and an arrow somewhere on the sheet? A plain line drawing, an illustration or a photograph of such a page all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "school_number": 16,
+    "step_words": ["one more", "one less", "neither"],
+    "n_steps": 3,
+    "n_school": 1,
+    "arrow_word": "to the right",
+    "arrow_state": "match"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_numbers_round_the_school_section_step_the_way_a_township_numbered_from_true_north_east_does",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the square lettered SCHOOL LAND on the township plat",
+          "out": "pl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pl_r.unreadable"]
+        },
+        {
+          "read_crop": "What number is printed in the middle square of this cut-out? Answer with that number only.",
+          "boxes": "pl_r",
+          "pad": 1.1,
+          "out": "pl_md",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pl_md.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how does the number in the square directly above the middle square stand against the number in the middle square? Answer with one of these three: one more, one less, neither.",
+          "boxes": "pl_r",
+          "pad": 1.1,
+          "out": "pl_up",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pl_up.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how does the number in the square directly below the middle square stand against the number in the middle square? Answer with one of these three: one more, one less, neither.",
+          "boxes": "pl_r",
+          "pad": 1.1,
+          "out": "pl_dn",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pl_dn.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how does the number in the square directly to the left of the middle square stand against the number in the middle square? Answer with one of these three: one more, one less, neither.",
+          "boxes": "pl_r",
+          "pad": 1.1,
+          "out": "pl_lf",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pl_lf.unreadable"]
+        },
+        {
+          "run": "section_step_agreement",
+          "args": [
+            "pl_md",
+            "pl_up",
+            "pl_dn",
+            "pl_lf",
+            "reference.step_words",
+            "reference.school_number"
+          ],
+          "out": "pl_s"
+        },
+        {
+          "compare_band": "pl_s.ok",
+          "to": "reference.n_steps",
+          "core_abs": 0.499,
+          "margin_abs": 1.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_true_north_arrow_points_the_way_the_sheet_is_laid_out",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the true north arrow printed on the township plat",
+          "out": "ar_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["ar_r.unreadable"]
+        },
+        {
+          "read_crop": "Taking this cut-out as it stands, which way does the head of the arrow in it point? Answer with one of these four: to the top, to the right, to the bottom, to the left.",
+          "boxes": "ar_r",
+          "pad": 0.15,
+          "out": "ar_a",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ar_a.unreadable"]
+        },
+        {
+          "run": "north_arrow_match",
+          "args": ["ar_a", "reference.arrow_word"],
+          "out": "ar_s"
+        },
+        {
+          "compare": "ar_s.state",
+          "to": "reference.arrow_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_page_carries_its_one_school_land_square",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the square lettered SCHOOL LAND on the township plat",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole square of the grid with SCHOOL LAND lettered across it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.4,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_school",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_numbering_note_or_second_arrow_was_added_on_the_plat",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written note about how the numbering runs, or a second arrow",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

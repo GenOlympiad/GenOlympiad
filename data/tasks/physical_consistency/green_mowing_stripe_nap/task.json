@@ -1,0 +1,84 @@
+{
+  "id": "green_mowing_stripe_nap",
+  "axis": "physical_consistency",
+  "prompt": "The captain wants the hole pictured before Saturday's broadcast, so the greenkeeper shoots it from the back tee as soon as the mower comes off.\n\nLow sun rakes across the hole from one side and the flagstick on the green throws a long shadow over the turf. The work docket clipped to the mower's steering column asks for six passes of the cylinder up and down the fairway, turning at each end and coming back alongside the pass just laid, then one lap right round the outside of them all to tidy the edge. The machine is a ride-on cylinder mower with a smooth roller behind the cutting head, and the docket names the first pass as the one up the left-hand edge, driven away from the tee.\n\nHow each of those runs of grass came out against the ones beside it is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a mown grass fairway seen from a raised tee, with wide bands of cut grass running away up the hole and a mower standing at the side? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "different_from_neighbour"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Count the bands of cut grass that run up and down the fairway and read pale rather than dark. Do not count the strip that runs round the outside of them. Write the number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "One continuous strip of cut grass runs right round the outside of the mown bands. Look at that strip along the far end of the fairway, beyond the ends of the bands. Answer with one of: it reads a different shade from the band next to it; it reads the same shade as the band next to it; it changes shade partway along its own run.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "id": "guitar_tab",
+  "axis": "symbolic_systems",
+  "prompt": "A warm-lit straight-on photograph of a guitar-method book page on a stand showing one short TAB (tablature) riff. Draw the six horizontal tab lines with the letters T A B stacked at the left. Along the lines, from left to right in time, write these fret numbers on these strings (string 1 is the TOP line, string 6 the BOTTOM line): 3 on string 1, 5 on string 2, 2 on string 3, 0 on string 1, 7 on string 4, 3 on string 2, 8 on string 5. Each number sits exactly on its own string line, evenly spaced. Crisp black print on real paper, no chord boxes, no other numbers.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show guitar-method book page on a stand showing a single-line TAB riff (six tab lines with fret numbers) under warm light, straight-on photo? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "notes": ["1:3", "2:5", "3:2", "1:0", "4:7", "2:3", "5:8"],
+    "n_notes": 7,
+    "q_seq": "This is guitar TAB (tablature): 6 horizontal lines; the TOP line is string 1 (thinnest / highest) and the BOTTOM line is string 6 (thickest / lowest). Each printed number is a fret played on the line it sits on, read left to right. For EACH number give 'string:fret' where string is 1 (top) to 6 (bottom) and fret is the printed number. List all separated by commas. Read ONLY what is printed: each number together with the line it sits on; do NOT guess at the music. If unreadable answer 'unreadable'."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tab_pairs",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "reference.q_seq",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "run": "fret_match_share",
+          "args": ["a", "reference.notes"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "n_notes",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_seq",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "run": "count_tokens",
+          "args": ["a"],
+          "out": "vn"
+        },
+        {
+          "compare_band": "vn",
+          "to": "reference.n_notes",
+          "core": 1.0,
+          "margin": 1e-09,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

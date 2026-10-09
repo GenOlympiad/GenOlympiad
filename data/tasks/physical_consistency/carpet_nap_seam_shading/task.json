@@ -1,0 +1,84 @@
+{
+  "id": "carpet_nap_seam_shading",
+  "axis": "physical_consistency",
+  "prompt": "The fitters finished at four and the site manager walks the floor with a camera before the furniture goes back, since a corridor that has to be lifted again is a fortnight lost.\n\nThree lengths of plain wool cord carpet have been run down the corridor off one roll and joined end to end, so the joins cross the floor at two points. Low sun comes in through the window at the lobby end and rakes along the floor. The marked-up floor plan taped to the wall at the far end carries an arrow for the way guests come off the lifts, and a note that the pile is to lie pointing that way for the whole run. A loose offcut from the same roll lies on the floor near the far end, dropped there turned end for end.\n\nHow the floor came out along those joins, and how that offcut sits against it, is what the plan does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a hotel corridor with plain carpet run down it, a paper plan taped to the wall at the far end, and a loose piece of the same carpet lying on the floor? Answer yes or no only.",
+  "reference": {
+    "part1": "even_across",
+    "part2": "different_shade"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Three lengths of carpet run down this corridor, joined end to end at two joins. Answer with one of: the floor reads one even shade right across both joins; the shade changes at one of the joins; the shade changes at both joins.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "A loose offcut of the same carpet lies on the floor near the far end. Answer with one of: the offcut reads a different shade from the floor around it; the offcut reads the same shade as the floor around it; the offcut is a different colour from the floor around it.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

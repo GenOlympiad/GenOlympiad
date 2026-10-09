@@ -1,0 +1,84 @@
+{
+  "id": "gs1_ai_bracket_structure",
+  "axis": "symbolic_systems",
+  "prompt": "The packing hall has to clear this pallet through the customer's goods-in scanner tonight, so the last case off the line is photographed on the labelling bench before it goes to the wrapper.\n\nA case stands on the bench with its logistics label applied to the side panel: a barcode with a single line of bracketed human-readable text under it. The same panel already carries the production date stamp, inked 26 09 04 for year, month and day, and a net weight plate reading 12.5 kg. The identifier table lies open on the bench beside the case: identifier 11 takes a production date written as year, then month, then day, each as a pair of figures; identifier 3103 takes a net weight in kilograms carried to three decimal places.\n\nWhat the label line itself carries is what the bench table does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a cardboard case on a bench carrying a logistics label, an inked date stamp and a net weight plate on one panel? Answer yes or no only.",
+  "reference": {
+    "part1": "repeats_the_panel_stamp",
+    "part2": "6"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Compare the dated segment in the label line with the date stamp inked on the same panel and say how they stand. Answer with one of: the dated segment repeats the figures of the date stamp on the panel; the dated segment carries figures the panel's date stamp does not carry; the label line has no dated segment in it.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Count the figures printed inside the bracketed dated segment of the label line. Write the number only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

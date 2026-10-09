@@ -1,0 +1,69 @@
+{
+  "id": "upside_down_signs",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Draw a clean, straight-on illustration of a traffic museum display displaying 7 triangular yellow warning signs in a grid. IMPORTANT RULE: EVERY sign is displayed UPSIDE DOWN -- each triangle is rotated 180 degrees so that its pointed corner points DOWNWARD and its flat side is at the top. For every one of the 7 signs, the triangle's point must face down. All 7 triangles must point down; do not leave any sign the normal way up (pointing up). Draw 7 triangular warning signs, every triangle pointing down. Add no caption or text.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show several triangular warning signs displayed together. Never mind how well it is drawn, and never mind their orientation. Does the picture show several triangular signs? A photo, illustration or clean diagram all count as yes. Answer NO only if it shows a blank card, a plain panel printing an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "count_object": "a triangular yellow warning sign",
+    "q_item": "This is a thin horizontal strip cut out of a bigger photograph. Ignoring everything else, look at the YELLOW colour in this strip. Does the yellow stretch nearly all the way across the strip, from close to its left edge to close to its right edge, or does the yellow cover only a narrow part around the middle? Answer with exactly one word: across or narrow.",
+    "exp_item": "down",
+    "n_objects": 7
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "upside_down_count",
+      "weight": 6.0,
+      "score": "cen.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.count_object",
+          "out": "bx",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "run": "top_slices",
+          "args": ["bx"],
+          "out": "bd"
+        },
+        {
+          "read_crop": "reference.q_item",
+          "boxes": "bd.top",
+          "pad": 0.0,
+          "out": "crt"
+        },
+        {
+          "fail_if": ["crt.unreadable"]
+        },
+        {
+          "run": "score_sign_orientation",
+          "args": ["crt", "reference.exp_item", "reference.n_objects"],
+          "out": "cen"
+        }
+      ]
+    }
+  ]
+}

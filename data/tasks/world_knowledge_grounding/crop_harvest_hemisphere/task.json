@@ -1,0 +1,216 @@
+{
+  "id": "crop_harvest_hemisphere",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A clean printed FARM ALMANAC 'Wheat Harvest Calendar' for a wheat farm in Australia (New South Wales). Draw a single horizontal strip of twelve month cells labelled JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC from left to right. Highlight in orange the ONE month when wheat is really harvested at this location and print 'HARVEST' under that cell. Remember this location's HEMISPHERE determines the season: get the harvest month right for where it actually is, not the northern-hemisphere default. Highlight exactly one month cell.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a farm almanac wheat-harvest calendar strip with the harvest month highlighted? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "true_month": "jan",
+    "q_month": "This is a 12-month wheat harvest calendar strip, months JAN through DEC left to right. Exactly ONE month cell is highlighted in orange and labelled 'HARVEST' beneath it. Which month is the highlighted HARVEST month? Answer with just the three-letter month abbreviation shown in the highlighted cell."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "harvest_month",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the strip of month cells itself -- the single horizontal row of twelve labelled cells taken together as one rectangle, not the title printed above it and not the word printed underneath it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_month_strip",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one cell cut out of a printed calendar strip. What three-letter month abbreviation is printed in this cell? Answer with just those three letters and nothing else. If no month is printed here, answer the single word none.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "nm"
+        },
+        {
+          "read_crop": "This is one cell cut out of a printed calendar strip. Is this cell filled in with a bright orange background colour? Answer yes or no only.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "fl"
+        },
+        {
+          "run": "read_harvest_months",
+          "args": ["nm", "fl", "reference.true_month"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "extract": "(?i)(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)",
+          "value": "res.v",
+          "out": "tok",
+          "pick": "last"
+        },
+        {
+          "fail_if": ["tok.none"]
+        },
+        {
+          "compare": "tok",
+          "to": "reference.true_month",
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint",
+          "args": ["pl", "res.oks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "harvest_month_confirm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the strip of month cells itself -- the single horizontal row of twelve labelled cells taken together as one rectangle, not the title printed above it and not the word printed underneath it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_month_strip",
+          "args": ["image", "anc"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one cell cut out of a printed calendar strip. What three-letter month abbreviation is printed in this cell? Answer with just those three letters and nothing else. If no month is printed here, answer the single word none.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "nm"
+        },
+        {
+          "read_crop": "This is one cell cut out of a printed calendar strip. Is this cell filled in with a bright orange background colour? Answer yes or no only.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "fl"
+        },
+        {
+          "run": "read_harvest_months",
+          "args": ["nm", "fl", "reference.true_month"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "extract": "(?i)(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)",
+          "value": "res.v",
+          "out": "tok",
+          "pick": "last"
+        },
+        {
+          "fail_if": ["tok.none"]
+        },
+        {
+          "compare": "tok",
+          "to": "reference.true_month",
+          "out": "frac"
+        },
+        {
+          "run": "ag_paint",
+          "args": ["pl", "res.oks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ],
+  "source": "In the southern hemisphere, wheat in Argentina and Australia is harvested from November to January.",
+  "grounding": "static"
+}

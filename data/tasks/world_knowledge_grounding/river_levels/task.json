@@ -1,0 +1,299 @@
+{
+  "id": "river_levels",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A weatherproof harbourmaster's DOCK KIOSK screen at a riverside landing, showing the flood monitor for the Mississippi River at St. Show the reading for 12:30 local time on 2026-07-16 (the pinned river stage for this kiosk). Louis, Missouri. Display a large gage height (river stage, in feet), the discharge / streamflow (in cfs), and a prominent flood-stage STATUS badge (e.g. 'No Flooding', 'Action', 'Minor Flood', 'Moderate Flood', 'Major Flood'), plus a small stage bar showing the flood-stage thresholds. Use the REAL data for this gauge. Clean hydrology-dashboard UI on the kiosk, crisp, every number and label sharp and legible.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict riverside harbourmaster's dock kiosk flood screen for the Mississippi River at St. Louis. Ignoring artistic quality, does the image actually DEPICT that? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "lid": "EADM7",
+    "url": "https://api.water.noaa.gov/nwps/v1/gauges/EADM7",
+    "height_band": 1.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "gage_height_ft",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big river-stage figure in feet printed on this kiosk screen under its own heading -- draw ONE box round that large figure itself, from the left edge of its first digit to the right edge of its last, taking in its decimal point and any ft unit printed beside it but NOT the heading word above it; not one of the small threshold numbers listed beside the coloured flood-stage bar, and not the streamflow figure",
+          "expected_n": 1,
+          "out": "h_ans_box"
+        },
+        {
+          "fail_if": ["h_ans_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a riverside kiosk screen. One big figure in feet is printed in it. Write down just that number and nothing else.",
+          "boxes": "h_ans_box",
+          "pad": 0.2,
+          "out": "h_ans_cr"
+        },
+        {
+          "fail_if": ["h_ans_cr.unreadable"]
+        },
+        {
+          "run": "pass_through",
+          "args": ["h_ans_cr"],
+          "out": "h_ans"
+        },
+        {
+          "run": "first_figure",
+          "args": ["h_ans"],
+          "code": {
+            "inline": "code_d24cf05d934e"
+          },
+          "out": "hh"
+        },
+        {
+          "fail_if": ["hh.unreadable"]
+        },
+        {
+          "compare_band": "hh.v",
+          "to": "reference.stage_ft",
+          "core": "reference.height_band",
+          "margin": "reference.height_band",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "discharge_cfs",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big streamflow figure in cubic feet per second printed on this kiosk screen under its own heading -- draw ONE box round that large figure itself, from the left edge of its first digit to the right edge of its last, taking in its thousands separators and any cfs unit printed beside it but NOT the heading word above it; not the river-stage figure in feet, and not a threshold number beside the flood-stage bar",
+          "expected_n": 1,
+          "out": "q_ans_box"
+        },
+        {
+          "fail_if": ["q_ans_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a riverside kiosk screen. One big figure is printed in it. Copy that figure in full digits and write nothing else.",
+          "boxes": "q_ans_box",
+          "pad": 0.2,
+          "out": "q_ans_cr"
+        },
+        {
+          "fail_if": ["q_ans_cr.unreadable"]
+        },
+        {
+          "run": "pass_through",
+          "args": ["q_ans_cr"],
+          "out": "q_ans"
+        },
+        {
+          "run": "first_figure",
+          "args": ["q_ans"],
+          "out": "qq"
+        },
+        {
+          "fail_if": ["qq.unreadable"]
+        },
+        {
+          "compare_band": "qq.v",
+          "to": "reference.discharge_cfs",
+          "core_rel": 0.25,
+          "margin_rel": 0.75,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "flood_status",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "coloured status badge printed on this kiosk screen saying what the flooding condition is right now",
+          "expected_n": 1,
+          "out": "s_ans_box"
+        },
+        {
+          "fail_if": ["s_ans_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a riverside kiosk screen, showing a badge. A word or short phrase saying what the flooding condition is is printed on it. Which of these is printed here? Answer with exactly one of these words and nothing else: no-flooding, action, minor, moderate, major.",
+          "boxes": "s_ans_box",
+          "pad": 0.2,
+          "out": "s_ans_cr"
+        },
+        {
+          "fail_if": ["s_ans_cr.unreadable"]
+        },
+        {
+          "run": "pass_through",
+          "args": ["s_ans_cr"],
+          "out": "s_ans"
+        },
+        {
+          "run": "flood_rank",
+          "args": ["s_ans"],
+          "out": "sr"
+        },
+        {
+          "fail_if": ["sr.unreadable"]
+        },
+        {
+          "compare_category": "sr.rank",
+          "to": "reference.flood_rank",
+          "max_steps": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "height_status_consistency",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big river-stage figure in feet printed on this kiosk screen under its own heading -- draw ONE box round that large figure itself, from the left edge of its first digit to the right edge of its last, taking in its decimal point and any ft unit printed beside it but NOT the heading word above it; not one of the small threshold numbers listed beside the coloured flood-stage bar, and not the streamflow figure",
+          "expected_n": 1,
+          "out": "c_h_ans_box"
+        },
+        {
+          "fail_if": ["c_h_ans_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a riverside kiosk screen. One big figure in feet is printed in it. Write down just that number and nothing else.",
+          "boxes": "c_h_ans_box",
+          "pad": 0.2,
+          "out": "c_h_ans_cr"
+        },
+        {
+          "fail_if": ["c_h_ans_cr.unreadable"]
+        },
+        {
+          "run": "pass_through",
+          "args": ["c_h_ans_cr"],
+          "out": "c_h_ans"
+        },
+        {
+          "read": "boxes",
+          "target": "coloured status badge printed on this kiosk screen saying what the flooding condition is right now",
+          "expected_n": 1,
+          "out": "c_s_ans_box"
+        },
+        {
+          "fail_if": ["c_s_ans_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a riverside kiosk screen, showing a badge. A word or short phrase saying what the flooding condition is is printed on it. Which of these is printed here? Answer with exactly one of these words and nothing else: no-flooding, action, minor, moderate, major.",
+          "boxes": "c_s_ans_box",
+          "pad": 0.2,
+          "out": "c_s_ans_cr"
+        },
+        {
+          "fail_if": ["c_s_ans_cr.unreadable"]
+        },
+        {
+          "run": "pass_through",
+          "args": ["c_s_ans_cr"],
+          "out": "c_s_ans"
+        },
+        {
+          "run": "first_figure",
+          "args": ["c_h_ans"],
+          "out": "c_h"
+        },
+        {
+          "fail_if": ["c_h.unreadable"]
+        },
+        {
+          "run": "flood_rank",
+          "args": ["c_s_ans"],
+          "out": "c_rank"
+        },
+        {
+          "fail_if": ["c_rank.unreadable"]
+        },
+        {
+          "compare_band": "c_h.v",
+          "to": "reference.stage_ft",
+          "core": "reference.height_band",
+          "margin": "reference.height_band",
+          "out": "frac_h"
+        },
+        {
+          "compare_category": "c_rank.rank",
+          "to": "reference.flood_rank",
+          "max_steps": 2,
+          "out": "frac_s"
+        },
+        {
+          "minimum": ["frac_h", "frac_s"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "const": {
+        "program": "code_d24cf05d934e"
+      },
+      "out": "code_d24cf05d934e"
+    },
+    {
+      "fetch": "https://waterservices.usgs.gov/nwis/iv/?format=json&sites=07010000&startDT=2026-07-16T17:00Z&endDT=2026-07-16T18:00Z&parameterCd=00065,00060",
+      "out": "iv"
+    },
+    {
+      "run": "gauge_reading_at_time",
+      "value": "iv",
+      "out": "obs"
+    },
+    {
+      "get": "$.stage_ft",
+      "value": "obs",
+      "out": "stage_ft"
+    },
+    {
+      "get": "$.discharge_cfs",
+      "value": "obs",
+      "out": "discharge_cfs"
+    },
+    {
+      "fetch": "reference.url",
+      "out": "meta"
+    },
+    {
+      "get": "$.flood.categories",
+      "value": "meta",
+      "out": "flood_thr"
+    },
+    {
+      "run": "flood_category",
+      "args": ["obs.stage_ft", "flood_thr"],
+      "out": "flood_category"
+    },
+    {
+      "calibrate": "flood_status_rank",
+      "value": "flood_category",
+      "out": "flood_rank"
+    }
+  ],
+  "grounding": "live"
+}

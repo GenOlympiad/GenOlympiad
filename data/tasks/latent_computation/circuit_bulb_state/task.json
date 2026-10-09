@@ -1,0 +1,242 @@
+{
+  "id": "circuit_bulb_state",
+  "axis": "latent_computation",
+  "prompt": "A clean, brightly-lit photograph of the maintenance test board behind an ELEVATOR-LOBBY floor-indicator panel, laid out left to right on a pale wall. There is a power pack and THREE round indicator lamps, labelled L1, L2 and L3, mounted in a horizontal row in that order (L1 leftmost, L3 rightmost). Wiring: the power pack connects through a main toggle switch S0 to lamp L1, and after L1 the circuit splits into TWO parallel branches that rejoin back to the pack — the FIRST branch holds lamp L2 in series with a toggle switch S2, the SECOND branch holds lamp L3 in series with a toggle switch S3. So L1 is in series with the parallel pair (L2 on one branch, L3 on the other). In this scene the main switch S0 is CLOSED, switch S2 is OPEN (contacts separated, the gap clearly visible), and switch S3 is CLOSED. Render each lamp at its TRUE state for this exact switch setting: a lamp that still has a complete conducting loop back to the pack glows warm and bright; a lamp whose only path is broken is dark, clear glass with a visible unlit filament. Work out the continuity carefully — opening one parallel branch does NOT necessarily darken the lamps that share the rest of the circuit. Do NOT default to drawing every lamp glowing. Keep the order L1, L2, L3 left to right. Do NOT print any words, labels, ON/OFF text, numbers, arrows, or ticks anywhere in the image; only the lamps' glow or darkness conveys the answer.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show maintenance test board behind an elevator-lobby floor-indicator panel, three labelled indicator lamps in a row wired series-then-parallel? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "states": [true, false, true],
+    "joint": "ON|OFF|ON",
+    "n": 3,
+    "names": ["L1", "L2", "L3"],
+    "centers": [
+      [0.25, 0.5],
+      [0.5, 0.5],
+      [0.75, 0.5]
+    ],
+    "all_on": [true, true, true]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "joint_state_exact",
+      "weight": 3.0,
+      "score": "s.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "a round indicator lamp mounted in the row on the test board",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Is this indicator lamp LIT or DARK? A lit lamp glows warm and bright from inside; a dark lamp is unlit clear glass with a visible filament. A white glassy highlight or reflection on the glass of an unlit lamp is still DARK -- only a warm internal glow counts as LIT. Answer with the single word lit or dark.",
+          "boxes": "bx",
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "read_lamps",
+          "args": ["bx", "st"],
+          "out": "rd"
+        },
+        {
+          "run": "hold_joint",
+          "args": ["rd"],
+          "out": "held"
+        },
+        {
+          "fail_if": ["held.unreadable"]
+        },
+        {
+          "run": "score_joint",
+          "args": ["rd", "reference.states"],
+          "out": "s"
+        }
+      ]
+    },
+    {
+      "name": "per_bulb_partial",
+      "weight": 1.0,
+      "score": "s.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "a round indicator lamp mounted in the row on the test board",
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Is this indicator lamp LIT or DARK? A lit lamp glows warm and bright from inside; a dark lamp is unlit clear glass with a visible filament. A white glassy highlight or reflection on the glass of an unlit lamp is still DARK -- only a warm internal glow counts as LIT. Answer with the single word lit or dark.",
+          "boxes": "bx",
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "read_lamps",
+          "args": ["bx", "st"],
+          "out": "rd"
+        },
+        {
+          "run": "hold_partial",
+          "args": ["rd"],
+          "out": "held"
+        },
+        {
+          "fail_if": ["held.unreadable"]
+        },
+        {
+          "run": "score_partial",
+          "args": ["rd", "reference.states"],
+          "out": "s"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_lamps",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one round indicator lamp mounted in the horizontal row on the board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole round indicator lamp rather than a switch, a wire, or only part of a lamp? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_s2_open_visible",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is switch S2 drawn OPEN with a clearly visible contact gap? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_not_all_glowing",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one round indicator lamp mounted in the horizontal row on the board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_s"
+        },
+        {
+          "fail_if": ["box_s.unreadable"]
+        },
+        {
+          "read_crop": "Is the round indicator lamp in this picture lit and glowing brightly rather than dark and unlit? Answer yes or no only.",
+          "boxes": "box_s",
+          "out": "crop_s"
+        },
+        {
+          "fail_if": ["crop_s.unreadable"]
+        },
+        {
+          "run": "not_all_confirmed",
+          "args": ["crop_s"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_text",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a printed word, letter, number, arrow or tick mark anywhere in the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "run": "marks_absent",
+          "args": ["sweep_s"],
+          "out": "abs_v"
+        },
+        {
+          "fail_if": ["abs_v.no_read"]
+        },
+        {
+          "compare": "abs_v.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

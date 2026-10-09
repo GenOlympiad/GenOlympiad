@@ -1,0 +1,186 @@
+{
+  "id": "headway_band_stop_times",
+  "axis": "long_range_consistency",
+  "prompt": "The timetable office of a city bus operator, on the morning the stop plates for route 27 go to the printers. What is wanted is the plate for one stop, SPRING ROAD -- the sheet a passenger reads standing at the pole.\n\nWhat the schedule for route 27 says:\n-- the first bus leaves the terminus at 06:00 and the last one leaves at 10:30;\n-- from 06:00 until 08:00 one bus leaves the terminus every 20 minutes;\n-- from 08:00 until 09:00 one leaves every 10 minutes;\n-- from 09:00 onwards one leaves every 30 minutes;\n-- the running time from the terminus to SPRING ROAD is 12 minutes.\n\nThe plate gives the times buses reach SPRING ROAD, one row to each hour, the hour at the left-hand end of its own row and that hour's minutes running across it, and at the foot the number of buses that call here in the day.\n\nWork all of that out for yourself -- I am deliberately not telling you how many buses call in any hour, which row the service thins out on, or what the day comes to. A plate that runs at the same rate from top to bottom is no use to anybody at the pole. Nothing on the plate may give the working away: no headway note, no table of the bands, no arrows. Every hour row and the figure at the foot must be readable in the frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a bus stop timetable plate with clock times set out in rows by the hour? A realistic photo, a document mockup or an illustration ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "row_profile": "06 3, 07 3, 08 5, 09 3, 10 2",
+    "total_buses": "16",
+    "nine_row": "021242",
+    "n_rows": 5,
+    "q_row_hour": "Copy the hour printed at the left-hand end of this cut-out. Write the two digits only.",
+    "q_row_count": "How many clock times are printed in this cut-out? Write the number only.",
+    "q_total": "This cut-out shows the foot of a printed plate. Copy the number of buses a day printed there -- the figure on the bottom line of the plate. Ignore every other number in this cut-out. Write the number only and nothing else.",
+    "q_nine": "Copy every minute figure printed in this cut-out, in the order they are printed, each written as two digits. Write numbers only.",
+    "q_row_unit": "Does this cut-out show one whole hour row of the timetable, rather than part of one? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_hour_row_holds_the_buses_that_hour_gets",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an hour row of the timetable on the stop plate",
+          "out": "hr",
+          "sweep": true
+        },
+        {
+          "fail_if": ["hr.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_hour",
+          "boxes": "hr",
+          "pad": 0.3,
+          "out": "hra"
+        },
+        {
+          "fail_if": ["hra.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_count",
+          "boxes": "hr",
+          "pad": 0.3,
+          "out": "hrb"
+        },
+        {
+          "fail_if": ["hrb.unreadable"]
+        },
+        {
+          "run": "paired_readings",
+          "args": ["hra", "hrb"],
+          "out": "hrv"
+        },
+        {
+          "compare_set": "hrv.seq",
+          "to": "reference.row_profile",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_day_total_closes_on_the_rows",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the figure for the buses a day at the foot of the plate",
+          "out": "tt",
+          "sweep": true
+        },
+        {
+          "fail_if": ["tt.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_total",
+          "boxes": "tt",
+          "pad": 0.35,
+          "out": "ttx"
+        },
+        {
+          "fail_if": ["ttx.unreadable"]
+        },
+        {
+          "run": "digits_read",
+          "args": ["ttx"],
+          "out": "ttv"
+        },
+        {
+          "compare": "ttv.txt",
+          "to": "reference.total_buses",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_carried_bus_lands_on_the_nine_row",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the hour row of the timetable headed 09 on the stop plate",
+          "out": "nn",
+          "sweep": true
+        },
+        {
+          "fail_if": ["nn.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_nine",
+          "boxes": "nn",
+          "pad": 0.35,
+          "out": "nnx"
+        },
+        {
+          "fail_if": ["nnx.unreadable"]
+        },
+        {
+          "run": "digits_read",
+          "args": ["nnx"],
+          "out": "nnv"
+        },
+        {
+          "compare": "nnv.txt",
+          "to": "reference.nine_row",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "five_hour_rows_on_the_plate",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an hour row of the timetable on the stop plate",
+          "out": "rw",
+          "sweep": true
+        },
+        {
+          "fail_if": ["rw.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_unit",
+          "boxes": "rw",
+          "pad": 0.3,
+          "out": "rwx"
+        },
+        {
+          "fail_if": ["rwx.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["rwx"],
+          "out": "rwn"
+        },
+        {
+          "compare_band": "rwn.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+{
+  "id": "plan_elevation_single_conflict",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "An architect's presentation sheet for a small open-sided garden pavilion, drawn in fine black line work on warm white paper, showing two panels side by side with a printed caption under each.\n\nThe LEFT panel is captioned PLAN and is the pavilion seen from directly above. The RIGHT panel is captioned SOUTH ELEVATION and is the same pavilion's south front seen straight on from outside, from the south. Both panels are drawn to the same width, and the three things listed below must be plainly countable in BOTH panels.\n\nThe pavilion's south front has, and has nothing else:\n- round columns standing in a row along the front, well apart from one another, drawn as small filled circles in the plan and as narrow uprights in the elevation;\n- a front stair whose steps are drawn as separate parallel bars in the plan and as a stepped edge in the elevation;\n- a front door in the plain back wall of the pavilion, drawn with a quarter-circle swing arc in the plan and as a tall rectangle in the elevation. There are no windows anywhere.\n\nThe two panels must agree on every one of these EXCEPT for exactly one deliberate discrepancy, which is the number of columns. Draw them like this:\n- PLAN: 5 columns, 3 steps, 1 door.\n- SOUTH ELEVATION: 6 columns, 3 steps, 1 door.\nNothing else may differ between the two panels: the step count and the door count must be identical in both, and no other feature may appear in one panel and be missing from the other. Every item is drawn clearly separated from its neighbours so it can be counted without doubt.\n\nClean architectural line work, no hatching, no dimensions, no text other than the two captions.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict an architect's sheet with a PLAN panel and a SOUTH ELEVATION panel of the same small garden pavilion. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_plan_col": "Look only at the left-hand panel, the one captioned PLAN. Write down every round column drawn along its front porch, working from left to right, each with a few plain words saying where it stands. Separate one item from the next with a semicolon; write no running total and nothing else. If no round column is drawn there, write the single word NONE.",
+    "q_plan_step": "Look only at the left-hand panel, the one captioned PLAN. Write down every step drawn in its front stair, working from left to right, each with a few plain words saying where it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If no step is drawn there, write the single word NONE.",
+    "q_plan_door": "Look only at the left-hand panel, the one captioned PLAN. Write down every door drawn in its front wall, working from left to right, each with a few plain words saying where it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If no door is drawn there, write the single word NONE.",
+    "q_elev_col": "Look only at the right-hand panel, the one captioned SOUTH ELEVATION. Write down every upright column drawn along its porch, working from left to right, each with a few plain words saying where it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If no upright column is drawn there, write the single word NONE.",
+    "q_elev_step": "Look only at the right-hand panel, the one captioned SOUTH ELEVATION. Write down every step drawn in its front stair, working from left to right, each with a few plain words saying where it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If no step is drawn there, write the single word NONE.",
+    "q_elev_door": "Look only at the right-hand panel, the one captioned SOUTH ELEVATION. Write down every door drawn in its wall, working from left to right, each with a few plain words saying where it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If no door is drawn there, write the single word NONE.",
+    "plan_table": [5, 3, 1],
+    "elev_table": [6, 3, 1],
+    "conflict_item": "columns",
+    "item_names": ["columns", "steps", "doors"],
+    "elev_target": "a small circle drawn in the left-hand panel below the building outline"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "sc",
+          "pick": "last",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "single_pinned_conflict",
+      "weight": 4.0,
+      "score": "r.frac",
+      "steps": [
+        {
+          "ask": "reference.q_plan_col",
+          "out": "pc"
+        },
+        {
+          "fail_if": ["pc.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["pc", "empty_as='0'"],
+          "out": "pc__std"
+        },
+        {
+          "fail_if": ["pc__std.refused"]
+        },
+        {
+          "ask": "reference.q_plan_step",
+          "out": "ps"
+        },
+        {
+          "fail_if": ["ps.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["ps", "empty_as='0'"],
+          "out": "ps__std"
+        },
+        {
+          "fail_if": ["ps__std.refused"]
+        },
+        {
+          "ask": "reference.q_plan_door",
+          "out": "pd"
+        },
+        {
+          "fail_if": ["pd.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["pd", "empty_as='0'"],
+          "out": "pd__std"
+        },
+        {
+          "fail_if": ["pd__std.refused"]
+        },
+        {
+          "ask": "reference.q_elev_col",
+          "out": "ec"
+        },
+        {
+          "fail_if": ["ec.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["ec", "empty_as='0'"],
+          "out": "ec__std"
+        },
+        {
+          "fail_if": ["ec__std.refused"]
+        },
+        {
+          "ask": "reference.q_elev_step",
+          "out": "es"
+        },
+        {
+          "fail_if": ["es.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["es", "empty_as='0'"],
+          "out": "es__std"
+        },
+        {
+          "fail_if": ["es__std.refused"]
+        },
+        {
+          "ask": "reference.q_elev_door",
+          "out": "ed"
+        },
+        {
+          "fail_if": ["ed.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["ed", "empty_as='0'"],
+          "out": "ed__std"
+        },
+        {
+          "fail_if": ["ed__std.refused"]
+        },
+        {
+          "run": "score_plan_elevation",
+          "args": [
+            "[pc__std.n, ps__std.n, pd__std.n]",
+            "[ec__std.n, es__std.n, ed__std.n]",
+            "reference.plan_table",
+            "reference.elev_table",
+            "reference.item_names",
+            "reference.conflict_item"
+          ],
+          "out": "r"
+        },
+        {
+          "fail_if": ["r.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d3_plan_column_boxes",
+      "weight": 0.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.elev_target",
+          "retries": 2,
+          "out": "pb"
+        },
+        {
+          "run": "any_box_found",
+          "args": ["pb"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

@@ -1,0 +1,170 @@
+{
+  "id": "inuse_expiry_two_bottles",
+  "axis": "text_fidelity",
+  "prompt": "The open drawer of a ward treatment trolley, photographed from above so that both bottles standing in it are fully in view. A marker pen lies in the drawer beside them.\n\nTwo eye-drop bottles are in use. Each carries the manufacturer's printed expiry on the bottle, and each has the ward's own opening label stuck round its shoulder. These are the printed expiries and the days the pharmacist opened them, word for word:\n  LATANOPROST       printed expiry 05 SEP 2026   opened 20 AUG 2026\n  CHLORAMPHENICOL   printed expiry 31 MAR 2027   opened 14 AUG 2026\n\nEach opening label has two lines on it, DATE OPENED and DISCARD BY, and the pharmacist has filled both in on both bottles, in block capitals with the marker. Preparations of this kind are good for twenty-eight days once opened, and the ward has the usual rule about which of the two dates that leaves you with. Which day went on the DISCARD BY line of each bottle is for you to work out -- I am deliberately not telling you either of them, and the two bottles do not get there the same way.\n\nBoth drug names, both printed expiries and both handwritten lines on both opening labels have to be legible in the one frame, and the handwriting has to be large and plain. Nothing else is in the drawer: no second sticker on any bottle, no other date written anywhere, no prescription chart and no note about the twenty-eight days.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show small bottles with handwritten labels stuck round them? A photograph, a product mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no bottles at all. Answer yes or no only.",
+  "reference": {
+    "discard_map": "chloramphenicol=11sep2026|latanoprost=05sep2026",
+    "opened_map": "chloramphenicol=14aug2026|latanoprost=20aug2026",
+    "bottle_keys": "latanoprost|chloramphenicol",
+    "clean_no_extras": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each bottle is discarded on whichever of its two days comes first",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one eye-drop bottle standing in the trolley drawer",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "bt"
+        },
+        {
+          "fail_if": ["bt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the drug name printed on the bottle in this cut-out. Write the name only. If it cannot be made out, answer none.",
+          "boxes": "bt",
+          "pad": 0.2,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "btk"
+        },
+        {
+          "read_crop": "Copy the date written by hand on the DISCARD BY line of the label in this cut-out. Write the date only. If it cannot be made out, answer none.",
+          "boxes": "bt",
+          "pad": 0.2,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "btv"
+        },
+        {
+          "run": "map_bottle_to_reading",
+          "args": ["btk", "btv", "reference.bottle_keys"],
+          "out": "dm"
+        },
+        {
+          "fail_if": ["dm.refused"]
+        },
+        {
+          "compare": "dm.seq",
+          "to": "reference.discard_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each label records the day the pharmacist opened that bottle",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one eye-drop bottle standing in the trolley drawer",
+          "sweep": true,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "bt"
+        },
+        {
+          "fail_if": ["bt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the drug name printed on the bottle in this cut-out. Write the name only. If it cannot be made out, answer none.",
+          "boxes": "bt",
+          "pad": 0.2,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "btk"
+        },
+        {
+          "read_crop": "Copy the date written by hand on the DATE OPENED line of the label in this cut-out. Write the date only. If it cannot be made out, answer none.",
+          "boxes": "bt",
+          "pad": 0.2,
+          "sort": "reading_order",
+          "layout": "row",
+          "out": "bto"
+        },
+        {
+          "run": "map_bottle_to_reading",
+          "args": ["btk", "bto", "reference.bottle_keys"],
+          "out": "om"
+        },
+        {
+          "fail_if": ["om.refused"]
+        },
+        {
+          "compare": "om.seq",
+          "to": "reference.opened_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "a second sticker or another handwritten date on a bottle in the drawer",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a second sticker or another handwritten date on a bottle in the drawer",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "xg"
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: a second sticker stuck on a bottle, or a handwritten date other than the one on that bottle's own opening label? Answer yes or no. Answer no if the cut-out shows the maker's printed expiry on the glass, the one opening label round a bottle's shoulder with its handwriting, the marker pen.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "run": "sweep_holds_nothing_banned",
+          "args": ["xg", "xgw", "xgy"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_no_extras",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "the_hand_chain_pays_out_by_the_number_of_falls",
+  "axis": "physical_consistency",
+  "prompt": "The lifting gear has to be signed off after its yearly test, so the rig is photographed with both hoists loaded and standing, exactly as the examiner left it for the report.\n\nTwo hand chain hoists hang from the same steel beam in the test bay. The plate on the left-hand hoist is stamped two falls; the plate on the right-hand hoist is stamped four falls. Each carries a matched test block, and both blocks have been raised to the three metre mark on the printed height board standing between them. The hand chain of each hoist has been reeled onto its own board, and each board carries a printed graduated scale in metres running up its face. The examiner's clipboard rests against the beam post and the bay floor is swept bare.\n\nHow much chain each board has taken is what the test record does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show two chain hoists hanging from one beam with a graduated reeling board standing beside each of them? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "four_fall_board_stands_higher"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the printed graduated scale on the reeling board beside the hoist whose plate is stamped four falls, and give the reeled hand chain in metres.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "11.4", "12.6"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the graduated reeling boards beside the two hoists and say where the reeled hand chain stands on each. Answer with one of: the board at the four-fall hoist carries chain to a higher graduation; the two boards carry chain to the same graduation; the board at the two-fall hoist carries chain to a higher graduation.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

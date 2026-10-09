@@ -1,0 +1,86 @@
+{
+  "id": "rt_stamp_matches_the_shot_seams",
+  "axis": "symbolic_systems",
+  "prompt": "The vessel cannot leave the bay until the nameplate has been checked against the inspection file, so the works photographs it on its saddles with the drawing board standing in the same frame.\n\nA horizontal vessel rests on its saddles. A nameplate welded to the shell carries the works number, the design figures and a radiography line waiting to be stamped. On the board beside it hangs the seam development sheet, on which every seam run is drawn out and numbered, and the runs that have been shot are blacked in. Clipped under the sheet is the seam schedule: it lists the category A butt seam runs as runs 1 to 12, and gives the works rule for spot work as one run in four. The inspection order pinned to the board calls this vessel up for spot radiography of those seams and nothing more.\n\nWhat goes on the radiography line, and which runs go black, is what the order does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a horizontal pressure vessel on its saddles with a nameplate on its shell and a drawing board standing beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "stamped_rt_3",
+    "part2": "3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the radiography line stamped on the vessel's nameplate. Answer with one of: the nameplate is stamped RT-1; the nameplate is stamped RT-2; the nameplate is stamped RT-3; the nameplate is stamped RT-4.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "seam runs blacked in on the development sheet",
+          "out": "r_part2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part2.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+pillow==12.2.0
+numpy==2.4.6
+opencv-python==4.13.0.92
+scipy==1.17.1
+scikit-image==0.26.0
+requests==2.33.1
+rapidocr-onnxruntime==1.4.4
+img2table==2.0.0
+astral==3.2
+tqdm==4.70.0
+# Needed only for --tokenizer with a Hugging Face tokenizer name:
+# transformers==4.55.4

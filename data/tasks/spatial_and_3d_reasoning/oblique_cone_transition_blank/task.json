@@ -1,0 +1,84 @@
+{
+  "id": "oblique_cone_transition_blank",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The ductwork gang cannot roll the section until the marking-out has been signed for, so the sheet is photographed lying flat on the bench with the drawing still weighted beside it.\n\nA galvanised sheet has been set out on a tinsmith's bench for an offset reducer. The printed sheet weighted at the bench corner puts the piece at 400 across its wide end, 200 across its narrow end and 300 tall, and its plan view carries the small circle hard over to one side of the large one, so that one side of the small circle sits directly over the rim of the large one. The setter-out has gone round the piece drawing lines across the blank in marker pen and has written a number beside each of them, 1 to 12, starting from the side where the rims stack up.\n\nWhat outline the sheet has to be cut to, and how those numbered lines fall inside it, is what the drawing does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a metalworking bench with a flat marked-out sheet blank on it and a printed three-view drawing weighted down at the corner? Answer yes or no only.",
+  "reference": {
+    "part1": "crescent_uneven_ends",
+    "part2": "line_seven_reaches_furthest"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the outline that has been drawn on the sheet blank lying on the bench. Answer with one of: it is a crescent with one end broader than the other; it is an even fan with two straight sides; it is a plain rectangle with square corners.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "The lines drawn across the blank each have a number written beside them in marker pen. Answer with one of: line 1 reaches the furthest across the blank; line 4 reaches the furthest across the blank; line 7 reaches the furthest across the blank.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

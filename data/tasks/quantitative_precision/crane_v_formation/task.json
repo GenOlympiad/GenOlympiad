@@ -1,0 +1,157 @@
+{
+  "id": "crane_v_formation",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic photograph of a golden dusk sky in which EXACTLY 11 white cranes are flying, seen as dark silhouettes against the bright warm sky. The cranes MUST form one clean V-shaped (chevron) flight formation: a single lead bird at the front point, with the remaining birds trailing back in two straight, evenly spaced arms behind it (one arm to the left, one arm to the right). There must be EXACTLY 11 cranes in total across the whole V -- not 10, not 12, exactly 11 -- and each bird stays separate enough to be counted individually. The formation must actually look like a tidy V, not a random scatter and not a single straight line. No text, no numerals.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a flock of cranes flying in a V / chevron formation across a bright dusk sky? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 11,
+    "q": "How many cranes (birds) are flying in this sky in total? Count every bird in the whole formation one by one. Answer with the integer number of birds only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "enforce_formation": true,
+    "q_formation": "Are the birds in this image arranged in a clean V-shaped (chevron) flight formation -- one bird at the front point with two straight even arms of birds trailing back behind it -- rather than scattered randomly or lined up in a single straight line? Answer with the single word yes or no only.",
+    "d2_q_objform": "This picture should show these countable objects: dark cranes / birds against a bright sky. Look at the individual objects being counted. Is each one a dark crane silhouette in the sky, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "v_formation",
+      "weight": 2.0,
+      "gate": true,
+      "only_if": "reference.enforce_formation",
+      "steps": [
+        {
+          "ask": "reference.q_formation",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one dark crane (bird) silhouette flying in the sky -- put a box on EVERY bird in the picture, one box per bird, taking in that bird's whole silhouette from wing tip to wing tip and from beak to tail; two birds flying close together are still two birds, so box each on its own; do not box empty sky, cloud, or several birds in one box.",
+          "out": "bx",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Is there a whole dark bird silhouette at the centre of this picture? Answer no if the centre holds only empty sky or cloud, or only a fragment such as a single wing tip. Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "count_yes": "cr",
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.0,
+      "premise": true,
+      "not_scored": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one dark shape flying in the bright dusk sky",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_g"
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole crane in flight, seen as a dark silhouette with its wings out, rather than some other object, a shapeless blob, or only part of a bird? Answer yes or no only.",
+          "boxes": "box_g",
+          "out": "crop_g"
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a dark crane silhouette in the sky",
+  "count_total": "reference.n"
+}

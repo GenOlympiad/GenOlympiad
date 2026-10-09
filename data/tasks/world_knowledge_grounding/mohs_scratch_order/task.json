@@ -1,0 +1,463 @@
+{
+  "id": "mohs_scratch_order",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A neatly hand-drawn geology lab worksheet titled 'Mineral Scratch-Test Grid': a single 4x4 table. The four ROW headers, top to bottom, are the minerals Fluorite, Quartz, Gypsum, Orthoclase, and the four COLUMN headers, left to right, are the SAME four minerals in the SAME order: Fluorite, Quartz, Gypsum, Orthoclase. In each cell you perform the scratch test: the ROW mineral is scraped against the COLUMN mineral. If the row mineral is HARDER than the column mineral it leaves a scratch, so draw a clear dark-red diagonal SCRATCH score line through that cell; if the row mineral is the same or SOFTER, it leaves no mark, so leave that cell clean (no red line). A mineral cannot scratch itself, so every cell on the main diagonal is left clean. Work out each of the sixteen cells from the real relative hardness of these four minerals and mark them correctly. Print ONLY the title and the mineral names in the headers -- do NOT print any hardness numbers, the words 'harder' or 'softer', any ranked list, or any answer key anywhere on the sheet. Clean cream worksheet paper, thin grey grid lines, black ink headers, red scratch lines.",
+  "difficulty": "s1",
+  "easy_question": "This picture was supposed to show a mineral scratch-test grid: a 4x4 table with mineral names as row and column headers, cells marked with a scratch line or left clean. Never mind how well it is drawn. Does the picture show a grid/table with mineral-name row and column headers? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or a plain panel that prints an answer with none of the requested grid depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "order": ["Fluorite", "Quartz", "Gypsum", "Orthoclase"],
+    "hardness": {
+      "Fluorite": 4,
+      "Quartz": 7,
+      "Gypsum": 2,
+      "Orthoclase": 6
+    },
+    "matrix": [
+      ["none", "none", "scratch", "none"],
+      ["scratch", "none", "scratch", "scratch"],
+      ["none", "none", "none", "none"],
+      ["scratch", "none", "scratch", "none"]
+    ],
+    "q_0_1": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Fluorite' and the COLUMN is 'Quartz'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Fluorite, column Quartz), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_0_1": "none",
+    "q_0_2": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Fluorite' and the COLUMN is 'Gypsum'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Fluorite, column Gypsum), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_0_2": "scratch",
+    "q_0_3": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Fluorite' and the COLUMN is 'Orthoclase'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Fluorite, column Orthoclase), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_0_3": "none",
+    "q_1_0": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Quartz' and the COLUMN is 'Fluorite'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Quartz, column Fluorite), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_1_0": "scratch",
+    "q_1_2": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Quartz' and the COLUMN is 'Gypsum'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Quartz, column Gypsum), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_1_2": "scratch",
+    "q_1_3": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Quartz' and the COLUMN is 'Orthoclase'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Quartz, column Orthoclase), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_1_3": "scratch",
+    "q_2_0": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Gypsum' and the COLUMN is 'Fluorite'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Gypsum, column Fluorite), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_2_0": "none",
+    "q_2_1": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Gypsum' and the COLUMN is 'Quartz'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Gypsum, column Quartz), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_2_1": "none",
+    "q_2_3": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Gypsum' and the COLUMN is 'Orthoclase'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Gypsum, column Orthoclase), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_2_3": "none",
+    "q_3_0": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Orthoclase' and the COLUMN is 'Fluorite'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Orthoclase, column Fluorite), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_3_0": "scratch",
+    "q_3_1": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Orthoclase' and the COLUMN is 'Quartz'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Orthoclase, column Quartz), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_3_1": "none",
+    "q_3_2": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Orthoclase' and the COLUMN is 'Gypsum'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Orthoclase, column Gypsum), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_3_2": "scratch",
+    "q_diag": "This is a 4x4 mineral scratch-test grid. Look ONLY at the single cell where the ROW is 'Fluorite' and the COLUMN is 'Fluorite'. A cell contains a clear dark-red diagonal SCRATCH score line if the row mineral scratched the column mineral, otherwise it is a clean cell with no red line. In that one cell (row Fluorite, column Fluorite), is there a red scratch line or not? Answer with only one word: 'scratch' or 'none'.",
+    "a_diag": "none",
+    "enforce_notext": true,
+    "q_notext": "Ignoring the mineral NAMES printed in the row and column headers and the grid's own title, does this image contain any OTHER printed answer text -- for example words like 'harder', 'softer', hardness NUMBERS (2, 4, 6, 7), a ranked list, or a printed answer key -- overlaid anywhere on or beside the grid? Answer yes if you can see any such extra answer text or numbers, no if the only text is the grid title and the mineral-name headers. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "matrix_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of test squares in the middle of the grid -- the rectangle covering every square where a scratch mark could be drawn, taken together as one shape; not the mineral names printed across the top, not the mineral names printed down the left, and not the title above the table",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "scratch_grid_plan",
+          "args": ["image", "anc", "reference.order"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one square cut out of a hand-drawn worksheet grid. Is there a dark red diagonal line scored across this square? Answer with only one word: scratch if a red line is drawn here, or none if the square is clean.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "read_scratch_grid",
+          "args": ["rd", "reference.order", "reference.matrix"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "ag_paint",
+          "args": ["pl", "res.oks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "compare": "res.c_0_1",
+          "to": "reference.a_0_1",
+          "out": "f_0_1"
+        },
+        {
+          "compare": "res.c_0_2",
+          "to": "reference.a_0_2",
+          "out": "f_0_2"
+        },
+        {
+          "compare": "res.c_0_3",
+          "to": "reference.a_0_3",
+          "out": "f_0_3"
+        },
+        {
+          "compare": "res.c_1_0",
+          "to": "reference.a_1_0",
+          "out": "f_1_0"
+        },
+        {
+          "compare": "res.c_1_2",
+          "to": "reference.a_1_2",
+          "out": "f_1_2"
+        },
+        {
+          "compare": "res.c_1_3",
+          "to": "reference.a_1_3",
+          "out": "f_1_3"
+        },
+        {
+          "compare": "res.c_2_0",
+          "to": "reference.a_2_0",
+          "out": "f_2_0"
+        },
+        {
+          "compare": "res.c_2_1",
+          "to": "reference.a_2_1",
+          "out": "f_2_1"
+        },
+        {
+          "compare": "res.c_2_3",
+          "to": "reference.a_2_3",
+          "out": "f_2_3"
+        },
+        {
+          "compare": "res.c_3_0",
+          "to": "reference.a_3_0",
+          "out": "f_3_0"
+        },
+        {
+          "compare": "res.c_3_1",
+          "to": "reference.a_3_1",
+          "out": "f_3_1"
+        },
+        {
+          "compare": "res.c_3_2",
+          "to": "reference.a_3_2",
+          "out": "f_3_2"
+        },
+        {
+          "all": [
+            "f_0_1",
+            "f_0_2",
+            "f_0_3",
+            "f_1_0",
+            "f_1_2",
+            "f_1_3",
+            "f_2_0",
+            "f_2_1",
+            "f_2_3",
+            "f_3_0",
+            "f_3_1",
+            "f_3_2"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "matrix_partial",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of test squares in the middle of the grid -- the rectangle covering every square where a scratch mark could be drawn, taken together as one shape; not the mineral names printed across the top, not the mineral names printed down the left, and not the title above the table",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "scratch_grid_plan",
+          "args": ["image", "anc", "reference.order"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one square cut out of a hand-drawn worksheet grid. Is there a dark red diagonal line scored across this square? Answer with only one word: scratch if a red line is drawn here, or none if the square is clean.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "read_scratch_grid",
+          "args": ["rd", "reference.order", "reference.matrix"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "ag_paint",
+          "args": ["pl", "res.oks"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "compare": "res.c_0_1",
+          "to": "reference.a_0_1",
+          "out": "pf_0_1"
+        },
+        {
+          "compare": "res.c_0_2",
+          "to": "reference.a_0_2",
+          "out": "pf_0_2"
+        },
+        {
+          "compare": "res.c_0_3",
+          "to": "reference.a_0_3",
+          "out": "pf_0_3"
+        },
+        {
+          "compare": "res.c_1_0",
+          "to": "reference.a_1_0",
+          "out": "pf_1_0"
+        },
+        {
+          "compare": "res.c_1_2",
+          "to": "reference.a_1_2",
+          "out": "pf_1_2"
+        },
+        {
+          "compare": "res.c_1_3",
+          "to": "reference.a_1_3",
+          "out": "pf_1_3"
+        },
+        {
+          "compare": "res.c_2_0",
+          "to": "reference.a_2_0",
+          "out": "pf_2_0"
+        },
+        {
+          "compare": "res.c_2_1",
+          "to": "reference.a_2_1",
+          "out": "pf_2_1"
+        },
+        {
+          "compare": "res.c_2_3",
+          "to": "reference.a_2_3",
+          "out": "pf_2_3"
+        },
+        {
+          "compare": "res.c_3_0",
+          "to": "reference.a_3_0",
+          "out": "pf_3_0"
+        },
+        {
+          "compare": "res.c_3_1",
+          "to": "reference.a_3_1",
+          "out": "pf_3_1"
+        },
+        {
+          "compare": "res.c_3_2",
+          "to": "reference.a_3_2",
+          "out": "pf_3_2"
+        },
+        {
+          "minimum": [
+            "pf_0_1",
+            "pf_0_2",
+            "pf_0_3",
+            "pf_1_0",
+            "pf_1_2",
+            "pf_1_3",
+            "pf_2_0",
+            "pf_2_1",
+            "pf_2_3",
+            "pf_3_0",
+            "pf_3_1",
+            "pf_3_2"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "diagonal_blank",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of test squares in the middle of the grid -- the rectangle covering every square where a scratch mark could be drawn, taken together as one shape; not the mineral names printed across the top, not the mineral names printed down the left, and not the title above the table",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "scratch_grid_plan",
+          "args": ["image", "anc", "reference.order"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one square cut out of a hand-drawn worksheet grid. Is there a dark red diagonal line scored across this square? Answer with only one word: scratch if a red line is drawn here, or none if the square is clean.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "read_scratch_grid",
+          "args": ["rd", "reference.order", "reference.matrix"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "ag_paint",
+          "args": ["pl", "[res.oks[0]]", "idx=[0]"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        },
+        {
+          "compare": "res.c_0_0",
+          "to": "reference.a_diag",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static"
+}

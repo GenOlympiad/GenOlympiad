@@ -1,0 +1,249 @@
+{
+  "id": "count_egg_tray",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic straight-down overhead photograph of a single grey moulded 30-cup egg tray (a 5-by-6 array of round cups) resting on a plain table. EXACTLY 22 of the 30 cups each hold ONE bright-yellow ball, and the remaining cups are EMPTY (showing the bare grey cup). The 22 filled cups are spread irregularly across the tray -- never a full filled row or a full filled column, and there are clearly some empty cups mixed in. There must be EXACTLY 22 filled cups out of the 30 -- not 21, not 23, exactly 22. No text, no numerals on or around the tray.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show 30-cup grey egg tray of which a number of cups hold a yellow ball and the rest are empty? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 22,
+    "q": "How many cups of this egg tray are filled (holding a yellow ball)? Count each filled cup one by one, ignoring the empty cups. Answer with the integer number of filled cups only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "Look at the small round things sitting in this picture. Is every one of them a yellow ball resting in a cup of the tray, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "d2_q_arrange": "Look at the cups in this picture. Are they arranged in neat straight rows and columns (a grid), rather than scattered or staggered? Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them fully visible and clearly separate from its neighbours -- none hidden behind another, none merged or overlapping into a single blob, none cut off by the edge of the frame -- so that each one could be counted individually? Answer yes if every object is fully visible and separate, no if objects overlap, merge, are hidden or are cut off. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "filled_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "a bright-yellow ball sitting in one cup of the egg tray",
+          "context": "the grey moulded egg tray of round cups",
+          "retries": 6,
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Is there a bright-yellow ball in this picture? Answer yes if a yellow ball is present, no if the picture shows only an empty grey cup or the bare table. Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "count_confirmed_stacks",
+          "args": ["cr", "bx"],
+          "code": {
+            "inline": "n_yes_code"
+          },
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tray_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show a moulded tray of round cups where some cups hold a bright yellow ball and other cups are empty? Answer with the single word yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one small round thing sitting in the picture",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "form_box"
+        },
+        {
+          "fail_if": ["form_box.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE yellow ball resting in a cup of the tray, rather than some other object, a shapeless blob or bare tray? Answer yes or no only.",
+          "boxes": "form_box",
+          "out": "form_chk"
+        },
+        {
+          "fail_if": ["form_chk.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["form_chk"],
+          "out": "cnt_form"
+        },
+        {
+          "compare": "cnt_form.n",
+          "to": "cnt_form.asked",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_arrangement",
+      "weight": 0.8,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_arrange",
+          "out": "g1"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g1",
+          "out": "yn1"
+        },
+        {
+          "compare": "yn1",
+          "to": "yes",
+          "out": "f1"
+        },
+        {
+          "ask": "Look at the overall layout of the many similar items in this image. Are their positions irregular and unaligned -- i.e. NOT organized into neat rows, columns, a grid, or one regular repeating pattern? Judge the layout as a whole. Answer yes or no only.",
+          "out": "g2"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g2",
+          "out": "yn2"
+        },
+        {
+          "compare": "yn2",
+          "to": "yes",
+          "out": "f2"
+        },
+        {
+          "any": ["f1", "f2"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an item being counted that is hidden behind another, merged into a blob, or cut off by the edge of the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sw1"
+        },
+        {
+          "fail_if": ["sw1.unreadable"]
+        },
+        {
+          "compare": "sw1.clean",
+          "to": "yes",
+          "out": "f1"
+        },
+        {
+          "read": "boxes",
+          "target": "a clump where several of the counted items merge so badly they cannot be told apart",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sw2"
+        },
+        {
+          "fail_if": ["sw2.unreadable"]
+        },
+        {
+          "compare": "sw2.clean",
+          "to": "yes",
+          "out": "f2"
+        },
+        {
+          "any": ["f1", "f2"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a yellow ball sitting in an egg-tray cup",
+  "count_total": "reference.n"
+}

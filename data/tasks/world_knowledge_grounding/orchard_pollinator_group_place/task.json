@@ -1,0 +1,84 @@
+{
+  "id": "orchard_pollinator_group_place",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The nursery foreman has to file one photograph with the planting record before the crew moves on, so the row was shot down its length with the plan propped at the head.\n\nA row of apple maidens stands along the headland with a numbered wooden tag driven at every stake, planted or not, and a variety label tied to each tree that went in. The planting plan is propped on the barrow. It sets Greensleeves at stakes 1, 5 and 11, Scrumptious at stakes 3, 8 and 9, Bramley's Seedling at stake 2 and Blenheim Orange at stake 6, and leaves stakes 4, 7 and 10 standing open. A note across the foot reads: the crab labelled Golden Hornet goes at whichever open stake serves every tree in the row that cannot set a crop on its own pollen, pollen carrying no further than two stakes either way.\n\nWhich open stake took the crab is what the plan does not fill in.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a newly planted row of young fruit trees with numbered wooden tags at their feet and a planting plan propped at the head of the row Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "consecutive_from_one"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Find the tree whose variety label reads Golden Hornet. Read the number painted on the wooden tag driven at its foot and write that number.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "3.5", "4.5"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Go down the row from the head and read the number painted on each wooden tag in turn, whether or not a tree stands at it. Write the numbers in the order you read them.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "consecutive_from_one",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

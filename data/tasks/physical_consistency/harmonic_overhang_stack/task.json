@@ -1,0 +1,175 @@
+{
+  "id": "harmonic_overhang_stack",
+  "axis": "physical_consistency",
+  "prompt": "A photograph from a school physics open evening, taken at the bench where visitors are invited to see how far a stack can lean.\n\nSeven identical hardwood blocks are stacked on the bench, one on another, each shifted towards the right of the block below it, and the stack is standing, not falling. The blocks are the department's numbered set: the number 1 is painted large on the face of the block lying on the bench, 2 on the block above it, and so on up to 7 on the block at the top. The camera is square on to the side of the stack at the height of its middle, and the whole stack and a good length of bench are in the frame.\n\nThe point of the display is how far out a stack of loose blocks can reach and still stand, so the stack has to lean as far to the right as seven blocks stacked this way really can while each block still rests on the one below it. How far each block is shifted is the demonstrator's setting -- I am deliberately not telling you any shift and I am deliberately not telling you how far the top of the stack ends up. No ruler, no dimension line, no arrow and no note goes into the picture: apart from the seven painted numbers there is no text in the frame. The seven numbers are large enough to read and each block's two ends can be told apart.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a stack of rectangular blocks resting one on another on a bench, each with a number painted on it? A photograph, a demonstration shot or a still life all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "past_pattern": "1:n,2:n,3:n,4:n,5:n,6:n,7:y",
+    "n_blocks": 7
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_top_block_has_reached_clear_of_the_bottom_block",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a wooden block with a large painted number on its face",
+          "sweep": true,
+          "out": "ov_r",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["ov_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the number painted on this block. Write digits only.",
+          "boxes": "ov_r",
+          "pad": 0.2,
+          "out": "ov_k"
+        },
+        {
+          "fail_if": ["ov_k.unreadable"]
+        },
+        {
+          "read_crop": "Does the left-hand end of this block stand further to the right than the right-hand end of the block marked 1? Answer yes or no only.",
+          "boxes": "ov_r",
+          "pad": 1.4,
+          "out": "ov_q"
+        },
+        {
+          "fail_if": ["ov_q.unreadable"]
+        },
+        {
+          "run": "overhang_pattern_matches",
+          "args": ["ov_k", "ov_q", "reference.past_pattern"],
+          "out": "ov_s"
+        },
+        {
+          "compare": "ov_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_block_still_lies_flat_on_the_one_below",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a wooden block with a large painted number on its face",
+          "sweep": true,
+          "out": "fl_r",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["fl_r.unreadable"]
+        },
+        {
+          "read_crop": "Look at the wooden block in this cut-out. Name the way it lies, using one word from this list: square (its long face runs straight across the picture and neither end is lifted) or tipped (one end of it stands above the other). Write that one word and nothing else.",
+          "boxes": "fl_r",
+          "pad": 0.3,
+          "out": "fl_q"
+        },
+        {
+          "fail_if": ["fl_q.unreadable"]
+        },
+        {
+          "run": "map_answer_to_token",
+          "args": ["fl_q", "[[['square'],'yes'],[['tipped'],'no']]"],
+          "out": "fl_q__mapped"
+        },
+        {
+          "run": "count_level_blocks",
+          "args": ["fl_q__mapped", "reference.n_blocks"],
+          "out": "fl_s"
+        },
+        {
+          "compare": "fl_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "all_seven_numbered_blocks_are_in_the_stack",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a wooden block with a large painted number on its face",
+          "sweep": true,
+          "out": "box_read",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole block, rather than part of one or more than one? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_blocks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_ruler_or_dimension_line_was_added",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a ruler, a dimension line, an arrow or a note added to the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

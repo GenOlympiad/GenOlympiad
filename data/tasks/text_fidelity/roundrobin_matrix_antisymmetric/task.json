@@ -1,0 +1,113 @@
+{
+  "id": "roundrobin_matrix_antisymmetric",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed round-robin RESULTS GRID titled 'HARBOUR CHESS CLUB' (Autumn Round-Robin -- Results Grid). The 8 players ADA, BEN, CAI, DEV, ELI, FAY, Gus, HAL are listed both down the left as rows and across the top as columns, forming an 8x8 square grid. Each cell at (row R, column C) prints R's score minus C's score in their one game, written 'a-b'. CRITICAL mirror rule: the grid must be antisymmetric about the diagonal -- if the cell for row ADA / column FAY reads 'a-b', then the cell for row FAY / column ADA must read the reversed 'b-a' (the SAME game seen from the other side), and likewise for row CAI / column GUS vs row GUS / column CAI. The diagonal cells (a player versus itself) are blanked with '--'. Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a round-robin results grid where each cell prints the score of the row player versus the column player. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 8,
+    "q_ij0": "In the results grid, read the cell at row 'ADA' and column 'FAY'. It prints a score 'a-b'. Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just that 'a-b' text.",
+    "q_ji0": "In the results grid, read the cell at row 'FAY' and column 'ADA'. It prints a score 'a-b'. Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just that 'a-b' text.",
+    "q_ij1": "In the results grid, read the cell at row 'CAI' and column 'GUS'. It prints a score 'a-b'. Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just that 'a-b' text.",
+    "q_ji1": "In the results grid, read the cell at row 'GUS' and column 'CAI'. It prints a score 'a-b'. Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just that 'a-b' text.",
+    "q_count": "How many players are listed as ROW labels down the left side of this results grid? Whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "roundrobin_matrix_antisymmetric_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_ij0",
+          "out": "ij0"
+        },
+        {
+          "fail_if": ["ij0.unreadable"]
+        },
+        {
+          "ask": "reference.q_ji0",
+          "out": "ji0"
+        },
+        {
+          "fail_if": ["ji0.unreadable"]
+        },
+        {
+          "ask": "reference.q_ij1",
+          "out": "ij1"
+        },
+        {
+          "fail_if": ["ij1.unreadable"]
+        },
+        {
+          "ask": "reference.q_ji1",
+          "out": "ji1"
+        },
+        {
+          "fail_if": ["ji1.unreadable"]
+        },
+        {
+          "run": "results_mirror",
+          "args": ["ij0", "ji0", "ij1", "ji1"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one player name printed as a row label down the left-hand edge of the results grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole printed player name used as a row label, rather than a score cell or bare paper? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 1.9,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

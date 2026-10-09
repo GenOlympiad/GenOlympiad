@@ -1,0 +1,148 @@
+{
+  "id": "snake_grid_position",
+  "axis": "latent_computation",
+  "prompt": "A clean, straight-on diagram of a 6-by-6 square GRID board (a game board of empty square cells). The columns are labelled with letters A, B, C ... from LEFT to right along the top, and the rows are numbered 1, 2, 3 ... from the TOP downward along the left side, so each cell has a label like column-letter + row-number (for example B3 is column B, row 3). A single SNAKE sits on the board; only its HEAD matters and it occupies exactly one cell.\n\nThe snake's head starts on cell C4. It then makes this ordered sequence of one-cell steps, IN THIS EXACT ORDER: UP, UP, RIGHT, RIGHT, RIGHT, RIGHT, DOWN, DOWN, DOWN, LEFT. UP means one cell toward row 1 (upward), DOWN means one cell toward the bottom row, LEFT means one cell toward column A, RIGHT means one cell toward the last column.\n\nWALL RULE: the board has solid walls. If a step would take the head OFF the edge of the board, that step is BLOCKED -- the head simply stays where it is for that step (it does NOT wrap around to the opposite side). Apply every step in order, honouring the wall rule.\n\nWork out which single cell the head ends on after the whole sequence, then draw the board with the snake's head marker filling exactly that one cell and every other cell left empty. Do NOT print the start cell, the move list, the answer cell label, or any words or numbers inside the cells -- the only thing that shows the final position is which single cell the head marker fills on the labelled grid.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn, and never mind whether the details are right or wrong. Does this picture show a square grid game board with lettered columns and numbered rows, with a snake head marker on it? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      ["empty", "empty", "empty", "empty", "empty", "empty"],
+      ["empty", "empty", "empty", "empty", "empty", "empty"],
+      ["empty", "empty", "empty", "empty", "empty", "empty"],
+      ["empty", "empty", "empty", "empty", "empty", "empty"],
+      ["empty", "empty", "empty", "empty", "head", "empty"],
+      ["empty", "empty", "empty", "empty", "empty", "empty"]
+    ],
+    "n_rows": 6,
+    "n_cols": 6,
+    "head_label": "E5",
+    "head_row": "5",
+    "q_grid": "Read the board cell by cell. For every cell, say whether it holds the snake's HEAD marker or is EMPTY. Answer 'head' for the single cell that holds the snake head marker and 'empty' for every other cell. Read the grid row by row from the TOP row (row 1) down to the bottom row, and within each row from the left column (A) to the right. Judge purely by which cell is filled with the head marker.",
+    "q_headcell": "Which single cell of the grid contains the snake's HEAD marker? Give the cell label as the column LETTER followed by the row NUMBER. Read the column letter from the top labels and the row number from the left labels. Answer with just that one cell label.",
+    "q_headrow": "Using the row numbers printed along the LEFT edge of the board, which ROW is the snake's HEAD marker in? Judge purely by the marker's position against the printed row numbers. Answer with just the row number.",
+    "q_nrows": "How many rows of cells does this square grid board have? Answer with a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "head_cell",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_headcell",
+          "out": "v"
+        },
+        {
+          "fail_if": ["v.unreadable"]
+        },
+        {
+          "compare": "v",
+          "to": "reference.head_label",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "head_row",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_headrow",
+          "out": "v"
+        },
+        {
+          "fail_if": ["v.unreadable"]
+        },
+        {
+          "compare": "v",
+          "to": "reference.head_row",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "row_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square cell in the left-hand column of the grid board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nt"
+        },
+        {
+          "fail_if": ["box_nt.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole square cell of the board, rather than bare background or only part of a cell? Answer yes or no only.",
+          "boxes": "box_nt",
+          "out": "crop_nt"
+        },
+        {
+          "fail_if": ["crop_nt.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nt"],
+          "out": "cnt_nt"
+        },
+        {
+          "compare_band": "cnt_nt.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "board_form",
+      "weight": 0.6,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show a square grid game board (lettered columns, numbered rows) with a single snake head marker filling exactly one cell? Answer yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

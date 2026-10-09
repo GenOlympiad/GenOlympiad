@@ -1,0 +1,200 @@
+{
+  "id": "langton_ant_steps",
+  "axis": "latent_computation",
+  "prompt": "A board-game strategy magazine puzzle diagram. Simulate LANGTON'S ANT on a 7x7 square grid for exactly 12 steps and render the final board. All 49 cells start WHITE. The ant starts on the centre cell (row 4, column 4, counting from the top-left), facing UP (north). At each step: if the ant's current cell is WHITE, turn 90 degrees RIGHT, flip that cell to BLACK, then move forward one cell; if the current cell is BLACK, turn 90 degrees LEFT, flip that cell to WHITE, then move forward one cell. Do this for 12 steps. Render ONLY the resulting 7x7 grid as sharp square cells with thin grey gridlines, each cell solid BLACK or solid WHITE according to its final colour. Do not draw the ant, arrows, coordinates, or any text -- only the 7x7 black/white grid.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show board-game strategy magazine puzzle diagram of Langton's Ant on a 7x7 grid after twelve steps? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 7,
+    "steps": 12,
+    "grid": [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 1, 1, 0, 0, 0],
+      [0, 0, 0, 1, 1, 0, 0],
+      [0, 1, 1, 1, 1, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0]
+    ],
+    "n_black": 8,
+    "q_form": "Look at this image. Is it a square grid of cells that are each solid black or solid white? Answer ONLY 'yes' or 'no'."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "final_grid",
+      "weight": 3.0,
+      "score": "fg.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed grid of squares: box the region running from the outer corner of the top-left square right down to the outer corner of the bottom-right square",
+          "expected_n": 1,
+          "out": "gb"
+        },
+        {
+          "fail_if": ["gb.unreadable"]
+        },
+        {
+          "run": "split_board_squares",
+          "args": ["gb", "reference.n"],
+          "out": "cs"
+        },
+        {
+          "fail_if": ["cs.degenerate"]
+        },
+        {
+          "read_crop": "This is one small square patch cut from a grid. Is this patch solid BLACK or solid WHITE? Judge by the colour covering the middle of the patch, and ignore any thin edge of a neighbouring square showing at its border. Answer with exactly one word: black or white.",
+          "boxes": "cs",
+          "out": "cellreads"
+        },
+        {
+          "fail_if": ["cellreads.unreadable"]
+        },
+        {
+          "run": "black_square_overlap",
+          "args": ["cellreads", "reference.n", "reference.grid"],
+          "out": "fg"
+        },
+        {
+          "fail_if": ["fg.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "d1_grid_rows",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square grid cell in the left-hand column of the grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole square cell of the grid rather than several cells together or only part of a cell? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_black_cells",
+      "weight": 0.75,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one square grid cell filled solid black",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole square cell filled solid black rather than a white cell or only part of a cell? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_black",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_ant_drawn",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a drawn ant, an arrow, a letter, a number or any other mark on the grid besides plain black and white cells",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

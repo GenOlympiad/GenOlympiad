@@ -1,0 +1,101 @@
+{
+  "id": "lighthouse_characteristic",
+  "axis": "symbolic_systems",
+  "prompt": "A clean nautical-chart margin panel that DIAGRAMS a lighthouse light characteristic as a horizontal timing strip over exactly one cycle. The light shows the characteristic Flashing group of three (Fl(3)) with a ten-second period: three equal brief flashes, each drawn as a yellow block, separated by two short equal dark gaps, followed by ONE long dark eclipse that is clearly the longest dark span, before the cycle repeats. Put a thin time axis under the strip. Bright flashes in yellow, darkness in white, straight-on, no numbers written on the strip.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show nautical chart margin panel diagramming a lighthouse light-characteristic timing strip (yellow flash blocks over a dark cycle) beside the chart symbol, straight-on? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "characteristic": "Fl(3) 10s",
+    "n_flashes": 3,
+    "long_eclipse_last": true,
+    "q_flashes": "This timing strip shows a navigation light characteristic: yellow blocks are light-ON flashes, white gaps are darkness. How many separate flashes (yellow blocks) are there in one cycle? Answer the integer only.",
+    "q_period": "This timing strip shows a navigation light's characteristic over one cycle: yellow blocks are the light ON (a flash), white spans are darkness. Is the LAST dark span (after the final flash) clearly the LONGEST dark span in the cycle (a long eclipse)? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "flash_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "solid yellow block inside the horizontal timing strip (each yellow rectangle is one light-ON flash)",
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "read_crop": "Is there a YELLOW block in this picture? Answer with the single word yes or no only.",
+          "boxes": "fb",
+          "out": "fa"
+        },
+        {
+          "fail_if": ["fa.unreadable"]
+        },
+        {
+          "run": "count_yes_answers",
+          "args": ["fa"],
+          "out": "nf"
+        },
+        {
+          "compare_tolerance": "nf.n",
+          "to": "reference.n_flashes",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "long_eclipse",
+      "weight": 1.0,
+      "score": "ec.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "solid yellow block inside the horizontal timing strip (each yellow rectangle is one light-ON flash)",
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the horizontal timing strip itself -- the long thin bar that holds the yellow flash blocks: draw ONE box from the strip's own left end to its own right end and from its top edge to its bottom edge, so every yellow block and every white gap between and beside them lies inside it (not the panel border round the whole diagram, not the time axis drawn under it, and not the chart light symbol)",
+          "expected_n": 1,
+          "out": "st"
+        },
+        {
+          "fail_if": ["st.unreadable"]
+        },
+        {
+          "run": "long_eclipse_score",
+          "args": ["fb", "st", "reference.long_eclipse_last"],
+          "out": "ec"
+        },
+        {
+          "fail_if": ["ec.degenerate"]
+        }
+      ]
+    }
+  ]
+}

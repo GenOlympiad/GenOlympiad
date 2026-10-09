@@ -1,0 +1,136 @@
+{
+  "id": "shadow_length_sun_height",
+  "axis": "physical_consistency",
+  "prompt": "A photorealistic outdoor PHOTOGRAPH of a single straight vertical wooden pole standing on flat open ground on a sunny day, casting one dark shadow along the ground. The sun sits LOW in the sky at an elevation angle of about 26.6 degrees above the horizon. Obey real shadow geometry: at that low sun angle the pole's cast shadow must be LONG -- almost exactly TWICE the height of the pole (shadow length approximately 2.0 times the pole's height), because the shadow length equals the pole height divided by the tangent of the sun's elevation. Draw the pole vertical and its long shadow stretching flat along the ground away from the sun. One real photograph, flat empty ground, sharp focus, no text, labels, arrows, or annotations.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show outdoor photo of one vertical pole at a stated 26.6-degree sun elevation whose cast shadow is a stated exact multiple of the pole height? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "sun_elev_deg": 26.57,
+    "ratio": 2.0,
+    "shadow_q_count": "How many separate shadow patches do the pole cast on the ground? Answer with the number only.",
+    "shadow_q_attached": "Does each upright object in this image cast exactly ONE shadow, attached at its base on the ground (no extra stray, floating, doubled or detached shadows)? Answer yes or no only.",
+    "shadow_n": 1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shadow_length_ratio",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "single upright vertical pole standing on the flat ground -- the post itself, from its top end down to where it meets the ground, NOT the shadow it casts",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "dark shadow the pole casts along the ground -- the shadow patch alone, boxed so it reaches from the pole's foot where the shadow starts out to the far TIP where the shadow fades into the sunlit ground, with the whole dark patch inside edge to edge; the box must not take in the upright pole and must not stop short of the shadow's tip.",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "sh"
+        },
+        {
+          "fail_if": ["sh.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "frame"
+        },
+        {
+          "run": "shadow_ratio",
+          "args": ["pl", "sh", "frame"],
+          "out": "sr"
+        },
+        {
+          "fail_if": ["sr.no_read"]
+        },
+        {
+          "compare_band": "sr.ratio",
+          "to": "reference.ratio",
+          "core": 0.25,
+          "margin": 0.6,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_shadow_coherence",
+      "weight": 0.0,
+      "not_scored": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one separate dark shadow patch cast on the ground by the pole -- one box per shadow patch, taking in that whole dark patch from the pole's foot out to its far tip; count a rectangle only if it holds a dark shadow lying on the sunlit ground; do not box the upright pole, the sky, bright sunlit ground, or a dark patch of soil, grass or stone that is not a shadow.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_scount"
+        },
+        {
+          "fail_if": ["box_scount.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole dark shadow patch lying on the ground, rather than bare sunlit ground or only part of a shadow? Answer yes or no only.",
+          "boxes": "box_scount",
+          "out": "crop_scount"
+        },
+        {
+          "fail_if": ["crop_scount.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_scount"],
+          "out": "cnt_scount"
+        },
+        {
+          "run": "shadow_count_matches",
+          "args": ["cnt_scount.n", "reference.shadow_n"],
+          "out": "f_count"
+        },
+        {
+          "read": "boxes",
+          "target": "an extra or detached shadow on the ground -- a floating shadow, or a second shadow from the same upright object",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_a"
+        },
+        {
+          "fail_if": ["sweep_a.unreadable"]
+        },
+        {
+          "compare": "sweep_a.clean",
+          "to": "yes",
+          "out": "f_attach"
+        },
+        {
+          "any": ["f_count", "f_attach"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

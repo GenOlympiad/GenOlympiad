@@ -1,0 +1,108 @@
+{
+  "id": "satellite_dish_bearing",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A clean rooftop scene at a rooftop in Berlin (northern hemisphere), with a home SATELLITE DISH and a labelled COMPASS ROSE (N, NE, E, SE, S, SW, W, NW). Geostationary TV satellites sit above the EQUATOR, so the dish must be aimed toward the equator. From this hemisphere that means the dish face points roughly SOUTH (toward the equator). Aim the dish that way and add a small arrow showing its aim direction so it matches the compass rose. Do NOT point the dish straight up at the sky; aim it toward the equator. Do NOT print the direction as text.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a rooftop scene with a satellite dish and a labelled compass rose? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "toward_deg": 180,
+    "q_aim": "This rooftop scene has a labelled COMPASS ROSE (N, NE, E, SE, S, SW, W, NW) and a satellite DISH with a red arrow showing which way the dish FACE is aimed. Matching the arrow to the compass rose, toward which compass direction is the dish aimed? Answer with one of: N, NE, E, SE, S, SW, W, NW."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "dish_bearing",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "reference.q_aim",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "extract": "(?i)(?<!['’])\\b(NE|NW|SE|SW|N|E|S|W)\\b",
+          "value": "a",
+          "out": "oct",
+          "pick": "last"
+        },
+        {
+          "fail_if": ["oct.none"]
+        },
+        {
+          "run": "compass_to_degrees",
+          "value": "oct",
+          "out": "deg"
+        },
+        {
+          "fail_if": ["deg.none"]
+        },
+        {
+          "compare_compass": "deg",
+          "to": "reference.toward_deg",
+          "core": 45,
+          "margin": 45,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "dish_bearing_confirm",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_aim",
+          "out": "a"
+        },
+        {
+          "fail_if": ["a.unreadable"]
+        },
+        {
+          "extract": "(?i)(?<!['’])\\b(NE|NW|SE|SW|N|E|S|W)\\b",
+          "value": "a",
+          "out": "oct",
+          "pick": "last"
+        },
+        {
+          "fail_if": ["oct.none"]
+        },
+        {
+          "run": "compass_to_degrees",
+          "value": "oct",
+          "out": "deg"
+        },
+        {
+          "fail_if": ["deg.none"]
+        },
+        {
+          "compare_compass": "deg",
+          "to": "reference.toward_deg",
+          "core": 45,
+          "margin": 45,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "source": "Geostationary satellites orbit above the equator, so a satellite dish points toward the equator.",
+  "grounding": "static"
+}

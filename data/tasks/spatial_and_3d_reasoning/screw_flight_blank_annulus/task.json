@@ -1,0 +1,122 @@
+{
+  "id": "screw_flight_blank_annulus",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A photograph of one cutting sheet from a conveyor works, lying on the nesting table, taken face on and big enough to read.\n\nThe job is the flights of a screw conveyor. The finished screw is 400 mm across the outside, runs on a shaft 114 mm across, and advances 400 mm in one turn. Each flight is one full turn, cut from 4 mm plate and then pulled out on the press into its helical shape.\n\nThe sheet has to show one flight as it comes off the plate before it is pulled, together with the finished flight on its shaft alongside for reference. Under the blank the sheet carries three figures on their own labelled lines, in this wording: BLANK OUTSIDE DIAMETER, BLANK INSIDE DIAMETER and GAP ANGLE.\n\nThose three figures are the whole job and I am not giving you any of them. Nothing else belongs on the sheet: no working, no formula, and no dimension beyond the finished sizes I have given and the three figures on the blank.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a technical sheet carrying a ring-shaped flat piece and a spiral piece on a rod, with a few labelled figures under them? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "blank_verdict": "grown and open",
+    "lead_mm": 400,
+    "q_line_cert": "Does this cut-out show one labelled line of figures under the flat piece, rather than a drawing? Answer yes or no only.",
+    "q_line_copy": "This cut-out is one printed line. Copy the wording printed on that line, then a single space, then the figure printed after it. Ignore anything printed on a line above or below it. Write nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_blank_is_larger_than_the_finished_flight_on_both_diameters_and_is_open",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a labelled figure line under the flat blank",
+          "sweep": true,
+          "out": "bk_ring"
+        },
+        {
+          "fail_if": ["bk_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_line_cert",
+          "boxes": "bk_ring",
+          "pad": 0.25,
+          "out": "bk_cert"
+        },
+        {
+          "fail_if": ["bk_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_line_copy",
+          "boxes": "bk_ring",
+          "pad": 0.25,
+          "out": "bk_txt"
+        },
+        {
+          "fail_if": ["bk_txt.unreadable"]
+        },
+        {
+          "run": "check_blank_sizes",
+          "args": ["bk_cert", "bk_txt"],
+          "out": "bk_v"
+        },
+        {
+          "compare": "bk_v.val",
+          "to": "reference.blank_verdict",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_three_figures_pull_out_to_the_lead_the_works_ordered",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a labelled figure line under the flat blank",
+          "sweep": true,
+          "out": "pl_ring"
+        },
+        {
+          "fail_if": ["pl_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_line_cert",
+          "boxes": "pl_ring",
+          "pad": 0.25,
+          "out": "pl_cert"
+        },
+        {
+          "fail_if": ["pl_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_line_copy",
+          "boxes": "pl_ring",
+          "pad": 0.25,
+          "out": "pl_txt"
+        },
+        {
+          "fail_if": ["pl_txt.unreadable"]
+        },
+        {
+          "run": "pulled_lead",
+          "args": ["pl_cert", "pl_txt"],
+          "out": "pl_v"
+        },
+        {
+          "compare_band": "pl_v.val",
+          "to": "reference.lead_mm",
+          "core_abs": 25.0,
+          "margin_abs": 90.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

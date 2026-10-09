@@ -1,0 +1,155 @@
+{
+  "id": "knight_tour_endpoint",
+  "axis": "latent_computation",
+  "prompt": "A clear straight-on top-down photo of a standard 8x8 chessboard at a chess club, files labelled a to h left to right and ranks 1 to 8 bottom to top, with a single white knight piece. The knight starts on square b1. It then makes exactly six legal knight moves in order, each move shifting it by (files, ranks): +1 file +2 ranks; then +2 files +1 rank; then -1 file +2 ranks; then -2 files +1 rank; then +2 files -1 rank; then +1 file +2 ranks. Every move is a legal L shaped knight jump that stays on the board. Render the board with a faint dot marking each square the knight visited along the way, and the white knight piece standing on its correct FINAL square. Do not print coordinates, arrows, or any move list.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show chess-club 8x8 board, overhead, a single white knight on its final square with faint dots on visited squares? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "end_square": "e8",
+    "end_file": "e",
+    "end_rank": 8,
+    "n_dots": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "endpoint_square",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "This is a top-down 8x8 chessboard, files a-h left to right, ranks 1-8 bottom to top, with a single white knight piece standing on one square. Read which square the knight is on. Answer with the file letter and rank number only. Do not explain. Read ONLY what is actually drawn in the image as the final state. Do NOT simulate, replay, or apply the rules yourself -- report exactly what the picture shows, even if it looks wrong.",
+          "out": "ka",
+          "retries": null
+        },
+        {
+          "fail_if": ["ka.unreadable"]
+        },
+        {
+          "run": "end_square_named",
+          "args": ["ka", "reference.end_square"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "start_square",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "On the chessboard, the knight's starting square is b1. Is there a marking (faint dot or the piece's origin) at square b1 in the bottom-left area, file b rank 1? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_visited",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one faint dot marking a visited square, on a square where no chess piece stands",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole faint dot marked on a chessboard square, with no chess piece standing on that square? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_dots",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_coords",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow or a written move list on the board, or any printed text on the board face away from its edge labels",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "single_knight",
+      "weight": 0.225,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is there exactly ONE white knight piece on this chessboard (not zero and not several)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

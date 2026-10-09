@@ -1,0 +1,262 @@
+{
+  "id": "terminal_gaps",
+  "axis": "physical_consistency",
+  "prompt": "An engraved plate from a nineteenth-century treatise on fluids, printed as fine dark line work on cream paper: one tall narrow glass jar stands upright filling the height of the plate, brim full of heavy oil. TWO lead shot are let fall into it at the very same instant with no push, one large and one small. The LARGE shot sinks straight down the LEFT half of the jar and the SMALL shot sinks straight down the RIGHT half, each on its own vertical line. A lamp flashes ten times at perfectly even intervals, so the plate shows each shot ten times down its own line, the first position of each being the point where it was released.\n\nSpace both lines of positions by calculation. Each shot speeds up only at the start; the oil pushes back harder the faster it goes and within a few flashes that push exactly balances that shot's weight, after which the shot descends at one single unchanging speed for the whole remainder of the jar, so every later gap in its line is EXACTLY equal to the gap before it. Neither line may go on widening toward the foot of the jar. The two shot do not settle to the same speed: the LARGE shot ends up sinking about twice as fast as the small one, so its unchanging gaps come out about twice as long as the small shot's. Because of that, the large shot's tenth position is near the very bottom of the jar while the small shot's tenth position has only reached about half way down.\n\nThe jar is vertical, each shot's ten positions lie on its own straight vertical line, every image of a given shot the same size, exactly ten images in each line, no motion blur. Fine dark line work on cream, the two lines well separated, no text, no numerals, no arrows, no rulers, no scale marks, no labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict an engraved plate of a tall jar of oil in which two separate lines of small shot are drawn descending, side by side. Ignoring artistic quality and styling, does the image actually DEPICT that requested subject? A realistic photograph, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if it instead shows an empty jar, a page of text or a single line of shot, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_flashes": 10,
+    "n_columns": 2,
+    "lock_index": 4,
+    "two_columns": true,
+    "gap_profile": [1.0, 2.1, 2.8, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0],
+    "first_over_tail": 0.333333,
+    "speed_ratio": 2.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "column_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one strobe image of the sinking ball",
+          "out": "mk",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "run": "gaps_read",
+          "args": ["mk", "reference.n_flashes", "reference.n_columns"],
+          "out": "m"
+        },
+        {
+          "run": "column_readable_frac",
+          "args": ["m", "reference.n_flashes", "reference.n_columns"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "flash_tally",
+      "weight": 0.75,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one strobe image of the sinking ball",
+          "out": "mk",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "run": "gaps_read",
+          "args": ["mk", "reference.n_flashes", "reference.n_columns"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "flash_count_frac",
+          "args": ["m", "reference.n_flashes", "reference.n_columns"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "head_gaps_widen",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one strobe image of the sinking ball",
+          "out": "mk",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "run": "gaps_read",
+          "args": ["mk", "reference.n_flashes", "reference.n_columns"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "head_widen_frac",
+          "args": ["m", "reference.lock_index"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "tail_gaps_locked",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one strobe image of the sinking ball",
+          "out": "mk",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "run": "gaps_read",
+          "args": ["mk", "reference.n_flashes", "reference.n_columns"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "tail_lock_frac",
+          "args": ["m", "reference.lock_index"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "two_regime_all_correct",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one strobe image of the sinking ball",
+          "out": "mk",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "run": "gaps_read",
+          "args": ["mk", "reference.n_flashes", "reference.n_columns"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "two_regime_frac",
+          "args": ["m", "reference.lock_index", "reference.first_over_tail"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "first_over_locked_gap_ratio",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one strobe image of the sinking ball",
+          "out": "mk",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "run": "gaps_read",
+          "args": ["mk", "reference.n_flashes", "reference.n_columns"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "first_over_tail_frac",
+          "args": ["m", "reference.lock_index", "reference.first_over_tail"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "two_shot_speed_ratio",
+      "weight": 1.5,
+      "only_if": "reference.two_columns",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one strobe image of the sinking ball",
+          "out": "mk",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "run": "gaps_read",
+          "args": ["mk", "reference.n_flashes", "reference.n_columns"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "speed_ratio_frac",
+          "args": ["m", "reference.speed_ratio"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_strobe_carrier_obeyed",
+      "weight": 0.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one strobe image of the sinking ball",
+          "out": "mk",
+          "sweep": true
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "run": "gaps_read",
+          "args": ["mk", "reference.n_flashes", "reference.n_columns"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "carrier_frac",
+          "args": ["m", "reference.n_flashes", "reference.n_columns"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "2:3"
+}

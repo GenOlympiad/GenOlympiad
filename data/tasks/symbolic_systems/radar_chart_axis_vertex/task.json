@@ -1,0 +1,135 @@
+{
+  "id": "radar_chart_axis_vertex",
+  "axis": "symbolic_systems",
+  "prompt": "Create a clean, realistic automotive-review infographic featuring a RADAR chart (spider/star chart) titled 'VEHICLE PROFILE'. Draw 5 spokes radiating from a central point, one per attribute, spaced evenly around the circle. Place the first spoke pointing straight UP (12 o'clock) and label the spokes CLOCKWISE in this order, starting from the top: SPEED, RANGE, COMFORT, PRICE, SAFETY. On each spoke, plot the attribute's value on a 0-to-10 scale as a corner of a single connected data polygon -- a larger value sits FARTHER from the centre along that spoke. The values are: SPEED = 10; RANGE = 1; COMFORT = 5; PRICE = 6; SAFETY = 5. Connect the corners into one shaded polygon. Keep each spoke's label clearly readable just outside its spoke, and make sure each polygon corner lands on the correct spoke for its own label. Crisp, clearly readable chart.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a RADAR chart (also called a spider/star chart): several labelled spokes radiating from a centre point, with a data polygon whose corner on each spoke sits at a distance from the centre. Ignoring artistic quality, does the image actually DEPICT that kind of radar chart with labelled spokes and a data polygon? Answer NO only if it shows just prose, a blank panel, a bar chart, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "labels": ["SPEED", "RANGE", "COMFORT", "PRICE", "SAFETY"],
+    "values": [10, 1, 5, 6, 5],
+    "max_label": "SPEED",
+    "min_label": "RANGE",
+    "q_max": "This is a radar (spider) chart with these labelled spokes: SPEED, RANGE, COMFORT, PRICE, SAFETY. Do NOT assume any typical profile. On each spoke, the data polygon's corner sits at some distance from the centre -- a longer reach means a larger value for that spoke's label. Look at the polygon and find the ONE spoke where the polygon reaches FARTHEST out from the centre (the longest reach). Which spoke LABEL is that? Answer with exactly one of these labels: SPEED, RANGE, COMFORT, PRICE, SAFETY.",
+    "q_min": "Same radar chart, same labelled spokes: SPEED, RANGE, COMFORT, PRICE, SAFETY. Now find the ONE spoke where the data polygon's corner is CLOSEST to the centre (the shortest reach, smallest value). Which spoke LABEL is that? Answer with exactly one of these labels: SPEED, RANGE, COMFORT, PRICE, SAFETY."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "axis_vertex",
+      "weight": 4.0,
+      "score": "av.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the whole spider-web chart -- the round web of grid lines with the straight spokes running out from its middle and the words printed just outside the ends of those spokes, taken together as one shape; not the title above it and not the page around it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_spoke_sectors",
+          "args": ["image", "anc", "reference.labels"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is a wedge-shaped piece cut from a spider-web chart. It runs from the middle of the web at one end out past its outer edge at the other end. One word is printed near the outer end of this piece. Copy that word in FULL, exactly as printed, including any letters that run right up to the edge of this piece. If more than one word is printed here, copy the one nearest the outer end. Answer with just that word, or the single word none if this piece holds no word.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rlab"
+        },
+        {
+          "read_crop": "This is a wedge-shaped piece cut from a spider-web chart. It runs from the middle of the web at one end out to the outer edge at the other end. Somewhere along the straight spoke line in this piece sits a corner of the shaded coloured shape. How far out from the middle does that corner sit? Answer with a whole number from 0 to 10, where 0 means it sits right at the middle and 10 means it sits right at the outer edge. Answer with just that number.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rval"
+        },
+        {
+          "run": "find_longest_shortest_spokes",
+          "args": ["rlab", "rval", "pl", "reference.labels"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "as_answer",
+          "args": ["res.vmax"],
+          "out": "cmax"
+        },
+        {
+          "run": "as_answer",
+          "args": ["res.vmin"],
+          "out": "cmin"
+        },
+        {
+          "run": "extreme_labels_match",
+          "args": [
+            "cmax",
+            "cmin",
+            "reference.labels",
+            "reference.max_label",
+            "reference.min_label"
+          ],
+          "out": "av"
+        },
+        {
+          "run": "mark_extreme_spokes",
+          "args": ["pl", "res", "reference"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ]
+}

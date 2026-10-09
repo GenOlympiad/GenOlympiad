@@ -1,0 +1,185 @@
+{
+  "id": "timber_frame_lean_and_rise",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The frame is back up after dismantling and the survey team is recording the front elevation.\n\nAlready fixed and not yours to move: the hall is five bays wide and its front columns are numbered at the base, C1 to C5, with C3 the middle one; a taut line is strung under the eaves from end to end and it is dead level; a plumb bob hangs on its cord in front of the middle bay and is still; a light scaffold stands at one end. The team is standing square in front of the hall.\n\nWhat the conservation specification for this hall says:\nthe columns of the front are set leaning towards the middle of the front rather than standing plumb, and the further from the middle a column stands the more it leans;\nthe middle column stands plumb;\nthe column heads climb away from the middle towards both ends of the front, so the eaves line is a shallow curve rather than a straight line, and the end columns stand highest.\n\nHow far each column ends up off the plumb line and where each head ends up against the taut line is the part I am deliberately not telling you, and no drawing of the elevation is in the picture to copy. Nothing is written on the frame beyond the base labels.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show the front of a traditional timber building with a row of columns under a wide eaves? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no building in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "head_run": "C1|C2|C3|C4|C5",
+    "head_scale": "clearly above the taut line|just above the taut line|level with the taut line",
+    "head_trend": ["up", "up", "down", "down"],
+    "lean_state": "C1=leans towards the middle|C2=leans towards the middle|C3=stands plumb|C4=leans towards the middle|C5=leans towards the middle",
+    "n_columns": 5
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_column_heads_climb_away_from_the_middle_towards_both_ends",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered column base with its own column and the eaves above it",
+          "sweep": true,
+          "out": "hd_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["hd_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what label is on the column base? Answer with the label exactly as it is written, or none if no label is on it.",
+          "boxes": "hd_box",
+          "pad": 0.9,
+          "out": "hd_key"
+        },
+        {
+          "fail_if": ["hd_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, where is the top of this column against the taut line strung under the eaves? Answer with one of: clearly above the taut line, just above the taut line, level with the taut line, or none if the taut line cannot be made out.",
+          "boxes": "hd_box",
+          "pad": 0.9,
+          "out": "hd_val"
+        },
+        {
+          "fail_if": ["hd_val.unreadable"]
+        },
+        {
+          "run": "crack_scale_ranks",
+          "args": ["hd_key", "hd_val", "reference.head_run", "reference.head_scale"],
+          "out": "hd_v"
+        },
+        {
+          "match_trend": "hd_v.seq",
+          "to": "reference.head_trend",
+          "min_delta": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_column_but_the_middle_one_leans_against_the_hanging_bob",
+      "weight": 1.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered column base with its own column and the eaves above it",
+          "sweep": true,
+          "out": "ln_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["ln_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what label is on the column base? Answer with the label exactly as it is written, or none if no label is on it.",
+          "boxes": "ln_box",
+          "pad": 0.9,
+          "out": "ln_key"
+        },
+        {
+          "fail_if": ["ln_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how does the column stand: does it lean towards the left edge of the picture, lean towards the right edge of the picture, or stand straight up and down? Answer with one of: leans left, leans right, stands plumb, or none if the column cannot be made out.",
+          "boxes": "ln_box",
+          "pad": 0.9,
+          "out": "ln_val"
+        },
+        {
+          "fail_if": ["ln_val.unreadable"]
+        },
+        {
+          "run": "count_correct_leans",
+          "args": ["ln_key", "ln_val", "ln_box", "reference.lean_state"],
+          "out": "ln_v"
+        },
+        {
+          "compare_band": "ln_v.n",
+          "to": "reference.n_columns",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_front_column_carries_its_base_label",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered column base with its own column and the eaves above it",
+          "sweep": true,
+          "out": "bl_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["bl_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a label written on the column base? Answer yes or no only.",
+          "boxes": "bl_box",
+          "pad": 0.4,
+          "out": "bl_rd"
+        },
+        {
+          "fail_if": ["bl_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["bl_rd"],
+          "out": "bl_v"
+        },
+        {
+          "compare_band": "bl_v.n",
+          "to": "reference.n_columns",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_word_or_line_is_added_to_the_frame",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written word or drawn line on the frame beyond the base labels",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "pr_sw"
+        },
+        {
+          "fail_if": ["pr_sw.unreadable"]
+        },
+        {
+          "compare": "pr_sw.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

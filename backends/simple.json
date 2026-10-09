@@ -1,0 +1,11 @@
+{
+  "name": "a plain image API",
+  "format": "simple",
+  "endpoint": "http://127.0.0.1:8000/generate",
+  "method": "POST",
+  "headers": {"Authorization": "Bearer ${MY_CUSTOM_API_TOKEN}"},
+  "request": {"prompt": "${PROMPT}", "width": "${WIDTH}", "height": "${HEIGHT}"},
+  "response": {"image_base64": "image_base64", "image_url": "image_url"},
+  "timeout": 420,
+  "retries": 5
+}

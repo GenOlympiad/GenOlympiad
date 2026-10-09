@@ -1,0 +1,189 @@
+{
+  "id": "newman",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A scan of a handed-in chemistry exam script: cream paper, dark blue ballpoint, one wide blank answer box with a printed rule around it, the box filling the frame. The box interior is unruled and holds nothing but the two drawings described below.\n\nThe student has drawn two end-on views inside the box, side by side and well apart, one on the left and one on the right, each built on its own round circle of the same size, with clear empty paper between and around them.\n\nLEFT drawing, looking down the C2-C3 bond of butane. Three pen lines start at the circle's centre and run out past its edge, aimed at twelve o'clock, four o'clock and eight o'clock; tip them CH3, H and H clockwise from the twelve o'clock line. Three more pen lines start on the circle's edge and run outward only, never crossing into the circle; they sit 120 degrees apart and the trio is turned 45 degrees clockwise from the centre trio; tip them CH3, H and H.\n\nRIGHT drawing, looking down the carbon-carbon bond of 1,2-dibromoethane. Again three lines from the centre out past the edge at twelve, four and eight o'clock, tipped Br, H and H clockwise from twelve; and three lines from the edge outward only, 120 degrees apart, the trio turned 100 degrees clockwise from that drawing's own centre trio, tipped Br, H and H.\n\nNo arcs, no angle figures, no degree signs, no arrows, no working and no marker's ticks anywhere in the box. Both circles stay empty inside.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a paper answer box containing TWO separate empty circles, side by side, each with several straight pen lines running outward away from it and short chemical labels at their outer ends. Ignoring handwriting quality and styling, does the picture actually show two such circles? Answer NO only if it shows something else entirely -- an empty box, a page of prose, a single circle, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "n_circles": 2,
+    "dihedrals_deg": [45.0, 100.0],
+    "front_labels": [
+      ["CH3", "H", "H"],
+      ["Br", "H", "H"]
+    ],
+    "back_labels": [
+      ["CH3", "H", "H"],
+      ["Br", "H", "H"]
+    ],
+    "core_deg": 5.0,
+    "margin_deg": 4.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "projection_circle_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "run": "read_newman",
+          "args": ["image", "reference.n_circles", "reference.dihedrals_deg"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "full_credit",
+          "args": ["m.n_circles"],
+          "code": {
+            "inline": "f_code"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "bond_set_complete",
+      "weight": 1.5,
+      "steps": [
+        {
+          "run": "read_newman",
+          "args": ["image", "reference.n_circles", "reference.dihedrals_deg"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_structure"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "rear_carbon_twist",
+      "weight": 10.0,
+      "steps": [
+        {
+          "run": "read_newman",
+          "args": ["image", "reference.n_circles", "reference.dihedrals_deg"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_offset"],
+          "out": "frac"
+        },
+        {
+          "run": "newman_marks",
+          "args": ["image", "reference.n_circles", "reference.dihedrals_deg"],
+          "out": "nmk"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "nmk.ref_anchors",
+          "found_anchors": "nmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [225, 0, 235],
+          "label": "a bond line the gauge found on this projection",
+          "out": "nmv1",
+          "polylines": "nmk.mk_measured.polylines",
+          "circles": "nmk.mk_measured.circles"
+        },
+        {
+          "overlay": "homography",
+          "ref_anchors": "nmk.ref_anchors",
+          "found_anchors": "nmk.found_anchors",
+          "width_frac": 0.004,
+          "color": [0, 175, 0],
+          "label": "where a back bond has to point for the committed twist",
+          "out": "nmv2",
+          "polylines": "nmk.mk_want.polylines"
+        }
+      ]
+    },
+    {
+      "name": "front_triad_spacing",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "read_newman",
+          "args": ["image", "reference.n_circles", "reference.dihedrals_deg"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_triad"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_front_bonds_on_the_clock",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "read_newman",
+          "args": ["image", "reference.n_circles", "reference.dihedrals_deg"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["m.frac_clock_anchor"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_newman_overlay",
+      "weight": 0.0,
+      "steps": [
+        {
+          "run": "newman_overlay",
+          "args": ["image", "reference.n_circles", "reference.dihedrals_deg"],
+          "out": "ov"
+        },
+        {
+          "fail_if": ["ov.no_read"]
+        },
+        {
+          "run": "to_float",
+          "args": ["ov.frac_offset"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

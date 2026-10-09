@@ -1,0 +1,113 @@
+{
+  "id": "word_ladder_closure",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed WORD-LADDER puzzle titled 'WORD LADDER -- COLD to WARM' (Change one letter each step). It lists 5 words in a vertical column, numbered 1..5, from the start word 'COLD' to the goal word 'WARM'. CRITICAL rule: every word is the SAME length, and each word differs from the word directly above it by EXACTLY ONE letter (a single-letter change per step). So word 2 and word 3 differ in one letter, and word 4 and word 5 differ in one letter. Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a word-ladder puzzle: a vertical list of equal-length words, one per row. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 5,
+    "q_w_a0": "What is the word on row 2 of the word ladder? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the word (letters only).",
+    "q_w_b0": "What is the word on row 3 of the word ladder? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the word (letters only).",
+    "q_w_a1": "What is the word on row 4 of the word ladder? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the word (letters only).",
+    "q_w_b1": "What is the word on row 5 of the word ladder? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the word (letters only).",
+    "q_count": "How many words are listed in this word ladder (count the numbered rows)? Whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "word_ladder_closure_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_w_a0",
+          "out": "a0"
+        },
+        {
+          "fail_if": ["a0.unreadable"]
+        },
+        {
+          "ask": "reference.q_w_b0",
+          "out": "b0"
+        },
+        {
+          "fail_if": ["b0.unreadable"]
+        },
+        {
+          "ask": "reference.q_w_a1",
+          "out": "a1"
+        },
+        {
+          "fail_if": ["a1.unreadable"]
+        },
+        {
+          "ask": "reference.q_w_b1",
+          "out": "b1"
+        },
+        {
+          "fail_if": ["b1.unreadable"]
+        },
+        {
+          "run": "check_ladder_steps",
+          "args": ["a0", "b0", "a1", "b1"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed word on its own numbered row of the ladder",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed word on a numbered row, rather than blank paper or only part of a word? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 1.4,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

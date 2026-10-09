@@ -1,0 +1,269 @@
+{
+  "id": "count_uniform_multiplicity",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic straight-down photograph of a plain white laboratory bench scattered with FLAT round silicone bottle caps, each cap a single flat matte colour. Use ONLY these cap colours: red, orange, yellow, green, turquoise, blue, purple, pink. You choose which colours to use and how many colours -- but you must use at least SEVEN different colours, and there must be EXACTLY THREE caps of every colour you use. No colour may appear once, twice, four times or more: every colour on the bench appears exactly three times. Scatter them irregularly with uneven gaps -- never in rows, never in a grid, never arranged as a ring or a decorative border. Keep the three caps of a colour well apart from each other, and never let any two caps touch or overlap. Even light, sharp focus, nothing else coloured in the frame. No text, no numerals, no labels.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a laboratory bench scattered with flat silicone bottle caps in several colours? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q": "How many different colours of counter can you see in this image? Answer with the integer number only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_q_objform": "This picture should show these countable objects: a laboratory bench scattered with flat silicone bottle caps in several colours. Look at the individual objects being counted. Is each one a flat round silicone bottle cap, and not some other object, a shapeless blob, or a mixture of different things? Answer with the single word yes or no only.",
+    "m": 3,
+    "kmin": 7,
+    "pal": "red|orange|yellow|green|cyan|blue|purple|magenta",
+    "is_pal8": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "uniform_multiplicity_p6",
+      "weight": 3.5,
+      "score": "u.frac",
+      "only_if": "reference.is_pal6",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "flat round painted wooden counter",
+          "out": "bx",
+          "propose_boxes": "incremental"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This picture shows one flat round counter from a scatter of coloured counters. What colour is it? Answer with exactly one word from this list: red, orange, yellow, green, blue, purple. If it is clearly none of those colours, answer other.",
+          "boxes": "bx",
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "check_uniform_counts",
+          "args": [
+            "cc",
+            "['red', 'orange', 'yellow', 'green', 'blue', 'purple']",
+            "reference.m",
+            "reference.kmin"
+          ],
+          "out": "u"
+        },
+        {
+          "run": "hold_uniform_multiplicity_p6_u",
+          "args": ["u"],
+          "out": "u_h"
+        },
+        {
+          "fail_if": ["u_h.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "kind_coverage_p6",
+      "weight": 1.5,
+      "score": "k.frac",
+      "only_if": "reference.is_pal6",
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "flat round painted wooden counter",
+          "out": "bx",
+          "propose_boxes": "incremental"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This picture shows one flat round counter from a scatter of coloured counters. What colour is it? Answer with exactly one word from this list: red, orange, yellow, green, blue, purple. If it is clearly none of those colours, answer other.",
+          "boxes": "bx",
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "colour_coverage",
+          "args": [
+            "cc",
+            "['red', 'orange', 'yellow', 'green', 'blue', 'purple']",
+            "reference.kmin"
+          ],
+          "out": "k"
+        },
+        {
+          "run": "hold_kind_coverage_p6_k",
+          "args": ["k"],
+          "out": "k_h"
+        },
+        {
+          "fail_if": ["k_h.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "uniform_multiplicity_p8",
+      "weight": 3.5,
+      "score": "u.frac",
+      "only_if": "reference.is_pal8",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "flat round coloured object",
+          "out": "bx",
+          "propose_boxes": "incremental"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This picture shows one flat round coloured object from a scatter of them. What colour is it? Answer with exactly one word from this list: red, orange, yellow, green, cyan, blue, purple, magenta. Use cyan for a turquoise or teal colour, and magenta for a pink colour. If it is clearly none of those colours, answer other.",
+          "boxes": "bx",
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "check_uniform_counts",
+          "args": [
+            "cc",
+            "['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'magenta']",
+            "reference.m",
+            "reference.kmin"
+          ],
+          "out": "u"
+        },
+        {
+          "run": "hold_uniform_multiplicity_p8_u",
+          "args": ["u"],
+          "out": "u_h"
+        },
+        {
+          "fail_if": ["u_h.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "kind_coverage_p8",
+      "weight": 1.5,
+      "score": "k.frac",
+      "only_if": "reference.is_pal8",
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "flat round coloured object",
+          "out": "bx",
+          "propose_boxes": "incremental"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This picture shows one flat round coloured object from a scatter of them. What colour is it? Answer with exactly one word from this list: red, orange, yellow, green, cyan, blue, purple, magenta. Use cyan for a turquoise or teal colour, and magenta for a pink colour. If it is clearly none of those colours, answer other.",
+          "boxes": "bx",
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "run": "colour_coverage",
+          "args": [
+            "cc",
+            "['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'magenta']",
+            "reference.kmin"
+          ],
+          "out": "k"
+        },
+        {
+          "run": "hold_kind_coverage_p8_k",
+          "args": ["k"],
+          "out": "k_h"
+        },
+        {
+          "fail_if": ["k_h.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.6,
+      "not_scored": true,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_objform",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "a flat round painted wooden counter",
+    "s2": "a large flat plastic button",
+    "s3": "a flat round silicone bottle cap"
+  }
+}

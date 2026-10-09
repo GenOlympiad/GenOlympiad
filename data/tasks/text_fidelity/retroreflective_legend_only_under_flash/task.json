@@ -1,0 +1,84 @@
+{
+  "id": "retroreflective_legend_only_under_flash",
+  "axis": "text_fidelity",
+  "prompt": "The taper has to be signed off before the crew move up the road, so the night inspector shoots the same board twice from one tripod position and both frames go on the record card.\n\nOne road works board stands at the head of the taper. The card carries the two frames one above the other: the upper frame is a 4 second exposure by the street lighting alone, the lower frame is taken from the same tripod with the camera's flash gun firing. The board carries two rows of capitals, one above the other, both cut to a letter height of 150 millimetres. The batch label taped to its bottom rail records the materials: the upper row is cut from prismatic reflective sheeting, the lower row is screen printed in ordinary black ink, both on the same white face.\n\nHow each row comes out in each of the two frames is not on the record card.",
+  "difficulty": "s1",
+  "easy_question": "Does this card show two photographs of the same road works board stacked one above the other? Answer yes or no only.",
+  "reference": {
+    "part1": "upper_brighter",
+    "part2": "ink_reads"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the lower of the two frames, the one taken with the flash gun. Answer with one of: the upper row stands out much brighter than the lower row; the lower row stands out much brighter than the upper row; the two rows stand out alike.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the upper of the two frames, the one taken by the street lighting alone. Answer with one of: the lower row reads plainly and the upper row has all but vanished into the face behind it; the upper row reads plainly and the lower row has all but vanished into the face behind it; both rows read plainly.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

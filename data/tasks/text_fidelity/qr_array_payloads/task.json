@@ -1,0 +1,94 @@
+{
+  "id": "qr_array_payloads",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed label sheet titled 'PARCEL DISPATCH QR SHEET'. Subtitle 'Depot dispatch codes -- one scannable QR per parcel ID'. The sheet shows SIX separate QR codes arranged in a 2-columns by 3-rows grid. Beside each QR code, print the label 'ASSET TAG:' and then the exact tag string that this QR code must encode. The six tag strings, in reading order (left-to-right, then top-to-bottom), are: PKG-7741-X, PKG-3092-Q, PKG-5518-M, PKG-8267-R, PKG-1934-T, PKG-6405-K. CRITICAL: each QR code must be a REAL, SCANNABLE QR code that actually decodes to EXACTLY the tag string printed beside it (standard black-and-white QR modules with the three square finder patterns in the corners and a quiet white border). Do not draw a decorative QR-like texture -- the codes must scan. Print exactly six QR codes and their six captions, nothing else.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed warehouse/dispatch label sheet showing an array of QR codes each captioned with an asset/parcel tag. Ignoring artistic quality, does the image actually DEPICT that requested subject -- a sheet of QR-code tiles with captions? A photo, scan or clean diagram all count as yes. Answer NO only if it shows a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "payloads": [
+      "PKG-7741-X",
+      "PKG-3092-Q",
+      "PKG-5518-M",
+      "PKG-8267-R",
+      "PKG-1934-T",
+      "PKG-6405-K"
+    ],
+    "n_codes": 6,
+    "q_ntiles": "How many separate QR-code tiles (square black-and-white 2D codes) are printed on this sheet? Give a whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "qr_payloads_decode",
+      "weight": 1.0,
+      "steps": [
+        {
+          "run": "decode_payload_set",
+          "args": ["image", "reference.payloads"],
+          "out": "dec"
+        },
+        {
+          "run": "to_float",
+          "args": ["dec.all_ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_tile_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed QR code tile -- one square block of black and white modules on the label sheet",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nt"
+        },
+        {
+          "fail_if": ["box_nt.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole square QR code, its complete black-and-white pattern with the dark square markers at its corners, rather than part of a code, two codes together, or a line of printed text? Answer yes or no only.",
+          "boxes": "box_nt",
+          "out": "crop_nt"
+        },
+        {
+          "fail_if": ["crop_nt.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nt"],
+          "out": "cnt_nt"
+        },
+        {
+          "compare_band": "cnt_nt.n",
+          "to": "reference.n_codes",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "id": "seatmap_manifest_bijection",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed airline boarding sheet titled 'CORAL COAST CC88' (BOARDING -- CABIN PLAN & PASSENGER MANIFEST). Lay it out as ONE single sheet filling the frame, viewed straight-on, with the SEAT MAP occupying the LEFT half and the PASSENGER MANIFEST occupying the RIGHT half. On the LEFT a SEAT MAP: rows 4 to 17 numbered down the side, seat letters A B C [aisle] D E F across the top, and the OCCUPIED seats shaded/marked. On the RIGHT a BOARDING LIST of 42 passengers, each printed with their name and their assigned seat code (like '6C'). CRITICAL binding rule: every passenger's listed seat code must name EXACTLY the seat that is shaded occupied on the map -- passenger G.GRECO holds seat 6C so seat 6C (row 6, letter C) is the shaded seat, and passenger P.HOLT holds seat 15F so seat 15F is shaded. Each occupied cell corresponds to exactly one listed passenger. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict an aircraft seat map with shaded occupied seats beside a boarding list of passengers and their seat codes. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 42,
+    "q_code0": "In the BOARDING LIST (right side), find passenger 'G.GRECO'. What seat code is printed next to that name (a row number then a letter)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the seat code.",
+    "q_code1": "In the BOARDING LIST (right side), find passenger 'P.HOLT'. What seat code is printed next to that name? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the seat code.",
+    "q_row0": "This image has an aircraft SEAT MAP on the LEFT (rows numbered down the side; seat letters A B C then an aisle then D E F across the top; a seat drawn as a filled or coloured box, usually with an X, is OCCUPIED, a plain white box is EMPTY) and a passenger manifest on the right. On the SEAT MAP only, find the row whose printed row number is 6. Which seat LETTERS in that row are shaded/occupied? Answer with just those letters in left-to-right order (A to F), separated by single commas with no spaces and no other words, or the single word NONE if none are shaded.",
+    "q_row1": "This image has an aircraft SEAT MAP on the LEFT (rows numbered down the side; seat letters A B C then an aisle then D E F across the top; a seat drawn as a filled or coloured box, usually with an X, is OCCUPIED, a plain white box is EMPTY) and a passenger manifest on the right. On the SEAT MAP only, find the row whose printed row number is 15. Which seat LETTERS in that row are shaded/occupied? Answer with just those letters in left-to-right order (A to F), separated by single commas with no spaces and no other words, or the single word NONE if none are shaded.",
+    "q_count": "Count how many passengers are listed in the BOARDING LIST on the right side. Whole number only.",
+    "r0": 6,
+    "l0": "C",
+    "r1": 15,
+    "l1": "F"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "seatmap_manifest_bijection_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_code0",
+          "out": "code0"
+        },
+        {
+          "fail_if": ["code0.unreadable"]
+        },
+        {
+          "ask": "reference.q_code1",
+          "out": "code1"
+        },
+        {
+          "fail_if": ["code1.unreadable"]
+        },
+        {
+          "ask": "reference.q_row0",
+          "out": "row0"
+        },
+        {
+          "fail_if": ["row0.unreadable"]
+        },
+        {
+          "ask": "reference.q_row1",
+          "out": "row1"
+        },
+        {
+          "fail_if": ["row1.unreadable"]
+        },
+        {
+          "run": "seats_shaded_on_map",
+          "args": [
+            "code0",
+            "code1",
+            "row0",
+            "row1",
+            "reference.r0",
+            "reference.l0",
+            "reference.r1",
+            "reference.l1"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "manifest_bijection_full",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read_crop": "This is a printed airline boarding list. Every passenger line ends in a SEAT CODE (a row number then a seat letter, like 12C). Transcribe the seat code from EVERY line, in printed order, top to bottom and left column before right column. Report exactly what is printed, even if a code appears more than once. Answer with just the seat codes separated by commas, nothing else.",
+          "out": "list_read"
+        },
+        {
+          "fail_if": ["list_read.unreadable"]
+        },
+        {
+          "read_crop": "Go through the passenger boarding list line by line and write out every seat code you see printed, in order, top to bottom and left column before right column. A seat code is a row number followed by a seat letter, like 12C. Include repeats exactly as printed. Reply with only the seat codes, separated by commas.",
+          "out": "list_read2"
+        },
+        {
+          "read_crop": "This is an aircraft seat map beside a boarding list. Rows are numbered down the side; seat letters are A B C then an aisle then D E F across the top. A seat drawn as a filled or coloured box, usually with an X, is OCCUPIED; a plain white box is EMPTY. Go down the rows in printed order and, for EVERY numbered row, report the row number and the letters of its occupied seats. Answer in exactly this form, one row per entry separated by semicolons: '4: C; 5: A,C; 6: NONE'. Write NONE for a row with no occupied seat.",
+          "out": "map_read"
+        },
+        {
+          "fail_if": ["map_read.unreadable"]
+        },
+        {
+          "run": "reconcile",
+          "args": ["list_read", "list_read2", "map_read", "reference.n"],
+          "out": "bij"
+        },
+        {
+          "fail_if": ["bij.uncertain"]
+        },
+        {
+          "compare": "bij.verdict",
+          "to": "consistent",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one passenger line in the boarding list on the right half of the sheet -- count a rectangle only if it holds exactly ONE printed line carrying a person's name AND that person's seat code (a row number followed by a seat letter) visible inside it; box each such line separately, one box per passenger line, and do not box the list's heading row, the seat map on the left half, or blank paper between lines.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed line with a person's name and a seat code beside it, rather than bare paper or only part of a line? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 2.9,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

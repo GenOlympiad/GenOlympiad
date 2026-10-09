@@ -1,0 +1,84 @@
+{
+  "id": "plate_caption_facing_page",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The autumn catalogue goes to the printer on Monday, so the picture editor has pulled a proof of one spread to check the house style before the rest of the book is made up.\n\nThe proof is an open art-catalogue spread, a left page and a right page. The left page carries the plate of a glazed stoneware ewer with a dragon-shaped handle, made about 890; the right page carries the plate of a gilded silver drinking horn finished with a ram's head, made about 560. On both pages the caption block runs over the top of the plate, not under it, set 10 pt with the material and the date on one line. The style memo clipped to the proof restates the rule this house has always used: a caption describes the plate on the page it faces, never the plate it shares a page with.\n\nWhich entry finishes up on which page is what the memo leaves to the editor.",
+  "difficulty": "s1",
+  "easy_question": "Is this a proof of an open art-catalogue spread with one picture plate and one caption block on each page Answer yes or no only.",
+  "reference": {
+    "part1": "names_the_horn",
+    "part2": "above"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the caption block on the left-hand page, and see which object it names. Answer with one of: The caption on the left-hand page names a ram's-head vessel; The caption on the left-hand page names a dragon-handled jug; The caption on the left-hand page names an object that is not pictured on this spread.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "On the left-hand page, look at where on the page the caption block is printed. Answer with one of: The caption block is printed above the plate; The caption block is printed below the plate; The caption block is printed alongside the plate in a side column.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

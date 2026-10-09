@@ -1,0 +1,124 @@
+{
+  "id": "pulley_mechanical_advantage",
+  "axis": "quantitative_precision",
+  "prompt": "A clean a mechanics diagram of a crane hoist with a pulley block, with 3 GREEN rope segments supporting the load block. Draw the LOAD (weight) as a RED downward arrow from the load block, and the EFFORT (the hand pull) as a BLUE downward arrow on the free rope end. Because 3 rope segments support the load, the mechanical advantage is 3, so the EFFORT force is one-3th of the LOAD: draw the BLUE effort arrow exactly one-3th as long as the RED load arrow. Do NOT draw the effort arrow the same length as the load arrow. Plain background, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a mechanics diagram of a crane hoist with a pulley block, with GREEN rope segments supporting the load block, with a red load arrow and a blue effort arrow. Ignoring artistic quality, does the image show green rope segments, a red downward arrow and a blue downward arrow? Answer NO only if those are missing or it is unrelated. Answer yes or no.",
+  "reference": {
+    "seg_lo": [40, 70, 50],
+    "seg_hi": [85, 255, 255],
+    "effort_lo": [100, 90, 60],
+    "effort_hi": [130, 255, 255],
+    "load_lo": [160, 90, 80],
+    "load_hi": [10, 255, 255],
+    "n_expected": 3,
+    "tol": 0.2,
+    "seg_min_frac": 0.0004,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "ma_reciprocal",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "pulley hoist itself",
+          "out": "seg",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["seg.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of a pulley hoist. Write down every separate green rope strand that runs all the way from the upper block down to the lower block, working from left to right, each with a few plain words saying where it runs. Separate one item from the next with a semicolon; write no running total and nothing else. If no strand runs the whole way, write the single word NONE.",
+          "boxes": "seg",
+          "out": "segq",
+          "pad": 0.1
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["segq", "empty_as='0'"],
+          "out": "segq__std"
+        },
+        {
+          "fail_if": ["segq__std.refused"]
+        },
+        {
+          "read": "line",
+          "target": "RED arrow",
+          "out": "ld"
+        },
+        {
+          "fail_if": ["ld.unreadable"]
+        },
+        {
+          "read": "line",
+          "target": "BLUE arrow",
+          "out": "ef"
+        },
+        {
+          "fail_if": ["ef.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "mechanical_advantage_score",
+          "args": ["segq__std", "ld", "ef", "src", "reference"],
+          "out": "rd"
+        },
+        {
+          "fail_if": ["rd.degenerate"]
+        },
+        {
+          "compare_band": "rd.frac",
+          "to": 1.0,
+          "core": 0.15,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,281 @@
+{
+  "id": "gaze_contradiction",
+  "axis": "physical_consistency",
+  "prompt": "A realistic everyday photograph of a runner on a treadmill in a bright gym, taken straight on. They hold a smartwatch raised on the wrist up in front of themselves at about eye level, held roughly upright. The runner is READING the message shown on the smartwatch's display -- it says 'ROUTE IS NORTH' in plain large letters. Their eyes are directed at the smartwatch's display as they read it. Even white gym lighting, sharp focus, a genuine candid photo, not a diagram, not an illustration, no extra text or captions anywhere else in the frame.",
+  "difficulty": "s3",
+  "easy_question": "This picture was supposed to show a gym photo of a runner holding a wrist smartwatch up at eye/face level while looking at its display/face, with the display's line visible in the shot. Never mind how well it is drawn. Does the picture show a person and a smartwatch (or similar hand-held / worn device / object with a readable face)? A realistic photo or an illustration of that subject counts as yes. Answer NO only if the image instead shows just a blank card or plain panel with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_text_to_cam": "Look ONLY at the smartwatch's display/face that the person is holding or wearing. Is there readable printed TEXT on that surface that you (the camera) can actually read right now -- i.e. the writing faces the camera enough to read it? Answer yes or no only.",
+    "q_exempt": "Look at the smartwatch the person is wearing. Three unreal things could be drawn: the device is see-through; it shows its display on both of its faces at once; part of the display's text floats in the air off the device. Is any of the three present? Answer yes or no only.",
+    "q_engaged": "Judge only the head and eye direction actually drawn, not how people usually use a smartwatch. Are the person's face and eyes turned toward the smartwatch, reading or operating it right now? If their eyes are on the camera or anywhere else, answer no. Answer yes or no only.",
+    "q_gaze_target": "Look ONLY at the person eyes and head direction as actually drawn. Where is the person looking? Answer with exactly one word: object (their gaze is on the handheld/worn object that carries the writing), camera (their gaze is on the viewer/camera), or elsewhere (anywhere else).",
+    "tgt_face": "the person's head and face",
+    "found_face": "human face",
+    "tgt_screen": "the flat front face or display of the hand-held or worn device the person is holding",
+    "found_screen": "device screen",
+    "q_screen_text": "This is a close-up cut out of a bigger picture. It shows the flat front face of a hand-held or worn device. Is there printed writing on that surface that you can actually read from here -- that is, the writing faces you enough to read it? Answer yes or no only.",
+    "q_face_engaged": "This is a close-up cut out of a bigger picture. It shows a person's head, and the object they are holding may also be in the cut-out. Judge only the head and eye direction as drawn. Are the eyes turned toward that held object? If the eyes are on you (the camera) or anywhere else, answer no. Answer yes or no only.",
+    "q_face_target": "This is a close-up cut out of a bigger picture. It shows a person's head, and the object they are holding may also be in the cut-out. Judge only the eyes and head direction as drawn. Where is the person looking? Answer with exactly one word: object (at the thing they are holding or wearing), camera (straight out at you), or elsewhere.",
+    "q_face_frontal_square": "Is the person's face turned squarely toward the camera, so that you are looking at the front of the face rather than at a side view? Answer yes or no only.",
+    "q_face_frontal_eyes": "Can you see both of the person's eyes in this picture? Answer yes or no only.",
+    "q_face_frontal_clear": "Is the front of the person's face left clear in this picture -- not covered by the smartwatch and not covered by a hand? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_geometric_silent_fake",
+      "weight": 3.0,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.tgt_screen",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_screen_text",
+          "boxes": "sb",
+          "pad": 0.15,
+          "out": "scr"
+        },
+        {
+          "fail_if": ["scr.unreadable"]
+        },
+        {
+          "const": "scr.answers.0",
+          "out": "a_text"
+        },
+        {
+          "read": "boxes",
+          "target": "reference.tgt_face",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_face_engaged",
+          "boxes": "fb",
+          "pad": 0.7,
+          "out": "fer"
+        },
+        {
+          "fail_if": ["fer.unreadable"]
+        },
+        {
+          "const": "fer.answers.0",
+          "out": "a_eng"
+        },
+        {
+          "read_crop": "reference.q_face_target",
+          "boxes": "fb",
+          "pad": 0.7,
+          "out": "ftr"
+        },
+        {
+          "fail_if": ["ftr.unreadable"]
+        },
+        {
+          "const": "ftr.answers.0",
+          "out": "a_tgt"
+        },
+        {
+          "compare": "a_text",
+          "to": "yes",
+          "out": "f_text"
+        },
+        {
+          "compare": "a_eng",
+          "to": "yes",
+          "out": "f_eng"
+        },
+        {
+          "compare": "a_tgt",
+          "to": "object",
+          "out": "f_tgt"
+        },
+        {
+          "all": ["f_text", "f_eng", "f_tgt"],
+          "out": "fake_score"
+        },
+        {
+          "compare_tolerance": "fake_score",
+          "to": 0,
+          "tol": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_unreal_device_artifact",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a see-through e-reader, its screen repeated on the back face, or screen text floating in the air off the device",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_a_art"
+        },
+        {
+          "fail_if": ["sweep_a_art.unreadable"]
+        },
+        {
+          "compare": "sweep_a_art.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "graceful_either_branch",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "reference.tgt_screen",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_screen_text",
+          "boxes": "sb",
+          "pad": 0.15,
+          "out": "scr"
+        },
+        {
+          "fail_if": ["scr.unreadable"]
+        },
+        {
+          "const": "scr.answers.0",
+          "out": "a_tx"
+        },
+        {
+          "compare": "a_tx",
+          "to": "yes",
+          "out": "f_tx"
+        },
+        {
+          "read": "boxes",
+          "target": "reference.tgt_face",
+          "expected_n": 1,
+          "sweep": true,
+          "votes": 3,
+          "out": "fb"
+        },
+        {
+          "fail_if": ["fb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_face_target",
+          "boxes": "fb",
+          "pad": 0.7,
+          "out": "ftr"
+        },
+        {
+          "fail_if": ["ftr.unreadable"]
+        },
+        {
+          "const": "ftr.answers.0",
+          "out": "a_gz"
+        },
+        {
+          "compare": "a_gz",
+          "to": "object",
+          "out": "f_gz"
+        },
+        {
+          "any": ["f_tx", "f_gz"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_pose_face_direction",
+      "weight": 0.0,
+      "steps": [
+        {
+          "ask": "reference.q_face_frontal_square",
+          "out": "a_ff1"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "a_ff1",
+          "out": "yn1"
+        },
+        {
+          "compare": "yn1",
+          "to": "yes",
+          "out": "f_ff1"
+        },
+        {
+          "ask": "reference.q_face_frontal_eyes",
+          "out": "a_ff2"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "a_ff2",
+          "out": "yn2"
+        },
+        {
+          "compare": "yn2",
+          "to": "yes",
+          "out": "f_ff2"
+        },
+        {
+          "ask": "reference.q_face_frontal_clear",
+          "out": "a_ff3"
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "a_ff3",
+          "out": "yn3"
+        },
+        {
+          "compare": "yn3",
+          "to": "yes",
+          "out": "f_ff3"
+        },
+        {
+          "all": ["f_ff1", "f_ff2", "f_ff3"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:4"
+}

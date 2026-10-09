@@ -1,0 +1,165 @@
+{
+  "id": "two_light_two_shadows",
+  "axis": "physical_consistency",
+  "prompt": "A photo-style scene: a museum plinth under two ceiling picture-lights with one vase between them. There are TWO separate light sources of similar brightness -- one clearly to the LEFT and one clearly to the RIGHT of the object. Because there are two lights, a vase in the middle must cast TWO distinct shadows on the ground: one shadow thrown to the RIGHT (away from the left lamp) and one shadow thrown to the LEFT (away from the right lamp). Draw BOTH shadows, each pointing away from its own lamp, so the two shadows splay outward to opposite sides. Both lamps are visible. No text, no numbers, no arrows.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a museum plinth under two ceiling picture-lights with one vase between them? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel printing an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_shadow": 2,
+    "q_single": "Look at the single central object standing on the ground. Does it cast just ONE single shadow (only one shadow, with no second shadow going a different way)? Answer yes if there is only one shadow; answer no if there are two shadows pointing different ways. Answer yes or no only.",
+    "q_two": "There are TWO lamps lit in this scene, one on the left and one on the right, and one object between them. Under two lights an object casts TWO shadows that point in TWO DIFFERENT directions (each shadow falls on the side away from its lamp). Do you see TWO shadows pointing in two clearly different directions? Answer yes only if there are two shadows going different ways; answer no if there is only one shadow, or two shadows lying on top of each other. Answer yes or no only.",
+    "q_count": "How many separate shadows does the central object cast on the floor or ground? Count each distinct dark shadow shape lying on the ground (a doubled or overlapping duplicate silhouette counts as a separate one). Answer with a whole number only.",
+    "q_extra": "Look at the shadow(s) the central object casts on the ground. Is there any duplicated / doubled silhouette, or an overlapping second shadow edge, or a third extra shadow beyond the expected pair? Answer yes if you can see any doubled or extra shadow; answer no if the shadows are clean with none doubled or overlapping. Answer yes or no only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "two_shadows",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "This picture shows an object standing on the ground between two lit lamps. Write down every shadow of that object you can see lying on the ground, one shadow per item. For each shadow take the picture as a clock face with 12 at the top, and write the clock hour that shadow points toward as a whole number from 1 to 12, then a few plain words saying where it lies. If the object has no shadow on the ground, write the single word NONE. Separate one item from the next with a semicolon, and add nothing else.",
+          "out": "d"
+        },
+        {
+          "fail_if": ["d.unreadable"]
+        },
+        {
+          "run": "check_shadow_directions",
+          "args": ["d", "[[['none'],'NONE']]", "2", "6", "'yes'", "'no'", "'no'"],
+          "out": "d__mapped"
+        },
+        {
+          "compare": "d__mapped.text",
+          "to": "yes",
+          "out": "fd"
+        },
+        {
+          "ask": "reference.q_single",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "fs"
+        },
+        {
+          "read": "boxes",
+          "target": "a doubled or ghosted copy of a shadow, an extra overlapping shadow edge, or a spare stray shadow on the ground",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_ex"
+        },
+        {
+          "fail_if": ["sweep_ex.unreadable"]
+        },
+        {
+          "compare": "sweep_ex.clean",
+          "to": "yes",
+          "out": "fex"
+        },
+        {
+          "all": ["fd", "fs", "fex"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_two_dir",
+      "weight": 0.6,
+      "not_scored": true,
+      "steps": [
+        {
+          "ask": "reference.q_two",
+          "out": "a0"
+        },
+        {
+          "fail_if": ["a0.unreadable"]
+        },
+        {
+          "compare": "a0",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_shadow_count",
+      "weight": 0.3,
+      "not_scored": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one separate dark shadow of the central statue lying on the ground",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole dark shadow lying on the ground, dark all the way through and with its own edge right round it, rather than plain lit ground or only part of a shadow? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "run": "shadow_count_matches",
+          "args": ["cnt_nc.n", "reference.n_shadow"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

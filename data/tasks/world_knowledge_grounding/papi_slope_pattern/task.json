@@ -1,0 +1,84 @@
+{
+  "id": "papi_slope_pattern",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The school is putting a new sheet on the briefing-room board, so the instructor photographs the finished chart flat against the board with both panels in the frame.\n\nThe sheet carries two approach panels side by side, each showing the same runway from the side with an aircraft on the approach. Under each panel a printed figure block gives that aircraft's height above the threshold and its ground distance from the threshold. The left block reads height 300 feet, distance 6000 feet. The right block reads height 350 feet, distance 6000 feet. A note printed across the head of the sheet gives the aiming slope for this runway as 3 degrees and says the lamp bar beside the touchdown zone is drawn large in both panels, with its four lamps side by side. The lamps carry no figures.\n\nHow each bar of lamps comes out is what the sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a printed wall chart with two side-on approach panels, each carrying a bar of four lamps and a block of figures? Answer yes or no only.",
+  "reference": {
+    "part1": "one_white_rest_red",
+    "part2": "three_white_one_red"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the bar of lamps in the panel whose figure block reads height 300 feet. Answer with one of: that bar shows one white lamp with the rest red; that bar shows two white lamps and two red lamps; that bar shows all four lamps white.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the bar of lamps in the panel whose figure block reads height 350 feet. Answer with one of: that bar shows three white lamps with one red; that bar shows two white lamps and two red lamps; that bar shows the same lamps lit the same way as the bar in the other panel.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

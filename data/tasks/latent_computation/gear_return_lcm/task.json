@@ -1,0 +1,156 @@
+{
+  "id": "gear_return_lcm",
+  "axis": "latent_computation",
+  "prompt": "A sharp close-up photograph on a clockmaker's workshop bench of THREE brass gears meshed in a row, with 20 teeth, 28 teeth and 45 teeth. Exactly one tooth on each gear is painted bright red, and the red teeth are drawn meeting at the mesh points at the start position. Next to the gears sits a small mechanical revolution counter with a number window. Print in that window the whole number of complete turns the 20-tooth gear must make before ALL THREE red teeth first return to meet at their start positions again. Show only that one number in the counter window; do not write any other digits, formulas, or labels anywhere in the image.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show clockmaker's-workshop bench photo of three enmeshed brass gears with one tooth on each painted red, beside a small mechanical revolution counter showing how many turns of the small gear return all three marks to their start? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "teeth_a": 20,
+    "teeth_b": 28,
+    "teeth_c": 45,
+    "turns_a": 63,
+    "n_gears": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "return_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or fill in the puzzle yourself. There is a small mechanical revolution counter with a number window next to three brass gears. Report the whole number shown in that counter window as a single integer.",
+          "out": "rn"
+        },
+        {
+          "fail_if": ["rn.unreadable"]
+        },
+        {
+          "compare_tolerance": "rn",
+          "to": "reference.turns_a",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_gears",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "How many brass gears are meshed in a row on the bench? Answer a whole number only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.n_gears",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_one_red_tooth_each",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does each of the three gears have exactly ONE tooth painted bright red? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_only_counter_number",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Is the counter window the ONLY place a number appears, with no other digits, formulas, or labels anywhere in the image? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_meshed_in_row",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Do the three brass gears in this image visibly MESH with each other (their teeth interlock in a connected row), rather than being drawn as three separate gears with gaps between them? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_extra_working",
+      "weight": 0.18,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Apart from the small number of required result / reference values, does this image show any WORKED-OUT arithmetic, intermediate calculation lines, a written formula, a move list, or an explanation of how the value was obtained? Answer 'yes' if any such working / formula / explanation is visible, 'no' if only the required values (and ordinary labels) appear. Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

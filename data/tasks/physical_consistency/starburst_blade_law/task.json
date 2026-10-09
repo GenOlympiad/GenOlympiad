@@ -1,0 +1,147 @@
+{
+  "id": "starburst_blade_law",
+  "axis": "physical_consistency",
+  "prompt": "A photo-style a bright car headlight at night shot with a 6-blade aperture, throwing a star-burst of spikes. Obey diffraction optics: a lens with 6 aperture blades produces a star-burst whose spike count follows a rule -- an EVEN number of aperture blades gives that many spikes, an ODD number of blades gives DOUBLE that many. With 6 blades this light must show exactly 6 straight diffraction spikes radiating evenly around it. Draw exactly 6 evenly-spaced straight spikes. No text, no numbers.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a bright point light with star-burst spikes? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel printing an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "nblades": 6,
+    "nspikes": 6,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "light": "car headlight"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "spike_count_law",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the star-burst of light -- the bright {gt.light} together with all the straight rays of light radiating from it",
+          "votes": 3,
+          "out": "spb",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["spb.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows a bright light with straight rays of light shooting out of it. Write down every straight ray shooting out from the light, each with a few plain words saying which way it points. Two rays lying opposite each other across the light are two separate rays. Separate one item from the next with a semicolon; write no running total and nothing else. If no ray shoots out, write the single word NONE.",
+          "boxes": "spb",
+          "pad": 0.05,
+          "out": "spc"
+        },
+        {
+          "fail_if": ["spc.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["spc", "empty_as='0'"],
+          "out": "spc__std"
+        },
+        {
+          "fail_if": ["spc__std.refused"]
+        },
+        {
+          "run": "count_in_largest_closeup",
+          "args": ["spb", "spc__std"],
+          "out": "cnt_s"
+        },
+        {
+          "fail_if": ["cnt_s.no_read"]
+        },
+        {
+          "run": "count_matches",
+          "args": ["cnt_s.n", "reference.nspikes"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_spikes",
+      "weight": 0.6,
+      "not_scored": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the star-burst of light -- the bright {gt.light} together with all the straight rays of light radiating from it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_n",
+          "votes": 3
+        },
+        {
+          "fail_if": ["box_n.unreadable"]
+        },
+        {
+          "read_crop": "This close-up shows a bright light with straight rays of light shooting out of it. How many straight rays shoot out from the light? Two rays lying opposite each other across the light count as two. Answer with just a number.",
+          "boxes": "box_n",
+          "pad": 0.05,
+          "out": "crop_n"
+        },
+        {
+          "fail_if": ["crop_n.unreadable"]
+        },
+        {
+          "run": "count_in_largest_closeup",
+          "args": ["box_n", "crop_n"],
+          "out": "cnt_n",
+          "code": {
+            "inline": "biggest_for_d1_code"
+          }
+        },
+        {
+          "fail_if": ["cnt_n.no_read"]
+        },
+        {
+          "run": "count_within_one",
+          "args": ["cnt_n.n", "reference.nspikes"],
+          "code": {
+            "inline": "c_code_2"
+          },
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

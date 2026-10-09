@@ -1,0 +1,161 @@
+{
+  "id": "lens_depth_of_field_engraving",
+  "axis": "physical_consistency",
+  "prompt": "The engraving layout a lens maker signs off before the barrel of a new fifty millimetre prime goes to the marking machine, drawn as the barrel rolled out flat.\n\nThe sheet carries the focus ring rolled out with its distance scale along it: the marks 0.45, 0.7, 1, 1.5, 2, 3, 5 and 10 metres and the infinity sign, nine marks in all, each with its own figure beside it. The ring is turned so that the 5 metre mark stands against the index line in the middle of the sheet. Below the distance scale runs the depth of field scale, a row of aperture figures opening out on both sides of that index line, and the pair for f/11 is picked out: a leader runs from each of the two f/11 marks up to the distance scale, and each leader ends in a small ruled box for one figure in metres to one decimal place. The lens is computed for a circle of confusion of 0.03 millimetres.\n\nThe marking machine cuts from this sheet, so the distance figures have to fall along the ring the way a real focus ring is laid out, and the two boxes have to carry the near and far limits of sharpness this lens really gives at this aperture focused here. What those two limits are, and how the distance marks are spaced, is the optical designer's work -- I am deliberately not telling you either limit and I am deliberately not telling you the spacing. No formula, no working and no note goes on the sheet: apart from the nine distance figures, the aperture figures and the two boxed figures, the sheet carries no text. The nine figures and the two boxes are large enough to read.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a strip with a row of distance figures along it and a second row of figures below, with leader lines between them? A drawing, a layout sheet or a diagram all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "dof_window": "2.7,3.4,12.5,17.0",
+    "want_crowd": "infinity",
+    "n_marks": 9
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_boxes_carry_the_limits_this_lens_really_gives",
+      "weight": 2.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a small ruled box at the end of a leader line on the sheet",
+          "sweep": true,
+          "out": "df_r",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["df_r.unreadable"]
+        },
+        {
+          "read_crop": "Copy the figure written in this box. Write digits and any decimal point only, and write none if the box is empty.",
+          "boxes": "df_r",
+          "pad": 0.3,
+          "out": "df_q"
+        },
+        {
+          "fail_if": ["df_q.unreadable"]
+        },
+        {
+          "run": "dof_window_match",
+          "args": ["df_q", "reference.dof_window"],
+          "out": "df_s"
+        },
+        {
+          "compare": "df_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_distance_figures_crowd_towards_infinity",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the row of distance figures along the focus ring",
+          "sweep": true,
+          "out": "cr_r"
+        },
+        {
+          "fail_if": ["cr_r.unreadable"]
+        },
+        {
+          "read_crop": "Are the distance figures in this cut-out packed more closely together at the end nearest the infinity sign, or at the end nearest the closest distance? Answer with one word: infinity or close.",
+          "boxes": "cr_r",
+          "pad": 0.2,
+          "out": "cr_q"
+        },
+        {
+          "fail_if": ["cr_q.unreadable"]
+        },
+        {
+          "run": "one_word_match",
+          "args": ["cr_q", "reference.want_crowd"],
+          "out": "cr_s"
+        },
+        {
+          "compare": "cr_s.state",
+          "to": "match",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_focus_ring_carries_all_nine_engraved_marks",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a distance figure engraved along the focus ring",
+          "sweep": true,
+          "out": "box_read",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE engraved distance figure, rather than part of one or more than one? Answer yes or no only.",
+          "boxes": "box_read",
+          "pad": 0.3,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_marks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_formula_was_written_on_the_sheet",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a formula, a line of working or a note written on the layout sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

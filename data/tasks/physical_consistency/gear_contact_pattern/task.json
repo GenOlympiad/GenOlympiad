@@ -1,0 +1,84 @@
+{
+  "id": "gear_contact_pattern",
+  "axis": "physical_consistency",
+  "prompt": "The mill drive went back together over the weekend and the fitter photographs the wheel before the case goes on, because the print on the teeth is the only proof of the setting.\n\nThe great wheel stands open in the pit with red lead on its flanks and the print pressed out by turning the drive over by hand. Every flank is scribed across into three parts, numbered 1, 2 and 3 from the coupling end, and every tooth carries its own number stamped near the root. The record board hung on the rail gives the shaft angle out by plus 0.06 millimetres per metre and the centre distance out by minus 0.05 millimetres. The works standard printed on the same board says a plus shaft angle drives the bearing away from the coupling end, a minus centre distance drives it down towards the roots, and the setting does the same on every tooth.\n\nWhere the print lands on the flank is what the record board does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a large open gear wheel in a maintenance pit with red marking compound worked onto its teeth and a written record board hung on the rail beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "part_three",
+    "part2": "at_roots"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the red lead print on any tooth flank of the great wheel. The flank is scribed across into three numbered parts. Answer with one of: the print sits in the part numbered 1; the print sits in the part numbered 2; the print sits in the part numbered 3.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the same red lead print. Answer with one of: the print lies down near the tooth roots; the print lies in the middle band of the flank; the print lies up near the tooth tips.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

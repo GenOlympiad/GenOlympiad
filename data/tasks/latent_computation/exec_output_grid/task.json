@@ -1,0 +1,180 @@
+{
+  "id": "exec_output_grid",
+  "axis": "latent_computation",
+  "prompt": "Execute the following Python program exactly, step by step, and render its printed output as an image. The program:\n\n    x = 9\n    for step in range(16):\n        print(x)\n        x = (31 * x + 17) % 89\n\nIt prints 16 whole numbers, one per step, in order. Render them as the 16 gate-assignment numbers on an airport GATE-ASSIGNMENT wall display: a clean 4x4 grid of bordered white panels, filled ROW BY ROW — the 1st printed number in the top-left panel, then left-to-right across the top row, then the next row, and so on, with the 16th printed number in the bottom-right panel. Exactly one integer per panel, crisp black digits on white panels with clear dark gridlines. Do NOT show the code, no flight labels, no arrows, no other text or numbers.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show airport gate-assignment wall display, sixteen numbers laid out as a 4x4 grid of bordered white panels? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "grid": [
+      [9, 29, 26, 22],
+      [76, 59, 66, 16],
+      [68, 78, 32, 30],
+      [57, 4, 52, 27]
+    ],
+    "n_rows": 4,
+    "first_val": 9,
+    "n_panels": 16,
+    "n_cols": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "program_output_exact",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_grid": "the 4x4 grid of integers, read row by row (left-to-right, top-to-bottom)",
+          "rows": 4,
+          "cols": 4,
+          "out": "cells"
+        },
+        {
+          "fail_if": ["cells.no_matrix", "cells.wrong_shape", "cells.illegible"]
+        },
+        {
+          "compare_grid": "cells.values",
+          "to": "reference.grid",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_panel_rows",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one bordered panel in the left-hand column of the display grid",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole bordered panel with a printed number inside it, rather than bare wall or only part of a panel? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_first_panel",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the integer printed in the TOP-LEFT panel of the 4x4 grid. Report just that number. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.first_val",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_panel_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one bordered panel holding a printed number on the display",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole bordered panel with a printed number inside it, rather than bare wall or only part of a panel? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_panels",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_n_cols",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "This display shows numbers laid out as a grid of bordered panels. How many COLUMNS does the grid have? Answer with a whole number only. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.n_cols",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

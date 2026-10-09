@@ -1,0 +1,137 @@
+{
+  "id": "weld_position_bead_sag",
+  "axis": "physical_consistency",
+  "prompt": "A welding school's macro-etch display board photographed straight on under even light, mounted at eye level in the workshop corridor.\n\nThree short coupons are bolted to the board in a row, each one cut across a completed weld and etched so that the parent plate, the fusion line and the added metal read as different tones. All three coupons were cut from the SAME joint preparation: the same plate thickness, the same single-V groove with the same included angle, the same consumable, the same operator, the same current. The only thing that differed was which way up the plate was clamped while the weld was made.\n\nUnder each coupon the board carries a small engraved plate with that coupon's welding position code stamped on it: PA on the left-hand coupon, PF on the middle one, PE on the right-hand one. PA is the plate lying flat with the weld run downhand, PF is the plate standing upright with the weld run upwards, PE is the plate overhead with the weld run underneath it. Each coupon is mounted the same way up as the plate was welded, so the direction that was down during welding is down on the board.\n\nWork out for yourself what each section has to look like -- I am deliberately not telling you the shape of any bead, and I am not telling you which coupon differs from which. Do not print any note, arrow, dimension or description on the board beyond the three stamped position codes. All three coupons with their cut faces, and all three engraved code plates, have to be legible in the one frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show three short pieces of metal mounted in a row, each cut through and showing a join in the metal? A photograph, a mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no metal pieces at all. Answer yes or no only.",
+  "reference": {
+    "profile_map": "pa=even|pe=flat|pf=sagging",
+    "undercut_map": "pa=no|pe=yes|pf=no",
+    "clean_no_notes": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_section_takes_the_shape_its_position_gives_it",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one coupon on the board together with the engraved plate under it",
+          "sweep": true,
+          "out": "cu"
+        },
+        {
+          "fail_if": ["cu.unreadable"]
+        },
+        {
+          "read_crop": "Copy the two letters stamped on the engraved plate in this cut-out. Write the letters only.",
+          "boxes": "cu",
+          "pad": 0.1,
+          "out": "cuk"
+        },
+        {
+          "read_crop": "Looking at the added metal on the cut face, is it piled evenly about the middle, heavier towards the lower side, or spread thin and wide? Answer with one word: even, sagging, or flat.",
+          "boxes": "cu",
+          "pad": 0.1,
+          "out": "cus"
+        },
+        {
+          "run": "pair_codes_with_reads",
+          "args": ["cuk", "cus"],
+          "out": "pm"
+        },
+        {
+          "fail_if": ["pm.refused"]
+        },
+        {
+          "compare": "pm.seq",
+          "to": "reference.profile_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_the_overhead_coupon_is_undercut_at_its_toes",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one coupon on the board together with the engraved plate under it",
+          "sweep": true,
+          "out": "cu"
+        },
+        {
+          "fail_if": ["cu.unreadable"]
+        },
+        {
+          "read_crop": "Copy the two letters stamped on the engraved plate in this cut-out. Write the letters only.",
+          "boxes": "cu",
+          "pad": 0.1,
+          "out": "cuk"
+        },
+        {
+          "read_crop": "Where the added metal meets the parent plate on each side, is there a small notch bitten into the parent plate? Answer yes or no only.",
+          "boxes": "cu",
+          "pad": 0.1,
+          "out": "cun"
+        },
+        {
+          "run": "pair_codes_with_reads",
+          "args": ["cuk", "cun"],
+          "out": "um"
+        },
+        {
+          "fail_if": ["um.refused"]
+        },
+        {
+          "compare": "um.seq",
+          "to": "reference.undercut_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_notes_or_dimensions_added_to_the_board",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written note, an arrow, a dimension or a description on the display board",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "nt"
+        },
+        {
+          "fail_if": ["nt.unreadable"]
+        },
+        {
+          "compare": "nt.clean",
+          "to": "reference.clean_no_notes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

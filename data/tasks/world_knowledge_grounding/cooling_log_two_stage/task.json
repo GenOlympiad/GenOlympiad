@@ -1,0 +1,84 @@
+{
+  "id": "cooling_log_two_stage",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The area manager audits this kitchen on Thursday, so the chef frames the cooling file and the pass together at the end of service.\n\nThree record sheets are clipped along the wall rail, headed A, B and C, one for each batch of chilli cooked this morning. Each sheet carries its own reading table above a printed time and temperature grid. Sheet A reads 60 at the start, 30 at one hour, 20 at two hours and 5 at six hours; sheet B reads 60, 26, 17 and 12 at those same clock times; sheet C reads 60, 34, 19 and 4. Degrees are Celsius and the grids are ruled in five degree divisions, with the hours along the foot. On the pass below, the pans stand in a row with their batch letters chalked on the rail, and a rework tag hangs from one.\n\nWhich batch is out of line, and where each reading falls on its own grid, is what the file does not carry.",
+  "difficulty": "s1",
+  "easy_question": "Does this frame show cooling record sheets clipped on a kitchen wall rail with a row of pans standing on the pass below them? Answer yes or no only.",
+  "reference": {
+    "part1": "tag_on_b",
+    "part2": "in_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the row of pans on the pass. Answer with one of: the rework tag hangs on the pan lettered A; the rework tag hangs on the pan lettered B; the rework tag hangs on the pan lettered C.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "On the record sheet lettered B, read the printed temperature scale down the side of its grid, and give the temperature its six-hour reading is plotted against.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part2", "9", "15"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

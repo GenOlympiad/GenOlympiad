@@ -1,0 +1,84 @@
+{
+  "id": "radioactive_package_category_bars",
+  "axis": "symbolic_systems",
+  "prompt": "The pot was drawn off and boxed this morning and the dispatch bench photographs every package as it leaves, because the driver signs for whatever the label says.\n\nA lead pot sits in its outer box on the bench, the transport label already on the box face and its index panel filled in with a marker. Two printed slips are taped beside it: the meter read 0.38 millisieverts an hour at the box face and 0.052 at one metre from it. The card over the bench lists the three labels the store may use: white below 0.005 at the face; two bar yellow below 0.5 with an index no higher than 1; three bar yellow below 2 with an index no higher than 10. The card sets the index as the one metre reading times 100, taken up to the next whole number.\n\nWhich label went on the box, and what went in the index panel, is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Is this a photograph of a small heavy pot inside a cardboard outer box on a dispatch bench, with a transport label on the box face and printed meter slips taped beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "yellow_three",
+    "part2": "in_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the transport label stuck on the face of the outer box. Answer with one of: it is the white label with one bar; it is the yellow label with two bars; it is the yellow label with three bars.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the number written by hand in the index panel of that same label and write that number.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part2", "5.5", "6.5"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

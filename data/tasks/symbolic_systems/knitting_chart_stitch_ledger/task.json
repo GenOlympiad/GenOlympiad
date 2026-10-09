@@ -1,0 +1,84 @@
+{
+  "id": "knitting_chart_stitch_ledger",
+  "axis": "symbolic_systems",
+  "prompt": "The pattern editor has to send this shaping chart to the printer with the sample pinned to it, so the desk is photographed with the chart and the knitted piece side by side.\n\nA shoulder shaping chart lies squared up on the studio desk. It is ruled as a grid, a cell to a stitch and a line to a row, and the key beside it gives every symbol its own take and yield. The commission says the chart is to run five lines up from the twenty stitches left on the needle, and that each charted line takes a stitch out at each of its ends. Down the right-hand side of the chart a narrow column is ruled for the running stitch count, and it has been left blank. The part-knitted sleeve head from this chart is pinned out on the cloth beside it.\n\nWhat the chart works out to, and what the knitted piece does, are what the commission does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a squared knitting chart lying on a studio desk with a knitted sleeve head pinned out beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "10",
+    "part2": "narrows_in_even_steps"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Count the symbol cells standing in the topmost line of the chart. Write the number only.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the part-knitted sleeve head pinned out beside the chart and say how its two side edges run. Answer with one of: the piece narrows towards its top in even steps on both edges; the piece has straight side edges from bottom to top; the piece widens out towards its top.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

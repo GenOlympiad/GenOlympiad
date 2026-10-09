@@ -1,0 +1,85 @@
+{
+  "id": "the_crate_slides_or_topples_by_its_own_pad",
+  "axis": "physical_consistency",
+  "prompt": "The lab photographs the table at the end of every incline run, so both crates and the display go into the one side-on shot.\n\nTwo matching fibreboard crates stand side by side on a tilting table, each two and a half times as tall as its base is wide. A pad is glued under each: black rubber under the left crate, a white glide sheet under the right. A specimen card by each crate names its pad. The wall chart gives the pad friction figures, black rubber 0.55 and glide sheet 0.25. Beside it hangs a legend card with three pictures and one word under each: slid, toppled, upright. The starting outline of each crate is printed on the table top, and a digital display is clamped to the table side. The table has been raised until the later of the two crates has just gone.\n\nWhich word each crate has ended up at, and what the display shows, is what the chart does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this side-on photograph show two matching crates standing on a raised tilting table with a legend card on the wall behind them? Answer yes or no only.",
+  "reference": {
+    "part1": "no_two_alike",
+    "part2": "in_band",
+    "vocab": ["slid", "toppled", "upright"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the two crates from left to right. For each one give the word from the legend card on the wall that fits it: slid, toppled or upright. Answer with the two words only, separated by a comma, with no numbering and no other words.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "adjacent_alike",
+          "args": ["a_part1", "reference.vocab"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the digital display clamped to the side of the table and write the figure showing on it.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part2", "20", "24"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

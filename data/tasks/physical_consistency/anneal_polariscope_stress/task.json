@@ -1,0 +1,84 @@
+{
+  "id": "anneal_polariscope_stress",
+  "axis": "physical_consistency",
+  "prompt": "The kiln has emptied and the shift cannot release the batch until the stress check is on file, so the inspector photographs the bench as it stands, all three pieces on the panel at once, with the cards left in place.\n\nThree tumblers from the same draw stand on the backlit panel of the stress bench, and a second polarising screen sits between them and the camera with its axis crossed against the panel. A card leans against the foot of each piece. The card at the left piece reads wall 2.4 mm; the middle card reads wall 4.6 mm; the right card reads wall 7.1 mm. All three cards carry the same kiln line, 40 minutes on the annealing cycle, and the left card carries one line more: held the full cycle, released. The room lights are out and the bench is the only source in the frame.\n\nHow the glass comes up on the panel is what the shift record does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show three glass tumblers standing on a backlit polarising panel with a small card leaning at the foot of each? Answer yes or no only.",
+  "reference": {
+    "part1": "thickest_piece_most_colour",
+    "part2": "comes_up_black"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the three tumblers on the panel and say which of them carries the most colour in its glass. Answer with one of: the piece whose card reads wall 7.1 mm carries the most colour; the piece whose card reads wall 2.4 mm carries the most colour; the three pieces all carry the same amount of colour as each other.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the piece whose card carries the line held the full cycle, released, and say how its glass comes up on the panel. Answer with one of: that piece comes up nearly black with no colour in it; that piece comes up carrying broad bands of colour; that piece comes up clear and colourless, like glass in ordinary room light.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

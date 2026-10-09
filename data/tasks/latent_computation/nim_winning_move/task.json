@@ -1,0 +1,260 @@
+{
+  "id": "nim_winning_move",
+  "axis": "latent_computation",
+  "prompt": "A photograph of a pub game corner where a game of Nim has just been played on a dark wooden table. There are three separate rows of wooden matchsticks laid out, labelled ROW A, ROW B and ROW C. Before the move the rows held 6, 10 and 13 matchsticks. A player has just made the single winning first move: from exactly ONE of the three rows they removed the correct number of matchsticks so that the position left for the opponent is a losing one. Draw the three rows as they look AFTER that winning move, and beside each row place a small printed count card showing how many matchsticks that row now holds. The number of matchsticks drawn in each row must equal the number on its card. Two of the rows are unchanged; exactly one row has fewer sticks than before. No other numbers or text anywhere in the image.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show pub game-corner photo of three labelled rows of wooden matchsticks after the winning first move has been played, each row tagged with a small printed count card? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "start": [6, 10, 13],
+    "result": [6, 10, 12],
+    "n_rows": 3,
+    "rA": 6,
+    "rB": 10,
+    "rC": 12
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "winning_position",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read_sequence": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or fill in the puzzle yourself. There are three rows labelled ROW A, ROW B, ROW C, each with a small printed count card. Report the three numbers printed on the ROW A, ROW B and ROW C cards, in that order, separated by spaces (three integers only).",
+          "n": 3,
+          "digits_only": false,
+          "out": "seq"
+        },
+        {
+          "fail_if": ["seq.unreadable"]
+        },
+        {
+          "run": "row_counts_match",
+          "args": ["seq", "reference.result"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "row_a",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or fill in the puzzle yourself. Beside ROW A there is a small printed count card with a number on it. Report the number printed on ROW A's card as a single integer.",
+          "out": "rn"
+        },
+        {
+          "fail_if": ["rn.unreadable"]
+        },
+        {
+          "compare_tolerance": "rn",
+          "to": "reference.rA",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "row_b",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or fill in the puzzle yourself. Beside ROW B there is a small printed count card with a number on it. Report the number printed on ROW B's card as a single integer.",
+          "out": "rn"
+        },
+        {
+          "fail_if": ["rn.unreadable"]
+        },
+        {
+          "compare_tolerance": "rn",
+          "to": "reference.rB",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "row_c",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or fill in the puzzle yourself. Beside ROW C there is a small printed count card with a number on it. Report the number printed on ROW C's card as a single integer.",
+          "out": "rn"
+        },
+        {
+          "fail_if": ["rn.unreadable"]
+        },
+        {
+          "compare_tolerance": "rn",
+          "to": "reference.rC",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sticks_match_cards",
+      "weight": 1.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "This image shows three rows of wooden matchsticks labelled ROW A, ROW B, ROW C; each row also has a small printed number on a card, but that card number MAY BE INCORRECT, so you must IGNORE the card entirely and count only the real sticks. Look ONLY at ROW A (the top row) and count the physical matchstick sticks actually drawn there, one by one from left to right. Answer with just the integer number of matchstick sticks you can actually see in that row.",
+          "out": "sa"
+        },
+        {
+          "fail_if": ["sa.unreadable"]
+        },
+        {
+          "read_number": "This image shows three rows of wooden matchsticks labelled ROW A, ROW B, ROW C; each row also has a small printed number on a card, but that card number MAY BE INCORRECT, so you must IGNORE the card entirely and count only the real sticks. Look ONLY at ROW B (the middle row) and count the physical matchstick sticks actually drawn there, one by one from left to right. Answer with just the integer number of matchstick sticks you can actually see in that row.",
+          "out": "sb"
+        },
+        {
+          "fail_if": ["sb.unreadable"]
+        },
+        {
+          "read_number": "This image shows three rows of wooden matchsticks labelled ROW A, ROW B, ROW C; each row also has a small printed number on a card, but that card number MAY BE INCORRECT, so you must IGNORE the card entirely and count only the real sticks. Look ONLY at ROW C (the bottom row) and count the physical matchstick sticks actually drawn there, one by one from left to right. Answer with just the integer number of matchstick sticks you can actually see in that row.",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "run": "row_counts_close",
+          "args": ["sa", "sb", "sc", "reference.result"],
+          "code": {
+            "inline": "chk_code_2"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_card_a",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the number printed on the small count card beside ROW A. Report the printed digits. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.rA",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_card_b",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the number printed on the small count card beside ROW B. Report the printed digits. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.rB",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_card_c",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the number printed on the small count card beside ROW C. Report the printed digits. Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.rC",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_rows",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one straight row of matchsticks laid side by side on the table",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole row of matchsticks lying side by side, rather than bare table or only part of a row? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,208 @@
+{
+  "id": "mirror_two_surfaces",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A clear, realistic photograph taken INSIDE a small independent coffee shop. You are standing behind the service counter with the till and the coffee machine right beside you, looking across the little room at the shop's glass front door; through the glass you can see the pavement and the street outside. Fill most of the frame with that glass door, straight on. TWO pieces of lettering are on the door, one on each face of the same pane of glass:\n(1) The shop's name, the four letters BEAN, is PAINTED IN LARGE LETTERS DIRECTLY ONTO THE OUTER FACE of the glass -- the street side of the pane, the side the pavement is on. It was signwritten there for people walking past on the pavement outside, so it is the right way round for someone standing out on the street.\n(2) A small white printed card is taped ONTO THE INNER FACE of the same pane -- the shop side of the glass, level with the door handle, its printed side facing into the room. It carries the single word PULL and it is there for a customer who is inside the shop and about to leave.\nDraw both pieces of lettering large, dark and easy to read, the painted name across the upper half of the glass and the little card down beside the handle. Plain even daylight, sharp focus, nothing else written or printed anywhere in the picture, no other signs, no menu boards, no captions, no watermark.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict the inside of a small coffee shop looking across the room at its glass front door, with the shop name painted on the door glass and a small printed card taped to the same glass. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical place and objects it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "paint_word": "BEAN",
+    "card_word": "PULL",
+    "expect_paint": "mirrored",
+    "expect_card": "normal",
+    "q_indoor": "Where was this picture taken from -- from INSIDE the shop looking out through the glass door at the street, or from OUTSIDE on the street looking in? Answer with exactly one word: inside or outside.",
+    "q_chir_paint": "This picture shows some large letters painted on the glass of a shop door. Look only at the shapes of the letters themselves. Are the letters the normal way round -- the way letters look in an ordinary book, reading left to right -- or are they back-to-front, the way ordinary writing looks when you see it in a mirror? Answer with exactly one word: normal or mirrored.",
+    "q_chir_card": "This picture shows some printing on a small card taped to the glass of a shop door. Look only at the shapes of the letters themselves. Are the letters the normal way round -- the way letters look in an ordinary book, reading left to right -- or are they back-to-front, the way ordinary writing looks when you see it in a mirror? Answer with exactly one word: normal or mirrored.",
+    "q_loc_paint": "Does this picture show LARGE letters painted straight onto the glass of a door -- big signwritten letters -- rather than a small printed paper card? Answer yes or no only.",
+    "q_loc_card": "Does this picture show a SMALL printed paper card stuck on the glass -- a little notice card -- rather than big letters painted on the glass itself? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "premise_viewpoint_inside",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.q_indoor",
+          "out": "vp"
+        },
+        {
+          "fail_if": ["vp.unreadable"]
+        },
+        {
+          "extract": "(?i)(inside|outside)",
+          "value": "vp",
+          "out": "sidew"
+        },
+        {
+          "compare": "sidew",
+          "to": "inside",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "two_surface_chirality",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the shop name painted in big letters on the door glass",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "bp"
+        },
+        {
+          "fail_if": ["bp.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_chir_paint",
+          "boxes": "bp",
+          "out": "cp"
+        },
+        {
+          "fail_if": ["cp.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_loc_paint",
+          "boxes": "bp",
+          "out": "lp"
+        },
+        {
+          "run": "read_handedness",
+          "args": ["cp", "lp"],
+          "out": "vp"
+        },
+        {
+          "read": "boxes",
+          "target": "the small printed card taped on the door glass",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "bc"
+        },
+        {
+          "fail_if": ["bc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_chir_card",
+          "boxes": "bc",
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_loc_card",
+          "boxes": "bc",
+          "out": "lc"
+        },
+        {
+          "run": "read_handedness",
+          "args": ["cc", "lc"],
+          "out": "vc"
+        },
+        {
+          "compare": "vp.val",
+          "to": "reference.expect_paint",
+          "out": "f_paint"
+        },
+        {
+          "compare": "vc.val",
+          "to": "reference.expect_card",
+          "out": "f_card"
+        },
+        {
+          "all": ["f_paint", "f_card"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_uniform_handedness",
+      "weight": 2.0,
+      "score": "cl.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the shop name painted in big letters on the door glass",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "bp"
+        },
+        {
+          "fail_if": ["bp.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_chir_paint",
+          "boxes": "bp",
+          "out": "cp"
+        },
+        {
+          "fail_if": ["cp.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_loc_paint",
+          "boxes": "bp",
+          "out": "lp"
+        },
+        {
+          "run": "read_handedness",
+          "args": ["cp", "lp"],
+          "out": "vp"
+        },
+        {
+          "read": "boxes",
+          "target": "the small printed card taped on the door glass",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "bc"
+        },
+        {
+          "fail_if": ["bc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_chir_card",
+          "boxes": "bc",
+          "out": "cc"
+        },
+        {
+          "fail_if": ["cc.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_loc_card",
+          "boxes": "bc",
+          "out": "lc"
+        },
+        {
+          "run": "read_handedness",
+          "args": ["cc", "lc"],
+          "out": "vc"
+        },
+        {
+          "run": "handedness_differs",
+          "args": ["vp", "vc"],
+          "out": "cl"
+        }
+      ]
+    }
+  ]
+}

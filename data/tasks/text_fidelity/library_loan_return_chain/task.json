@@ -1,0 +1,105 @@
+{
+  "id": "library_loan_return_chain",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed LIBRARY circulation ledger titled 'RIVERSIDE PUBLIC LIBRARY' (Circulation Ledger -- Card 4471). It lists 14 transactions in date order, each with a CALL NUMBER (the copy), a TRANSACTION type (BORROW or RETURN) and a DATE. Several copies appear. CRITICAL rule for each copy: its own transactions must alternate BORROW then RETURN then BORROW then RETURN, and their dates must strictly increase through that order (a copy cannot be borrowed again until it has been returned). The copy with call number 'QA76 .K52' is borrowed and returned twice; its four events (two borrows, two returns) must run borrow < return < borrow < return in date. Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a library circulation ledger listing borrow and return transactions, each with a call number and a date. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 14,
+    "copy": "QA76 .K52",
+    "q_k0": "Scan this ledger from the TOP downward and find every row whose CALL NUMBER is exactly 'QA76 .K52' (ignore all other call numbers). There are four such rows. Looking at the first of those rows from the top, is its TRANSACTION a BORROW or a RETURN? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer one word: BORROW or RETURN.",
+    "q_d0": "Scan this ledger from the TOP downward and find every row whose CALL NUMBER is exactly 'QA76 .K52' (ignore all other call numbers). There are four such rows. Looking at the first of those rows from the top, what DATE is printed on it (YYYY-MM-DD)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the date.",
+    "q_k1": "Scan this ledger from the TOP downward and find every row whose CALL NUMBER is exactly 'QA76 .K52' (ignore all other call numbers). There are four such rows. Looking at the second of those rows from the top, is its TRANSACTION a BORROW or a RETURN? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer one word: BORROW or RETURN.",
+    "q_d1": "Scan this ledger from the TOP downward and find every row whose CALL NUMBER is exactly 'QA76 .K52' (ignore all other call numbers). There are four such rows. Looking at the second of those rows from the top, what DATE is printed on it (YYYY-MM-DD)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the date.",
+    "q_k2": "Scan this ledger from the TOP downward and find every row whose CALL NUMBER is exactly 'QA76 .K52' (ignore all other call numbers). There are four such rows. Looking at the third of those rows from the top, is its TRANSACTION a BORROW or a RETURN? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer one word: BORROW or RETURN.",
+    "q_d2": "Scan this ledger from the TOP downward and find every row whose CALL NUMBER is exactly 'QA76 .K52' (ignore all other call numbers). There are four such rows. Looking at the third of those rows from the top, what DATE is printed on it (YYYY-MM-DD)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the date.",
+    "q_k3": "Scan this ledger from the TOP downward and find every row whose CALL NUMBER is exactly 'QA76 .K52' (ignore all other call numbers). There are four such rows. Looking at the fourth of those rows from the top, is its TRANSACTION a BORROW or a RETURN? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer one word: BORROW or RETURN.",
+    "q_d3": "Scan this ledger from the TOP downward and find every row whose CALL NUMBER is exactly 'QA76 .K52' (ignore all other call numbers). There are four such rows. Looking at the fourth of those rows from the top, what DATE is printed on it (YYYY-MM-DD)? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the date.",
+    "q_count": "Count how many transaction rows (numbered lines) are listed in this ledger. Whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "library_loan_return_chain_law",
+      "weight": 1.0,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read_crop": "This is a library circulation ledger. Write out every transaction row on it, one row per line, in the order they are printed from top to bottom. On each line give that row's call number, then a comma, then the word BORROW or RETURN, then a comma, then that row's date. Copy every character exactly as printed, even if something looks wrong or out of order. Answer with the rows only.",
+          "out": "tr"
+        },
+        {
+          "fail_if": ["tr.unreadable"]
+        },
+        {
+          "const": "reference.copy",
+          "out": "copyval"
+        },
+        {
+          "run": "copy_borrow_return_chain",
+          "args": ["tr", "copyval"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one transaction line printed in the ledger table, below the bold heading line",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one complete printed data line of the table, not the bold heading line and not blank paper? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 2.9,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

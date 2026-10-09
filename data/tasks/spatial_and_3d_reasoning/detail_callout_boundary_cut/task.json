@@ -1,0 +1,218 @@
+{
+  "id": "detail_callout_boundary_cut",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A gauge-and-fixture shop's drawing office has to reissue the part drawing for a locating spindle before the batch goes back to the inspection room. One A3 sheet, ordinary drawing-office output, the sort of sheet an inspector works from at the bench.\n\nThe part, in full: a plain round steel spindle, 40 mm diameter and 120 mm long, chamfered 1 mm at 45 degrees at each end. A keyway 8 mm wide and 4 mm deep is milled along the top of it, running from 15 mm to 75 mm measured from the left-hand end. A retaining-ring groove 2 mm wide and 1.5 mm deep is turned right round the spindle at 45 mm from that same end. One oil hole of 5 mm diameter is drilled radially into the top of it at 95 mm from that end.\n\nThe callout is already agreed with the inspection room and belongs on the sheet exactly as agreed: a circle 30 mm across on the main view, centred on the top outline of the spindle at 45 mm from the left-hand end, with the letter B against that circle. The sheet then has to carry that detail brought out at five times size in the reserved space at the top right, captioned with the letter B and its enlargement ratio the way the office captions detail views. Inspection takes its measurements of the small features off that enlargement, so the enlargement has to agree with the part.\n\nWhich features fall inside that circle, and what each of them has to look like once it has been brought out at five times size, is for you to work out from the sizes above -- I am deliberately not telling you. Beyond ordinary drawing content the sheet stays bare: no note explaining how the detail was arrived at, and nothing outside the office's normal practice.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a part drawing of a round shaft, with a circled detail callout and a separate round enlarged view on the same sheet? A CAD plot, a hand-drawn sheet or a rendering ALL count as yes. Answer NO only if the image instead shows a photograph of a real shaft, a page of prose, or nothing drawn at all. Answer yes or no only.",
+  "reference": {
+    "slot_end_inside": "no",
+    "groove_in_detail": "yes",
+    "hole_in_detail": "no",
+    "n_detail_views": 1,
+    "detail_scale_factor": 5,
+    "code_carried": {
+      "program": "code_carried"
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "enlargement_keeps_the_cut",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the callout circle lettered B drawn on the shaft in the main view",
+          "expected_n": 1,
+          "out": "box_callout"
+        },
+        {
+          "fail_if": ["box_callout.unreadable"]
+        },
+        {
+          "read_crop": "Inside the circle drawn on the shaft, does the long groove along the top stop with a visible end, run out past the circle edge, or is no groove drawn there? Answer with one word: stops, runs-out, or none.",
+          "boxes": "box_callout",
+          "out": "rd_callout"
+        },
+        {
+          "fail_if": ["rd_callout.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the round enlarged detail view drawn in the corner of the drawing sheet",
+          "expected_n": 1,
+          "out": "box_detail"
+        },
+        {
+          "fail_if": ["box_detail.unreadable"]
+        },
+        {
+          "read_crop": "Inside the round outline of this enlarged view, does the long groove along the top stop with a visible end, run out past that outline edge, or is no groove drawn there? Answer with one word: stops, runs-out, or none.",
+          "boxes": "box_detail",
+          "out": "rd_detail"
+        },
+        {
+          "fail_if": ["rd_detail.unreadable"]
+        },
+        {
+          "run": "groove_end_agrees",
+          "args": ["rd_callout", "rd_detail", "reference.slot_end_inside"],
+          "code": "code_carried",
+          "out": "cut_res"
+        },
+        {
+          "compare": "cut_res.ok",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "contained_groove_arrives_whole",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the round enlarged detail view drawn in the corner of the drawing sheet",
+          "expected_n": 1,
+          "out": "box_groove"
+        },
+        {
+          "fail_if": ["box_groove.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is a round enlarged view of part of a shaft. Is a narrow square-cornered groove drawn right across the shaft here, with both of its walls in view? Answer yes or no only.",
+          "boxes": "box_groove",
+          "out": "rd_groove"
+        },
+        {
+          "fail_if": ["rd_groove.unreadable"]
+        },
+        {
+          "compare": "rd_groove.answers.0",
+          "to": "reference.groove_in_detail",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "outside_feature_stays_out",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the round enlarged detail view drawn in the corner of the drawing sheet",
+          "expected_n": 1,
+          "out": "box_hole"
+        },
+        {
+          "fail_if": ["box_hole.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is a round enlarged view of part of a shaft. Is a small round drilled hole drawn anywhere inside the round outline? Answer yes or no only.",
+          "boxes": "box_hole",
+          "out": "rd_hole"
+        },
+        {
+          "fail_if": ["rd_hole.unreadable"]
+        },
+        {
+          "compare": "rd_hole.answers.0",
+          "to": "reference.hole_in_detail",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "detail_view_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a round enlarged detail view drawn on the drawing sheet",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole round enlarged detail view, rather than the long main view of the shaft or only part of a view? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_detail_views",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "detail_caption_ratio",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the caption lettered beside the round enlarged detail view",
+          "expected_n": 1,
+          "out": "box_cap"
+        },
+        {
+          "fail_if": ["box_cap.unreadable"]
+        },
+        {
+          "read_crop": "Copy the lettering printed in this cut-out exactly as it stands. Write nothing else.",
+          "boxes": "box_cap",
+          "out": "cap_read"
+        },
+        {
+          "fail_if": ["cap_read.unreadable"]
+        },
+        {
+          "extract": "(\\d+)\\s*:\\s*1",
+          "value": "cap_read.answers.0",
+          "out": "cap_ratio"
+        },
+        {
+          "compare": "cap_ratio",
+          "to": "reference.detail_scale_factor",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

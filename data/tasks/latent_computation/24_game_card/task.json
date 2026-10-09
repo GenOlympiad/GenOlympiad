@@ -1,0 +1,181 @@
+{
+  "id": "24_game_card",
+  "axis": "latent_computation",
+  "prompt": "A close-up photograph of a card table on which four playing cards are dealt face-up in a row: two threes and two eights (values 3, 3, 8 and 8). Below the cards is a small slate. On the slate, write a single arithmetic expression that uses each of the four card values 3, 3, 8, 8 exactly once, combined with plus, minus, multiply, divide and brackets, so that the expression equals exactly 24. Only one kind of solution exists for this hand and it needs division and brackets. Write just that one correct expression on the slate (you may end it with '= 24'); do not write any other numbers, words or working on the slate or table.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show card-table close-up of four playing cards 3, 3, 8, 8 dealt in a row with a small slate below on which an arithmetic expression using all four to make a stated target value is written? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "cards": [3, 3, 8, 8],
+    "target": 24,
+    "n_cards": 4,
+    "n_threes": 2,
+    "n_eights": 2
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "expr_makes_24",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "Read ONLY the value actually printed/drawn at the location described. Transcribe exactly what is shown on the image; do NOT solve, complete or fill in the puzzle yourself. On the slate below the four playing cards there is a single arithmetic expression written in chalk. Transcribe exactly the characters written on the slate (digits, + - * / x, brackets, and any '= 24'). Report only that written expression; do not invent or make up an expression yourself.",
+          "out": "expr"
+        },
+        {
+          "fail_if": ["expr.unreadable"]
+        },
+        {
+          "run": "check_makes_24",
+          "args": ["expr", "reference.cards"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_cards",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "How many playing cards are dealt face-up in the row on the card table? Give a whole number only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.n_cards",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count_threes",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Among the four dealt playing cards, how many show the value 3 (three)? Give a whole number only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.n_threes",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count_eights",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Among the four dealt playing cards, how many show the value 8 (eight)? Give a whole number only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.n_eights",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_target_value",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_number": "Read the target total that the expression on the slate is stated to equal (look for the number after the '=' sign, or the stated target of the puzzle). Read ONLY the digit(s) actually printed on the image for that line; do NOT do any sums, redo it or correct it -- report exactly what is printed even if it looks wrong. Answer with digits only.",
+          "out": "read"
+        },
+        {
+          "fail_if": ["read.unreadable"]
+        },
+        {
+          "compare_band": "read",
+          "to": "reference.target",
+          "core_abs": 0.499,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_cards_match",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "In this picture some playing cards lie face-up in a row. Going along the row from left to right, write down the number printed on each card, separated by commas. Copy only the numbers you can see on the cards; ignore any writing anywhere else in the picture, and write nothing else.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "run": "numbers_match",
+          "args": ["s", "reference.cards"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_extra_working",
+      "weight": 0.15,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Apart from the small number of required result / reference values, does this image show any WORKED-OUT arithmetic, intermediate calculation lines, a written formula, a move list, or an explanation of how the value was obtained? Answer 'yes' if any such working / formula / explanation is visible, 'no' if only the required values (and ordinary labels) appear. Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

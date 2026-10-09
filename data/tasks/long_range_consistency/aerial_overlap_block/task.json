@@ -1,0 +1,184 @@
+{
+  "id": "aerial_overlap_block",
+  "axis": "long_range_consistency",
+  "prompt": "Here is the block we have to fly next week; turn it into the flight plan sheet the pilot takes up with him. The sheet holds the survey block ruled on it, the flight lines across it, an exposure cross wherever the camera fires, and the ground footprint of one photograph as a square on each line.\n\nWhat the contract pins. The block is a square 1.44 km on a side. At the planned flying height one photograph covers a square 900 m on the ground. The forward overlap along a line is 60 per cent and the side overlap between neighbouring lines is 20 per cent, and the block has to come out covered with no hole anywhere in it. The lines run east and west with north to the top of the sheet, and the sheet carries a north arrow and a scale bar. Every exposure cross is numbered with its line and its place along that line, 1-1, 1-2 and so on. The footprint square goes on the first exposure of the first line, on the middle exposure of the middle line, and on the last exposure of the last line.\n\nHow many lines the block needs, how many exposures go on each line and how far apart any of them stand is the flight planner's own work, and I am deliberately not telling you any of it. Apart from the block outline, the flight lines, the numbered crosses, the three footprint squares, the north arrow and the scale bar, nothing else goes on the sheet: no spacing figure, no dimension line between two crosses, no working. Keep every cross and every square edge easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a survey planning sheet with a ruled area, straight lines across it, a scatter of small crosses and a square or two outlined on it? A plain line drawing, an illustration or a photograph of such a sheet all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "fp_counts": [2, 3, 2],
+    "n_footprints": 3,
+    "edge_expected": ["yes", "no", "yes"],
+    "edge_state": "match"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_drawn_footprint_holds_the_run_of_exposures_the_two_overlaps_demand",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the photograph footprint squares drawn on the flight plan",
+          "out": "fp_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["fp_r.unreadable"]
+        },
+        {
+          "read_crop": "What exposure number is printed at the centre of the square in this cut-out? Answer with that number only.",
+          "boxes": "fp_r",
+          "pad": 0.25,
+          "out": "fp_id",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fp_id.unreadable"]
+        },
+        {
+          "read_crop": "Write down every small exposure cross standing inside the outlined square in this cut-out, each with a few plain words saying where inside the square it sits. Separate one item from the next with a semicolon; write no running total and nothing else. If there is no cross inside the square, write the single word NONE.",
+          "boxes": "fp_r",
+          "pad": 0.06,
+          "out": "fp_n",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["fp_n.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["fp_n", "empty_as='0'"],
+          "out": "fp_n__std"
+        },
+        {
+          "fail_if": ["fp_n__std.refused"]
+        },
+        {
+          "run": "overlap_count_match",
+          "args": ["fp_id", "fp_n__std", "reference.fp_counts"],
+          "out": "fp_s"
+        },
+        {
+          "compare_band": "fp_s.ok",
+          "to": "reference.n_footprints",
+          "core_abs": 0.499,
+          "margin_abs": 2.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_block_outline_runs_through_the_end_squares_and_clear_of_the_middle_one",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the photograph footprint squares drawn on the flight plan",
+          "out": "eg_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["eg_r.unreadable"]
+        },
+        {
+          "read_crop": "Does the ruled boundary of the survey block pass through the outlined square in this cut-out? Answer yes or no only.",
+          "boxes": "eg_r",
+          "pad": 0.3,
+          "out": "eg_a",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["eg_a.unreadable"]
+        },
+        {
+          "run": "rim_cut_match",
+          "args": ["eg_a", "reference.edge_expected"],
+          "out": "eg_s"
+        },
+        {
+          "compare": "eg_s.state",
+          "to": "reference.edge_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sheet_carries_its_three_drawn_footprint_squares",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the photograph footprint squares drawn on the flight plan",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole outlined square with an exposure cross at its centre, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.4,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_footprints",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_spacing_figure_or_dimension_line_was_added_between_the_crosses",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a distance figure or a dimension line drawn between two exposure crosses",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

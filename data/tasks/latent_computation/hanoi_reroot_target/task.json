@@ -1,0 +1,274 @@
+{
+  "id": "hanoi_reroot_target",
+  "axis": "latent_computation",
+  "prompt": "A crisp studio photograph, taken level with the base, of a hand-turned wooden puzzle on a craft-fair stall table: a flat base with THREE upright pegs standing on it, marked A (left), B (middle) and C (right).\n\nIt carries 5 round disks of clearly different widths -- disk 1 (the narrowest) is red, disk 2 is orange, disk 3 is amber, disk 4 is green, disk 5 is blue (the widest) -- each with its own size number printed large on its face. The stacking rule is the usual one -- a disk rests either on the base or on a disk wider than itself, never on a narrower one.\n\nThis puzzle is NOT set up the usual way. At the start the whole tower of 5 disks stands on peg C, widest at the bottom, and it has to be rebuilt on peg B; peg A is only a resting place. Someone solves it in the FEWEST possible moves -- exactly 31 moves -- one disk at a time, always the top disk of a peg, never a wider disk onto a narrower one.\n\nShow the puzzle EXACTLY as it stands immediately after move 21 of that shortest solution for THIS start peg and THIS target peg. Every disk must sit on the peg it really occupies at that instant, in the correct order; an empty peg must be drawn empty.\n\nKeep the picture clean: no move list, no annotations, no captions. The only characters in the image are the letters on the base and the number printed on each disk.",
+  "difficulty": "s3",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a wooden ring-stacking puzzle: a base with three upright pegs carrying round stacking disks of graduated widths? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_disks": 5,
+    "n_pegs": 3,
+    "s_A": "4,1",
+    "c_A": 2,
+    "s_B": "5,2",
+    "c_B": 2,
+    "s_C": "3",
+    "c_C": 1,
+    "enforce_notext": true,
+    "q_notext": "The peg letters on the base and the size number printed on each disk do not count. Apart from those, is there a separate line of text or numbers that lists moves or states where the disks sit? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "peg_contents_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "upright peg standing on the base of the stacking puzzle",
+          "sweep": true,
+          "votes": 3,
+          "out": "pb"
+        },
+        {
+          "fail_if": ["pb.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking puzzle. Does this cut-out show ONE single upright peg standing on the flat base -- just one peg, not two pegs side by side, and not only bare background or bare table? Answer yes or no only.",
+          "boxes": "pb",
+          "pad": 0.06,
+          "out": "pc"
+        },
+        {
+          "fail_if": ["pc.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "round disk threaded on one of the upright pegs",
+          "sweep": true,
+          "votes": 3,
+          "out": "db"
+        },
+        {
+          "fail_if": ["db.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking puzzle. Does this cut-out show exactly ONE whole round disk threaded on a peg -- one single disk, not two of them stacked on top of each other, not a bare peg, and not just the flat base or the background? Answer yes or no only.",
+          "boxes": "db",
+          "pad": 0.06,
+          "out": "dc"
+        },
+        {
+          "fail_if": ["dc.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one round flat disk from a stacking toy, and a size number is printed large on the face of that disk. What number is printed on it? Answer with that single number and nothing else. If you cannot see any number printed on it, answer 0.",
+          "boxes": "db",
+          "pad": 0.04,
+          "out": "dn"
+        },
+        {
+          "fail_if": ["dn.unreadable"]
+        },
+        {
+          "run": "read_peg_stacks",
+          "args": ["pb", "pc", "db", "dc", "dn", "reference"],
+          "out": "st"
+        },
+        {
+          "compare_set": "st.A",
+          "to": "reference.s_A",
+          "out": "fA_raw"
+        },
+        {
+          "compare_tolerance": "fA_raw",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "fA"
+        },
+        {
+          "compare_set": "st.B",
+          "to": "reference.s_B",
+          "out": "fB_raw"
+        },
+        {
+          "compare_tolerance": "fB_raw",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "fB"
+        },
+        {
+          "compare_set": "st.C",
+          "to": "reference.s_C",
+          "out": "fC_raw"
+        },
+        {
+          "compare_tolerance": "fC_raw",
+          "to": 1.0,
+          "tol": 0.001,
+          "out": "fC"
+        },
+        {
+          "all": ["fA", "fB", "fC"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "stack_heights_joint",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "upright peg standing on the base of the stacking puzzle",
+          "sweep": true,
+          "votes": 3,
+          "out": "pb2"
+        },
+        {
+          "fail_if": ["pb2.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking puzzle. Does this cut-out show ONE single upright peg standing on the flat base -- just one peg, not two pegs side by side, and not only bare background or bare table? Answer yes or no only.",
+          "boxes": "pb2",
+          "pad": 0.06,
+          "out": "pc2"
+        },
+        {
+          "fail_if": ["pc2.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "round disk threaded on one of the upright pegs",
+          "sweep": true,
+          "votes": 3,
+          "out": "db2"
+        },
+        {
+          "fail_if": ["db2.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking puzzle. Does this cut-out show exactly ONE whole round disk threaded on a peg -- one single disk, not two of them stacked on top of each other, not a bare peg, and not just the flat base or the background? Answer yes or no only.",
+          "boxes": "db2",
+          "pad": 0.06,
+          "out": "dc2"
+        },
+        {
+          "fail_if": ["dc2.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture. It shows one round flat disk from a stacking toy, and a size number is printed large on the face of that disk. What number is printed on it? Answer with that single number and nothing else. If you cannot see any number printed on it, answer 0.",
+          "boxes": "db2",
+          "pad": 0.04,
+          "out": "dn2"
+        },
+        {
+          "fail_if": ["dn2.unreadable"]
+        },
+        {
+          "run": "read_peg_stacks",
+          "args": ["pb2", "pc2", "db2", "dc2", "dn2", "reference"],
+          "out": "st2"
+        },
+        {
+          "compare_band": "st2.h_A",
+          "to": "reference.c_A",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "gA"
+        },
+        {
+          "compare_band": "st2.h_B",
+          "to": "reference.c_B",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "gB"
+        },
+        {
+          "compare_band": "st2.h_C",
+          "to": "reference.c_C",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "gC"
+        },
+        {
+          "all": ["gA", "gB", "gC"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "disk_conservation",
+      "weight": 0.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "round disk threaded on one of the upright pegs",
+          "sweep": true,
+          "votes": 3,
+          "out": "db3"
+        },
+        {
+          "fail_if": ["db3.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut out of a bigger picture of a stacking puzzle. Does this cut-out show exactly ONE whole round disk threaded on a peg -- one single disk, not two of them stacked on top of each other, not a bare peg, and not just the flat base or the background? Answer yes or no only.",
+          "boxes": "db3",
+          "pad": 0.06,
+          "out": "dc3"
+        },
+        {
+          "fail_if": ["dc3.unreadable"]
+        },
+        {
+          "run": "count_confirmed_disks",
+          "args": ["db3", "dc3", "reference"],
+          "out": "tot"
+        },
+        {
+          "compare_band": "tot.n",
+          "to": "reference.n_disks",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

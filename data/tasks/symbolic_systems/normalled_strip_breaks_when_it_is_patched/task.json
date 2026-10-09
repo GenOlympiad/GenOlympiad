@@ -1,0 +1,86 @@
+{
+  "id": "normalled_strip_breaks_when_it_is_patched",
+  "axis": "symbolic_systems",
+  "prompt": "The technician has to hand the room over before the session, so the rack is photographed as it stands and the frame goes into the studio's handover file.\n\nA patch bay sits in the middle of the rack. Its holes run in an upper row that sends and a lower row that listens, with the machine's name written on the strip under each hole and the printed normalling mark on the strip edge beside each column. Every column here is marked normalled, and by default the microphone preamplifier feeds the multitrack recorder, the compact disc player feeds the headphone amplifier, and the multitrack feeds the monitor controller. Patch cords in strong colours are plugged across the bay. The docket clipped to the rack, job 4417, asks for this session: the headphone amplifier must hear what the preamplifier sends, and the monitor controller must be fed from the compact disc player.\n\nWhich holes those cords stand in is what the docket does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a studio patch bay in a rack with patch cords plugged across it and a docket clipped beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "cord_end_in_the_named_hole",
+    "part2": "2"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Find the hole on the patch bay whose strip is written with the microphone preamplifier's name, and say where the nearest cord end stands. Answer with one of: a cord end stands in that same hole; a cord end stands in the hole directly below it; both of those holes stand empty.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "patch cord ends standing in the lower row of holes on the bay",
+          "out": "r_part2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part2.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

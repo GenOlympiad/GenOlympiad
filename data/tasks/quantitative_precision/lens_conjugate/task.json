@@ -1,0 +1,94 @@
+{
+  "id": "lens_conjugate",
+  "axis": "quantitative_precision",
+  "prompt": "A clean a camera-focusing diagram with a thin lens (a grey vertical lens plane), a green object arrow to the left and a blue image arrow to the right, and two magenta focal-point dots on the horizontal axis. The distances must obey the thin-lens equation 1/u + 1/v = 1/f, where u is the object distance from the lens, v the image distance from the lens, and f the focal length (the distance from the lens to a magenta focal dot). Place the blue image arrow at the distance v that makes 1/u + 1/v equal 1/f exactly. Do NOT place the image at an arbitrary distance. Plain background, no numbers.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a camera-focusing diagram with a thin lens (a grey vertical lens plane), a green object arrow to the left and a blue image arrow to the right, and two magenta focal-point dots on the horizontal axis. Ignoring artistic quality, does the image show a horizontal axis with a green arrow on the left, a blue arrow on the right, a grey vertical lens line, and magenta dots on the axis? Answer NO only if those are missing or it is unrelated. Answer yes or no.",
+  "reference": {
+    "obj_lo": [40, 70, 50],
+    "obj_hi": [85, 255, 255],
+    "img_lo": [100, 90, 60],
+    "img_hi": [130, 255, 255],
+    "foc_lo": [135, 80, 80],
+    "foc_hi": [160, 255, 255],
+    "lens_x": 0.5,
+    "tol": 0.1,
+    "min_frac": 0.0003
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "conjugate",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "point",
+          "target": "the point where the grey vertical lens line crosses the horizontal optical axis line -- the single crossing at the middle of the grey lens line, level with the thin horizontal axis that runs the width of the diagram; put the point exactly on that crossing, not at either tip of the grey lens line, not on a magenta focal dot, and not on an arrow",
+          "out": "lens"
+        },
+        {
+          "fail_if": ["lens.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the GREEN arrow on the left half of the optical axis",
+          "expected_n": 1,
+          "out": "obj"
+        },
+        {
+          "fail_if": ["obj.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the BLUE arrow on the right half of the optical axis",
+          "expected_n": 1,
+          "out": "img"
+        },
+        {
+          "fail_if": ["img.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the small MAGENTA (bright pink) focal-point dots sitting ON the horizontal optical axis line",
+          "out": "foc"
+        },
+        {
+          "fail_if": ["foc.unreadable"]
+        },
+        {
+          "run": "thin_lens_fit",
+          "args": ["lens", "obj", "img", "foc", "reference"],
+          "out": "lc"
+        },
+        {
+          "fail_if": ["lc.degenerate"]
+        },
+        {
+          "compare_band": "lc.frac",
+          "to": 1.0,
+          "core": 0.15,
+          "margin": 0.45,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

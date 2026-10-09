@@ -1,0 +1,189 @@
+{
+  "id": "payslip_deductions_net",
+  "axis": "latent_computation",
+  "prompt": "Render a clean, straight-on image of a printed monthly PAYSLIP on plain paper (an employer header, then a deductions breakdown ending in a boxed NET PAY line).\n\nGross monthly pay: 3200.00.\nCompute the deductions IN THIS ORDER and print each on its own labelled line:\n  1. Income tax. Tax is PROGRESSIVE (banded), not a flat rate. First subtract a tax-free personal allowance of 1000.00 to get the TAXABLE pay. Then tax the taxable pay through these bands: the first 1200.00 of taxable pay is taxed at 10 percent, and any taxable pay ABOVE 1200.00 is taxed at 20 percent. Income tax is the SUM of the tax due in each band (only the part of the taxable pay that falls in a band is charged that band's rate).\n  2. Pension contribution = 5.0 percent of the GROSS pay.\n  3. Union fee = a fixed 12.50.\nThen print NET PAY = gross - income tax - pension - union fee, in a bold box. Also print the personal allowance and the taxable pay as reference lines. Print every money value to 2 decimals, right-aligned and legible. Do not print the band arithmetic; only the line totals.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed monthly payslip whose net pay comes from progressive banded income tax plus a percentage pension and a fixed union fee subtracted from gross? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "gross": 3200.0,
+    "allowance": 1000.0,
+    "taxable": 2200.0,
+    "tax": 320.0,
+    "pension": 160.0,
+    "union": 12.5,
+    "net": 2707.5,
+    "q_net": "This is a printed payslip. Find the bold boxed NET PAY line and read the net pay amount printed there. Answer with ONLY that number, digits and decimal point, no currency sign, no thousands commas.",
+    "q_tax": "On the payslip, read the printed INCOME TAX deduction amount (the tax line). Read ONLY what is printed; do NOT recompute. Answer with digits only (drop any minus sign)."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "net_pay",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "bold boxed net pay line across the bottom of this payslip -- ONE box covering just that single boxed line, from the LEFT edge of its bold box to the RIGHT edge of the same box and no taller than that one line, holding the words naming it as net pay together with the one money amount printed on it; not the deduction lines above it, not the gross or taxable pay line, and not the whole payslip.",
+          "expected_n": 1,
+          "out": "rd_box"
+        },
+        {
+          "fail_if": ["rd_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed payslip. One amount of money is printed in it. Write down just that number, digits and the decimal point only, with no currency sign and no thousands separators, and nothing else.",
+          "boxes": "rd_box",
+          "pad": 0.15,
+          "out": "rd_cr"
+        },
+        {
+          "fail_if": ["rd_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "rd_cr",
+          "out": "rd"
+        },
+        {
+          "compare_band": "rd",
+          "to": "reference.net",
+          "core_abs": 0.5,
+          "margin_abs": 1.0,
+          "out": "frac",
+          "margin_rel": 0.001
+        }
+      ]
+    },
+    {
+      "name": "income_tax",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the printed payslip sheet in this picture",
+          "expected_n": 1,
+          "out": "rd_box"
+        },
+        {
+          "fail_if": ["rd_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of a printed payslip. What amount of money is printed on the line labelled Income Tax? Write down just that number, digits and the decimal point only, with no currency sign and no thousands separators, and nothing else.",
+          "boxes": "rd_box",
+          "pad": 0.02,
+          "out": "rd_cr"
+        },
+        {
+          "fail_if": ["rd_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "rd_cr",
+          "out": "rd"
+        },
+        {
+          "compare_band": "rd",
+          "to": "reference.tax",
+          "core_abs": 0.5,
+          "margin_abs": 1.0,
+          "out": "frac",
+          "margin_rel": 0.002
+        }
+      ]
+    },
+    {
+      "name": "d1_gross",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "line of this payslip labelled as the gross pay, with the amount printed on that same line",
+          "expected_n": 1,
+          "out": "rd_box"
+        },
+        {
+          "fail_if": ["rd_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed payslip. One amount of money is printed in it. Write down just that number, digits and the decimal point only, with no currency sign and no thousands separators, and nothing else.",
+          "boxes": "rd_box",
+          "pad": 0.2,
+          "out": "rd_cr"
+        },
+        {
+          "fail_if": ["rd_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "rd_cr",
+          "out": "rd"
+        },
+        {
+          "compare_band": "rd",
+          "to": "reference.gross",
+          "core_abs": 0.5,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_taxable",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "line of this payslip labelled as the taxable pay, with the amount printed on that same line",
+          "expected_n": 1,
+          "out": "rd_box"
+        },
+        {
+          "fail_if": ["rd_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed payslip. One amount of money is printed in it. Write down just that number, digits and the decimal point only, with no currency sign and no thousands separators, and nothing else.",
+          "boxes": "rd_box",
+          "pad": 0.2,
+          "out": "rd_cr"
+        },
+        {
+          "fail_if": ["rd_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "rd_cr",
+          "out": "rd"
+        },
+        {
+          "compare_band": "rd",
+          "to": "reference.taxable",
+          "core_abs": 0.5,
+          "margin_abs": 0.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "id": "the_chord_leaves_its_versine_on_the_curve",
+  "axis": "quantitative_precision",
+  "prompt": "The track gang files one frame per curve after each versine round, so the element board, the cord and all three gauges go into the one shot along the rail.\n\nA ballasted running line curves away from the camera. A cord is strung tight between two clips on the inner working edge of the outer rail. Three purpose-made versine gauges stand against that same edge; each has one window showing a single millimetre figure, and each carries a bold station letter above its window. One stands at the middle of the easement, lettered M; one at the join between the easement and the circular curve, lettered J; one out on the circular curve, lettered C. The element board on the cess prints the radius as 250 metres, the cord as 20 metres and the easement as 60 metres. A mileage post stands behind the board.\n\nWhat each window is showing is what the element board does not print.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph look along a curving running line with a cord strung between two clips on the rail and lettered gauges standing against it? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "straight_run_meter_matches"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the window on the gauge lettered C and give the figure showing in it, in millimetres.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part1", "196", "204"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the window on the gauge lettered M and give the figure showing in it, in millimetres.",
+          "out": "m_mid"
+        },
+        {
+          "fail_if": ["m_mid.unreadable"]
+        },
+        {
+          "ask": "Read the window on the gauge lettered J and give the figure showing in it, in millimetres.",
+          "out": "m_join"
+        },
+        {
+          "fail_if": ["m_join.unreadable"]
+        },
+        {
+          "ask": "Read the window on the gauge lettered C and give the figure showing in it, in millimetres.",
+          "out": "m_circ"
+        },
+        {
+          "fail_if": ["m_circ.unreadable"]
+        },
+        {
+          "run": "meter_matching_sheet_noting_tolerance",
+          "args": ["m_mid", "m_join", "m_circ"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

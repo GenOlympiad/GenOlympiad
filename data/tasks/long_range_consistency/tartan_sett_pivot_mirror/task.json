@@ -1,0 +1,91 @@
+{
+  "id": "tartan_sett_pivot_mirror",
+  "axis": "long_range_consistency",
+  "prompt": "The cloth inspector has to pass this piece before it goes to the registry, so it is photographed flat on the table with the rule lying along it.\n\nThe piece is woven to the printed thread-count sheet weighted down at the edge of the table. That sheet gives the count for each colour in the half sett and names the two pivot colours at which the sequence turns back on itself. A registered check turns at each pivot, so the colours run out from a pivot the same way on either hand of it, and the same sequence is used for the threads that run up the cloth as for the threads that run across it. A graduated rule lies along the cloth so that the width of every band can be read off in its divisions. The mill's registry will not pass a piece woven as a plain repeat.\n\nWhere each band falls on the piece is what the count sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a length of checked cloth lying flat on a table with a graduated rule along it and a printed count sheet beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "sequences_are_reverses",
+    "part2": "diagonal_squares_solid"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the count of divisions each colour band covers on the graduated rule, working from the left selvedge in to the first pivot band, and write those counts in that order, separated by commas.",
+          "out": "a_part1_g"
+        },
+        {
+          "fail_if": ["a_part1_g.unreadable"]
+        },
+        {
+          "ask": "Read the count of divisions each colour band covers on the graduated rule, working from the first pivot band across to the second pivot band, and write those counts in that order, separated by commas.",
+          "out": "a_part1_x"
+        },
+        {
+          "fail_if": ["a_part1_x.unreadable"]
+        },
+        {
+          "run": "reverse_pair",
+          "args": ["a_part1_g", "a_part1_x"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look along the run of squares that goes from one corner of the check towards the other and say what stands there. Answer with one of: the squares along that run are each of one colour throughout; the squares along that run are crossed by threads of a second colour; the squares along that run are each split into four smaller blocks of unlike colours.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

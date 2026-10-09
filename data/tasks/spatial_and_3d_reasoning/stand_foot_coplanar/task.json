@@ -1,0 +1,65 @@
+{
+  "id": "stand_foot_coplanar",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "a photorealistic straight-on side-view photograph of a four-legged wooden STOOL / CHAIR standing on a flat floor. Mark each of the FOUR feet where a leg touches the floor with a clear RED dot. GEOMETRY IS THE SUBJECT and must be EXACT (do NOT default to one leg drawn too short so a foot floats above the floor): for the stool to stand steady WITHOUT wobbling, ALL FOUR feet must rest on the SAME floor line — every red foot dot at the same height, all four touching the floor together. Four red feet all on one floor line. Photoreal stool, four red feet, no text, no numbers.",
+  "difficulty": "f2",
+  "easy_question": "This image was supposed to show a four-legged stool/chair (side view) with a RED dot marking each foot where a leg meets the floor. Ignoring quality, does it depict a stool/chair on its legs with red foot markers? A photo or render both count. Answer NO only for a blank panel or no seat. Answer yes or no only.",
+  "reference": {
+    "core": 0.02,
+    "margin": 0.06,
+    "n_feet": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "feet_coplanar",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "red foot dot -- ONE small solid RED dot marking where a single leg meets the floor, boxed tight around that one dot so the rectangle's bottom edge sits where the dot meets the floor; box every foot dot separately, one box per leg, including a foot partly hidden behind another leg; do not box the wooden leg, a red reflection on the floor, or two dots in one rectangle.",
+          "expected_n": "reference.n_feet",
+          "retries": 4,
+          "out": "rd",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["rd.unreadable"]
+        },
+        {
+          "run": "foot_level_spread",
+          "args": ["rd"],
+          "out": "cv"
+        },
+        {
+          "fail_if": ["cv.unreadable"]
+        },
+        {
+          "compare_band": "cv.dev_frac",
+          "to": 0.0,
+          "core": "reference.core",
+          "margin": "reference.margin",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

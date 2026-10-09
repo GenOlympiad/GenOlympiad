@@ -1,0 +1,84 @@
+{
+  "id": "halbach_row_field_one_side",
+  "axis": "physical_consistency",
+  "prompt": "The jig shop has to show the integrator that the rail it has built pulls on the hand it was ordered to pull on, so the bench is photographed from straight above with both channels and the loose clips in the frame.\n\nTwo aluminium channels lie on the bench, each holding a row of square magnet blocks. Every block is printed on its top face with an arrow giving the way that block is set. In the upper channel the arrows turn a quarter of a circle from block to block, going up, then to the right, then down, then to the left, and on along the row. In the lower channel the arrows simply alternate, up and down and up again. Loose steel clips have been strewn on the bench along both sides of both channels, in equal helpings, and the works order lies at the end of the bench.\n\nWhich sides the clips have gathered on is what the works order does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph look straight down on a bench carrying two channels of square magnet blocks with loose steel clips strewn beside them? Answer yes or no only.",
+  "reference": {
+    "part1": "clips_on_a_single_side",
+    "part2": "clips_on_both_sides"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the upper channel on the bench and say how the loose steel clips have gathered against it. Answer with one of: the clips have piled against a single side of that channel; the clips have piled against both sides of that channel; the clips have stayed out on the bench away from that channel.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the lower channel on the bench and say how the loose steel clips have gathered against it. Answer with one of: the clips have piled against both sides of that channel; the clips have piled against a single side of that channel; the clips have stayed out on the bench away from that channel.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

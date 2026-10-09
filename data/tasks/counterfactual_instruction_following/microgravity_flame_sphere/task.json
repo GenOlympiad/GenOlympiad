@@ -1,0 +1,150 @@
+{
+  "id": "microgravity_flame_sphere",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Inside the combustion rack of an orbiting research laboratory the crew have swung the chamber door open for the next burn, and the payload team needs the reference plate that goes on the operations card for it. The plate is a single view of the open chamber taken square from the front, with the hatch end of the module towards the left-hand edge of the frame.\n\nFour things have to be in that view: the small test candle alight on the sample tray; a bead of drinking water that a crew member has just squeezed out of a straw and let go beside the tray; the thread of smoke coming off the tray; and the duct placard screwed to the right-hand wall panel. The placard is the one carrying module number SM-4 and duct number D-12, and its arrow is the forced draught leaving the vent and running the length of the chamber towards the hatch end.\n\nThe standing note on every operations card for this rack reads: the module is in continuous free fall, so nothing aboard has a preferred direction of its own, and the draught named on the placard is the only flow in the chamber.\n\nWhat that leaves the candle flame, the loose water and the smoke doing is for you to work out -- I am deliberately not telling you what shape the flame takes, where the water ends up, or which way the smoke goes. The flame, the water and the smoke all belong in the one view, at a size that can be told apart. Apart from the duct placard named above, nothing else in the chamber may carry an arrow, a caption or a written note.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show the inside of a spacecraft module with an open equipment chamber and a small lit flame in it? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no module in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "smoke_bearing": 270,
+    "water_state": "floating",
+    "flame_shape": "ball"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_smoke_runs_with_the_duct_arrow_and_not_up_the_chamber",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the sample tray inside the open combustion chamber",
+          "sweep": true,
+          "out": "tray_box"
+        },
+        {
+          "fail_if": ["tray_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, which edge or corner of the picture does the smoke trail run towards? Answer with one of: top, top right, right, bottom right, bottom, bottom left, left, top left, or none if there is no smoke trail here.",
+          "boxes": "tray_box",
+          "pad": 0.6,
+          "out": "smoke_rd"
+        },
+        {
+          "fail_if": ["smoke_rd.unreadable"]
+        },
+        {
+          "run": "smoke_direction_gap",
+          "args": ["smoke_rd", "reference.smoke_bearing"],
+          "out": "smokev"
+        },
+        {
+          "compare_compass": "smokev.gap",
+          "to": 0,
+          "core": 25.0,
+          "margin": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_loose_water_hangs_clear_of_every_surface",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the drinking water squeezed out of the straw",
+          "sweep": true,
+          "out": "water_box"
+        },
+        {
+          "fail_if": ["water_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the drinking water hanging in the air with nothing touching it, or is it lying against a surface? Answer floating or lying.",
+          "boxes": "water_box",
+          "pad": 0.4,
+          "out": "water_rd"
+        },
+        {
+          "fail_if": ["water_rd.unreadable"]
+        },
+        {
+          "compare": "water_rd.answers.0",
+          "to": "reference.water_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_flame_is_a_ball_and_not_a_teardrop",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the lit flame at the wick of the test candle",
+          "sweep": true,
+          "out": "flame_box"
+        },
+        {
+          "fail_if": ["flame_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is the flame shaped like a ball or shaped like a teardrop? Answer ball or teardrop.",
+          "boxes": "flame_box",
+          "pad": 0.5,
+          "out": "flame_rd"
+        },
+        {
+          "fail_if": ["flame_rd.unreadable"]
+        },
+        {
+          "compare": "flame_rd.answers.0",
+          "to": "reference.flame_shape",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_second_arrow_or_caption_is_added_inside_the_chamber",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, caption or written note in the chamber other than the duct placard",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": []
+}

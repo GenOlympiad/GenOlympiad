@@ -1,0 +1,338 @@
+{
+  "id": "heraldry_tincture_rule",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A photograph taken inside the great hall of an English castle that is open to visitors, in the flat daylight coming through the hall windows. High on the stone wall, four painted family shields hang side by side.\n\nEach shield is done the same way: one flat tincture over the whole face, and one single figure laid over it, also in one flat tincture. The four figures, one to a shield, are a lion, an eagle, a cross and a chevron. Every one of the eight tinctures must be one a herald is entitled to use, and no shield may carry any tincture beyond its own two.\n\nThe visitors' plaque under the shields carries this text and nothing else:\nFOUR SHIELDS OF THE HOUSE, HUNG HERE SINCE 1614. THREE WERE CHECKED AGAINST THE OLD RULE OF TINCTURE BY THE COLLEGE OF ARMS. ONE WAS REPAINTED IN 1872 BY A DECORATOR WHO HAD NEVER HEARD OF THE RULE.\n\nThe room guides stand at this wall and teach the oldest rule of the trade off it, so the wall has to bear out what the plaque says. Choose the eight tinctures yourself -- I am deliberately not telling you what the rule is, which tinctures may lie over which, or which of the four is the 1872 shield. No tincture name, no heraldic term, no shield number and no writing of any kind may appear anywhere in the picture apart from the plaque text above.\n\nAll four shields and the plaque must be in the same frame, and each shield's two tinctures must be unmistakable.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show four painted shields hanging in a row on a wall with a plaque under them? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "metals": ["gold", "silver"],
+    "colours": ["red", "blue", "green", "black", "purple"],
+    "charges": ["lion", "eagle", "cross", "chevron"],
+    "n_shields": 4,
+    "n_bad_shields": 1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "exactly_one_shield_lays_like_on_like",
+      "weight": 2.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of painted shields on the hall wall",
+          "expected_n": 1,
+          "out": "anc_sh",
+          "context": "the hall wall with the painted shields on it"
+        },
+        {
+          "fail_if": ["anc_sh.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is the row of painted shields on the wall. Write down every shield hanging here, working from left to right, each with a few plain words saying what colour it is. Separate one item from the next with a semicolon; write no running total and nothing else. If no shield is hanging here, write the single word NONE.",
+          "boxes": "anc_sh",
+          "pad": 0.02,
+          "out": "n_sh"
+        },
+        {
+          "fail_if": ["n_sh.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["n_sh", "empty_as='0'"],
+          "out": "n_sh__std"
+        },
+        {
+          "fail_if": ["n_sh__std.refused"]
+        },
+        {
+          "run": "plan_grid_from_read_count",
+          "args": ["image", "anc_sh", "n_sh__std", "cols=1", "transpose=True"],
+          "out": "pl_sh"
+        },
+        {
+          "fail_if": ["pl_sh.no_plan"]
+        },
+        {
+          "read_crop": "This cut-out shows one painted shield. What colour is the plain background of the shield behind the figure? Answer with one word: gold, silver, red, blue, green, black, purple or other.",
+          "boxes": "pl_sh.cells",
+          "out": "fld",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["fld.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one painted shield. What colour is the single figure painted on the shield? Answer with one word: gold, silver, red, blue, green, black, purple or other.",
+          "boxes": "pl_sh.cells",
+          "out": "chg",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["chg.unreadable"]
+        },
+        {
+          "run": "check_shield_tinctures",
+          "args": ["fld", "chg", "reference.metals", "reference.colours"],
+          "out": "sd"
+        },
+        {
+          "compare_band": "sd.n_bad",
+          "to": "reference.n_bad_shields",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        },
+        {
+          "run": "paint_cells_by_fraction",
+          "args": ["pl_sh", "frac"],
+          "out": "pa_sh"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_sh.hit",
+          "ref_anchors": "pa_sh.ref_anchors",
+          "found_anchors": "pa_sh.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_sh_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_sh_hit.path",
+          "rects": "pa_sh.miss",
+          "ref_anchors": "pa_sh.ref_anchors",
+          "found_anchors": "pa_sh.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_sh_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_sh_miss.path",
+          "rects": "pa_sh.edge",
+          "ref_anchors": "pa_sh.ref_anchors",
+          "found_anchors": "pa_sh.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_sh_edge"
+        }
+      ]
+    },
+    {
+      "name": "every_tincture_is_a_heraldic_one",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of painted shields on the hall wall",
+          "expected_n": 1,
+          "out": "anc_sh2",
+          "context": "the hall wall with the painted shields on it"
+        },
+        {
+          "fail_if": ["anc_sh2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is the row of painted shields on the wall. Write down every shield hanging here, working from left to right, each with a few plain words saying what colour it is. Separate one item from the next with a semicolon; write no running total and nothing else. If no shield is hanging here, write the single word NONE.",
+          "boxes": "anc_sh2",
+          "pad": 0.02,
+          "out": "n_sh2"
+        },
+        {
+          "fail_if": ["n_sh2.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["n_sh2", "empty_as='0'"],
+          "out": "n_sh2__std"
+        },
+        {
+          "fail_if": ["n_sh2__std.refused"]
+        },
+        {
+          "run": "plan_grid_from_read_count",
+          "args": ["image", "anc_sh2", "n_sh2__std", "cols=1", "transpose=True"],
+          "out": "pl_sh2"
+        },
+        {
+          "fail_if": ["pl_sh2.no_plan"]
+        },
+        {
+          "read_crop": "This cut-out shows one painted shield. What colour is the plain background of the shield behind the figure? Answer with one word: gold, silver, red, blue, green, black, purple or other.",
+          "boxes": "pl_sh2.cells",
+          "out": "fld2",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["fld2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one painted shield. What colour is the single figure painted on the shield? Answer with one word: gold, silver, red, blue, green, black, purple or other.",
+          "boxes": "pl_sh2.cells",
+          "out": "chg2",
+          "pad": 0.0
+        },
+        {
+          "fail_if": ["chg2.unreadable"]
+        },
+        {
+          "run": "check_shield_tinctures",
+          "args": ["fld2", "chg2", "reference.metals", "reference.colours"],
+          "out": "sd2"
+        },
+        {
+          "compare_band": "sd2.n_listed",
+          "to": "reference.n_shields",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        },
+        {
+          "run": "paint_cells_by_fraction",
+          "args": ["pl_sh2", "frac"],
+          "out": "pa_sh2"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa_sh2.hit",
+          "ref_anchors": "pa_sh2.ref_anchors",
+          "found_anchors": "pa_sh2.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_sh2_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_sh2_hit.path",
+          "rects": "pa_sh2.miss",
+          "ref_anchors": "pa_sh2.ref_anchors",
+          "found_anchors": "pa_sh2.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_sh2_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_sh2_miss.path",
+          "rects": "pa_sh2.edge",
+          "ref_anchors": "pa_sh2.ref_anchors",
+          "found_anchors": "pa_sh2.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_sh2_edge"
+        }
+      ]
+    },
+    {
+      "name": "shield_count",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one painted family shield hanging on the stone wall of the hall",
+          "sweep": true,
+          "propose_boxes": "vlm",
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole painted shield, rather than bare stone wall or only part of a shield? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_shields",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_four_figures",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one painted family shield hanging on the stone wall of the hall",
+          "sweep": true,
+          "propose_boxes": "vlm",
+          "out": "sh3"
+        },
+        {
+          "fail_if": ["sh3.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one painted shield. What figure is painted on it? Answer with one word: lion, eagle, cross, chevron or other.",
+          "boxes": "sh3",
+          "out": "cw"
+        },
+        {
+          "fail_if": ["cw.unreadable"]
+        },
+        {
+          "compare_set": "cw.answers",
+          "to": "reference.charges",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_written_key",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a tincture name, a heraldic term or a shield number written in the picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_d3_n"
+        },
+        {
+          "fail_if": ["sweep_d3_n.unreadable"]
+        },
+        {
+          "compare": "sweep_d3_n.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

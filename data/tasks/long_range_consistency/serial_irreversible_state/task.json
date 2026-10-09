@@ -1,0 +1,253 @@
+{
+  "id": "serial_irreversible_state",
+  "axis": "long_range_consistency",
+  "prompt": "An eight-panel comic strip with clean ink borders, TWO ROWS OF FOUR panels. All eight panels are the same bakery kitchen seen from a different angle each time, with the same baker in a white coat and brown apron at work. On a shelf behind him stands a single white JUG and above the bench hangs a LAMP.\n\nTHE JUG DECAYS IN TWO ONE-WAY STEPS, and it never recovers:\n  * in panels 1 and 2 the jug is WHOLE and undamaged.\n  * in panel 3 it has been knocked and now has a big CRACK drawn across it, but it is still standing in one piece — and it is still the same cracked jug in panels 4 and 5.\n  * in panel 6 it has fallen and lies on the shelf in BROKEN PIECES, and it is still in broken pieces in panels 7 and 8. It never goes back to being cracked-but-whole, and never back to undamaged.\n\nTHE LAMP: switched OFF (dull and grey) in panel 1; from panel 2 onwards it is GLOWING and it stays glowing to the end.\n\nThe two changes start in different panels. His pose and the framing change every panel. No text, no captions, no lettering.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to show a comic strip: several separate panels, drawn side by side, with the same person appearing in each panel. Ignoring artistic quality and ignoring whether the story is right, does the image DEPICT that — a strip of separate panels with a recurring figure? A comic page, a storyboard or a picture-book strip all count as yes. Answer NO only if it is blank, a single picture with no panels, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 8,
+    "na": 8,
+    "qa": "This picture is a comic strip of 8 panels arranged as two rows of four panels. Look at every panel in reading order (the top row left to right, then the bottom row left to right). For EACH panel in that order, report what state the white jug on the shelf behind the baker is in — in one piece and undamaged, in one piece but with a crack drawn across it, or lying in broken pieces. Use only these words: whole, cracked, broken. The panels do not have to agree with one another — report what each panel actually shows, one answer per panel, even if the answer repeats or changes from panel to panel. Answer with exactly 8 answers separated by commas, in panel order, and nothing else.",
+    "qa2": "The picture is a strip of separate drawings arranged as two rows of four panels. Going through them in the top row left to right, then the bottom row left to right order, tell me, for each drawing in turn, what state the white jug on the shelf behind the baker is in — in one piece and undamaged, in one piece but with a crack drawn across it, or lying in broken pieces. Allowed answers: whole, cracked, broken. Judge each drawing on its own — two drawings may well disagree, so do not assume the strip is consistent. Reply with exactly 8 comma-separated answers and nothing else.",
+    "seq_a": ["whole", "whole", "cracked", "cracked", "cracked", "broken", "broken", "broken"],
+    "nb": 8,
+    "qb": "This picture is a comic strip of 8 panels arranged as two rows of four panels. Look at every panel in reading order (the top row left to right, then the bottom row left to right). For EACH panel in that order, report whether the hanging lamp above the bench is glowing or is switched off. Use only these words: lit, dark. The panels do not have to agree with one another — report what each panel actually shows, one answer per panel, even if the answer repeats or changes from panel to panel. Answer with exactly 8 answers separated by commas, in panel order, and nothing else.",
+    "qb2": "The picture is a strip of separate drawings arranged as two rows of four panels. Going through them in the top row left to right, then the bottom row left to right order, tell me, for each drawing in turn, whether the hanging lamp above the bench is glowing or is switched off. Allowed answers: lit, dark. Judge each drawing on its own — two drawings may well disagree, so do not assume the strip is consistent. Reply with exactly 8 comma-separated answers and nothing else.",
+    "seq_b": ["dark", "lit", "lit", "lit", "lit", "lit", "lit", "lit"],
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "pn_rows": 2,
+    "pn_cols": 4,
+    "qa_cell": "This is ONE panel cut out of a comic strip. It shows a bakery kitchen with a baker in it, and a single white JUG standing on a shelf behind him. Is that jug in one piece and undamaged, in one piece but with a big crack drawn across it, or lying in broken pieces? Answer with just one word: whole, cracked, or broken. If this panel does not show the jug at all, answer the single word missing. Nothing else.",
+    "qb_cell": "This is ONE panel cut out of a comic strip. It shows a bakery kitchen with a baker in it, and a LAMP hanging above the bench. Is that lamp glowing, or is it switched off and dull grey? Answer with just one word: lit, or dark. If this panel does not show the lamp at all, answer the single word missing. Nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of comic panels itself -- the outer edge of the whole row or grid of drawn panels, counting all of the panels together as one single block; not one panel on its own, and not the paper margin, table or wall around the strip",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "panel_plan",
+          "args": ["image", "anc", "reference.na", "reference.pn_rows", "reference.pn_cols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.qa_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rda"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rda", "pl", "PN_WORDS_A"],
+          "out": "sqa"
+        },
+        {
+          "fail_if": ["sqa.no_read"]
+        },
+        {
+          "read_crop": "reference.qb_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rdb"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rdb", "pl", "PN_WORDS_B"],
+          "out": "sqb"
+        },
+        {
+          "fail_if": ["sqb.no_read"]
+        },
+        {
+          "run": "law_holds_score",
+          "args": ["[[sqa.seq], [sqb.seq]]", "[reference.seq_a, reference.seq_b]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "paint_panels",
+          "args": ["pl", "res", "[sqa, sqb]"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "panel_share",
+      "weight": 0.3,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of comic panels itself -- the outer edge of the whole row or grid of drawn panels, counting all of the panels together as one single block; not one panel on its own, and not the paper margin, table or wall around the strip",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "panel_plan",
+          "args": ["image", "anc", "reference.na", "reference.pn_rows", "reference.pn_cols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.qa_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rda"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rda", "pl", "PN_WORDS_A"],
+          "out": "sqa"
+        },
+        {
+          "fail_if": ["sqa.no_read"]
+        },
+        {
+          "read_crop": "reference.qb_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rdb"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rdb", "pl", "PN_WORDS_B"],
+          "out": "sqb"
+        },
+        {
+          "fail_if": ["sqb.no_read"]
+        },
+        {
+          "run": "law_share_score",
+          "args": ["[[sqa.seq], [sqb.seq]]", "[reference.seq_a, reference.seq_b]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "paint_panels",
+          "args": ["pl", "res", "[sqa, sqb]"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

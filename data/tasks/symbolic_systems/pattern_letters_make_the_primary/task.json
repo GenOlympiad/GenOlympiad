@@ -1,0 +1,84 @@
+{
+  "id": "pattern_letters_make_the_primary",
+  "axis": "symbolic_systems",
+  "prompt": "The records clerk has to file the card before the day's batch goes to the cabinet, so it is photographed flat under the copy light with the classification boxes filled in.\n\nThe card carries all 10 rolled impressions, thumbs first, the right hand along the top row and the left hand along the bottom, with the pattern letter written in the corner of each block. The booking sheet beside it describes the rolls: whorls on the right index, the right little finger, the left thumb and the left ring finger; ulnar loops on the right thumb, the right middle finger, the left index and the left little finger; a radial loop on the right ring finger; and an arch on the left middle finger. The classification boxes are ruled at the top right of the card.\n\nWhat goes into those boxes is what the booking sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a ten-print fingerprint card lying flat under a copy light with a letter written in the corner of each block and ruled classification boxes at its top right? Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "secondary_shows_W_over_U"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the number written above the line in the primary classification box at the top right of the card, and write that number.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "20.5", "21.5"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the secondary classification box at the top right of the card and say which letters stand in it. Answer with one of: it shows W over U; it shows U over W; it shows W over W.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

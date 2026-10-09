@@ -1,0 +1,172 @@
+{
+  "id": "calendar_year_firstday",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed 'WALL CALENDAR 2025 -- KEY MONTHS' wall calendar for the year 2025. Subtitle 'Monday-first week columns'. Show these FOUR months of 2025 -- March, July, September, November -- as separate month grids in a 2-by-2 layout. Each grid has a month-and-year heading, a row of weekday column headers Mon Tue Wed Thu Fri Sat Sun (Monday-first), and the dates 1..N placed in the correct weekday columns for 2025. CRITICAL: for the real 2025 calendar the 1st of each month must fall in its correct weekday column, and dates then run left to right wrapping each week. Print exactly these four month grids, nothing else.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed wall calendar / planner showing several month grids for one year. Ignoring artistic quality, does the image DEPICT that -- printed month calendar grids? A photo, scan or clean planner all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_months": 4,
+    "q_nmonths": "How many separate month calendar grids are printed on this planner? Whole number only.",
+    "blanks_m3": 5,
+    "wd_m3": "Sat",
+    "wdfull_m3": "Saturday",
+    "q_m3": "On this planner, find the MARCH month grid. Its weekday header row reads Mon Tue Wed Thu Fri Sat Sun. Which weekday header is printed directly ABOVE the date number 1 of March, i.e. in the same column as that 1? Copy the header word only. Answer with exactly one word (Mon, Tue, Wed, Thu, Fri, Sat or Sun). Do not explain.",
+    "blanks_m7": 1,
+    "wd_m7": "Tue",
+    "wdfull_m7": "Tuesday",
+    "q_m7": "On this planner, find the JULY month grid. Its weekday header row reads Mon Tue Wed Thu Fri Sat Sun. Which weekday header is printed directly ABOVE the date number 1 of July, i.e. in the same column as that 1? Copy the header word only. Answer with exactly one word (Mon, Tue, Wed, Thu, Fri, Sat or Sun). Do not explain.",
+    "blanks_m11": 5,
+    "wd_m11": "Sat",
+    "wdfull_m11": "Saturday",
+    "q_m11": "On this planner, find the NOVEMBER month grid. Its weekday header row reads Mon Tue Wed Thu Fri Sat Sun. Which weekday header is printed directly ABOVE the date number 1 of November, i.e. in the same column as that 1? Copy the header word only. Answer with exactly one word (Mon, Tue, Wed, Thu, Fri, Sat or Sun). Do not explain."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "month_3_firstday",
+      "weight": 1.0,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "expected_n": 1,
+          "target": "the whole MARCH month grid on this planner -- the block made of the 'March' heading, the row of weekday column headers (Mon Tue Wed Thu Fri Sat Sun) directly under that heading, and every date row of that month underneath them; box that block only, not the other months",
+          "context": "a printed wall-calendar planner page holding several month grids",
+          "out": "mb"
+        },
+        {
+          "fail_if": ["mb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_m3",
+          "boxes": "mb",
+          "out": "ans"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "month_starts_on_weekday",
+          "args": ["ans", "'March'", "reference.wd_m3"],
+          "out": "law"
+        }
+      ]
+    },
+    {
+      "name": "month_7_firstday",
+      "weight": 1.0,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "expected_n": 1,
+          "target": "the whole JULY month grid on this planner -- the block made of the 'July' heading, the row of weekday column headers (Mon Tue Wed Thu Fri Sat Sun) directly under that heading, and every date row of that month underneath them; box that block only, not the other months",
+          "context": "a printed wall-calendar planner page holding several month grids",
+          "out": "mb"
+        },
+        {
+          "fail_if": ["mb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_m7",
+          "boxes": "mb",
+          "out": "ans"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "month_starts_on_weekday",
+          "args": ["ans", "'July'", "reference.wd_m7"],
+          "out": "law"
+        }
+      ]
+    },
+    {
+      "name": "month_11_firstday",
+      "weight": 1.0,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "expected_n": 1,
+          "target": "the whole NOVEMBER month grid on this planner -- the block made of the 'November' heading, the row of weekday column headers (Mon Tue Wed Thu Fri Sat Sun) directly under that heading, and every date row of that month underneath them; box that block only, not the other months",
+          "context": "a printed wall-calendar planner page holding several month grids",
+          "out": "mb"
+        },
+        {
+          "fail_if": ["mb.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_m11",
+          "boxes": "mb",
+          "out": "ans"
+        },
+        {
+          "fail_if": ["ans.unreadable"]
+        },
+        {
+          "run": "month_starts_on_weekday",
+          "args": ["ans", "'November'", "reference.wd_m11"],
+          "out": "law"
+        }
+      ]
+    },
+    {
+      "name": "d1_month_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one month calendar grid printed on the planner, with its own heading and block of dates",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nm"
+        },
+        {
+          "fail_if": ["box_nm.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one whole month grid with a heading above a block of dates rather than blank paper or only part of a grid? Answer yes or no only.",
+          "boxes": "box_nm",
+          "out": "crop_nm"
+        },
+        {
+          "fail_if": ["crop_nm.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nm"],
+          "out": "cnt_nm"
+        },
+        {
+          "compare_band": "cnt_nm.n",
+          "to": "reference.n_months",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

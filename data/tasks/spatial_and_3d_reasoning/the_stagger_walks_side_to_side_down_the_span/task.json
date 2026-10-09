@@ -1,0 +1,85 @@
+{
+  "id": "the_stagger_walks_side_to_side_down_the_span",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "The run is photographed from the inspection car roof so the stagger can be signed off against the schedule.\n\nSix supports stand along the track ahead, each with its number stencilled on the mast, and the contact wire runs above the pantograph. The stagger schedule taped inside the cab marks the supports up to the fourth as tangent track and the rest as curve. It gives the rule the gang works to: on tangent track the wire alternates sides of the centre line support by support, while through the curve it stays on the outside. It sets the stagger at the second cell either side of the zero and allows the wire out to the third. The pantograph pan carries a printed scale with a zero at its middle and cells numbered out to the fourth cell on each side.\n\nWhich side of the zero the wire stands at each support is what the schedule does not draw.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show the view forward over an inspection car pantograph, with its printed pan scale in the near frame and a line of numbered masts running away down the track? Answer yes or no only.",
+  "reference": {
+    "part1": "no_two_alike",
+    "part2": "in_band",
+    "vocab": ["left", "right"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Working from the nearest support along to the fourth support, say for each one whether the contact wire stands to the left or to the right of the zero mark on the pan scale, and write those four answers in that order.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "adjacent_alike",
+          "args": ["a_part1", "reference.vocab"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the cell of the printed scale on the pan that the contact wire stands over at the nearest support, and write that figure only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "number_within_band",
+          "args": ["a_part2", "1.5", "2.5"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "only_the_doors_out_of_the_risk_rooms_carry_the_closer",
+  "axis": "long_range_consistency",
+  "prompt": "Fenwick Foods' Wrexham plant is being signed off after its refit, and the fire consultant wants a record shot of the ground-floor service corridor. Five matching flush doors open off it, alternately left and right, each with a large engraved plate above the head; along the corridor the plates say BOILER HOUSE, STORE, SWITCHROOM, CLEANER and OFFICE. The house standard quoted in the fire strategy is that a door out of a room holding a fire risk takes an overhead closer arm and a round blue mandatory disc on the leaf, an office door takes a closer arm but no disc, and a store or a cleaner's cupboard takes neither; the ironmonger left the corridor exactly as that standard requires. Wanted is the consultant's photograph, taken from the end of the corridor on its centre line, camera level, all five leaves in frame together with the plate above each and the full head of every door, nothing cut off at the top, in the corridor's own ceiling light.",
+  "difficulty": "pA",
+  "easy_question": "Does this picture look straight down a works corridor lined with plain flush doors, each with a large lettered use plate above it? Answer yes or no.",
+  "reference": {
+    "part1": "3",
+    "part2": "2"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "How many of the corridor doors have a metal closer arm fitted?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_bucket",
+          "args": ["a_part1", "4"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "How many of the doors along the corridor carry a round blue sign on the leaf?",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_bucket",
+          "args": ["a_part2", "4"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

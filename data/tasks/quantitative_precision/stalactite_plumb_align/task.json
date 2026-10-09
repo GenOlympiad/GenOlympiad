@@ -1,0 +1,179 @@
+{
+  "id": "stalactite_plumb_align",
+  "axis": "quantitative_precision",
+  "prompt": "A serene fine-art photograph inside a blue ICE CAVE, tall 2:3 portrait framing, cool daylight filtering through the ice. A single clear ICICLE hangs straight down from the ice ceiling and a matching ICE COLUMN rises straight up from the cave floor directly beneath it. GEOMETRY IS THE SUBJECT and must be EXACT, measured as-is (do NOT default to letting the two tips drift apart sideways or nearly touch): the icicle tip and the ice-column tip must be in perfect VERTICAL PLUMB ALIGNMENT -- both tips on ONE vertical line, one exactly above the other with no sideways offset -- AND the vertical GAP between the two tips must be exactly ONE FIFTH (1/5, 0.20) of the total ceiling-to-floor height (from where the icicle meets the ceiling down to where the ice column meets the floor). Translucent blue ice, fine internal fractures, glassy highlights. No text, no numbers, no measuring lines, no scale bar.",
+  "difficulty": "s2",
+  "easy_question": "This picture was supposed to show the inside of an ice cave with an icicle hanging from the ceiling and an ice column rising from the floor beneath it. Never mind how well it is drawn. Does the picture show an ice-cave interior with a downward icicle from the ceiling and an upward ice column from the floor? A realistic photo or an illustration BOTH count as yes. Answer NO only if the image instead shows a blank card, a plain panel, or something with no such ice formations. Answer yes or no only.",
+  "reference": {
+    "plumb_tol": 0.03,
+    "gap_target": 0.2,
+    "gap_tol": 0.05,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "formation_noun": "pointed ice formation"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "plumb_gap_joint",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "{gt.formation_noun}",
+          "expected_n": 2,
+          "retries": 4,
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "run": "tip_alignment",
+          "args": ["sp"],
+          "out": "pt"
+        },
+        {
+          "run": "plumb_check",
+          "args": [
+            "pt",
+            "reference['plumb_tol']",
+            "reference['gap_target']",
+            "reference['gap_tol']"
+          ],
+          "out": "pc"
+        },
+        {
+          "fail_if": ["pc.no_read"]
+        },
+        {
+          "compare_band": "pc.joint",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_plumb",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "{gt.formation_noun}",
+          "expected_n": 2,
+          "retries": 4,
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "run": "tip_alignment",
+          "args": ["sp"],
+          "out": "pt2"
+        },
+        {
+          "run": "plumb_check",
+          "args": [
+            "pt2",
+            "reference['plumb_tol']",
+            "reference['gap_target']",
+            "reference['gap_tol']"
+          ],
+          "out": "pc2"
+        },
+        {
+          "fail_if": ["pc2.no_read"]
+        },
+        {
+          "compare_band": "pc2.plumb",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_gap_ratio",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "{gt.formation_noun}",
+          "expected_n": 2,
+          "retries": 4,
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.unreadable"]
+        },
+        {
+          "run": "tip_alignment",
+          "args": ["sp"],
+          "out": "pt3"
+        },
+        {
+          "run": "plumb_check",
+          "args": [
+            "pt3",
+            "reference['plumb_tol']",
+            "reference['gap_target']",
+            "reference['gap_tol']"
+          ],
+          "out": "pc3"
+        },
+        {
+          "fail_if": ["pc3.no_read"]
+        },
+        {
+          "compare_band": "pc3.gap",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "2:3"
+}

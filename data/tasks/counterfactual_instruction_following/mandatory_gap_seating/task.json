@@ -1,0 +1,126 @@
+{
+  "id": "mandatory_gap_seating",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A screenshot of a theatre box-office system's final confirmation screen, the one the duty manager checks before pressing CONFIRM AND ISSUE.\n\nAcross the middle of the screen runs row G: thirteen seat icons in one straight line, numbered 1 to 13 under the icons. On the left rail sits tonight's order legend, readable in full: ORDER A, 2 SEATS, blue -- ORDER B, 3 SEATS, orange -- ORDER C, 2 SEATS, green -- ORDER D, 3 SEATS, purple -- UNSOLD, grey. The top banner carries the house rule for tonight, word for word: 'Distanced seating in force. All four orders are seated in row G tonight. The seats of one order sit side by side with no break. Between one order and the next there is at least one unsold seat. Unsold seats stay grey.'\n\nThe screen in the picture is the finished allocation. Decide for yourself which seats each order takes and which seats stay unsold -- I am deliberately not telling you any seat numbers, and the banner deliberately does not say whether the row even has room enough, or how wide the breaks between orders come out. Every seat icon must show its fill plainly and its seat number must be readable; the legend and the banner must be readable in the same picture; and no seat icon may be half-filled, hatched or left ambiguous.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a screen or chart with one row of seat icons and a legend near it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card that states an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "packing_expected": "valid gap packing",
+    "allfour_expected": "all four orders seated",
+    "q_seat_cert": "Does this cut-out show one seat icon from a seating chart? Answer yes or no only.",
+    "q_seat_fill": "This cut-out is one seat icon. Which fill does it show? Answer with one word: blue, orange, green, purple or grey."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "row_packs_into_gapped_order_blocks",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one seat icon in the row of thirteen seats",
+          "layout": "row",
+          "sweep": true,
+          "out": "st_box"
+        },
+        {
+          "fail_if": ["st_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_seat_cert",
+          "boxes": "st_box",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "st_cert"
+        },
+        {
+          "fail_if": ["st_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_seat_fill",
+          "boxes": "st_box",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "st_fill"
+        },
+        {
+          "fail_if": ["st_fill.unreadable"]
+        },
+        {
+          "run": "check_gap_packing",
+          "args": ["st_cert", "st_fill"],
+          "out": "pk"
+        },
+        {
+          "compare": "pk.canon",
+          "to": "reference.packing_expected",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "all_four_orders_are_on_the_row",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one seat icon in the row of thirteen seats",
+          "layout": "row",
+          "sweep": true,
+          "out": "s2_box"
+        },
+        {
+          "fail_if": ["s2_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_seat_cert",
+          "boxes": "s2_box",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "s2_cert"
+        },
+        {
+          "fail_if": ["s2_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_seat_fill",
+          "boxes": "s2_box",
+          "pad": 0.3,
+          "sort": "reading_order",
+          "out": "s2_fill"
+        },
+        {
+          "fail_if": ["s2_fill.unreadable"]
+        },
+        {
+          "run": "orders_seated",
+          "args": ["s2_cert", "s2_fill"],
+          "out": "af"
+        },
+        {
+          "compare": "af.canon",
+          "to": "reference.allfour_expected",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

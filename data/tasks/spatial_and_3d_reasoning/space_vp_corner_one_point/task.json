@@ -1,0 +1,130 @@
+{
+  "id": "space_vp_corner_one_point",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "Render a clean black-ink line drawing on white of the corner of a city block where a bookshop's front window wall meets the side street: the shop's whole front wall faces the viewer square-on, while the side street wall runs away from the viewer into the distance.\n\nUse STRICT ONE-POINT perspective even though we are looking at a corner:\n- The front wall is PARALLEL to the picture: every horizontal edge on that front wall (the roof line, the floor line, the window heads and sills, the sign band) must be drawn EXACTLY HORIZONTAL -- perfectly level across the page, not sloping at all -- and every vertical edge on it exactly vertical. That wall must NOT recede.\n- ONLY the side wall recedes: its horizontal edges all converge to a SINGLE vanishing point, and that is the ONLY vanishing point in the drawing.\n- Give the front wall plenty of long horizontal lines (roof line, sign band, window heads and sills, base line) so the level front face is unmistakable.\nPlain line rendering, no people, no text, no numbers, no labels.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict the corner of a city block where a bookshop's front window wall meets the side street: the shop's whole front wall faces the viewer square-on, while the side street wall runs away from the viewer into the distance, drawn as a line perspective. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "vlm_leaves": true,
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption anywhere on it (as opposed to being purely a drawing with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 0.8,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "front_face_level",
+      "weight": 3.0,
+      "score": "d.frac",
+      "steps": [
+        {
+          "read_crop": "This picture is a line drawing of a building seen at an outside corner, so two wall faces are drawn. Take each wall face on its own. For each face write which face it is -- left-hand face or right-hand face -- then a comma, then one word from this list for the way its long left-to-right edges run across the page: flat, rising, falling. Write flat only when those edges run exactly along the page with neither end lifted. Separate one item from the next with a semicolon, and add nothing else.",
+          "out": "lv"
+        },
+        {
+          "fail_if": ["lv.unreadable"]
+        },
+        {
+          "run": "any_item_satisfies",
+          "args": ["lv", "[[['flat'],'T'],[['rising','falling'],'F']]", "'yes'", "'no'"],
+          "out": "lv__mapped"
+        },
+        {
+          "run": "read_yes_no",
+          "args": ["lv__mapped.answers"],
+          "out": "d"
+        },
+        {
+          "fail_if": ["d.unread"]
+        }
+      ]
+    },
+    {
+      "name": "side_wall_recedes",
+      "score": "d.frac",
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read_crop": "This picture is a perspective drawing of a building seen at an outside corner. Is there a wall face that runs AWAY from you into the distance, whose long left-to-right edges are slanted and get closer together as they go away? Answer the single word yes or the single word no.",
+          "out": "rc"
+        },
+        {
+          "fail_if": ["rc.unreadable"]
+        },
+        {
+          "run": "read_yes_no",
+          "args": ["rc.answers"],
+          "out": "d"
+        },
+        {
+          "fail_if": ["d.unread"]
+        }
+      ]
+    },
+    {
+      "name": "verticals_stay_vertical",
+      "weight": 0.7,
+      "score": "d.frac",
+      "steps": [
+        {
+          "read_crop": "This picture is a line drawing of a building. Look at the tall upright edges in it -- the corner of the building and the sides of its windows and doors. Take each upright edge you can make out on its own, up to eight of them. For each one write where it is in a few plain words, then a comma, then one word from this list for the way it runs down the page: upright (it runs straight up and down the page) or leaning (it slants over to one side). Separate one item from the next with a semicolon, and add nothing else.",
+          "out": "vt"
+        },
+        {
+          "fail_if": ["vt.unreadable"]
+        },
+        {
+          "run": "all_items_satisfy",
+          "args": ["vt", "[[['upright'],'T'],[['leaning'],'F']]", "'yes'", "'no'", "'unlisted'"],
+          "out": "vt__mapped"
+        },
+        {
+          "run": "read_yes_no",
+          "args": ["vt__mapped.answers"],
+          "out": "d"
+        },
+        {
+          "fail_if": ["d.unread"]
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

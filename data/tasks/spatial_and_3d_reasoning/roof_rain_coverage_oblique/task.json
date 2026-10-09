@@ -1,0 +1,216 @@
+{
+  "id": "roof_rain_coverage_oblique",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A rain-coverage check drawing for a stadium consent file, taken face on: one section through the west stand, with the pitch at the left of the sheet and the back of the stand at the right, and every figure on it big enough to read.\n\nThe stand is pinned, word for word and figure for figure: ten rows of seats, numbered 1 at the front by the pitch through to 10 at the back. Every row's tread is 0.9 m deep and every row sits 0.45 m higher than the one in front of it; the front edge of row 1's tread is the datum. The canopy cantilevers forward over the seats from the back of the stand, and its front edge stands 3.5 m back from the datum and 9.0 m above row 1's tread. Driven rain comes in from the pitch side at 30 degrees to the vertical, and the section carries it as a family of parallel rain lines run right across the sheet.\n\nThe checker's convention is lettered on the sheet, word for word: 'A row counts as sheltered only when the whole of its tread lies on the sheltered side of the rain line that just clears the canopy's front edge. Sheltered rows are drawn with hatching over the seat and exposed rows are left plain. The displacement between the canopy's own vertical shadow and that rain line, taken at the level of the back row's tread, is lettered on the sheet in metres to one decimal place, with the word DISPLACEMENT lettered beside it. Of the family of rain lines, the one that just clears the canopy's front edge is drawn heavier than the rest, so that a checker can follow it down to the seating.'\n\nWhich rows come out sheltered and what that displacement comes to, you work out for yourself -- I am deliberately telling you neither. Nothing else belongs on the sheet: no note naming a row.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a sectional drawing of stepped seating rows under an overhanging canopy, with slanting lines across the sheet? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "sheltered_rows": "10, 9",
+    "grazed_row": "8",
+    "clean_no_row_note": "yes",
+    "displacement_m": "2.9",
+    "no_vertical_rain_clean": "yes",
+    "q_row_number": "Copy the row number printed beside the seat in this cut-out. Write only the number.",
+    "q_row_hatched": "Is the seat in this cut-out drawn with hatching over it? Answer yes or no only.",
+    "q_disp_cert": "Is the word DISPLACEMENT lettered beside the figure in this cut-out? Answer yes or no only.",
+    "q_row_graze": "Does the heavier rain line, the one drawn thicker than the rest, cross the tread of the seat row in this cut-out? Answer yes or no only.",
+    "q_disp_copy": "Copy the figure lettered in this cut-out. Write only the number."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_the_back_two_rows_come_out_sheltered",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered seat row on the stand section",
+          "sweep": true,
+          "out": "row_box"
+        },
+        {
+          "fail_if": ["row_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_number",
+          "boxes": "row_box",
+          "pad": 0.2,
+          "out": "row_num"
+        },
+        {
+          "fail_if": ["row_num.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_hatched",
+          "boxes": "row_box",
+          "pad": 0.2,
+          "out": "row_hat"
+        },
+        {
+          "fail_if": ["row_hat.unreadable"]
+        },
+        {
+          "run": "flagged_names",
+          "args": ["row_num", "row_hat"],
+          "out": "hatched"
+        },
+        {
+          "compare_set": "hatched.seq",
+          "to": "reference.sheltered_rows",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_grazing_line_lands_on_the_tread_the_hatching_stops_at",
+      "weight": 3.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered seat row on the stand section",
+          "sweep": true,
+          "out": "gz_box"
+        },
+        {
+          "fail_if": ["gz_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_number",
+          "boxes": "gz_box",
+          "pad": 0.2,
+          "out": "gz_num"
+        },
+        {
+          "fail_if": ["gz_num.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_graze",
+          "boxes": "gz_box",
+          "pad": 0.2,
+          "out": "gz_hit"
+        },
+        {
+          "fail_if": ["gz_hit.unreadable"]
+        },
+        {
+          "run": "flagged_names",
+          "args": ["gz_num", "gz_hit"],
+          "out": "grazed"
+        },
+        {
+          "compare_set": "grazed.seq",
+          "to": "reference.grazed_row",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "displacement_figure_is_the_height_times_tan_thirty",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the displacement figure lettered in metres on the section",
+          "sweep": true,
+          "out": "disp_box"
+        },
+        {
+          "fail_if": ["disp_box.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_disp_cert",
+          "boxes": "disp_box",
+          "pad": 0.3,
+          "out": "disp_cert"
+        },
+        {
+          "fail_if": ["disp_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_disp_copy",
+          "boxes": "disp_box",
+          "pad": 0.3,
+          "out": "disp_txt"
+        },
+        {
+          "fail_if": ["disp_txt.unreadable"]
+        },
+        {
+          "run": "certified_figure",
+          "args": ["disp_cert", "disp_txt"],
+          "out": "disp"
+        },
+        {
+          "fail_if": ["disp.refused"]
+        },
+        {
+          "compare": "disp.val",
+          "to": "reference.displacement_m",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_rain_line_runs_straight_down_the_sheet",
+      "weight": 0.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a rain line running straight down the sheet instead of slanting",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "vert_sweep"
+        },
+        {
+          "fail_if": ["vert_sweep.unreadable"]
+        },
+        {
+          "compare": "vert_sweep.clean",
+          "to": "reference.no_vertical_rain_clean",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_note_naming_a_row_on_the_sheet",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a written note on the sheet that names a seat row as sheltered or as exposed",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "note_sweep"
+        },
+        {
+          "fail_if": ["note_sweep.unreadable"]
+        },
+        {
+          "compare": "note_sweep.clean",
+          "to": "reference.clean_no_row_note",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

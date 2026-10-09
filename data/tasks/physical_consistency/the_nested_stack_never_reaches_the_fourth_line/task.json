@@ -1,0 +1,84 @@
+{
+  "id": "the_nested_stack_never_reaches_the_fourth_line",
+  "axis": "physical_consistency",
+  "prompt": "Valve shop assembly sheet for the live-loading stack on a hot bonnet joint, made out at the spring bench. The joint spec at the head asks for a clamp load of 32 kN with movement at the stack held to 0.7 mm; the Schnorr discs issued are rated 8 kN each at a deflection of 0.85 mm, free height 2.95 mm, material 2.20 mm thick. The shop standard at the foot runs: discs stacked hollow sides all the same way up add their forces while the stack's travel stays what an individual disc gives, and discs stacked hollow face to hollow face add their travel while the force stays what an individual disc gives. Left box takes the section through the bolt, every disc's section square to the reader; right box the free-height check, the finished stack standing loose on the bench beside the bolt it came off. Wanted is the record photograph of the finished sheet on the bench, square-on from above, whole sheet in shot.",
+  "difficulty": "pA",
+  "easy_question": "Does this picture show an assembly sheet carrying, to the left, a section drawing of coned washers threaded on a bolt, and alongside it a photograph of the same washers standing free on the bench? Answer yes or no.",
+  "reference": {
+    "part1": "3",
+    "part2": "4"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "In the section drawing, how many places are there where two of the coned washers nest one inside the other the same way up?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "How many coned washers can be counted in the free-standing stack in the right-hand photograph?",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

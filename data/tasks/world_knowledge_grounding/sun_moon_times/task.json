@@ -1,0 +1,220 @@
+{
+  "id": "sun_moon_times",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A printed 'Sun & Moon' almanac panel bolted to a mountain TRAILHEAD information station near Tromso, Norway, for the date 2026-09-15, photographed at the signpost. In a crisp flat layout: a SUNRISE time and a SUNSET time (both HH:MM, with small sun-up / sun-down icons) and a MOON PANEL with the moon-phase NAME (e.g. 'Waxing Gibbous'), a matching moon-phase ICON, and the % illuminated. Put the place name Tromso and the date 2026-09-15 at the top. Use the REAL astronomical sunrise, sunset and moon phase for Tromso on exactly that date; make the day length equal sunset minus sunrise, and draw the moon icon to match the named phase and the illumination percentage. Every number and label sharp and legible.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show mountain trailhead information-station almanac panel for Tromso, weathered signpost setting? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "lat": 69.6492,
+    "lon": 18.9553,
+    "timezone": "Europe/Oslo",
+    "date": "2026-09-15"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "moon_phase_name",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "moon phase written out in words, in the part of this sign that is about the moon",
+          "expected_n": 1,
+          "out": "phase_read_box"
+        },
+        {
+          "fail_if": ["phase_read_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed sign. A moon phase is written out in words in it. Which of these words is printed here? Answer with exactly one of: new moon, waxing crescent, first quarter, waxing gibbous, full moon, waning gibbous, last quarter, waning crescent.",
+          "boxes": "phase_read_box",
+          "pad": 0.3,
+          "out": "phase_read_cr"
+        },
+        {
+          "fail_if": ["phase_read_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "phase_read_cr",
+          "out": "phase_read"
+        },
+        {
+          "compare_phase": "phase_read",
+          "to": "reference.moon_phase",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "moon_illumination_pct",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "percentage printed in the part of this sign that is about the moon -- ONE box holding just that printed figure together with its per-cent sign, from its first digit to the % sign and nothing else; not the moon-phase words, not the moon icon, not the sunrise or sunset times, and not the place name or the date.",
+          "expected_n": 1,
+          "out": "illum_read_box"
+        },
+        {
+          "fail_if": ["illum_read_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed sign. A percentage is printed in it. If more than one percentage is printed here, read the one nearest the middle of this cut-out. Write down just that number, digits only, and leave out the per-cent sign.",
+          "boxes": "illum_read_box",
+          "pad": 0.3,
+          "out": "illum_read_cr"
+        },
+        {
+          "fail_if": ["illum_read_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "illum_read_cr",
+          "out": "illum_read"
+        },
+        {
+          "compare_band": "illum_read",
+          "to": "reference.moon_illum_pct",
+          "core": 15.0,
+          "margin": 15.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sunrise_time",
+      "weight": 0.75,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "clock time printed under the sunrise heading of this sign (the heading next to the picture of a sun coming up) -- ONE box holding just that HH:MM figure, from its first digit to its last and nothing else; not the sunrise heading word itself, not the sun-up icon, not the sunset time, and not the moon panel's phase words or percentage.",
+          "expected_n": 1,
+          "out": "sunrise_read_box"
+        },
+        {
+          "fail_if": ["sunrise_read_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed sign. A clock time is printed in it. Copy that time exactly as it is printed, in HH:MM form, and add am or pm only if those letters are printed too. Write nothing else.",
+          "boxes": "sunrise_read_box",
+          "pad": 0.25,
+          "out": "sunrise_read_cr"
+        },
+        {
+          "fail_if": ["sunrise_read_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "sunrise_read_cr",
+          "out": "sunrise_read"
+        },
+        {
+          "to_minutes": "sunrise_read",
+          "out": "sunrise_read_min"
+        },
+        {
+          "compare_band": "sunrise_read_min",
+          "to": "reference.sunrise_min",
+          "core": 10,
+          "margin": 15,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sunset_time",
+      "weight": 0.75,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the SUNSET block of this sign",
+          "expected_n": 1,
+          "out": "sunset_read_box"
+        },
+        {
+          "fail_if": ["sunset_read_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up of the sunset part of a printed sign. Copy the clock time printed there exactly as it appears, character for character, and add am or pm only if those letters are printed too. Write nothing else.",
+          "boxes": "sunset_read_box",
+          "pad": 0.1,
+          "out": "sunset_read_cr"
+        },
+        {
+          "fail_if": ["sunset_read_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "sunset_read_cr",
+          "out": "sunset_read"
+        },
+        {
+          "to_minutes": "sunset_read",
+          "out": "sunset_read_min"
+        },
+        {
+          "compare_band": "sunset_read_min",
+          "to": "reference.sunset_min",
+          "core": 10,
+          "margin": 15,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "run": "compute_sun_moon_almanac",
+      "args": ["reference.lat", "reference.lon", "reference.timezone", "reference.date"],
+      "code": {
+        "inline": "compute_sun_moon_almanac_code"
+      },
+      "out": "alm"
+    },
+    {
+      "get": ".sunrise_min",
+      "value": "alm",
+      "out": "sunrise_min"
+    },
+    {
+      "get": ".sunset_min",
+      "value": "alm",
+      "out": "sunset_min"
+    },
+    {
+      "get": ".day_length_min",
+      "value": "alm",
+      "out": "day_length_min"
+    },
+    {
+      "get": ".moon_phase",
+      "value": "alm",
+      "out": "moon_phase"
+    },
+    {
+      "get": ".moon_illum_pct",
+      "value": "alm",
+      "out": "moon_illum_pct"
+    }
+  ],
+  "grounding": "live"
+}

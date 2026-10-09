@@ -1,0 +1,93 @@
+{
+  "id": "patch_bay_jumpers_realise_the_flow",
+  "axis": "long_range_consistency",
+  "prompt": "The duty engineer has to sign the chain over before the evening transmission, so the rack front is photographed with the flow sheet still taped below the panel.\n\nOne rack bay stands open in the apparatus room. The upper part is a jack panel with two rows of jacks, the top row numbered 11 to 18 and the bottom row 21 to 28 on the strip printed under each jack, and short cords are plugged across the field. The flow sheet taped below the panel is a printed signal chart, each block carrying the same number as its jack, with the links that have to be made by cord drawn as heavy lines and marked so on the sheet: block 12 to block 25, block 14 to block 27, block 16 to block 22. Every other link on the sheet is made inside the equipment.\n\nWhich jacks the cords actually stand in is what the sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a numbered jack panel with cords plugged across it and a printed signal chart taped below? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "every_across_number_in_grid"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "short cords plugged across the face of the jack panel",
+          "out": "r_part1",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part1.unreadable"]
+        },
+        {
+          "run": "count_boxes",
+          "args": ["r_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the numbers printed under the jacks that have a cord plugged into them, taking the top row first and then the bottom row.",
+          "out": "a_part2_g"
+        },
+        {
+          "fail_if": ["a_part2_g.unreadable"]
+        },
+        {
+          "ask": "Read the numbers in the blocks at the two ends of each heavy marked link on the flow sheet.",
+          "out": "a_part2_x"
+        },
+        {
+          "fail_if": ["a_part2_x.unreadable"]
+        },
+        {
+          "run": "across_numbers_in_grid",
+          "args": ["a_part2_g", "a_part2_x"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

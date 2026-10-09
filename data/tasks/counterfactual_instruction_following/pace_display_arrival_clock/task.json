@@ -1,0 +1,181 @@
+{
+  "id": "pace_display_arrival_clock",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of the pace band for one runner lying on the race office desk beside the entry card it was printed for, both square to the camera and readable in the one picture.\n\nThe band is the paper strip a runner wears round the wrist. Above its splits it has a head panel with two fields, headed START and PACE. Below the panel run four split lines, one to a line, each giving a distance -- 5 km, 10 km, 15 km, 20 km -- with the time for that distance printed beside it.\n\nThis race prints its bands to the gun clock and not to elapsed time: the time against a split is the time of day the runner is due to reach it, in hours and minutes. The entry card asks for a start at 08:30 and a pace of 4:48 per kilometre, which is minutes and seconds to cover one kilometre and not kilometres in an hour.\n\nThe band goes on the runner's wrist at the start, so the times have to be the ones the clock at each split will be showing. Work the four times out for yourself -- I am deliberately not telling you any of them. A band printed in elapsed time sends the runner past a clock that says something else, and the runner races the wrong number.\n\nEvery heading, distance and time must be large and sharp. Nothing may appear on the band beyond the two head panel fields and the four split lines with their distances and times: no working, no notes, no arrows.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a narrow printed strip carrying a short column of lines, each line with a distance and a time on it? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "splits": "10km:0918 15km:0942 20km:1006 5km:0854",
+    "head": "pace:448 start:0830",
+    "n_lines": 4,
+    "q_line_cert": "Does this cut-out show ONE whole split line of the band with its distance and its time, rather than the head panel or only part of a line? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_split_carries_the_time_of_day_the_pace_puts_it_at",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a split line printed on the pace band",
+          "sweep": true,
+          "out": "spl_box"
+        },
+        {
+          "fail_if": ["spl_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the distance printed on this line. Write the distance only.",
+          "boxes": "spl_box",
+          "pad": 0.15,
+          "out": "dist_txt"
+        },
+        {
+          "fail_if": ["dist_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the time printed on this line. Write the time only.",
+          "boxes": "spl_box",
+          "pad": 0.15,
+          "out": "time_txt"
+        },
+        {
+          "fail_if": ["time_txt.unreadable"]
+        },
+        {
+          "run": "labelled_pairs",
+          "args": ["dist_txt", "time_txt"],
+          "out": "band"
+        },
+        {
+          "compare": "band.canon",
+          "to": "reference.splits",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_head_panel_still_carries_the_start_and_the_pace_it_was_printed_for",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a headed field of the head panel on the pace band",
+          "sweep": true,
+          "out": "hd_box"
+        },
+        {
+          "fail_if": ["hd_box.unreadable"]
+        },
+        {
+          "read_crop": "Copy the heading printed above this field. Write the heading only.",
+          "boxes": "hd_box",
+          "pad": 0.2,
+          "out": "hhead_txt"
+        },
+        {
+          "fail_if": ["hhead_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy what is printed in this field. Write it only.",
+          "boxes": "hd_box",
+          "pad": 0.2,
+          "out": "hval_txt"
+        },
+        {
+          "fail_if": ["hval_txt.unreadable"]
+        },
+        {
+          "run": "labelled_pairs",
+          "args": ["hhead_txt", "hval_txt"],
+          "out": "panel"
+        },
+        {
+          "compare": "panel.canon",
+          "to": "reference.head",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "four_split_lines_stand_on_the_band",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a split line printed on the pace band",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_line_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_lines",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_added_to_the_band",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, a note or an arrow added beyond the head panel and the split lines",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

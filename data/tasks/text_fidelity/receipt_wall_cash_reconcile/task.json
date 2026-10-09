@@ -1,0 +1,107 @@
+{
+  "id": "receipt_wall_cash_reconcile",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on photo of an end-of-day accounts page from 'HARBOUR HARDWARE' showing FIVE printed cash-register RECEIPTS laid out on one sheet. For each receipt print its line items and prices, then a TOTAL (sum of its items), the CASH tendered (given), and the CHANGE (= CASH tendered minus TOTAL). Here are the five receipts:\n    Receipt R-207: Screws box GBP 4.80; Wall plugs GBP 2.60; Drill bit GBP 7.15 ; CASH tendered GBP 20.00\n    Receipt R-208: Paint 2.5L GBP 18.99; Roller GBP 4.25; Tray GBP 3.40 ; CASH tendered GBP 30.00\n    Receipt R-209: Hinges x2 GBP 5.60; Handle GBP 8.90; Latch GBP 4.45; Screws GBP 2.10 ; CASH tendered GBP 25.00\n    Receipt R-210: Sandpaper GBP 3.40; Filler GBP 6.20; Brush GBP 2.75; Tape GBP 1.90; Gloves GBP 3.50 ; CASH tendered GBP 20.00\n    Receipt R-211: LED bulb GBP 6.40; Fuse pack GBP 3.60 ; CASH tendered GBP 15.00\nBelow the five receipts print a boxed 'DRAWER RECONCILIATION' with three lines: 'Total takings' = the sum of all five receipt TOTALs; 'Total change given' = the sum of all five CHANGE amounts; and 'NET CASH IN DRAWER' = (the sum of all five CASH tendered amounts) minus (the total change given). CRITICAL: because every receipt balances, the NET CASH IN DRAWER must come out EQUAL to the Total takings. Print all amounts in GBP. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a page of five printed cash-register RECEIPTS and a DRAWER RECONCILIATION box at the foot summing takings, change and net cash. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_rows": 5,
+    "read_label": "R-209",
+    "read_change": 3.95,
+    "net_cash": 89.99,
+    "takings": 89.99,
+    "q_count": "How many separate cash-register RECEIPTS are shown on this page (not counting the DRAWER RECONCILIATION box)? Whole number only.",
+    "q_change": "Find the receipt labelled 'R-209'. Read the amount printed on its CHANGE line. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Report as a decimal number of currency units, ignore the currency symbol.",
+    "q_net": "In the DRAWER RECONCILIATION box at the foot, read the amount printed on the 'NET CASH IN DRAWER' line. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Report as a decimal number of currency units, ignore the currency symbol."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cash_reconcile_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_change",
+          "out": "chg"
+        },
+        {
+          "fail_if": ["chg.unreadable"]
+        },
+        {
+          "read_number": "reference.q_net",
+          "out": "net"
+        },
+        {
+          "fail_if": ["net.unreadable"]
+        },
+        {
+          "run": "change_and_net_match",
+          "args": [
+            "chg",
+            "net",
+            "reference.read_change",
+            "reference.net_cash",
+            "reference.takings"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed cash-register receipt on the page, with its own list of items and its own total line",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole cash-register receipt, with its own list of item prices and its own total, rather than part of a receipt or the reconciliation box at the foot of the page? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n_rows",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,253 @@
+{
+  "id": "derive_undo_rollback",
+  "axis": "long_range_consistency",
+  "prompt": "A six-frame storyboard on grey paper, TWO ROWS OF THREE panels, loose pencil-and-wash style. The same site foreman is in all six frames: a man in a WHITE coat and a brown flat cap. In frame 1 he has NO scarf and is carrying NOTHING.\n\nWHAT HE DOES, and every change lasts until it is taken back:\n  * in FRAME 2 he puts on a RED SCARF.\n  * in FRAME 3 he picks up a GREEN TOOLBOX and carries it from then on.\n  * in FRAME 4 he UNDOES exactly what he did in frame 2, and nothing else.\n  * in FRAME 6 he UNDOES exactly what he did in frame 3, and nothing else.\n\nEach undo takes back ONE earlier decision only; anything else that was in force stays in force. Work out for yourself what he has on and what he is carrying in each frame; I am deliberately not listing it frame by frame.\n\nSix different corners of the site, a different pose and camera angle each time. No text, no captions, no lettering.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a comic strip: several separate panels, drawn side by side, with the same person appearing in each panel. Ignoring artistic quality and ignoring whether the story is right, does the image DEPICT that — a strip of separate panels with a recurring figure? A comic page, a storyboard or a picture-book strip all count as yes. Answer NO only if it is blank, a single picture with no panels, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 6,
+    "na": 6,
+    "qa": "This picture is a comic strip of 6 panels arranged as two rows of three panels. Look at every panel in reading order (the top row left to right, then the bottom row left to right). For EACH panel in that order, report whether the site foreman has a RED SCARF round his neck, or no scarf at all. Use only these words: scarf, none. The panels do not have to agree with one another — report what each panel actually shows, one answer per panel, even if the answer repeats or changes from panel to panel. Answer with exactly 6 answers separated by commas, in panel order, and nothing else.",
+    "qa2": "The picture is a strip of separate drawings arranged as two rows of three panels. Going through them in the top row left to right, then the bottom row left to right order, tell me, for each drawing in turn, whether the site foreman has a RED SCARF round his neck, or no scarf at all. Allowed answers: scarf, none. Judge each drawing on its own — two drawings may well disagree, so do not assume the strip is consistent. Reply with exactly 6 comma-separated answers and nothing else.",
+    "seq_a": ["none", "scarf", "scarf", "none", "none", "none"],
+    "nb": 6,
+    "qb": "This picture is a comic strip of 6 panels arranged as two rows of three panels. Look at every panel in reading order (the top row left to right, then the bottom row left to right). For EACH panel in that order, report whether the site foreman is carrying a GREEN TOOLBOX in his hand, or is not carrying a toolbox at all. Use only these words: toolbox, none. The panels do not have to agree with one another — report what each panel actually shows, one answer per panel, even if the answer repeats or changes from panel to panel. Answer with exactly 6 answers separated by commas, in panel order, and nothing else.",
+    "qb2": "The picture is a strip of separate drawings arranged as two rows of three panels. Going through them in the top row left to right, then the bottom row left to right order, tell me, for each drawing in turn, whether the site foreman is carrying a GREEN TOOLBOX in his hand, or is not carrying a toolbox at all. Allowed answers: toolbox, none. Judge each drawing on its own — two drawings may well disagree, so do not assume the strip is consistent. Reply with exactly 6 comma-separated answers and nothing else.",
+    "seq_b": ["none", "none", "toolbox", "toolbox", "toolbox", "none"],
+    "enforce_notext": true,
+    "q_notext": "Look at every panel and the margins. Is there any written text that states or labels what the recurring character is wearing or carrying? Answer yes or no.",
+    "pn_rows": 2,
+    "pn_cols": 3,
+    "qa_cell": "This is ONE panel cut out of a storyboard strip. It shows a site foreman, a man in a white coat and a brown flat cap. In this panel, has he got a RED SCARF round his neck, or no scarf at all? Answer with just one word: scarf, or none. Nothing else.",
+    "qb_cell": "This is ONE panel cut out of a storyboard strip. It shows a site foreman, a man in a white coat and a brown flat cap. In this panel, is he carrying a GREEN TOOLBOX in his hand, or is he carrying no toolbox at all? Answer with just one word: toolbox, or none. Nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of comic panels itself -- the outer edge of the whole row or grid of drawn panels, counting all of the panels together as one single block; not one panel on its own, and not the paper margin, table or wall around the strip",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "panel_plan",
+          "args": ["image", "anc", "reference.na", "reference.pn_rows", "reference.pn_cols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.qa_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rda"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rda", "pl", "PN_WORDS_A"],
+          "out": "sqa"
+        },
+        {
+          "fail_if": ["sqa.no_read"]
+        },
+        {
+          "read_crop": "reference.qb_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rdb"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rdb", "pl", "PN_WORDS_B"],
+          "out": "sqb"
+        },
+        {
+          "fail_if": ["sqb.no_read"]
+        },
+        {
+          "run": "panel_cells_verdict",
+          "args": ["[sqa.seq, sqb.seq]", "[reference.seq_a, reference.seq_b]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "paint_panels",
+          "args": ["pl", "res", "[sqa, sqb]"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "panel_share",
+      "weight": 0.3,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of comic panels itself -- the outer edge of the whole row or grid of drawn panels, counting all of the panels together as one single block; not one panel on its own, and not the paper margin, table or wall around the strip",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "panel_plan",
+          "args": ["image", "anc", "reference.na", "reference.pn_rows", "reference.pn_cols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "reference.qa_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rda"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rda", "pl", "PN_WORDS_A"],
+          "out": "sqa"
+        },
+        {
+          "fail_if": ["sqa.no_read"]
+        },
+        {
+          "read_crop": "reference.qb_cell",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rdb"
+        },
+        {
+          "run": "panel_words",
+          "args": ["rdb", "pl", "PN_WORDS_B"],
+          "out": "sqb"
+        },
+        {
+          "fail_if": ["sqb.no_read"]
+        },
+        {
+          "run": "panel_cells_verdict",
+          "args": ["[sqa.seq, sqb.seq]", "[reference.seq_a, reference.seq_b]"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "paint_panels",
+          "args": ["pl", "res", "[sqa, sqb]"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

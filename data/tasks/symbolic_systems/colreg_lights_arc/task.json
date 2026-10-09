@@ -1,0 +1,90 @@
+{
+  "id": "colreg_lights_arc",
+  "axis": "symbolic_systems",
+  "prompt": "Draw a clear night-time picture of a small ship at sea, seen from another boat close by, in plain side view. Draw the ship's bow (her pointed front end) at the LEFT of the picture and her stern at the RIGHT, with her mast standing up in the middle.\nA ship's navigation lamps are DIRECTIONAL: each lamp shines only over its own arc around the ship, and from outside that arc you cannot see it at all. The arcs are:\n- white masthead lamp, high on the mast: an arc of 225 degrees, reaching from dead ahead round to 112.5 degrees on each side;\n- green starboard sidelight, low near the bow: an arc of 112.5 degrees, reaching from dead ahead round to 112.5 degrees on the STARBOARD (right-hand) side of the ship only;\n- red port sidelight, low near the bow: an arc of 112.5 degrees, reaching from dead ahead round to 112.5 degrees on the PORT (left-hand) side of the ship only;\n- white sternlight, low at the stern: an arc of 135 degrees, reaching from dead astern round to 67.5 degrees on each side.\nYOUR VIEWPOINT: your boat lies 100 degrees round from her bow, on her STARBOARD side, so you are looking at her starboard side.\nWork out which of those four lamps have your viewpoint inside their arc, and draw ONLY those. Leave every other lamp dark and undrawn. Draw each lit lamp as a big, clearly coloured glowing disc on the ship, large enough that its colour is unmistakable. Keep the rest of the night dark: no cabin lights, no deck floodlights, no harbour lights, no other coloured light anywhere in the picture, and no text, labels or captions.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a boat or ship at night at sea, with one or more glowing coloured lamps on it. Ignoring artistic quality, does the image actually DEPICT a boat or ship at night? A photo, a painting, an illustration or a clean diagram all count as yes. Answer NO only if it shows a blank card, a panel of plain text, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "bearing_deg": 100.0,
+    "observer_side": "starboard",
+    "masthead_arc": 225.0,
+    "sidelight_arc": 112.5,
+    "sternlight_arc": 135.0,
+    "bow_side": "left",
+    "q_green": "Look at the lamps that are glowing on this boat. Is any one of them GREEN? Judge only by the colour of the glowing lamps themselves, not by any other part of the picture. Answer with exactly one word: yes or no.",
+    "q_red": "Look at the lamps that are glowing on this boat. Is any one of them RED? Judge only by the colour of the glowing lamps themselves, not by any other part of the picture. Answer with exactly one word: yes or no.",
+    "q_white_n": "Look at the lamps that are glowing on this boat. How many of them are WHITE? Count only the glowing white lamps on the boat itself. Answer with a single digit: 0, 1, 2 or 3.",
+    "q_bow": "Look at the boat in this picture. Its bow is its pointed front end and its stern is its blunt back end. Is the pointed front end at the LEFT-hand side of the picture or at the RIGHT-hand side? Answer with exactly one word: left or right."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "lamp_set_in_arc",
+      "weight": 4.0,
+      "score": "res.frac",
+      "steps": [
+        {
+          "read_crop": "reference.q_green",
+          "out": "gn"
+        },
+        {
+          "read_crop": "reference.q_red",
+          "out": "rd"
+        },
+        {
+          "read_number": "reference.q_white_n",
+          "out": "wn"
+        },
+        {
+          "fail_if": ["gn.unreadable", "rd.unreadable", "wn.unreadable"]
+        },
+        {
+          "run": "lamp_visibility_score",
+          "args": ["gn", "rd", "wn", "reference"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "d1_bow_side",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.q_bow",
+          "out": "bw"
+        },
+        {
+          "fail_if": ["bw.unreadable"]
+        },
+        {
+          "compare": "bw",
+          "to": "reference.bow_side",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

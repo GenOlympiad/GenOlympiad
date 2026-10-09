@@ -1,0 +1,181 @@
+{
+  "id": "shoe_last_medial_lateral",
+  "axis": "world_knowledge_grounding",
+  "prompt": "The lasts are wanted for a four o'clock fitting, so the maker lays them out on the fitting bench with the drawings they were rasped to.\n\nTwo sheets of paper are squared up on the bench, one for each foot, with the customer's own outline drawn round on each of them and two marks added in pencil: a short bar across the widest part of the tread where the joint of the big toe sits, and a cross at the middle of the heel. The word LEFT is written at the top of one sheet and RIGHT at the top of the other. A wooden last stands sole uppermost on each sheet. The tape and the last knife lie at the edge of the bench.\n\nA last is not a symmetrical block and it is not a rounded shape either. Down one side it runs almost dead straight from the ball of the foot to the heel, and that side goes to the inside of the foot; the other side swings out in a curve. The widest part of the last has to fall on the joint of the big toe, not forward of it and not behind it, and the heel of the last has to sit over the middle of the heel.\n\nHow each last sits on its own drawing is the whole point of the layout and I am deliberately not telling you. Nothing is added to the picture: no measurements written on the paper, no arrows, no annotation besides the two words already named. Keep the outline, both pencil marks and the whole of each last easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show wooden shoe lasts standing on sheets of paper with drawn foot outlines on a bench? A photograph, an illustration or a printed panel all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "sheets": ["LEFT", "RIGHT"],
+    "n_units": 2,
+    "n_facts": 4
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_last_lies_straight_side_to_the_inside_of_its_own_drawing_and_lands_on_both_marks",
+      "weight": 3.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one sheet of paper on the bench with the last standing on it",
+          "out": "sl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sl_r.unreadable"]
+        },
+        {
+          "read_crop": "What word is written at the top of the sheet in this cut-out? Answer with that word only.",
+          "boxes": "sl_r",
+          "pad": 0.2,
+          "out": "sl_k",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sl_k.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out as a clock face with 12 at the top. Which hour does the side of the wooden last that runs almost straight lie toward, seen from the middle of the last? Answer with a single number from 1 to 12.",
+          "boxes": "sl_r",
+          "pad": 0.2,
+          "out": "sl_s",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sl_s.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out as a clock face with 12 at the top. Which hour does the inside edge of the drawn foot outline lie toward, seen from the middle of the outline? Answer with a single number from 1 to 12.",
+          "boxes": "sl_r",
+          "pad": 0.2,
+          "out": "sl_i",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sl_i.unreadable"]
+        },
+        {
+          "read_crop": "Does the widest part of the wooden last fall on the short pencil bar drawn across the tread? Answer yes or no only.",
+          "boxes": "sl_r",
+          "pad": 0.2,
+          "out": "sl_b",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sl_b.unreadable"]
+        },
+        {
+          "read_crop": "Does the heel end of the wooden last sit over the pencil cross at the middle of the heel? Answer yes or no only.",
+          "boxes": "sl_r",
+          "pad": 0.2,
+          "out": "sl_h",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sl_h.unreadable"]
+        },
+        {
+          "run": "last_edge_gap",
+          "args": ["sl_k", "sl_s", "sl_i", "sl_b", "sl_h", "reference.sheets"],
+          "out": "sl_o"
+        },
+        {
+          "compare_compass": "sl_o.obs",
+          "to": "sl_o.exp",
+          "core": 22.5,
+          "margin": 44.0,
+          "out": "f_geom"
+        },
+        {
+          "compare_band": "sl_o.facts",
+          "to": "reference.n_facts",
+          "core_abs": 0.499,
+          "margin_abs": 1.5,
+          "out": "f_fact"
+        },
+        {
+          "minimum": ["f_geom", "f_fact"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_bench_carries_its_two_titled_sheets",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one sheet of paper on the bench with the last standing on it",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole sheet of paper with its title word, its drawn outline and a last standing on it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.2,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_measurement_arrow_or_extra_annotation_was_written_on_the_paper",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a measurement, an arrow or an extra annotation written on the paper",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

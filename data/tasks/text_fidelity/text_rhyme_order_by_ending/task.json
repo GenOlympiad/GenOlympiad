@@ -1,0 +1,115 @@
+{
+  "id": "text_rhyme_order_by_ending",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on scan of a printed lyricist's rhyming index titled 'RHYME INDEX - PAGE TWO', sub-heading 'Twenty-four words by ending'. Print EXACTLY 24 numbered lines (1. to 24.), ONE word per line, using these twenty-four words:\nblanket, market, rocket, harvest, forest, compass, canvas, campus, meadow, window, shadow, carrot, parrot, biscuit, circuit, summit, planet, helmet, tunnel, channel, kernel, anchor, harbour, colour\n\nCRITICAL ORDERING LAW: collate the words by their ENDINGS -- compare the LAST letter first, then the second-to-last, then the third-to-last, and so on -- so that words which rhyme stand together. Print them down the page in exactly that order. Do NOT use ordinary alphabetical order and do NOT keep the order listed above.\n\nOne word per numbered line, nothing else on the page.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a printed index page listing numbered single words. Ignoring artistic quality and ignoring whether the wording is correct, does the image DEPICT that -- a printed page carrying a numbered list of text lines? A photo, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_lines": 24,
+    "expected": [
+      "channel",
+      "tunnel",
+      "kernel",
+      "anchor",
+      "harbour",
+      "colour",
+      "canvas",
+      "compass",
+      "campus",
+      "rocket",
+      "blanket",
+      "market",
+      "helmet",
+      "planet",
+      "summit",
+      "circuit",
+      "biscuit",
+      "carrot",
+      "parrot",
+      "forest",
+      "harvest",
+      "meadow",
+      "shadow",
+      "window"
+    ]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_crop": "This page carries a numbered list of written lines. Write those numbered lines out again, exactly as they are printed. Put each one on its own line, starting with the number it carries, then a full stop, then that line's words. Copy every word letter for letter, and keep each word's capital letters and small letters exactly as they are printed. Do not fix spelling, do not change the order of the words, do not add a word and do not leave one out. Leave out the title, any sub-heading, and any text that carries no number. Write out the list and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Look at every numbered line of text on this page and transcribe it word for word. Begin each transcribed line with its printed number followed by a full stop, then that line's words in the order they appear, with upper-case and lower-case letters exactly as printed. Reproduce anything that looks like a mistake just as it stands -- never correct it, complete it or tidy it up. Ignore the heading, the sub-heading and any line without a number. Output only the transcribed lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "score_rhyme_order",
+          "args": ["[t1, t2]", "reference.n_lines", "reference.expected"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read_crop": "This page carries a numbered list of written lines. Write those numbered lines out again, exactly as they are printed. Put each one on its own line, starting with the number it carries, then a full stop, then that line's words. Copy every word letter for letter, and keep each word's capital letters and small letters exactly as they are printed. Do not fix spelling, do not change the order of the words, do not add a word and do not leave one out. Leave out the title, any sub-heading, and any text that carries no number. Write out the list and nothing else.",
+          "votes": 1,
+          "out": "t1"
+        },
+        {
+          "read_crop": "Look at every numbered line of text on this page and transcribe it word for word. Begin each transcribed line with its printed number followed by a full stop, then that line's words in the order they appear, with upper-case and lower-case letters exactly as printed. Reproduce anything that looks like a mistake just as it stands -- never correct it, complete it or tidy it up. Ignore the heading, the sub-heading and any line without a number. Output only the transcribed lines.",
+          "votes": 1,
+          "out": "t2"
+        },
+        {
+          "run": "score_rhyme_order",
+          "args": ["[t1, t2]", "reference.n_lines", "reference.expected"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

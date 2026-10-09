@@ -1,0 +1,170 @@
+{
+  "id": "braille_contraction",
+  "axis": "symbolic_systems",
+  "prompt": "A sharp photorealistic close-up photograph of a dark anodised aluminium tactile plate fixed to the end of a railway platform handrail, with a single horizontal row of braille embossed into it. The plate says PLATFORM 3 -- the word PLATFORM, then one blank cell of space, then the number 3, and the number is written in braille dots as well.\nWrite it the way a real braille sign is written: in CONTRACTED (Grade 2) Unified English Braille, applying every contraction the code makes compulsory in that word, and writing the number exactly as the braille code requires a number to be written. Work these out for yourself -- do not simply put one cell per printed character.\nEach cell is the standard 2x3 grid of six dot positions, with exactly the right dots raised and the rest of the grid flat. Keep every cell the same size, sit them all on one straight baseline, and leave a gap between neighbouring cells that is clearly wider than the gap between the two dot columns inside a cell. Daylight from the upper left so each raised dot shows a bright top and a small shadow. The plate carries the braille only: no printed letters, no printed words, no printed digits and no logos anywhere on it.",
+  "difficulty": "s3",
+  "easy_question": "Does this image show a dark metal plate carrying a single horizontal row of small raised round dots on its face? A photograph, an illustration or a clean diagram of such a plate all count as yes. Answer NO only if the image instead shows a plate or card with no raised dots at all, a page of printed text, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "word": "PLATFORM 3",
+    "n_cells": 8,
+    "cell_codes": [
+      [1, 2, 3, 4],
+      [1, 2, 3],
+      [1],
+      [2, 3, 4, 5],
+      [1, 2, 3, 4, 5, 6],
+      [1, 3, 4],
+      [3, 4, 5, 6],
+      [1, 4]
+    ],
+    "contraction_idx": [4, 6],
+    "enforce_notext": true,
+    "q_notext": "Apart from the raised round dots, does the dark metal plate itself carry any printed or engraved alphabet letters, words or digits on its face? Answer yes or no only.",
+    "vlm_leaves": true
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "braille_only_no_print",
+      "weight": 0.8,
+      "gate": true,
+      "only_if": "reference.enforce_notext",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "any printed or engraved letter, word, digit or logo on the face of the dark metal plate, apart from the raised dots",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "contracted_cell_count",
+      "weight": 4.0,
+      "steps": [
+        {
+          "run": "read_braille_symbols",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "symbol_count_matches",
+          "args": ["m", "reference.n_cells"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "contraction_cells_correct",
+      "weight": 5.0,
+      "steps": [
+        {
+          "run": "read_braille_symbols",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "contraction_symbols_match",
+          "args": ["m", "reference.cell_codes", "reference.contraction_idx"],
+          "code": {
+            "inline": "f_code_2"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "all_cell_codes",
+      "weight": 3.0,
+      "steps": [
+        {
+          "run": "read_braille_symbols",
+          "args": ["image"],
+          "out": "m"
+        },
+        {
+          "fail_if": ["m.no_read"]
+        },
+        {
+          "run": "share_of_symbols_matching",
+          "args": ["m", "reference.cell_codes"],
+          "code": {
+            "inline": "f_code_3"
+          },
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_cells_overlay",
+      "weight": 0.0,
+      "only_if": "reference.vlm_leaves",
+      "steps": [
+        {
+          "run": "mark_braille_overlay",
+          "args": ["image", "reference.cell_codes", "'cells'"],
+          "out": "ov"
+        },
+        {
+          "overlay": "homography",
+          "image": "ov.path",
+          "rects": "ov.mk_cells.rects",
+          "polylines": "ov.mk_cells.polylines",
+          "ref_anchors": "ov.ref_anchors",
+          "found_anchors": "ov.found_anchors",
+          "color": [235, 40, 40],
+          "width_frac": 0.004,
+          "out": "ovm1"
+        },
+        {
+          "ask": "Red rectangles have been drawn on this picture. Is every red rectangle drawn around a group of raised round dots? Answer yes or no only.",
+          "image": "ovm1.path",
+          "out": "q"
+        },
+        {
+          "fail_if": ["q.unreadable"]
+        },
+        {
+          "compare": "q",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

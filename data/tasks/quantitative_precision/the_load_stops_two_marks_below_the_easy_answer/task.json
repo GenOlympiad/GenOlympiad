@@ -1,0 +1,243 @@
+{
+  "id": "the_load_stops_two_marks_below_the_easy_answer",
+  "axis": "quantitative_precision",
+  "prompt": "A laminated loading card of the sort a quarry weighbridge office makes up for one regular lorry and hands to the shovel driver. One card, drawn in plain line work: a section straight through the tipper body seen from the side, with the printed panel of figures beneath it.\n\nThe body on this lorry is a taper: 1200 mm long by 1000 mm wide on the floor, opening out to 5600 mm by 2800 mm at the rim, and 1500 mm deep. Ten level marks are painted up the inside of its front bulkhead, numbered 1 at the bottom to 10 at the rim, one every 150 mm.\n\nThe panel beneath the section already carries the two figures the office holds for this job: the lorry's plated payload of 10.0 tonnes, and the bulk density of the material at 1.50 tonnes per cubic metre. It has one more line on it, headed LOAD TO MARK, waiting for a number.\n\nDraw the section with the load hatched in to the level this lorry may be loaded to on this material, and fill in the LOAD TO MARK line. Which mark that is, is for you to work out -- I am deliberately not telling you, and I am not telling you what the body holds.\n\nThe card goes into the cab as drawn, so nothing may be added that does the reading for the driver: no arrow, no ring drawn round a mark, no dimension line up the bulkhead, no note in the margin and no writing anywhere on the card other than the mark numbers, the panel of figures and the LOAD TO MARK line.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a drawing of a container seen in section with numbered marks up one side of it? A drawing, a scan or a photograph ALL count as yes. Answer NO only if the image shows a blank sheet that just states an answer, or shows no container at all. Answer yes or no only.",
+  "reference": {
+    "level_tag": "yes",
+    "agrees_tag": "yes",
+    "taper_tag": "yes",
+    "clean_frame": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_load_stops_at_the_highest_mark_the_plated_payload_allows",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the section through the tipper body, with the numbered marks up the inside of its front bulkhead",
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the number of the painted mark that the top of the hatched load is level with. Write the number only.",
+          "boxes": "bd",
+          "pad": 0.12,
+          "out": "lv"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the body wider across the top than across the floor, the same width, or narrower at the top? Answer wider, same, or narrower.",
+          "boxes": "bd",
+          "pad": 0.12,
+          "out": "sh"
+        },
+        {
+          "read": "boxes",
+          "target": "the printed panel of figures beneath the section on the loading card",
+          "out": "pn"
+        },
+        {
+          "fail_if": ["pn.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the number filled in on the LOAD TO MARK line. Write the number only.",
+          "boxes": "pn",
+          "pad": 0.15,
+          "out": "cm"
+        },
+        {
+          "run": "load_level_ok",
+          "args": ["lv"],
+          "out": "lm"
+        },
+        {
+          "fail_if": ["lm.refused"]
+        },
+        {
+          "compare": "lm.tag",
+          "to": "reference.level_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_card_and_the_section_name_the_same_mark",
+      "weight": 2.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the section through the tipper body, with the numbered marks up the inside of its front bulkhead",
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the number of the painted mark that the top of the hatched load is level with. Write the number only.",
+          "boxes": "bd",
+          "pad": 0.12,
+          "out": "lv"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the body wider across the top than across the floor, the same width, or narrower at the top? Answer wider, same, or narrower.",
+          "boxes": "bd",
+          "pad": 0.12,
+          "out": "sh"
+        },
+        {
+          "read": "boxes",
+          "target": "the printed panel of figures beneath the section on the loading card",
+          "out": "pn"
+        },
+        {
+          "fail_if": ["pn.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the number filled in on the LOAD TO MARK line. Write the number only.",
+          "boxes": "pn",
+          "pad": 0.15,
+          "out": "cm"
+        },
+        {
+          "run": "mark_matches_label",
+          "args": ["lv", "cm"],
+          "out": "ag"
+        },
+        {
+          "fail_if": ["ag.refused"]
+        },
+        {
+          "compare": "ag.tag",
+          "to": "reference.agrees_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_body_is_drawn_the_taper_the_card_gives",
+      "weight": 1.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the section through the tipper body, with the numbered marks up the inside of its front bulkhead",
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the number of the painted mark that the top of the hatched load is level with. Write the number only.",
+          "boxes": "bd",
+          "pad": 0.12,
+          "out": "lv"
+        },
+        {
+          "read_crop": "Look only at this cut-out. Is the body wider across the top than across the floor, the same width, or narrower at the top? Answer wider, same, or narrower.",
+          "boxes": "bd",
+          "pad": 0.12,
+          "out": "sh"
+        },
+        {
+          "read": "boxes",
+          "target": "the printed panel of figures beneath the section on the loading card",
+          "out": "pn"
+        },
+        {
+          "fail_if": ["pn.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Copy the number filled in on the LOAD TO MARK line. Write the number only.",
+          "boxes": "pn",
+          "pad": 0.15,
+          "out": "cm"
+        },
+        {
+          "run": "taper",
+          "args": ["sh"],
+          "out": "tp"
+        },
+        {
+          "fail_if": ["tp.refused"]
+        },
+        {
+          "compare": "tp.tag",
+          "to": "reference.taper_tag",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_on_the_card_works_the_level_out_for_the_driver",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, a ring drawn round a mark, a dimension line or a note in the margin",
+          "out": "xg",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["xg.unreadable"]
+        },
+        {
+          "read_crop": "Look only at this cut-out. Say in a few plain words what it shows, quoting any words or figures printed or written inside it. If the cut-out is blank, answer none.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgw"
+        },
+        {
+          "read_crop": "Look only at this cut-out, not the rest of the picture. Is any of these inside it: an arrow, a ring drawn round a mark, a dimension line or a note in the margin? Answer yes or no. Answer no if the cut-out shows the outline of the body, a numbered level mark, the hatching of the load, the printed panel of figures, the LOAD TO MARK line, or blank card.",
+          "boxes": "xg",
+          "pad": 0.15,
+          "out": "xgy"
+        },
+        {
+          "read_crop": "Wide cut-out: the thing asked about is in the middle; around it is what it sits on. Was it put there as an arrow, a ring drawn round a mark, a dimension line or a note in the margin? Answer yes or no. Answer no if it belongs there -- the outline of the body, a numbered level mark, the hatching of the load, the printed panel of figures, the LOAD TO MARK line, or blank card.",
+          "boxes": "xg",
+          "pad": 0.8,
+          "out": "xgz"
+        },
+        {
+          "run": "sweep_banned_unless_count_disagrees",
+          "args": ["xg", "xgw", "xgy", "xgz"],
+          "out": "xgc"
+        },
+        {
+          "fail_if": ["xgc.refused"]
+        },
+        {
+          "compare": "xgc.clean",
+          "to": "reference.clean_frame",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

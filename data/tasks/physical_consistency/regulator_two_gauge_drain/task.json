@@ -1,0 +1,290 @@
+{
+  "id": "regulator_two_gauge_drain",
+  "axis": "physical_consistency",
+  "prompt": "Argon cylinder number 7 gets photographed at the start, the middle and the end of every shift, and the three close-ups go into the workshop gas log. This is today's page, photographed flat, the three photographs in a row across it, each of them under its own printed time: 07:10, 11:25, 15:40.\n\nEvery photograph is the same shot of the same regulator on that one cylinder: both of its gauges together, near enough that the numbers round each dial can be made out. The regulator carries the two gauges every regulator carries. The one watching what is left in the cylinder has a dial marked 0, 50, 100, 150, 200 and it stood at 180 at 07:10. The one watching what the torch is being fed has a dial marked 0 to 10 in twos and it stood at 4 at 07:10.\n\nThe welder has been running a bead most of the shift, and the shop reads this page to decide whether there is enough left in the bottle to start the next job, so all six needles have to be legible.\n\nWork the other four needles out for yourself. I am not telling you what either gauge stands at by 11:25, and I am not telling you what either of them stands at by 15:40. No annotation, no arrow and no reading may be written onto the page beyond the three printed times.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a page with three photographs of pressure gauges pasted across it in a row? A photograph, a scan, an illustration or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no gauges in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "work_same": "yes",
+    "hp_falling": "yes",
+    "work_bar": "4"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_working_needle_holds_all_shift_while_the_contents_needle_falls",
+      "weight": 4.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the dial marked 0 to 10 in the photograph under the printed time 07:10",
+          "sweep": true,
+          "out": "w1_box"
+        },
+        {
+          "fail_if": ["w1_box.unreadable"]
+        },
+        {
+          "read_crop": "Which number printed round this dial is the needle pointing at? Write the number only. If no needle is drawn on it, answer the single word blank.",
+          "boxes": "w1_box",
+          "pad": 0.25,
+          "out": "w1_rd"
+        },
+        {
+          "fail_if": ["w1_rd.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the dial marked 0 to 10 in the photograph under the printed time 11:25",
+          "sweep": true,
+          "out": "w2_box"
+        },
+        {
+          "fail_if": ["w2_box.unreadable"]
+        },
+        {
+          "read_crop": "Which number printed round this dial is the needle pointing at? Write the number only. If no needle is drawn on it, answer the single word blank.",
+          "boxes": "w2_box",
+          "pad": 0.25,
+          "out": "w2_rd"
+        },
+        {
+          "fail_if": ["w2_rd.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the dial marked 0 to 10 in the photograph under the printed time 15:40",
+          "sweep": true,
+          "out": "w3_box"
+        },
+        {
+          "fail_if": ["w3_box.unreadable"]
+        },
+        {
+          "read_crop": "Which number printed round this dial is the needle pointing at? Write the number only. If no needle is drawn on it, answer the single word blank.",
+          "boxes": "w3_box",
+          "pad": 0.25,
+          "out": "w3_rd"
+        },
+        {
+          "fail_if": ["w3_rd.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the dial marked 0, 50, 100, 150, 200 in the photograph under the printed time 07:10",
+          "sweep": true,
+          "out": "c1_box"
+        },
+        {
+          "fail_if": ["c1_box.unreadable"]
+        },
+        {
+          "read_crop": "The needle on this dial lies between two of the numbers printed round it. Copy both of those printed numbers -- the one on each side of the needle -- separated by a semicolon, exactly as they are printed. Answer the single word blank if no needle is drawn on this dial, and add nothing else.",
+          "boxes": "c1_box",
+          "pad": 0.25,
+          "out": "c1_rd"
+        },
+        {
+          "fail_if": ["c1_rd.unreadable"]
+        },
+        {
+          "run": "pick_smallest_or_largest_figure",
+          "args": ["c1_rd", "'min'"],
+          "out": "c1_rd__mapped"
+        },
+        {
+          "read": "boxes",
+          "target": "the dial marked 0, 50, 100, 150, 200 in the photograph under the printed time 15:40",
+          "sweep": true,
+          "out": "c3_box"
+        },
+        {
+          "fail_if": ["c3_box.unreadable"]
+        },
+        {
+          "read_crop": "The needle on this dial lies between two of the numbers printed round it. Copy both of those printed numbers -- the one on each side of the needle -- separated by a semicolon, exactly as they are printed. Answer the single word blank if no needle is drawn on this dial, and add nothing else.",
+          "boxes": "c3_box",
+          "pad": 0.25,
+          "out": "c3_rd"
+        },
+        {
+          "fail_if": ["c3_rd.unreadable"]
+        },
+        {
+          "run": "pick_smallest_or_largest_figure",
+          "args": ["c3_rd", "'min'"],
+          "out": "c3_rd__mapped"
+        },
+        {
+          "run": "working_gauge_held",
+          "args": ["w1_rd", "w2_rd", "w3_rd", "c1_rd__mapped", "c3_rd__mapped"],
+          "out": "hold_chk"
+        },
+        {
+          "compare": "hold_chk.v",
+          "to": "reference.work_same",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_contents_gauge_falls_photograph_by_photograph",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the dial marked 0, 50, 100, 150, 200 in the photograph under the printed time 07:10",
+          "sweep": true,
+          "out": "h1_box"
+        },
+        {
+          "fail_if": ["h1_box.unreadable"]
+        },
+        {
+          "read_crop": "The needle on this dial lies between two of the numbers printed round it. Copy both of those printed numbers -- the one on each side of the needle -- separated by a semicolon, exactly as they are printed. Answer the single word blank if no needle is drawn on this dial, and add nothing else.",
+          "boxes": "h1_box",
+          "pad": 0.25,
+          "out": "h1_rd"
+        },
+        {
+          "fail_if": ["h1_rd.unreadable"]
+        },
+        {
+          "run": "pick_smallest_or_largest_figure",
+          "args": ["h1_rd", "'min'"],
+          "out": "h1_rd__mapped"
+        },
+        {
+          "read": "boxes",
+          "target": "the dial marked 0, 50, 100, 150, 200 in the photograph under the printed time 11:25",
+          "sweep": true,
+          "out": "h2_box"
+        },
+        {
+          "fail_if": ["h2_box.unreadable"]
+        },
+        {
+          "read_crop": "The needle on this dial lies between two of the numbers printed round it. Copy both of those printed numbers -- the one on each side of the needle -- separated by a semicolon, exactly as they are printed. Answer the single word blank if no needle is drawn on this dial, and add nothing else.",
+          "boxes": "h2_box",
+          "pad": 0.25,
+          "out": "h2_rd"
+        },
+        {
+          "fail_if": ["h2_rd.unreadable"]
+        },
+        {
+          "run": "pick_smallest_or_largest_figure",
+          "args": ["h2_rd", "'min'"],
+          "out": "h2_rd__mapped"
+        },
+        {
+          "read": "boxes",
+          "target": "the dial marked 0, 50, 100, 150, 200 in the photograph under the printed time 15:40",
+          "sweep": true,
+          "out": "h3_box"
+        },
+        {
+          "fail_if": ["h3_box.unreadable"]
+        },
+        {
+          "read_crop": "The needle on this dial lies between two of the numbers printed round it. Copy both of those printed numbers -- the one on each side of the needle -- separated by a semicolon, exactly as they are printed. Answer the single word blank if no needle is drawn on this dial, and add nothing else.",
+          "boxes": "h3_box",
+          "pad": 0.25,
+          "out": "h3_rd"
+        },
+        {
+          "fail_if": ["h3_rd.unreadable"]
+        },
+        {
+          "run": "pick_smallest_or_largest_figure",
+          "args": ["h3_rd", "'min'"],
+          "out": "h3_rd__mapped"
+        },
+        {
+          "run": "contents_gauge_falls",
+          "args": ["h1_rd__mapped", "h2_rd__mapped", "h3_rd__mapped"],
+          "out": "fall_chk"
+        },
+        {
+          "compare": "fall_chk.v",
+          "to": "reference.hp_falling",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_torch_is_still_being_fed_what_the_gauge_opened_the_shift_at",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the dial marked 0 to 10 in the photograph under the printed time 15:40",
+          "sweep": true,
+          "out": "last_box"
+        },
+        {
+          "fail_if": ["last_box.unreadable"]
+        },
+        {
+          "read_crop": "Which number printed round this dial is the needle pointing at? Write the number only. If no needle is drawn on it, answer the single word blank.",
+          "boxes": "last_box",
+          "pad": 0.25,
+          "out": "last_rd"
+        },
+        {
+          "fail_if": ["last_rd.unreadable"]
+        },
+        {
+          "run": "read_needle_figure",
+          "args": ["last_rd"],
+          "out": "last_num"
+        },
+        {
+          "compare": "last_num.txt",
+          "to": "reference.work_bar",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_reading_is_written_onto_the_log_page",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an annotation, an arrow or a reading written onto the page beyond the three times",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

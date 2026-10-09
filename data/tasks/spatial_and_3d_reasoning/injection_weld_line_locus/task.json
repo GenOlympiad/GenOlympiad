@@ -1,0 +1,124 @@
+{
+  "id": "injection_weld_line_locus",
+  "axis": "spatial_and_3d_reasoning",
+  "prompt": "A photograph of one page from a moulding shop's gate review, lying on the tool engineer's bench, taken face on and big enough to read.\n\nThe part is a flat polypropylene cover plate of even wall thickness, 260 mm by 180 mm, seen from above. It carries three through holes for fixings, tagged H1, H2 and H3. Taking the top left corner of the plate as the origin, the first figure across and the second down, H1 is at 90 and 40, H2 at 105 and 100, and H3 at 50 and 130. The single edge gate feeds the plate on the left-hand edge, 40 mm below the top edge.\n\nThe review page has to carry the plate with its gate on it, a short bold stroke against each hole where the melt fronts rejoin behind that hole, and under the plate a knit-line schedule of three rows. A row gives the hole tag and then the clock hour of that hole's knit line, taken on the plate with twelve o'clock toward the top edge and the hole itself as the centre of the clock.\n\nWhere the fronts rejoin is what this review is for and not one clock hour is given here. Flow-front contours are yours to include or leave out and carry no weight. Nothing on the page may explain the flow, and no figure may appear on it beyond the plate size, the gate position, the three hole positions and the three clock hours.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a technical sheet carrying a rectangular part with a few round holes in it and a short table of figures underneath? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a bare card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "knit_schedule": "h1 3, h2 4, h3 5",
+    "n_far_side": 3,
+    "q_row_cert": "Does this cut-out show one row of the small table under the plate, rather than its heading? Answer yes or no only.",
+    "q_row_copy": "This cut-out is one row of a table. Copy the hole tag printed on that row, then a single space, then the clock figure printed after it. Ignore anything printed on a row above or below it. Write nothing else.",
+    "q_hole_cert": "Does this cut-out show a round hole in the plate with a short bold stroke beside it? Answer yes or no only.",
+    "q_hole_side": "Is that bold stroke on the side of the hole away from the gate on the left-hand edge of the plate? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_hole_gets_its_own_knit_line_direction",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a row of the knit-line schedule under the plate",
+          "sweep": true,
+          "out": "ks_ring"
+        },
+        {
+          "fail_if": ["ks_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_cert",
+          "boxes": "ks_ring",
+          "pad": 0.25,
+          "out": "ks_cert"
+        },
+        {
+          "fail_if": ["ks_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_row_copy",
+          "boxes": "ks_ring",
+          "pad": 0.25,
+          "out": "ks_txt"
+        },
+        {
+          "fail_if": ["ks_txt.unreadable"]
+        },
+        {
+          "run": "certified_tag_values",
+          "args": ["ks_cert", "ks_txt"],
+          "out": "ks_v"
+        },
+        {
+          "compare_set": "ks_v.seq",
+          "to": "reference.knit_schedule",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_knit_line_sits_behind_its_own_hole",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a fixing hole on the plate with a bold stroke beside it",
+          "sweep": true,
+          "out": "hl_ring"
+        },
+        {
+          "fail_if": ["hl_ring.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_hole_cert",
+          "boxes": "hl_ring",
+          "pad": 0.35,
+          "out": "hl_cert"
+        },
+        {
+          "fail_if": ["hl_cert.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_hole_side",
+          "boxes": "hl_ring",
+          "pad": 0.35,
+          "out": "hl_txt"
+        },
+        {
+          "fail_if": ["hl_txt.unreadable"]
+        },
+        {
+          "run": "count_confirmed_yes",
+          "args": ["hl_cert", "hl_txt"],
+          "out": "hl_v"
+        },
+        {
+          "compare_band": "hl_v.n",
+          "to": "reference.n_far_side",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

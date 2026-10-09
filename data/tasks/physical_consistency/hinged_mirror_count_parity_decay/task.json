@@ -1,0 +1,80 @@
+{
+  "id": "hinged_mirror_count_parity_decay",
+  "axis": "physical_consistency",
+  "prompt": "A clean top-down diagram of a dressing-table pair of mirrors hinged at a narrow angle, with a single bold black letter 'F' standing in the wedge between them. Apply angled-mirror imaging: the mirrors create a fan of repeated images of the F, and (1) the images ALTERNATE handedness -- the first reflection is a mirror-flipped backwards F, the next is normal, and so on -- while (2) each image is SMALLER and fainter than the one before it as they recede outward. Show the first reflection mirror-flipped and the images shrinking outward. No text other than the letters themselves.",
+  "difficulty": "s2",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a letter F between two angled mirrors making a row of repeated reflected images? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel printing an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_parity": "A bold letter 'F' sits between two angled mirrors, producing a ROW of repeated reflected images of the F going outward. Look at the FIRST reflected image right next to the real F. Is that first reflection a MIRROR-flipped, backwards F (its arms pointing LEFT off the stem), or a normal forward-facing F? Answer 'flipped' if it is mirror-reversed / backwards; answer 'normal' if it looks like an ordinary F. Answer with exactly one word: flipped or normal.",
+    "q_decay": "A letter 'F' between angled mirrors makes a ROW of repeated reflected images spreading outward. Going OUTWARD along the row (away from the real F), do the repeated images get progressively SMALLER, or do they all stay the SAME size? Answer 'smaller' if each image outward is smaller than the one before it; answer 'same' if they are all the same size. Answer with exactly one word: smaller or same."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "hinged_mirror_count_parity_decay_point",
+      "weight": 4.0,
+      "score": "pd.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "sweep": true,
+          "target": "letter shape near the middle of the row of repeated letters",
+          "out": "lb"
+        },
+        {
+          "fail_if": ["lb.unreadable"]
+        },
+        {
+          "read_crop": "This picture shows one printed capital letter. The letter has a straight vertical stem (an upright bar) with the rest of the letter -- its horizontal arms -- attached to one side of that stem. Is the rest of the letter attached to the LEFT side or the RIGHT side of the vertical stem? Answer with exactly one word: left or right.",
+          "boxes": "lb",
+          "out": "pr"
+        },
+        {
+          "fail_if": ["pr.unreadable"]
+        },
+        {
+          "run": "check_flip_and_shrink",
+          "args": ["lb", "pr"],
+          "out": "pd"
+        }
+      ]
+    },
+    {
+      "name": "d1_q_decay",
+      "weight": 0.6,
+      "not_scored": true,
+      "steps": [
+        {
+          "ask": "reference.q_decay",
+          "out": "raw_frac"
+        },
+        {
+          "fail_if": ["raw_frac.unreadable"]
+        },
+        {
+          "compare": "raw_frac",
+          "to": "smaller",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

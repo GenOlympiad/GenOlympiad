@@ -1,0 +1,181 @@
+{
+  "id": "ambiguous_date_conditional_spellout",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A photograph of the date column of a customs entry lying under the lamp on the broker's desk, shot square on, with all five consignment lines readable in the one picture.\n\nThe column has five lines numbered 1 to 5 down the left, one consignment to a line, each with its date of shipment beside the number. The five consignments shipped on: line 1, day 07 of month 03; line 2, day 19 of month 04; line 3, day 11 of month 11; line 4, day 23 of month 09; line 5, day 30 of month 01. All five are of the year 2026.\n\nThis customs house writes a date day first and month second, and it keeps one further rule against a date being taken the other way round. On any line whose day figure is 12 or lower, and which could therefore be taken for a month, the month is written out as an English word, with the day in two figures before it and the year in four figures after it. On every other line the whole date is in figures, two for the day, two for the month and four for the year, divided by strokes.\n\nThe entry goes to the officer as filed, so no line may be open to being read the wrong way round. Work out for yourself which lines take the written month -- I am deliberately not telling you which ones they are. A date read the wrong way round holds the consignment at the frontier and the demurrage runs against us.\n\nEvery line number and date must be large and sharp. Nothing may appear in the column beyond the five numbered lines and their dates: no working, no notes, no arrows.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed column of numbered lines with a date written beside each number? A realistic photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows just a blank card stating an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "form": "1:word 2:figures 3:word 4:figures 5:figures",
+    "dates": "1:07march2026 2:19042026 3:11november2026 4:23092026 5:30012026",
+    "n_lines": 5,
+    "q_line_cert": "Does this cut-out show ONE whole numbered line of the column with its date, rather than a heading or only part of a line? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_month_is_spelled_out_on_the_lines_that_could_be_taken_the_other_way_round",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered line of the date column",
+          "sweep": true,
+          "out": "line_box"
+        },
+        {
+          "fail_if": ["line_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one printed line with a line number at its left. Copy that line number -- the number nearest the left edge of this cut-out. Ignore anything printed on a line above or below it. Write the number only and nothing else.",
+          "boxes": "line_box",
+          "pad": 0.15,
+          "out": "num_txt"
+        },
+        {
+          "fail_if": ["num_txt.unreadable"]
+        },
+        {
+          "read_crop": "Is the month on this line written as a word, or in figures? Answer with one word: word or figures.",
+          "boxes": "line_box",
+          "pad": 0.15,
+          "out": "form_txt"
+        },
+        {
+          "fail_if": ["form_txt.unreadable"]
+        },
+        {
+          "run": "pair_lines_with_values",
+          "args": ["num_txt", "form_txt"],
+          "out": "styles"
+        },
+        {
+          "compare": "styles.canon",
+          "to": "reference.form",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_line_carries_the_date_it_was_filed_with",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered line of the date column",
+          "sweep": true,
+          "out": "date_box"
+        },
+        {
+          "fail_if": ["date_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one printed line with a line number at its left. Copy that line number -- the number nearest the left edge of this cut-out. Ignore anything printed on a line above or below it. Write the number only and nothing else.",
+          "boxes": "date_box",
+          "pad": 0.15,
+          "out": "dnum_txt"
+        },
+        {
+          "fail_if": ["dnum_txt.unreadable"]
+        },
+        {
+          "read_crop": "Copy the date written on this line exactly as it stands. Write the date only.",
+          "boxes": "date_box",
+          "pad": 0.15,
+          "out": "dval_txt"
+        },
+        {
+          "fail_if": ["dval_txt.unreadable"]
+        },
+        {
+          "run": "pair_lines_with_values",
+          "args": ["dnum_txt", "dval_txt"],
+          "out": "filed"
+        },
+        {
+          "compare": "filed.canon",
+          "to": "reference.dates",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "five_numbered_lines_stand_in_the_column",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a numbered line of the date column",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_line_cert",
+          "boxes": "box_read",
+          "pad": 0.25,
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_lines",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_added_to_the_column",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of working, a note or an arrow added beyond the five numbered lines",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "windsock_reversed_rig",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A farm strip owner has to send an incoming pilot something better than a phone call about the wind, so the strip is photographed from the gate at the moment of the call and the frame is sent on.\n\nThe strip is mown grass with big painted numbers at each end, 09 at the near end and 27 at the far end, and two taxiway markers painted A and B along the side. The sock on its mast is rigged back to front: the narrow mouth is clamped into the swivel ring and the wide mouth is left loose, which is how the owner has always flown it. The farmhouse chimney is burning wood a hundred metres away in the same frame. The wind is steady at 15 knots and has not shifted all morning.\n\nWhich way the sock lies is what the phone call cannot carry.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a grass airstrip with a windsock on a mast and a smoking farmhouse chimney in the same frame? Answer yes or no only.",
+  "reference": {
+    "part1": "sock_and_smoke_oppose",
+    "part2": "narrow_at_ring_widens_out"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the windsock and the chimney smoke in the same picture and say how the two lie. Answer with one of: the loose end of the sock and the trailing smoke point to opposite ends of the strip; the loose end of the sock and the trailing smoke point to the same end of the strip; the sock hangs limp while the smoke stands straight up.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the windsock by itself and say how its two mouths are made. Answer with one of: the mouth clamped to the ring is the narrow one and the sock widens towards its loose end; the mouth clamped to the ring is the wide one and the sock narrows towards its loose end; both mouths of the sock are cut to the same width.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

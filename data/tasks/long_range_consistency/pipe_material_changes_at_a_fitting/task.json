@@ -1,0 +1,86 @@
+{
+  "id": "pipe_material_changes_at_a_fitting",
+  "axis": "long_range_consistency",
+  "prompt": "The spool drawings go to the prefabrication shop on Friday, so this sheet is plotted and taped down for the material check.\n\nOne process drawing lies flat on the plotting bench. A single main line runs right across it from edge to edge, at a plotted 48 metres overall, and that figure is boxed in the sheet corner with the material table. The table names carbon steel, stainless and a chrome-moly alloy, and gives each of them its own pen style. Sitting on the run are a gate valve, a check valve and a flanged joint at either end of a strainer spool, each drawn to the house symbol. The house rule printed under the table is that a change of material may be made only at a fitting, never in a plain run of pipe.\n\nWhich material each stretch of the line is drawn in, and where each stretch begins, is what the table does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show a process drawing taped flat on a bench with one long pipe line running right across it and valve and flange symbols sitting on that line? Answer yes or no only.",
+  "reference": {
+    "part1": "changes_at_fittings",
+    "part2": "3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Follow the main line across the sheet from left to right and watch the pen style it is drawn in. Answer with one of: every change of pen style sits at a valve or flange symbol; at least one change sits in a plain run with no symbol at it; the pen style never changes across the whole sheet.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "unbroken stretches of the main line drawn in one pen style",
+          "out": "r_part2",
+          "sweep": true
+        },
+        {
+          "fail_if": ["r_part2.unreadable"]
+        },
+        {
+          "run": "box_count",
+          "args": ["r_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

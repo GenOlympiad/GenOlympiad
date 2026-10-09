@@ -1,0 +1,283 @@
+{
+  "id": "gantt_dependencies",
+  "axis": "long_range_consistency",
+  "prompt": "A clean project GANTT chart with EXACTLY 8 task rows top to bottom: Survey, Design, Prototype, Procure, Build, Wiring, Testing, Handover. The horizontal axis is Week, numbered 1 to 20. You are given each task's DURATION and which task it follows -- Survey takes 2 weeks (it is the first task, starting in week 1); Design takes 3 weeks and starts when Survey finishes; Prototype takes 3 weeks and starts when Design finishes; Procure takes 2 weeks and starts when Design finishes; Build takes 5 weeks and starts when Prototype finishes; Wiring takes 2 weeks and starts when Build finishes; Testing takes 3 weeks and starts when Wiring finishes; Handover takes 1 weeks and starts when Testing finishes. Work out each task's start and finish week from its duration and its predecessor's finish (a task starts the week its predecessor finishes; Procure and Prototype both follow Design and so start together). Draw each task as one horizontal bar from its computed start week to its computed finish week, and print the start and finish week numbers at the two ends of each bar. No dependent bar may overlap the bar it follows. White background, week gridlines, no title.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show construction-project Gantt whose task start weeks are computed from durations+dependencies? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_tasks": 8,
+    "q_count": "How many task rows (horizontal bars) are in this Gantt chart? Respond with a single digit and nothing else.",
+    "q_build_start": "On the Gantt chart, in which week number does the 'Build' task bar START (its left edge)? Respond with the number only, as digits, and nothing else.",
+    "q_proto_end": "In which week number does the 'Prototype' task bar END (its right edge)? Respond with the number only, as digits, and nothing else.",
+    "q_test_start": "In which week number does the 'Testing' task bar START (its left edge)? Respond with the number only, as digits, and nothing else.",
+    "q_wiring_end": "In which week number does the 'Wiring' task bar END (its right edge)? Respond with the number only, as digits, and nothing else.",
+    "q_handover_start": "In which week number does the 'Handover' task bar START (its left edge)? Respond with the number only, as digits, and nothing else."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "schedule_joint",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the body of the Gantt chart -- the block covering every task row, each with its name printed at the left and its coloured bar drawn to the right, as ONE rectangle running from the top edge of the topmost task row to the bottom edge of the lowest, and from the left edge of the printed names to the right end of the longest bar; not the strip of week numbers along the top and not the white paper around the chart",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read_crop": "This is the body of a Gantt chart cut out of a bigger picture. Each task is drawn as one horizontal coloured bar on its own row. Write down every task row drawn here, working from the top row down, each with a few plain words saying what colour that row's bar is and where along the row it starts. Separate one item from the next with a semicolon; write no running total and nothing else. If no task row is drawn here, write the single word NONE.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "nrow"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["nrow", "empty_as='0'"],
+          "out": "nrow__std"
+        },
+        {
+          "fail_if": ["nrow__std.refused"]
+        },
+        {
+          "run": "plan_task_rows",
+          "args": ["image", "anc", "nrow__std", "reference.n_tasks"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one task row cut out of a Gantt chart. What task name is printed at its LEFT-HAND end -- the name nearest the left edge of this cut-out? Ignore anything printed on a row above or below it. Answer with just that name and nothing else.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd_name"
+        },
+        {
+          "read_crop": "This is one task row cut out of a Gantt chart, with one coloured bar running across it. Read the number printed immediately beside the LEFT-HAND end of that bar -- the end nearer the left edge of this cut-out. If more than one number is printed near that end, take the one closest to the bar. Answer with just that number and nothing else.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd_st"
+        },
+        {
+          "read_crop": "This is one task row cut out of a Gantt chart, with one coloured bar running across it. Read the number printed immediately beside the RIGHT-HAND end of that bar -- the end nearer the right edge of this cut-out. If more than one number is printed near that end, take the one closest to the bar. Answer with just that number and nothing else.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd_en"
+        },
+        {
+          "run": "read_task_weeks",
+          "args": ["nrow__std", "rd_name", "rd_st", "rd_en", "pl"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "compare_tolerance": "res.bs",
+          "to": 9,
+          "tol": 0.5,
+          "out": "f_bs"
+        },
+        {
+          "compare_tolerance": "res.ts",
+          "to": 16,
+          "tol": 0.5,
+          "out": "f_ts"
+        },
+        {
+          "compare_tolerance": "res.hs",
+          "to": 19,
+          "tol": 0.5,
+          "out": "f_hs"
+        },
+        {
+          "run": "weeks_match",
+          "args": ["res.bs", "res.pe"],
+          "out": "f_chain1"
+        },
+        {
+          "run": "weeks_match",
+          "args": ["res.ts", "res.we"],
+          "out": "f_chain2"
+        },
+        {
+          "all": ["f_bs", "f_ts", "f_hs", "f_chain1", "f_chain2"],
+          "out": "frac"
+        },
+        {
+          "run": "pick_task_rows",
+          "args": ["pl", "res.rows"],
+          "out": "sub"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["sub", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "task_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the body of the Gantt chart -- the block covering every task row, each with its name printed at the left and its coloured bar drawn to the right, as ONE rectangle running from the top edge of the topmost task row to the bottom edge of the lowest, and from the left edge of the printed names to the right end of the longest bar; not the strip of week numbers along the top and not the white paper around the chart",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read_crop": "This is the body of a Gantt chart cut out of a bigger picture. Each task is drawn as one horizontal coloured bar on its own row. Write down every task row drawn here, working from the top row down, each with a few plain words saying what colour that row's bar is and where along the row it starts. Separate one item from the next with a semicolon; write no running total and nothing else. If no task row is drawn here, write the single word NONE.",
+          "boxes": "anc",
+          "pad": 0.02,
+          "out": "nrow"
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["nrow", "empty_as='0'"],
+          "out": "nrow__std"
+        },
+        {
+          "fail_if": ["nrow__std.refused"]
+        },
+        {
+          "run": "plan_task_rows",
+          "args": ["image", "anc", "nrow__std", "reference.n_tasks"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "read_crop": "This is one task row cut out of a Gantt chart. What task name is printed at its LEFT-HAND end -- the name nearest the left edge of this cut-out? Ignore anything printed on a row above or below it. Answer with just that name and nothing else.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd_name"
+        },
+        {
+          "read_crop": "This is one task row cut out of a Gantt chart, with one coloured bar running across it. Read the number printed immediately beside the RIGHT-HAND end of that bar -- the end nearer the right edge of this cut-out. If more than one number is printed near that end, take the one closest to the bar. Answer with just that number and nothing else.",
+          "boxes": "pl.cells",
+          "pad": 0.0,
+          "out": "rd_en"
+        },
+        {
+          "run": "read_task_weeks",
+          "args": ["nrow__std", "rd_name", "None", "rd_en", "pl"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "compare_tolerance": "res.n",
+          "to": "reference.n_tasks",
+          "tol": 0.5,
+          "out": "f_nc"
+        },
+        {
+          "compare_tolerance": "res.we",
+          "to": 16,
+          "tol": 0.5,
+          "out": "f_we"
+        },
+        {
+          "all": ["f_nc", "f_we"],
+          "out": "frac"
+        },
+        {
+          "run": "pick_task_rows",
+          "args": ["pl", "[res.wiring_row]"],
+          "out": "sub"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["sub", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ]
+}

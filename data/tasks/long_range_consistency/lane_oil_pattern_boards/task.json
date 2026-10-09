@@ -1,0 +1,84 @@
+{
+  "id": "lane_oil_pattern_boards",
+  "axis": "long_range_consistency",
+  "prompt": "The house technician logs the pattern before the squad session, so the lane is shot low from the approach with the foul line and the boards in frame.\n\nA wood bowling lane runs away from the camera under raking light, so the oiled area shows as a bright film with a clean edge along each side. The board numbers are printed on the kickback trim at the foul line, counted from the left gutter. The pattern sheet lying on the ball return prints the machine programme by board: over the first stretch of the lane the oil is laid from board 5 to board 35; over the stretch nearer the pins the oil is laid from board 11 to board 29. Everywhere outside those boards the lane is left dry.\n\nHow the oil edge steps between the two stretches is what the pattern sheet does not picture.",
+  "difficulty": "s1",
+  "easy_question": "Is this a low photograph of a bowling lane taken from behind the foul line, with the oiled area showing as a bright film on the boards Answer yes or no only.",
+  "reference": {
+    "part1": "in_band",
+    "part2": "steps_inward"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the board numbers printed on the kickback trim at the foul line and give the number of the board that the left-hand edge of the oil film sits on.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part1", "4", "6"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Follow the left-hand edge of the oil film from the foul line toward the pins. Answer with one of: The edge stays on the same board number the whole way; The edge moves in toward the middle of the lane further down; The edge moves out toward the gutter further down.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

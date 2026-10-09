@@ -1,0 +1,98 @@
+{
+  "id": "rotation_pattern_carries_the_treads",
+  "axis": "long_range_consistency",
+  "prompt": "The tyre bay has to book the rotation into the service record before the wheels go back on, so the four covers are photographed on the floor with the wall board and the pillar plate in view.\n\nFour tyres lie side by side in the bay. Each carries a position label from the wheel it came off and, under that label, a work card with a tread depth and a cold pressure written by hand. On the wall behind them the service sheet lists a tread depth against each of the four wheel positions as the car now stands, and the rotation chart beside it moves each front cover straight back on its own side and takes each rear cover to the opposite front corner. The door pillar plate, propped against the bench leg, prints a cold pressure for the front axle and another for the rear.\n\nWhat has been written on the four work cards is what the service sheet does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show four dismounted tyres laid out on a bay floor with a service sheet and a rotation chart on the wall behind them? Answer yes or no only.",
+  "reference": {
+    "part1": "bend_meter_matches",
+    "part2": "rear_axle_figure"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the tread depth the service sheet on the wall lists against the left rear wheel position, and write that figure only.",
+          "out": "m_bend"
+        },
+        {
+          "fail_if": ["m_bend.unreadable"]
+        },
+        {
+          "ask": "Read the tread depth the service sheet on the wall lists against the left front wheel position, and write that figure only.",
+          "out": "m_straight"
+        },
+        {
+          "fail_if": ["m_straight.unreadable"]
+        },
+        {
+          "ask": "Read the tread depth written on the work card under the position label reading left front, and write that figure only.",
+          "out": "m_sheet"
+        },
+        {
+          "fail_if": ["m_sheet.unreadable"]
+        },
+        {
+          "run": "which_matches",
+          "args": ["m_bend", "m_straight", "m_sheet"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the work card under the position label reading left front and say which figure its cold pressure is. Answer with one of: the figure the plate prints for the rear axle; the figure the plate prints for the front axle; a figure taken from the service sheet on the wall.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

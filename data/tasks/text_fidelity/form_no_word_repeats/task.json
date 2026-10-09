@@ -1,0 +1,171 @@
+{
+  "id": "form_no_word_repeats",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on photo of a printed museum wall panel in warm sepia tones, headed 'THE HOARD - GALLERY NOTES' with the small line 'No word is used twice'. Print EXACTLY 10 numbered lines (1. to 10.), each at least SEVEN words long, about a buried bronze hoard.\n\nCRITICAL WRITING LAW: every word on the panel must be unique -- no word may appear a second time anywhere in the ten lines. This applies to 'the', 'a', 'of', 'and', 'in' exactly as it applies to 'bronze' or 'farmers'. Write the notes yourself and spend each word only once.\n\nDark brown text on cream, nothing else on the panel.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a printed page with numbered lines of text. Ignoring artistic quality and ignoring whether the wording is correct, does the image DEPICT that -- a printed page or board carrying a numbered list of text lines? A photo, a scan or a clean page all count as yes. Answer NO only if it is blank, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_lines": 10,
+    "min_words": 7,
+    "q_read": "This image is a page carrying 10 numbered lines of text. Transcribe the 10 numbered lines EXACTLY as written, in order. Copy every word, keep the original spelling, and keep the spaces between words. If a numbered line wraps onto a second printed row, keep it as ONE line. Separate one numbered line from the next with a single pipe character | and nothing else. Do NOT transcribe the title, any heading or any word bank. Do not add commentary, line numbers or quotation marks. Output only the transcribed lines separated by |."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered line of the printed notice on this museum wall panel, not the heading or the small line under it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_t1"
+        },
+        {
+          "fail_if": ["box_t1.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one numbered line of a printed notice. Copy that line exactly as it is printed: first the number it carries, then a full stop, then that line's words in the order they stand. Copy every word letter for letter, keeping capital and small letters as printed. Do not correct spelling, do not add a word and do not leave one out. Write out that one line and nothing else.",
+          "boxes": "box_t1",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_t1"
+        },
+        {
+          "fail_if": ["crop_t1.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_t1", "\"\\n\""],
+          "out": "txt_t1"
+        },
+        {
+          "read": "boxes",
+          "target": "one line of the notice that begins with its own printed number, on this printed museum wall panel",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_t2"
+        },
+        {
+          "fail_if": ["box_t2.unreadable"]
+        },
+        {
+          "read_crop": "Look at the written line in this cut-out and transcribe it word for word. If more than one written line is visible, transcribe the one nearest the middle of the cut-out. Begin with the number printed at its start, then a full stop, then the words in the order they appear, with upper-case and lower-case letters exactly as printed. Reproduce anything that looks like a mistake just as it stands, never tidying it up. Give that transcribed line only.",
+          "boxes": "box_t2",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_t2"
+        },
+        {
+          "fail_if": ["crop_t2.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_t2", "\"\\n\""],
+          "out": "txt_t2"
+        },
+        {
+          "run": "no_repeated_words",
+          "args": ["[txt_t1, txt_t2]", "reference.n_lines", "reference.min_words"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.ok"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_unit_share",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered line of the printed notice on this museum wall panel, not the heading or the small line under it",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_t1"
+        },
+        {
+          "fail_if": ["box_t1.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one numbered line of a printed notice. Copy that line exactly as it is printed: first the number it carries, then a full stop, then that line's words in the order they stand. Copy every word letter for letter, keeping capital and small letters as printed. Do not correct spelling, do not add a word and do not leave one out. Write out that one line and nothing else.",
+          "boxes": "box_t1",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_t1"
+        },
+        {
+          "fail_if": ["crop_t1.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_t1", "\"\\n\""],
+          "out": "txt_t1"
+        },
+        {
+          "read": "boxes",
+          "target": "one line of the notice that begins with its own printed number, on this printed museum wall panel",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_t2"
+        },
+        {
+          "fail_if": ["box_t2.unreadable"]
+        },
+        {
+          "read_crop": "Look at the written line in this cut-out and transcribe it word for word. If more than one written line is visible, transcribe the one nearest the middle of the cut-out. Begin with the number printed at its start, then a full stop, then the words in the order they appear, with upper-case and lower-case letters exactly as printed. Reproduce anything that looks like a mistake just as it stands, never tidying it up. Give that transcribed line only.",
+          "boxes": "box_t2",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "crop_t2"
+        },
+        {
+          "fail_if": ["crop_t2.unreadable"]
+        },
+        {
+          "run": "join_box_reads",
+          "args": ["crop_t2", "\"\\n\""],
+          "out": "txt_t2"
+        },
+        {
+          "run": "no_repeated_words",
+          "args": ["[txt_t1, txt_t2]", "reference.n_lines", "reference.min_words"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        },
+        {
+          "run": "to_float",
+          "args": ["res.frac"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

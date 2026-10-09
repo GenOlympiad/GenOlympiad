@@ -1,0 +1,115 @@
+{
+  "id": "nutrition_panel_pct_dv",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed NUTRITION FACTS panel (US style) for 'Trail Mix Bar' by HARBOUR SNACKS. At the top print a large 'Calories' figure equal to 4x(protein grams) + 4x(carbohydrate grams) + 9x(fat grams) = 4*6 + 4*30 + 9*14. Below it list these nutrients; for EACH nutrient print its amount and a '% Daily Value' equal to round(amount / that nutrient's OWN reference value * 100) using these references (they DIFFER per nutrient):\n  Total Fat            14g   ref 78g   -> 18% DV\n  Saturated Fat        4g   ref 20g   -> 20% DV\n  Cholesterol          0mg   ref 300mg   -> 0% DV\n  Sodium               95mg   ref 2300mg   -> 4% DV\n  Total Carbohydrate   30g   ref 275g   -> 11% DV\n  Dietary Fiber        5g   ref 28g   -> 18% DV\n  Total Sugars         18g   ref 50g   -> 36% DV\n  Protein              6g   ref 50g   -> 12% DV\n  Vitamin D            1mcg   ref 20mcg   -> 5% DV\n  Calcium              80mg   ref 1300mg   -> 6% DV\n  Iron                 2mg   ref 18mg   -> 11% DV\n  Potassium            200mg   ref 4700mg   -> 4% DV\nPrint the bold 'Nutrition Facts' box with the Calories line and every nutrient row with its % DV. Render it as a slightly warm off-white printed sheet with alternating faint grey shaded rows (zebra striping), a coloured header band and rounded panel corners, like a modern designed template, viewed straight-on.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed Nutrition Facts panel with a Calories figure and a list of nutrients each with an amount and a % Daily Value. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 12,
+    "read_nut": "Total Carbohydrate",
+    "read_amt": 30,
+    "read_ref": 275,
+    "read_pct": 11,
+    "calories": 270,
+    "protein_g": 6,
+    "carb_g": 30,
+    "fat_g": 14,
+    "q_count": "How many nutrient rows are listed in this Nutrition Facts panel (rows each with a nutrient name and a %% value, not the Calories line)? Whole number only.",
+    "q_pct": "Find the row for 'Total Carbohydrate'. Read the '% Daily Value' number printed at the right of that row (the percentage). Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only, without the percent sign.",
+    "q_cal": "Read the large 'Calories' number printed near the top of the panel. Report exactly what is printed, digit for digit, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Whole number only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nutrition_pctdv_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_number": "reference.q_pct",
+          "out": "pct"
+        },
+        {
+          "fail_if": ["pct.unreadable"]
+        },
+        {
+          "read_number": "reference.q_cal",
+          "out": "cal"
+        },
+        {
+          "fail_if": ["cal.unreadable"]
+        },
+        {
+          "run": "percent_dv_and_calories",
+          "args": [
+            "pct",
+            "cal",
+            "reference.read_amt",
+            "reference.read_ref",
+            "reference.read_pct",
+            "reference.calories",
+            "reference.protein_g",
+            "reference.carb_g",
+            "reference.fat_g"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one nutrient row of the panel, giving a nutrient name and a percent Daily Value",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed row with a nutrient name and a percent value at its right, rather than bare paper or only part of a row? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 1.5,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

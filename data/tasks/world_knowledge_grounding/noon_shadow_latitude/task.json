@@ -1,0 +1,219 @@
+{
+  "id": "noon_shadow_latitude",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A SIDE-ON outdoor PHOTOGRAPH, the camera at ground level facing due WEST, of a single tall vertical FLAGPOLE standing by itself on open, flat, level ground. Because the camera faces west, NORTH is toward the RIGHT edge of the frame and SOUTH is toward the LEFT edge; plant two small signposts on the ground at the frame edges, one labelled N at the right edge and one labelled S at the left edge. The location and time are: Hobart, Tasmania (Australia), at LOCAL SOLAR NOON, in the depths of the southern winter, in late June. Show the flagpole casting its SHADOW flat along the ground ACROSS the frame, with the shadow's DIRECTION (toward the correct signpost) and its LENGTH (as a multiple of the pole's height, both fully visible in the image plane) physically correct for the sun's position at that place, date and time of day. Keep the flagpole perfectly vertical and the ground flat. Photorealistic daytime lighting; no text other than the two signpost letters.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a side-on outdoor photograph, camera facing due west, of a single tall flagpole on open flat ground at Hobart, Tasmania (Australia) at local solar noon, its cast shadow on the ground, with N and S signposts at the frame edges. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "place": "Hobart, Tasmania (Australia)",
+    "latitude": -42.88,
+    "date": "in the depths of the southern winter, in late June",
+    "day_of_year": 172,
+    "solar_elevation_deg": 23.7,
+    "shadow_dir": "south",
+    "shadow_side": "left",
+    "length_ratio": 2.28,
+    "q_dir": "This is a side-on outdoor photo of a single vertical flagpole standing on flat ground, casting a shadow along the ground. Ignore any labels. Look ONLY at the shadow: does the shadow lie to the LEFT of the pole, to the RIGHT of the pole, or is it just a tiny stub directly under the pole (pointing in no clear direction)? Answer with one word: left, right, or none.",
+    "q_ratio": "This is an outdoor photo of a single vertical flagpole casting a shadow on flat ground. Estimate the LENGTH of the shadow as a MULTIPLE of the flagpole's HEIGHT. That is, about how many pole-heights long is the shadow? Answer with a single number only.",
+    "shadow_q_count": "How many separate shadow patches do the flagpole cast on the ground? Answer with the number only.",
+    "shadow_q_attached": "Does each upright object in this image cast exactly ONE shadow, attached at its base on the ground (no extra stray, floating, doubled or detached shadows)? Answer yes or no only.",
+    "shadow_n": 1
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shadow_direction",
+      "weight": 2.0,
+      "steps": [
+        {
+          "ask": "reference.q_dir",
+          "out": "sdir"
+        },
+        {
+          "fail_if": ["sdir.unreadable", "sdir.no_read"]
+        },
+        {
+          "run": "shadow_side_matches",
+          "args": ["sdir", "reference"],
+          "out": "cm"
+        },
+        {
+          "run": "frac_of",
+          "args": ["cm"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shadow_length_ratio",
+      "weight": 2.0,
+      "steps": [
+        {
+          "ask": "reference.q_dir",
+          "out": "sdir_r"
+        },
+        {
+          "read": "boxes",
+          "target": "flagpole -- the tall vertical pole standing on the ground (the pole itself, not its shadow)",
+          "expected_n": 1,
+          "out": "pole"
+        },
+        {
+          "fail_if": ["pole.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "long dark shadow stripe lying on the ground",
+          "expected_n": 1,
+          "out": "shad"
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "shadow_to_pole_ratio",
+          "args": ["pole", "shad", "src", "sdir_r"],
+          "out": "rr"
+        },
+        {
+          "fail_if": ["rr.degenerate"]
+        },
+        {
+          "compare_band": "rr.ratio",
+          "to": "reference.length_ratio",
+          "core": 0.6,
+          "margin": 1.1,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "shadow_joint",
+      "weight": 2.0,
+      "steps": [
+        {
+          "ask": "This is a side-on outdoor photo of a single vertical flagpole standing on flat ground, casting a shadow along the ground. Ignore any labels. Look ONLY at the shadow: does the shadow lie to the LEFT of the pole, to the RIGHT of the pole, or is it just a tiny stub directly under the pole (pointing in no clear direction)? Answer with one word: left, right, or none.",
+          "out": "jd"
+        },
+        {
+          "fail_if": ["jd.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "flagpole -- the tall vertical pole standing on the ground (the pole itself, not its shadow)",
+          "expected_n": 1,
+          "out": "jpole"
+        },
+        {
+          "fail_if": ["jpole.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "long dark shadow stripe lying on the ground",
+          "expected_n": 1,
+          "out": "jshad"
+        },
+        {
+          "crop_full": true,
+          "out": "jsrc"
+        },
+        {
+          "run": "shadow_to_pole_ratio",
+          "args": ["jpole", "jshad", "jsrc", "jd"],
+          "out": "jrr"
+        },
+        {
+          "fail_if": ["jrr.degenerate"]
+        },
+        {
+          "compare_band": "jrr.ratio",
+          "to": "reference.length_ratio",
+          "core": 0.6,
+          "margin": 1.1,
+          "out": "jlen"
+        },
+        {
+          "run": "side_and_length_check",
+          "args": ["jd", "jlen", "reference"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_shadow_coherence",
+      "weight": 0.0,
+      "not_scored": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one separate dark shadow patch cast on the ground by the flagpole",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_scount"
+        },
+        {
+          "fail_if": ["box_scount.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole dark shadow lying on the ground, rather than the pole itself, plain bare ground, or only a broken-off piece of a shadow? Answer yes or no only.",
+          "boxes": "box_scount",
+          "out": "crop_scount"
+        },
+        {
+          "fail_if": ["crop_scount.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_scount"],
+          "out": "cnt_scount"
+        },
+        {
+          "run": "shadow_count_matches",
+          "args": ["cnt_scount.n", "reference.shadow_n"],
+          "out": "f_count"
+        },
+        {
+          "read": "boxes",
+          "target": "an extra or detached shadow on the ground -- a floating shadow, or a second shadow from the same upright object",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_a"
+        },
+        {
+          "fail_if": ["sweep_a.unreadable"]
+        },
+        {
+          "compare": "sweep_a.clean",
+          "to": "yes",
+          "out": "f_attach"
+        },
+        {
+          "any": ["f_count", "f_attach"],
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "source": "At solar noon, shadow length divided by object height is cot(sun altitude), and sun altitude is 90 - |latitude - solar declination|. The declination comes from the Cooper (1969) day-of-year formula. Latitudes: Reykjavik about 64.13 N, Nairobi about 1.29 S, Hobart about 42.88 S.",
+  "grounding": "static"
+}

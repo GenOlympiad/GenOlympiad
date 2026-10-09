@@ -1,0 +1,184 @@
+{
+  "id": "lead_room_gaze_side",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The picture desk is closing a shift-work story tonight and the crop review sheet has to go up with it.\n\nOn the light table, and not yours to alter: three crops from the one story, taped in a row, each with its own caption slip beneath it, and the agency's cropping note strip along the top edge of the sheet.\n\nWhat the three caption slips carry:\n07:41  front page banner, 96 mm deep  -- the fitter reading the worksheet in his own hands\n07:44  inside column, 48 mm deep  -- the fitter turned to his mate, who stands beside him\n07:52  app tile, 24 mm deep  -- the fitter looking away down the platform at the far signal\n\nWhat the cropping note strip carries, in full:\nmore of the open space goes on the side the subject is turned towards than behind his back;\nwhere the subject is looking into something in his own hands, the extra space goes underneath him instead;\na face has to reach 8 mm on the printed page, and a head-and-shoulders crop puts the face at about a third of the picture depth, a waist-up crop at about a sixth, a full-length crop at about a twelfth;\nof the crops that still clear 8 mm, the widest one is the one that runs.\n\nWhich way round each crop falls, and how much of the man each crop holds, is the part I am deliberately not telling you, and there is no fourth crop on the sheet to copy from. Nothing is scribbled across the face of any picture beyond the caption slips and that note strip.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a sheet with more than one separate photograph laid out on it and a slip of text under each? A photo, an illustration, a schematic or a plain diagram ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no photographs on it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "lead_side": "07:41=below him|07:44=the side he is turned towards|07:52=the side he is turned towards",
+    "frame_scale": "07:41=his whole body|07:44=down to about the waist|07:52=head and shoulders",
+    "n_frames": 3
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_open_space_falls_where_the_note_strip_sends_it_in_each_crop",
+      "weight": 3.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the photographs taped to the review sheet with its caption slip",
+          "sweep": true,
+          "out": "ld_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["ld_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what time is printed on the caption slip? Answer with the time exactly as it is printed, or none if no time is printed here.",
+          "boxes": "ld_box",
+          "pad": 0.3,
+          "out": "ld_key"
+        },
+        {
+          "fail_if": ["ld_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, where does the open space around the man sit? Answer with one of: the side he is turned towards, the side behind his back, below him, above him, even on both sides, or none if no man can be made out.",
+          "boxes": "ld_box",
+          "pad": 0.3,
+          "out": "ld_val"
+        },
+        {
+          "fail_if": ["ld_val.unreadable"]
+        },
+        {
+          "run": "count_key_matches",
+          "args": ["ld_key", "ld_val", "reference.lead_side"],
+          "out": "ld_v"
+        },
+        {
+          "compare_band": "ld_v.n",
+          "to": "reference.n_frames",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_crop_holds_as_much_of_the_man_as_its_printed_depth_allows",
+      "weight": 1.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the photographs taped to the review sheet with its caption slip",
+          "sweep": true,
+          "out": "sc_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["sc_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, what time is printed on the caption slip? Answer with the time exactly as it is printed, or none if no time is printed here.",
+          "boxes": "sc_box",
+          "pad": 0.3,
+          "out": "sc_key"
+        },
+        {
+          "fail_if": ["sc_key.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, how much of the man is inside the photograph? Answer with one of: head and shoulders, down to about the waist, his whole body, or none if no man can be made out.",
+          "boxes": "sc_box",
+          "pad": 0.3,
+          "out": "sc_val"
+        },
+        {
+          "fail_if": ["sc_val.unreadable"]
+        },
+        {
+          "run": "count_key_matches",
+          "args": ["sc_key", "sc_val", "reference.frame_scale"],
+          "out": "sc_v"
+        },
+        {
+          "compare_band": "sc_v.n",
+          "to": "reference.n_frames",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_crop_carries_its_own_caption_slip",
+      "weight": 0.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the photographs taped to the review sheet with its caption slip",
+          "sweep": true,
+          "out": "cs_box",
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cs_box.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, is a slip of printed text taped underneath the photograph? Answer yes or no only.",
+          "boxes": "cs_box",
+          "pad": 0.3,
+          "out": "cs_rd"
+        },
+        {
+          "fail_if": ["cs_rd.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cs_rd"],
+          "out": "cs_v"
+        },
+        {
+          "compare_band": "cs_v.n",
+          "to": "reference.n_frames",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_further_mark_is_scribbled_across_the_face_of_a_picture",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a crop mark or word on the face of a photograph beyond the caption slips and note strip",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "pr_sw"
+        },
+        {
+          "fail_if": ["pr_sw.unreadable"]
+        },
+        {
+          "compare": "pr_sw.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

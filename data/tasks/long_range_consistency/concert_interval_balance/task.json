@@ -1,0 +1,160 @@
+{
+  "id": "concert_interval_balance",
+  "axis": "long_range_consistency",
+  "prompt": "Programme copy for tonight closes at four o'clock, and two documents have to leave the orchestra office together: the programme the audience is handed at the door, and the running sheet the stage manager works from in the corner. Both go on one page, side by side, so the librarian can check them against each other before they go down.\n\nTonight's seven items, in the order they are played, with the minutes each one runs: 20, 22, 6, 8, 7, 9, 14. The house lights go down at 19:30 and the interval is 20 minutes long.\n\nThe interval goes in one of the gaps between items -- never inside an item -- and the house rule is that it goes in the gap that leaves the two halves as nearly equal in playing time as they can be. The programme has the seven items numbered down the page with the interval ruled in where it falls, and under each half a line giving that half's running time in minutes. The running sheet carries an interval entry saying which item number the interval follows, and a finish time at its foot.\n\nWork out for yourself where the interval falls -- I am deliberately not telling you which gap it goes in, what either half runs to, or when the audience gets out. Counting the items and cutting the programme down the middle is the mistake that leaves the second half half empty. Nothing on the page may carry working: no arithmetic, no note about how the halves were balanced, no running total beside the items. Every figure on both documents has to be readable in the frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show two printed documents side by side on one page, each with a column of numbered lines of text? A photograph, a document mockup or an illustration all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "half_times": "42|44",
+    "split_after": "2",
+    "finish": "21:16",
+    "q_half": "Copy the number of minutes printed on this running time line. Write the number only, with no unit.",
+    "q_split": "Copy the item number this interval entry says the interval follows. Write the number only.",
+    "q_finish": "Copy the finish time printed in this cut-out. Write the time only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_halves_come_out_as_near_level_as_the_items_allow",
+      "weight": 2.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a running time line printed under one half of the programme",
+          "sweep": true,
+          "out": "hf"
+        },
+        {
+          "fail_if": ["hf.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_half",
+          "boxes": "hf",
+          "pad": 0.3,
+          "out": "hfq"
+        },
+        {
+          "fail_if": ["hfq.unreadable"]
+        },
+        {
+          "run": "sorted_figures",
+          "args": ["hfq"],
+          "out": "hfn"
+        },
+        {
+          "compare": "hfn.seq",
+          "to": "reference.half_times",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_running_sheet_names_the_same_gap",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the interval entry on the stage manager's running sheet",
+          "sweep": true,
+          "out": "iv"
+        },
+        {
+          "fail_if": ["iv.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_split",
+          "boxes": "iv",
+          "pad": 0.3,
+          "out": "ivq"
+        },
+        {
+          "fail_if": ["ivq.unreadable"]
+        },
+        {
+          "run": "read_decimal",
+          "args": ["ivq"],
+          "out": "ivd"
+        },
+        {
+          "compare": "ivd.txt",
+          "to": "reference.split_after",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_audience_gets_out_when_the_two_halves_say",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the finish time printed at the foot of the running sheet",
+          "sweep": true,
+          "out": "fn"
+        },
+        {
+          "fail_if": ["fn.unreadable"]
+        },
+        {
+          "read_crop": "reference.q_finish",
+          "boxes": "fn",
+          "pad": 0.3,
+          "out": "fnq"
+        },
+        {
+          "fail_if": ["fnq.unreadable"]
+        },
+        {
+          "run": "clock_time",
+          "args": ["fnq"],
+          "out": "fnc"
+        },
+        {
+          "compare": "fnc.txt",
+          "to": "reference.finish",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_working_was_added_to_the_page",
+      "weight": 0.6,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of arithmetic or a running total added beside the programme items",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

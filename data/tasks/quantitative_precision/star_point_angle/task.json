@@ -1,0 +1,107 @@
+{
+  "id": "star_point_angle",
+  "axis": "quantitative_precision",
+  "prompt": "A flat top-down photograph of an emblem designer's proof sheet on a light desk: a sheet of pale card on which a single regular NINE-POINTED STAR is laid out as nine small solid black dots marking the nine OUTER TIPS of the star, plus one solid black dot marking its exact CENTRE, with faint pale lines running from the centre out to each tip. The nine tips must be spaced PERFECTLY EVENLY around the centre -- exactly 40 degrees apart from one tip to the next, so the star is a true regular nonagram with all nine points identical and equally spread, none bunched closer together or farther apart. Point one tip straight up. Draw only the ten solid black dots (nine tips plus the centre) and the faint pale spokes; no numbers, no angle marks, no text, evenly lit, dots clearly and solidly darker than the card.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a sheet of card with a ring of small solid black dots spread around one black dot in the middle, with faint pale lines joining the middle dot to each of the others. Ignoring artistic quality, and ignoring whether the dots are the right number or evenly spread or not, does the image DEPICT that? Answer NO only if the picture is unrelated to that description or contains no such arrangement at all. Answer yes or no only.",
+  "reference": {
+    "n_marks": 10,
+    "ntips": 9
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "mark_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "solid black dot",
+          "out": "bc",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bc.unreadable"]
+        },
+        {
+          "read_crop": "Is there a solid black dot in this picture? Answer yes or no only.",
+          "boxes": "bc",
+          "out": "dc"
+        },
+        {
+          "fail_if": ["dc.unreadable"]
+        },
+        {
+          "run": "count_yes",
+          "args": ["dc"],
+          "out": "nm"
+        },
+        {
+          "compare_band": "nm.n",
+          "to": 10,
+          "core": 0.0,
+          "margin": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "weight": 2.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "solid black dot",
+          "out": "bd"
+        },
+        {
+          "fail_if": ["bd.unreadable"]
+        },
+        {
+          "crop_full": true,
+          "out": "src"
+        },
+        {
+          "run": "centres",
+          "args": ["bd", "src"],
+          "out": "cen"
+        },
+        {
+          "fail_if": ["cen.degenerate"]
+        },
+        {
+          "run": "worst_tip_spacing_error",
+          "args": ["cen['centers']", "reference['ntips']"],
+          "out": "err"
+        },
+        {
+          "compare_band": "err",
+          "to": 0.0,
+          "core": 3.0,
+          "margin": 8.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "grounding": "static",
+  "count_noun": "a star tip dot"
+}

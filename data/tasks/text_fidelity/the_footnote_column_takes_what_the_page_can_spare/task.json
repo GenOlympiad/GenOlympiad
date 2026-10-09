@@ -1,0 +1,84 @@
+{
+  "id": "the_footnote_column_takes_what_the_page_can_spare",
+  "axis": "text_fidelity",
+  "prompt": "The typesetter has to send the spread back to the editor before the next gathering goes out, so the proof is photographed flat on the table with the layout sheet beside it.\n\nA proof spread lies weighted open. Both pages carry body text with small raised numbers through it, and each has its footnotes set small below a short rule near the foot of the page. The copy sheet clipped to the table says how many footnote lines each page has to carry: the left-hand page takes 4, the right-hand page takes 9. The layout sheet beside it gives the type page as 40 lines deep, and both pages must come down to the same depth on the table. The footnotes themselves are numbered where they sit.\n\nHow the text divides on each page, and how the numbering runs, is what the sheets do not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this photograph show a book proof spread lying open on a table, each page with a footnote area below a short rule, and a layout sheet beside it? Answer yes or no only.",
+  "reference": {
+    "part1": "left_page_has_more_lines",
+    "part2": "right_page_notes_restart_at_one"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the two pages and say which of them has more lines of text standing above its footnote rule. Answer with one of: the left-hand page has more lines above its rule; the right-hand page has more lines above its rule; the pages have the same number of lines above their rules.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the first footnote below the rule on the right-hand page and say what number stands at its head. Answer with one of: that footnote is numbered one; that footnote is numbered five; that footnote is numbered seven.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

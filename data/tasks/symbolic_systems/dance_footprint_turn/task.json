@@ -1,0 +1,167 @@
+{
+  "id": "dance_footprint_turn",
+  "axis": "symbolic_systems",
+  "prompt": "Eight beats of a turning sequence go down on the studio floor this week as a printed decal, and the supplier photographs the finished job from the gallery before the invoice goes in.\n\nThe decal is a run of eight footprints on the sprung floor of a dance studio, the barre and the mirror along one wall, the ceiling lights overhead. Each footprint carries its beat number printed inside it, 1 to 8, and the run comes round in a loose circle. Left and right feet are drawn as the two shapes they are.\n\nThe whole notation of a floor decal is this: a footprint's own direction is where the dancer's toes go on that beat, so the turn a dancer makes between one beat and the next is not written anywhere -- it is the angle between the two footprints. The teacher's sequence for these eight beats runs: straight ahead, then a quarter turn, then straight ahead, then a half turn, then straight ahead, then a quarter turn, then a three quarter turn. Feet alternate throughout.\n\nWhat each footprint looks like on the floor is the whole job and I am deliberately not telling you. Nothing is printed on the decal beside the footprints and their beat numbers: no arrows, no degree figures, no guide lines. Keep every footprint and its number easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a studio floor with a run of numbered footprints printed on it? A photograph, an illustration or a printed panel all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "beats": ["1", "2", "3", "4", "5", "6", "7", "8"],
+    "turn_want": [0, 90, 0, 180, 0, 90, 270],
+    "feet_want": ["left", "right", "left", "right", "left", "right", "left", "right"],
+    "n_units": 8
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_angle_between_each_pair_of_footprints_is_the_turn_the_sequence_calls_for",
+      "weight": 3.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered footprint printed on the studio floor",
+          "out": "df_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["df_r.unreadable"]
+        },
+        {
+          "read_crop": "What beat number is printed inside the footprint in this cut-out? Answer with that number only.",
+          "boxes": "df_r",
+          "pad": 0.2,
+          "out": "df_k",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["df_k.unreadable"]
+        },
+        {
+          "read_crop": "Take this cut-out as a clock face with 12 at the top. Which hour do the toes of this footprint point toward? Answer with a single number from 1 to 12.",
+          "boxes": "df_r",
+          "pad": 0.2,
+          "out": "df_h",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["df_h.unreadable"]
+        },
+        {
+          "read_crop": "Is this footprint a left foot or a right foot? Answer with one of: left, right.",
+          "boxes": "df_r",
+          "pad": 0.2,
+          "out": "df_f",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["df_f.unreadable"]
+        },
+        {
+          "run": "worst_turn_error",
+          "args": ["df_k", "df_h", "reference.beats", "reference.turn_want"],
+          "out": "df_s"
+        },
+        {
+          "compare_compass": "df_s.obs",
+          "to": "df_s.exp",
+          "core": 22.5,
+          "margin": 44.0,
+          "out": "f_geom"
+        },
+        {
+          "run": "count_feet_matched",
+          "args": ["df_k", "df_f", "reference.beats", "reference.feet_want"],
+          "out": "df_o"
+        },
+        {
+          "compare_band": "df_o.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 1.5,
+          "out": "f_fact"
+        },
+        {
+          "minimum": ["f_geom", "f_fact"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_decal_carries_its_eight_numbered_footprints",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one numbered footprint printed on the studio floor",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Answer yes only if this cut-out holds ONE complete footprint with its beat number printed inside it, with the whole footprint inside the picture. Answer no if it holds two or more footprints, or only part of one, or none at all. Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.2,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_arrow_degree_figure_or_guide_line_was_printed_on_the_decal",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "an arrow, a figure in degrees or a guide line printed on the decal",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

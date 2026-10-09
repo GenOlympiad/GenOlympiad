@@ -1,0 +1,262 @@
+{
+  "id": "punchcard_parity",
+  "axis": "latent_computation",
+  "prompt": "A flat, high-contrast top-down SCAN of a vintage PUNCHED-CARD PARITY PANEL, filling the frame on a plain WHITE background with only a thin white margin: a precise 8-column by 8-row square grid of thin dark ruled lines, each of the 64 cells either PUNCHED (a solid dark round hole filling the middle of the cell) or left blank (empty white cell).\n\nFill the top-left 7-by-7 block of cells with EXACTLY this punch pattern, reading rows top to bottom (1 = punch a hole, 0 = leave blank):\n1 0 0 1 1 1 0\n1 1 1 0 1 1 1\n0 0 1 0 0 1 1\n0 0 1 0 0 1 1\n0 1 1 0 0 1 1\n0 1 0 1 1 1 0\n1 1 1 0 1 1 0\nThen complete the 8th (right-most) column and the 8th (bottom) row as EVEN-PARITY check bits: in each of the first seven rows, punch the 8th cell only if that row's seven data cells hold an ODD number of holes, so every full row ends up with an even number of holes; likewise punch the 8th-row cell of each of the first seven columns to make every full column even; and punch the very bottom-right corner cell to make the 8th column itself even. The finished panel must have every one of its 8 rows and every one of its 8 columns containing an even number of holes.\n\nDraw the whole 8x8 ruled grid edge-to-edge, the holes as crisp solid dark circles centred in their cells; leave blank cells plain white. No digits, letters, shadows, or other marks anywhere -- just the grid and its holes on white.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show vintage 8x8 punched-card parity panel on a retro computer-room bench, holes forming a joint even row-and-column parity code over a fixed 7x7 data block? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "rows": 8,
+    "cols": 8,
+    "grid": [
+      [1, 0, 0, 1, 1, 1, 0, 0],
+      [1, 1, 1, 0, 1, 1, 1, 0],
+      [0, 0, 1, 0, 0, 1, 1, 1],
+      [0, 0, 1, 0, 0, 1, 1, 1],
+      [0, 1, 1, 0, 0, 1, 1, 0],
+      [0, 1, 0, 1, 1, 1, 0, 0],
+      [1, 1, 1, 0, 1, 1, 0, 1],
+      [1, 0, 1, 0, 0, 1, 0, 1]
+    ],
+    "n_holes": 36,
+    "q_form": "Look at this image. Is it a square grid card (about 8 by 8 cells) with some cells PUNCHED as dark round holes and others left blank? Answer ONLY 'yes' or 'no'.",
+    "enforce_notext": true,
+    "q_notext": "The ruled grid lines and the punched holes are not text. Apart from them, is there any printed digit or word anywhere on the card or the background? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "parity_joint",
+      "weight": 3.0,
+      "score": "pj.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the outer border of the whole ruled grid of punched-card cells (ONE tight rectangle around ALL the cells together, not around a single cell)",
+          "expected_n": 1,
+          "out": "card"
+        },
+        {
+          "run": "grid_square_boxes",
+          "args": ["card", "reference.rows", "reference.cols"],
+          "out": "cellbx"
+        },
+        {
+          "read_crop": "This small crop is ONE cell of a punched card. Does the cell hold a PUNCHED HOLE -- a solid dark filled round disc? Answer yes if a solid dark disc is present, and no if the cell is blank (only pale card and thin ruled lines). Answer yes or no only.",
+          "boxes": "cellbx.boxes",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "read_grid",
+          "args": ["cr", "reference.rows", "reference.cols"],
+          "out": "rg"
+        },
+        {
+          "run": "even_parity",
+          "args": ["rg"],
+          "out": "pj"
+        }
+      ]
+    },
+    {
+      "name": "pattern_exact",
+      "weight": 1.0,
+      "score": "px.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the outer border of the whole ruled grid of punched-card cells (ONE tight rectangle around ALL the cells together, not around a single cell)",
+          "expected_n": 1,
+          "out": "card"
+        },
+        {
+          "run": "grid_square_boxes",
+          "args": ["card", "reference.rows", "reference.cols"],
+          "out": "cellbx"
+        },
+        {
+          "read_crop": "This small crop is ONE cell of a punched card. Does the cell hold a PUNCHED HOLE -- a solid dark filled round disc? Answer yes if a solid dark disc is present, and no if the cell is blank (only pale card and thin ruled lines). Answer yes or no only.",
+          "boxes": "cellbx.boxes",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "read_grid",
+          "args": ["cr", "reference.rows", "reference.cols"],
+          "out": "rg"
+        },
+        {
+          "run": "grid_matches",
+          "args": ["rg", "reference.grid"],
+          "out": "px"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_rows",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "The panel is ruled into a square grid of cells. Is the ruled grid exactly EIGHT cell-rows tall (8 rows of cells; the thin ruled lines themselves are not rows)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_layout_cols",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "The panel is ruled into a square grid of cells. Is the ruled grid exactly EIGHT cell-columns wide (8 columns of cells; the thin ruled lines themselves are not columns)? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_hole_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the outer border of the whole ruled grid of punched-card cells (ONE tight rectangle around ALL the cells together, not around a single cell)",
+          "expected_n": 1,
+          "out": "card"
+        },
+        {
+          "run": "grid_square_boxes",
+          "args": ["card", "reference.rows", "reference.cols"],
+          "out": "cellbx"
+        },
+        {
+          "read_crop": "This small crop is ONE cell of a punched card. Does the cell hold a PUNCHED HOLE -- a solid dark filled round disc? Answer yes if a solid dark disc is present, and no if the cell is blank (only pale card and thin ruled lines). Answer yes or no only.",
+          "boxes": "cellbx.boxes",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "run": "read_grid",
+          "args": ["cr", "reference.rows", "reference.cols"],
+          "out": "rg"
+        },
+        {
+          "run": "hole_count",
+          "args": ["rg"],
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt",
+          "to": "reference.n_holes",
+          "core_abs": 0.499,
+          "margin_abs": 2.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_marks",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "digit, letter, word or any other printed mark on the panel that is not a grid line or a round hole",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

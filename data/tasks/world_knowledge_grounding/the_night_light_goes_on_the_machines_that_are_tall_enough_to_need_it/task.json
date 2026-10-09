@@ -1,0 +1,84 @@
+{
+  "id": "the_night_light_goes_on_the_machines_that_are_tall_enough_to_need_it",
+  "axis": "world_knowledge_grounding",
+  "prompt": "Cworthy Down wind farm is being handed over after its extension and the operator will not release the retention until the obstruction lighting has been recorded from the ground at dusk. Eight machines stand along the ridge. Five of them belong to the original row and carry a tip height of 118 metres; the remainder are the extension machines, whose tip height is 176 metres. The instruction reproduces the clause the regulator applies: aviation obstruction lighting is required on any obstacle whose tip height exceeds 150 metres, and the light is placed at the highest fixed part of the structure. Take the photograph from the estate track below the ridge as the light goes, all eight machines inside the single frame, the nearest filling much of the frame height and the farthest still reading as a distinct tower against the sky rather than a speck.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph show a line of wind turbines of two different sizes standing on open ground at dusk, taken from ground level, with every machine inside the single frame? Answer yes or no only.",
+  "reference": {
+    "part1": "nacelle",
+    "part2": "3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Say in a few plain words where on the machines the red lights sit. Describe only the machines that carry a light.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "How many of the machines are showing a red light? Answer with a whole number.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

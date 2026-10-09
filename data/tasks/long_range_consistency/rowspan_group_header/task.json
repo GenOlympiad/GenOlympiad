@@ -1,0 +1,133 @@
+{
+  "id": "rowspan_group_header",
+  "axis": "long_range_consistency",
+  "prompt": "Render a clean, straight-on image of a printed stock-list TABLE with three columns: CATEGORY, ITEM and QTY. The rows are grouped by category. In the CATEGORY column, write each category name ONCE inside a single tall merged cell that vertically covers exactly that category's item rows (so the category name sits beside its group of items and the cell's height matches how many items are in that group). Black print on white paper, thin table rules.\n\nThe categories and their items, in order:\n        PRODUCE: Carrots, Onions\n        CHILLED: Yoghurt, Cheese, Cream, Eggs\n        PANTRY: Rice, Pasta, Flour\n        DRINKS: Juice, Water\n\nEach category's merged CATEGORY cell must span exactly its own item rows -- no fewer, and it must not extend into the next category's rows. Give each ITEM row a small quantity in the QTY column (any small number). Print only this table.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a printed stock-list table whose left category header cell is vertically merged to span exactly the number of item rows in each category. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene -- the physical object, document, board, or diagram it describes? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 4,
+    "cats": ["PRODUCE", "CHILLED", "PANTRY", "DRINKS"],
+    "spans": [2, 4, 3, 2],
+    "q_spans": "This table groups items by category, and each category name is written once in a tall merged cell in the CATEGORY column. For each category from top to bottom, count how many item rows that category's merged cell vertically covers, and list those counts in order (top category first). Output ONLY the counts separated by single spaces, and nothing else.",
+    "q_cover": "In this table, does each category's merged CATEGORY cell cover EXACTLY its own group of item rows -- no fewer, and without extending into the next category's rows? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "header_spans",
+      "weight": 3.0,
+      "score": "law.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "each tall merged cell of the leftmost CATEGORY column -- one box per category name, and each box must cover that merged cell's FULL height from its top rule to its bottom rule; do not box the column header word CATEGORY and do not box anything in the ITEM or QTY columns",
+          "context": "a printed stock-list table with CATEGORY, ITEM and QTY columns",
+          "out": "cats"
+        },
+        {
+          "fail_if": ["cats.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "one cell of the leftmost CATEGORY column with a category name printed inside it, not the column heading",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nlabel"
+        },
+        {
+          "fail_if": ["box_nlabel.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole cell of a printed table with a single printed name inside it, rather than an empty cell, only part of a cell, or two separate cells together? Answer yes or no only.",
+          "boxes": "box_nlabel",
+          "out": "crop_nlabel"
+        },
+        {
+          "fail_if": ["crop_nlabel.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nlabel"],
+          "out": "cnt_nlabel"
+        },
+        {
+          "run": "count_as_read",
+          "args": ["cnt_nlabel"],
+          "out": "as_nlabel"
+        },
+        {
+          "read": "boxes",
+          "target": "one item row of the table, carrying an item name in the ITEM column, not the header row -- count a rectangle only if it holds exactly one such row, with that row's item name and its QTY number inside it, boxed from the rule above the row to the rule below it; do not box two rows stacked together, do not box the header row printing CATEGORY ITEM QTY, and do not box a tall merged CATEGORY cell",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nrow"
+        },
+        {
+          "fail_if": ["box_nrow.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole table row carrying one item name and one quantity, rather than an empty strip, only part of a row, or two rows stacked together? Answer yes or no only.",
+          "boxes": "box_nrow",
+          "out": "crop_nrow"
+        },
+        {
+          "fail_if": ["crop_nrow.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nrow"],
+          "out": "cnt_nrow"
+        },
+        {
+          "run": "count_as_read",
+          "args": ["cnt_nrow"],
+          "out": "as_nrow"
+        },
+        {
+          "run": "group_header_spans",
+          "args": ["cats", "as_nlabel", "as_nrow", "reference"],
+          "out": "law"
+        },
+        {
+          "fail_if": ["law.no_read"]
+        }
+      ]
+    },
+    {
+      "name": "d1_exact_cover",
+      "weight": 0.6,
+      "steps": [
+        {
+          "ask": "reference.q_cover",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

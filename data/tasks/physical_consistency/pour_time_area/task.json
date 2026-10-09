@@ -1,0 +1,203 @@
+{
+  "id": "pour_time_area",
+  "axis": "physical_consistency",
+  "prompt": "A two-colour silkscreen print on card, viewed dead level with the ground: six upright parallel-sided brewing casks arranged along a single stone plinth, every cask identical in overall stature and every one scoured dry beforehand. Their girths, reading leftward to rightward, come to one span, two spans, four spans, five spans, one span and four spans.\n\nA lone spigot, delivering at a pace that never varies, was swung above each cask successively and held there: 24 ticks above the leftmost, 48 above its neighbour, 64 above the middle-left, 50 above the middle-right, 1 tick above the next, 192 above the rightmost. Nothing was ever decanted back.\n\nPrint what depth each brew genuinely reaches. Because the spigot delivers steadily, identical ticks deliver identical bulk, whence each cask's own dwell beneath the spigot decides its bulk. Depth, though, equals that bulk shared out across the cask's own footing, and footing climbs as girth MULTIPLIED BY ITSELF -- quintuple girth means twenty-fivefold footing, whence identical bulk reaches barely a twenty-fifth as deep. Reason about every cask from its own couple of figures. Whichever dwelled longest beneath the spigot does not carry the deepest brew; wherever two girths agree, their depths must agree in precisely the proportion borne by their dwells; and deepest exceeds shallowest manyfold.\n\nOne flat saturated VIOLET ink throughout for the brew, each meniscus dead horizontal, nothing anywhere near brimming over, every footing resting upon the same stone line. Flat colours, thick clean outlines, plain white background, items well separated, no text, no numerals, no arrows, no rulers, no scale marks, no labels.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a printed picture of upright parallel-sided casks ranged along one stone plinth, viewed level with the ground, each holding a different depth of coloured brew. Ignoring artistic quality and styling, does the image actually DEPICT that requested subject? A photograph, an illustration, a schematic or a clean diagram of it ALL count as yes. Answer NO only if it instead shows a bare plinth, a page of text or a print with no row of casks in it, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "q_look": "Ignore whether the brew depths are physically right -- judge only how the print is set out. Check three things: all the casks stand at one common height on the same plinth line, every brew surface is dead level, and no cask is close to brimming over. Are all three true? Answer yes or no only.",
+    "k": 6,
+    "hue_lo": 132,
+    "hue_hi": 163,
+    "s_min": 55,
+    "v_min": 45,
+    "height_norms": [2.6182, 1.3091, 0.4364, 0.2182, 0.1091, 1.3091],
+    "spread": 24.0,
+    "min_spread": 2.0,
+    "pair": [0, 4],
+    "pair_ratio": 24.0
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "vessels_readable",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "flat-topped pool of coloured liquid inside a vessel -- ONE box per vessel round the coloured liquid alone, its top edge on the flat liquid surface and its bottom edge on the inside floor the liquid rests on. Box the shallow pools too, one box each; do not include the empty space above the surface, the rim, or the bench or plinth it stands on, and do not box two vessels in one rectangle.",
+          "expected_n": "reference.k",
+          "out": "cols"
+        },
+        {
+          "fail_if": ["cols.unreadable"]
+        },
+        {
+          "run": "column_count_score",
+          "args": ["cols", "reference.k"],
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "not_one_flat_row",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "flat-topped pool of coloured liquid inside a vessel -- ONE box per vessel round the coloured liquid alone, its top edge on the flat liquid surface and its bottom edge on the inside floor the liquid rests on. Box the shallow pools too, one box each; do not include the empty space above the surface, the rim, or the bench or plinth it stands on, and do not box two vessels in one rectangle.",
+          "expected_n": "reference.k",
+          "out": "cols"
+        },
+        {
+          "fail_if": ["cols.unreadable"]
+        },
+        {
+          "run": "spread_floor_score",
+          "args": ["cols", "reference.min_spread"],
+          "code": {
+            "inline": "f_code_2"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "depth_each_vessel",
+      "weight": 2.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "flat-topped pool of coloured liquid inside a vessel -- ONE box per vessel round the coloured liquid alone, its top edge on the flat liquid surface and its bottom edge on the inside floor the liquid rests on. Box the shallow pools too, one box each; do not include the empty space above the surface, the rim, or the bench or plinth it stands on, and do not box two vessels in one rectangle.",
+          "expected_n": "reference.k",
+          "out": "cols"
+        },
+        {
+          "fail_if": ["cols.unreadable"]
+        },
+        {
+          "run": "depth_profile_score",
+          "args": ["cols", "reference.height_norms"],
+          "code": {
+            "inline": "f_code_3"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "depth_spread",
+      "weight": 1.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "flat-topped pool of coloured liquid inside a vessel -- ONE box per vessel round the coloured liquid alone, its top edge on the flat liquid surface and its bottom edge on the inside floor the liquid rests on. Box the shallow pools too, one box each; do not include the empty space above the surface, the rim, or the bench or plinth it stands on, and do not box two vessels in one rectangle.",
+          "expected_n": "reference.k",
+          "out": "cols"
+        },
+        {
+          "fail_if": ["cols.unreadable"]
+        },
+        {
+          "run": "spread_ratio_score",
+          "args": ["cols", "reference.spread"],
+          "code": {
+            "inline": "f_code_4"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "equal_width_pair_control",
+      "weight": 0.5,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "flat-topped pool of coloured liquid inside a vessel -- ONE box per vessel round the coloured liquid alone, its top edge on the flat liquid surface and its bottom edge on the inside floor the liquid rests on. Box the shallow pools too, one box each; do not include the empty space above the surface, the rim, or the bench or plinth it stands on, and do not box two vessels in one rectangle.",
+          "expected_n": "reference.k",
+          "out": "cols"
+        },
+        {
+          "fail_if": ["cols.unreadable"]
+        },
+        {
+          "run": "pair_ratio_score",
+          "args": ["cols", "reference.pair", "reference.pair_ratio"],
+          "code": {
+            "inline": "f_code_5"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "d1_column_overlay",
+      "weight": 0.0,
+      "score": "v.frac",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "flat-topped pool of coloured liquid inside a vessel -- ONE box per vessel round the coloured liquid alone, its top edge on the flat liquid surface and its bottom edge on the inside floor the liquid rests on. Box the shallow pools too, one box each; do not include the empty space above the surface, the rim, or the bench or plinth it stands on, and do not box two vessels in one rectangle.",
+          "expected_n": "reference.k",
+          "out": "cols"
+        },
+        {
+          "fail_if": ["cols.unreadable"]
+        },
+        {
+          "run": "depth_profile_overlay",
+          "args": ["cols", "reference.height_norms"],
+          "code": {
+            "inline": "f_code_6"
+          },
+          "out": "v"
+        }
+      ]
+    },
+    {
+      "name": "d2_appearance_compliance",
+      "weight": 0.0,
+      "steps": [
+        {
+          "ask": "reference.q_look",
+          "retries": 2,
+          "out": "lk"
+        },
+        {
+          "compare": "lk",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

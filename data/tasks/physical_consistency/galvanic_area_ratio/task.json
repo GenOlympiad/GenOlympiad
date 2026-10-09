@@ -1,0 +1,215 @@
+{
+  "id": "galvanic_area_ratio",
+  "axis": "physical_consistency",
+  "prompt": "A page from a third-party corrosion laboratory's failure examination file, of the plain sort the lab issues to a contractor: a heading strip, then two photographs of returned hardware side by side, each photograph under its own caption.\n\nThe two samples came off the same seaside balustrade run after eighteen months in the salt spray zone, and they are the two ways that run was fastened. SAMPLE A is a single stainless steel M8 bolt clamping a large aluminium infill panel. SAMPLE B is a row of small aluminium rivets clamping a large stainless steel facing panel. Same sea, same eighteen months, the same two metals in contact in both -- only the sizes are swapped over between them.\n\nThe contractor and its insurer settle the replacement bill from this page, so each photograph has to be close enough that the panel and the fasteners in it can both be made out.\n\nWhich metal has been eaten in each sample, and how far it has gone, is for you to work out -- I am deliberately not telling you which part corrodes in either sample, and I am not telling you which of the two is the worse case. Do not put any verdict, any severity word, any rating, any tick or any arrow anywhere on the page: the only lettering is the heading strip and the two captions SAMPLE A and SAMPLE B.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a page carrying two photographs of bolted or riveted metal parts side by side, each with a caption of its own? A photograph, an illustration or a diagram all count as yes. Answer NO only if the image instead shows a blank sheet that just prints an answer, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n_samples": 2,
+    "eaten_a": "panel",
+    "eaten_b": "fasteners",
+    "state_a": "surface",
+    "state_b": "through",
+    "attack_a": "contact"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "corroded_member_binding",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the joint photograph captioned SAMPLE A",
+          "out": "box_a",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_a.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one metal joint from the handrail. Which part of it is eaten away and crumbling: the large flat panel, or the small fasteners holding it? Answer with one word: panel or fasteners.",
+          "boxes": "box_a",
+          "out": "rd_a"
+        },
+        {
+          "fail_if": ["rd_a.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one metal joint from the handrail. Where is the eaten metal at its worst: close in around the fasteners where the two metals touch, or spread evenly over the metal far from them? Answer contact, spread, or cannot tell.",
+          "boxes": "box_a",
+          "out": "cn_a"
+        },
+        {
+          "fail_if": ["cn_a.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the joint photograph captioned SAMPLE B",
+          "out": "box_b",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_b.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one metal joint from the handrail. Which part of it is eaten away and crumbling: the large flat panel, or the small fasteners holding it? Answer with one word: panel or fasteners.",
+          "boxes": "box_b",
+          "out": "rd_b"
+        },
+        {
+          "fail_if": ["rd_b.unreadable"]
+        },
+        {
+          "run": "attacked_parts_score",
+          "args": [
+            "rd_a",
+            "rd_b",
+            "cn_a",
+            "reference.eaten_a",
+            "reference.eaten_b",
+            "reference.attack_a"
+          ],
+          "out": "sd"
+        },
+        {
+          "compare_band": "sd.frac",
+          "to": 1.0,
+          "core_abs": 0.001,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "small_anode_is_the_worse_one",
+      "weight": 1.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the joint photograph captioned SAMPLE A",
+          "out": "box_a2",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_a2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one metal joint from the handrail. Is the eaten metal worn right through with holes in it, or only roughened and stained on the surface? Answer with one word: through or surface.",
+          "boxes": "box_a2",
+          "out": "dp_a"
+        },
+        {
+          "fail_if": ["dp_a.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the joint photograph captioned SAMPLE B",
+          "out": "box_b2",
+          "expected_n": 1
+        },
+        {
+          "fail_if": ["box_b2.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one metal joint from the handrail. Is the eaten metal worn right through with holes in it, or only roughened and stained on the surface? Answer with one word: through or surface.",
+          "boxes": "box_b2",
+          "out": "dp_b"
+        },
+        {
+          "fail_if": ["dp_b.unreadable"]
+        },
+        {
+          "run": "attack_depth_order",
+          "args": ["dp_a", "dp_b", "reference.state_a", "reference.state_b"],
+          "out": "sv"
+        },
+        {
+          "compare": "sv.verdict",
+          "to": "small-anode-worse",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "sample_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one photograph of a metal joint with its printed caption",
+          "propose_boxes": "vlm",
+          "out": "box_read",
+          "sweep": true
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole photograph of a metal joint, rather than the heading strip or bare page? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_samples",
+          "core_abs": 0.499,
+          "margin_abs": 1.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_verdict_on_the_page",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a severity word, rating, tick or arrow added to the page, not the heading strip or the SAMPLE captions",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

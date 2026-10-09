@@ -1,0 +1,136 @@
+{
+  "id": "road_legend_elongation_axis",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "The marking gang finished a small crossroads last night and the handover photograph has to go to the highway authority before the road opens.\n\nWhat is on the ground:\n\n  - two approach lanes that meet at right angles, one running up the picture and one running across it, each with its own stop line;\n  - in each of those two lanes, one legend in block capitals laid in white thermoplastic, and beside the legend a direction arrow of the ordinary kind;\n  - the gang's setting-out card, weighted down on the kerb;\n  - cones still standing at the stop lines.\n\nThe standard the gang works to says this much, and it is not mine to change: a legend on a carriageway is laid several times longer than it is wide, because a driver reads it at a very shallow angle, and the direction it is lengthened in is the direction that lane's traffic travels.\n\nWhich way each of the two legends actually ends up lengthened is what the handover photograph is for, and I am telling you neither. Fly the drone directly over the middle of the junction and photograph straight down, high enough that both approaches, both legends and both arrows are inside one frame. Keep the paint bare: no figure in millimetres, no ratio, no note of any kind written on the carriageway or added to the photograph afterwards.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a road junction seen from above with white markings painted on the carriageway. A photograph, a rendering or a scan of one all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "axis_separation_min": 60.0,
+    "shape_expected": "both"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_legend_is_lengthened_along_its_own_lanes_arrow_and_the_two_axes_differ",
+      "weight": 2.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a patch of white paint holding block capitals with an arrow beside them",
+          "out": "pt_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["pt_r.unreadable"]
+        },
+        {
+          "read_crop": "Taking twelve o'clock as the top of the picture, look at one single letter of the block capitals in this cut-out. That letter is stretched along one direction. Which hour of a clock face does that stretch run toward? Answer with a whole number from 1 to 12 and nothing else.",
+          "boxes": "pt_r",
+          "pad": 0.15,
+          "out": "pt_l",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pt_l.unreadable"]
+        },
+        {
+          "read_crop": "Taking twelve o'clock as the top of the picture, which hour of a clock face does the head of the painted arrow in this cut-out point toward. Answer with a whole number from 1 to 12.",
+          "boxes": "pt_r",
+          "pad": 0.15,
+          "out": "pt_a",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["pt_a.unreadable"]
+        },
+        {
+          "run": "legend_arrow_offset",
+          "args": ["pt_l", "pt_a", "reference.axis_separation_min"],
+          "out": "ax"
+        },
+        {
+          "compare_compass": "ax.obs",
+          "to": "ax.exp",
+          "core": 30.0,
+          "margin": 60.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "both_legends_are_several_times_longer_than_they_are_wide",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a patch of white paint holding block capitals laid on the carriageway",
+          "out": "sh_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["sh_r.unreadable"]
+        },
+        {
+          "read_crop": "Look at the shape of a single letter in this cut-out, not at the whole word. Is that letter more than twice as long in one direction as it is in the other, or is it about as long one way as the other. Answer with the word stretched or the word ordinary.",
+          "boxes": "sh_r",
+          "pad": 0.1,
+          "out": "sh_a",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["sh_a.unreadable"]
+        },
+        {
+          "run": "letters_stretched",
+          "args": ["sh_a", "reference.shape_expected"],
+          "out": "sp"
+        },
+        {
+          "compare": "sp.obs",
+          "to": "sp.exp",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_figure_and_no_note_was_written_on_the_carriageway",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a figure in millimetres or a written note laid on the carriageway",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "fg_r"
+        },
+        {
+          "fail_if": ["fg_r.unreadable"]
+        },
+        {
+          "compare": "fg_r.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

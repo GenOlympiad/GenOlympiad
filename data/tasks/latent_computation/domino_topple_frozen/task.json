@@ -1,0 +1,280 @@
+{
+  "id": "domino_topple_frozen",
+  "axis": "latent_computation",
+  "prompt": "A slow-motion science-museum photo shows a straight left-to-right row of 13 identical standing dominoes, numbered 1 to 13 from the LEFT. Someone taps domino 1 so the row begins to topple, each falling domino knocking the next. The camera FREEZES the instant domino number 7 has just fallen flat but has not yet reached domino 8. Render that exact frozen frame: dominoes 1 through 7 lying flat (fallen), and dominoes 8 through 13 still standing upright. Show all 13 tiles in a single straight row, clearly distinguishing fallen (lying flat) from standing (upright). Do NOT print the numbers 7 or any tile labels on the image.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show slow-motion science-museum photo of a 13-domino row frozen at the instant one particular tile has fallen, the first seven flat and the last six upright? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "pattern": [
+      ["F"],
+      ["F"],
+      ["F"],
+      ["F"],
+      ["F"],
+      ["F"],
+      ["F"],
+      ["S"],
+      ["S"],
+      ["S"],
+      ["S"],
+      ["S"],
+      ["S"]
+    ],
+    "n_fallen": 7,
+    "q_form": "Look at this image. Is it a single straight row of about 13 domino tiles, some lying flat and some standing upright? Answer ONLY 'yes' or 'no'.",
+    "q_phys_form": "Look only at the fallen dominoes lying down in this photo. Which option matches what is drawn: (a) the fallen dominoes lean on or overlap one another, or (b) they lie flat and separate, with clear gaps and none touching the next? Answer with the single letter a or b only.",
+    "q_phys_len": "Compare a fallen domino's length with a standing domino's height in this photo. Which option matches what is drawn: (a) a fallen domino is about as long as a standing one is tall, or (b) a fallen domino is clearly shorter or clearly longer than that? Answer with the single letter a or b only.",
+    "n_total": 13.0,
+    "n_standing": 6.0,
+    "enforce_notext": true,
+    "q_notext": "Is there any printed word or number anywhere on this photo? Answer yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "form_gate",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_form",
+          "out": "fa"
+        },
+        {
+          "compare_token": "fa",
+          "to": "yes",
+          "mode": "starts_with",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "topple_pattern",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read_sequence": "Look at the single row of 13 domino tiles from LEFT to RIGHT. For each tile output 'F' if it is lying FLAT (fallen) or 'S' if it is STANDING upright. Report ONLY the 13 letters separated by single spaces, in left-to-right order, and nothing else.",
+          "n": 13,
+          "as_column": true,
+          "out": "seq"
+        },
+        {
+          "fail_if": ["seq.unreadable", "seq.empty"]
+        },
+        {
+          "run": "first_letters_upper",
+          "args": ["seq"],
+          "out": "seqU"
+        },
+        {
+          "compare_grid": "seqU",
+          "to": "reference.pattern",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "cascade_physics",
+      "weight": 2.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.q_phys_form",
+          "out": "pf"
+        },
+        {
+          "ask": "reference.q_phys_len",
+          "out": "pl"
+        },
+        {
+          "run": "both_picked_a",
+          "args": ["pf", "pl"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "fallen_count",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read_sequence": "Look at the single row of 13 domino tiles from LEFT to RIGHT. For each tile output 'F' if it is lying FLAT (fallen) or 'S' if it is STANDING upright. Report ONLY the 13 letters separated by single spaces, in left-to-right order, and nothing else.",
+          "n": 13,
+          "as_column": true,
+          "out": "seqc"
+        },
+        {
+          "fail_if": ["seqc.unreadable", "seqc.empty"]
+        },
+        {
+          "run": "count_f_rows",
+          "args": ["seqc"],
+          "out": "nf"
+        },
+        {
+          "compare_tolerance": "nf",
+          "to": "reference.n_fallen",
+          "tol": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_total_dominoes",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one domino tile in the row, whether it is standing upright or lying flat",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole domino tile, standing or fallen, rather than two tiles together, part of a tile, or empty ground? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_total",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_standing_count",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one domino tile standing upright on its end in the row",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_read"
+        },
+        {
+          "fail_if": ["box_read.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole domino tile standing upright on its end, rather than a tile lying flat, a piece of a tile, or bare ground? Answer yes or no only.",
+          "boxes": "box_read",
+          "out": "crop_read"
+        },
+        {
+          "fail_if": ["crop_read.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_read"],
+          "out": "cnt_read"
+        },
+        {
+          "compare_band": "cnt_read.n",
+          "to": "reference.n_standing",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_no_tile_numbers",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "any digit, letter, label or other printed marking on a domino tile or anywhere else in this picture",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_contiguous_fallen",
+      "weight": 0.5,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Are all the fallen (lying flat) dominoes the ones on the LEFT of the row, forming one contiguous run followed by the standing dominoes? Answer yes or no only.",
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

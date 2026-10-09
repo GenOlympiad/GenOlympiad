@@ -1,0 +1,152 @@
+{
+  "id": "registrar_exempt_gpa_denominator",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "A transcript, just off the registry printer and squared up under the desk lamp, photographed from straight above with the board's memo lying beside it.\n\nThe transcript covers one semester and carries six course rows in this order, each with its code, its title, its credits and its grade point:\nPHY201  Waves and Optics       4 credits  grade point 3.7\nHIS118  Early Modern Europe    3 credits  grade point 3.0\nMAT230  Linear Algebra         4 credits  grade point 4.0\nLAW104  Contract Law           2 credits\nBIO150  Cell Biology           3 credits  grade point 2.3\nECO112  Microeconomics         3 credits  grade point 3.3\n\nThe memo beside it is the Board of Examiners' decision on this student, and it names the course only by its title: exemption from assessment has been granted in Contract Law. This registry keeps one standing rule for an exempted course and the transcript has to carry that rule on its face: the credits still count towards the credit total, the course does not enter the grade point average at all, and no grade point is ever recorded against it.\n\nThe transcript's two right-hand columns are headed COUNTED IN CREDIT TOTAL and COUNTED IN GPA, and every row carries either a tick or an empty box in each of them. Under the table stand two footnotes, one saying how many courses went into the credit total and one saying how many went into the average.\n\nWork out for yourself what each row is entitled to -- I am deliberately not telling you which boxes are ticked, and I am not telling you either footnote figure. Every tick box and both footnote figures have to be large and sharp. Nothing may stand on the sheet beyond the table, its two columns and the two footnotes: no arithmetic, no total, no average, no note.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed transcript with course rows and two columns of small boxes on its right-hand side? A photo, an illustration, a schematic or a plain document scan ALL count as yes. Answer NO only if the image instead shows a blank card stating an answer with no transcript in it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "both_columns": "tick,tick,tick,tick,tick,tick|tick,tick,tick,empty,tick,tick",
+    "footnote_pair": "6/5"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "only_the_exempted_row_parts_the_two_membership_columns",
+      "weight": 5.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a course row of the transcript table",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "row_box"
+        },
+        {
+          "fail_if": ["row_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one course row. Is the box in the column headed COUNTED IN CREDIT TOTAL ticked, or is it empty? Answer tick or empty. If that column is not printed on this row, answer the single word missing.",
+          "boxes": "row_box",
+          "pad": 0.2,
+          "sort": "reading_order",
+          "out": "cred_rd"
+        },
+        {
+          "fail_if": ["cred_rd.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out shows one course row. Is the box in the column headed COUNTED IN GPA ticked, or is it empty? Answer tick or empty. If that column is not printed on this row, answer the single word missing.",
+          "boxes": "row_box",
+          "pad": 0.2,
+          "sort": "reading_order",
+          "out": "gpa_rd"
+        },
+        {
+          "fail_if": ["gpa_rd.unreadable"]
+        },
+        {
+          "run": "credit_and_average_marks",
+          "args": ["cred_rd", "gpa_rd"],
+          "out": "cols"
+        },
+        {
+          "compare": "cols.s",
+          "to": "reference.both_columns",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_two_footnotes_stand_one_course_apart",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the footnote line under the transcript table that speaks about the credit total",
+          "sweep": true,
+          "out": "fc_box"
+        },
+        {
+          "fail_if": ["fc_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one footnote line from under the transcript table. Copy the number of courses it gives. Write the number and nothing else.",
+          "boxes": "fc_box",
+          "pad": 0.3,
+          "out": "fc_rd"
+        },
+        {
+          "fail_if": ["fc_rd.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the footnote line under the transcript table that speaks about the average",
+          "sweep": true,
+          "out": "fg_box"
+        },
+        {
+          "fail_if": ["fg_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one footnote line from under the transcript table. Copy the number of courses it gives. Write the number and nothing else.",
+          "boxes": "fg_box",
+          "pad": 0.3,
+          "out": "fg_rd"
+        },
+        {
+          "fail_if": ["fg_rd.unreadable"]
+        },
+        {
+          "run": "footnote_counts",
+          "args": ["fc_rd", "fg_rd"],
+          "out": "footv"
+        },
+        {
+          "compare": "footv.s",
+          "to": "reference.footnote_pair",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "nothing_stands_on_the_sheet_beyond_the_table_and_its_footnotes",
+      "weight": 0.5,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line of arithmetic, a total, an average or a written note standing on the transcript sheet",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_s"
+        },
+        {
+          "fail_if": ["sweep_s.unreadable"]
+        },
+        {
+          "compare": "sweep_s.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

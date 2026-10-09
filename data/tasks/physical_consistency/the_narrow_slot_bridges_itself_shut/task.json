@@ -1,0 +1,84 @@
+{
+  "id": "the_narrow_slot_bridges_itself_shut",
+  "axis": "physical_consistency",
+  "prompt": "Flowability trials in Thornbury Handling's test bay, run against the boiler-house feed contract: three perspex-fronted model hoppers stand in a row on a common frame straddling a running conveyor, each charged from the same lorry-load of washed singles coal and filled to the same mark. A card hangs on the front of each hopper with its outlet slot width, 480 mm on the left-hand hopper, 700 mm in the middle and 900 mm on the right. The batch sheet clipped to the frame gives the largest lump in the load as 95 mm, and the works standard the trial is run to reads: clear outlet width shall be not less than six times the largest lump. The belt has been running since the hoppers were charged. Wanted for the trial record is the photograph taken square-on from the front, all three hoppers and the full width of the belt beneath them in the frame, coal visible through the perspex.",
+  "difficulty": "pA",
+  "easy_question": "Does this picture show three clear-fronted test hoppers standing side by side above a running conveyor belt, each with a large plate hung on the front? Answer yes or no.",
+  "reference": {
+    "part1": "2",
+    "part2": "dome"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "How many separate heaps of material are lying on the belt beneath the hoppers?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_of",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Say in a few plain words what shape the material inside the left-hand hopper makes just above its outlet slot.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

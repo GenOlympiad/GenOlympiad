@@ -1,0 +1,172 @@
+{
+  "id": "bulb_planted_on_its_side",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "Six planting pockets have been cut open in the sample section of a new bulb bed, and the landscape contractor wants the acceptance photograph taken before the trench goes back in.\n\nThe trench runs along the bed and its face has been cut back square, so every pocket is exposed in section with its bulb still sitting where the planter left it. A gravel path runs along the front of the bed. A stake at the end of the trench carries the planting schedule, and a small lettered stick stands beside each pocket:\n  A -- tulip\n  B -- crown imperial fritillary\n  C -- tulip\n  D -- daffodil\n  E -- snake's head fritillary\n  F -- allium\n\nTwo rules came down on the works order and both are ordinary nursery practice. A fritillary bulb goes in on its side, because water lodges between the scales of an upright one and rots the heart out of it over the winter. A tulip is seated with its flatter face toward the front of the bed, because the first leaf always comes away on that face and the edge of the bed then reads as one line. Everything else goes nose up. Soil cover over each bulb is deeper than the bulb is tall.\n\nHow each bulb sits in its pocket is the whole reason the photograph is being taken and I am deliberately not telling you what any of the six looks like. Nothing goes over the trench face: no depth figures, no measuring lines, no arrows. Every pocket and its bulb should be easy to make out, and the path stays in frame.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show an open trench cut through a planted bed, with bulbs sitting in pockets in the cut face and a board on a stake beside it? A photograph, an illustration or a printed panel all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "pockets": ["A", "B", "C", "D", "E", "F"],
+    "lay_expected": ["nose up", "on its side", "nose up", "nose up", "on its side", "nose up"],
+    "face_scored": ["yes", "no", "yes", "no", "no", "no"],
+    "face_expected": ["toward the path", "", "toward the path", "", "", ""],
+    "n_checks": 14,
+    "n_units": 6
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "each_bulb_lies_and_is_buried_the_way_its_schedule_line_and_the_path_together_require",
+      "weight": 3.9,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one planting pocket exposed in the cut face of the trench together with the near edge of the gravel path",
+          "out": "ly_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["ly_r.unreadable"]
+        },
+        {
+          "read_crop": "What letter is on the little stick standing beside the pocket in this cut-out? Answer with that letter only.",
+          "boxes": "ly_r",
+          "pad": 0.2,
+          "out": "ly_k",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ly_k.unreadable"]
+        },
+        {
+          "read_crop": "How does the bulb in this cut-out lie in its pocket? Answer with one of: nose up, on its side, nose down.",
+          "boxes": "ly_r",
+          "pad": 0.2,
+          "out": "ly_a",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ly_a.unreadable"]
+        },
+        {
+          "read_crop": "The bulb in this cut-out has one flatter face. Which way does that flatter face point? Answer with one of: toward the path, away from the path, cannot tell.",
+          "boxes": "ly_r",
+          "pad": 0.2,
+          "out": "ly_b",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ly_b.unreadable"]
+        },
+        {
+          "read_crop": "Is the soil lying over the bulb in this cut-out thicker than the bulb itself is tall? Answer yes or no only.",
+          "boxes": "ly_r",
+          "pad": 0.2,
+          "out": "ly_c",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ly_c.unreadable"]
+        },
+        {
+          "run": "score_bulb_pockets",
+          "args": [
+            "ly_k",
+            "ly_a",
+            "ly_b",
+            "ly_c",
+            "reference.pockets",
+            "reference.lay_expected",
+            "reference.face_expected",
+            "reference.face_scored"
+          ],
+          "out": "bs"
+        },
+        {
+          "compare_band": "bs.n",
+          "to": "reference.n_checks",
+          "core_abs": 0.499,
+          "margin_abs": 2.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_trench_face_exposes_its_six_lettered_pockets",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one planting pocket exposed in the cut face of the trench",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole planting pocket with a bulb sitting in it and a lettered stick beside it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.2,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_units",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_depth_figure_or_measuring_line_was_added_over_the_trench_face",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a depth figure or a drawn measuring line added over the open trench face",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

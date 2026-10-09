@@ -1,0 +1,198 @@
+{
+  "id": "derive_countdown_ledger",
+  "axis": "long_range_consistency",
+  "prompt": "A six-frame storyboard on grey paper, TWO ROWS OF THREE panels, loose pencil-and-wash style. The same window cleaner — brown coat, blue hat, glasses — stands on the LEFT of every frame, with a row of identical GREEN BUCKETS standing on the ground beside him, to his right.\n\nHOW MANY BUCKETS: frame 1 shows FIVE buckets. He leaves exactly one bucket behind at every stop, so each frame after the first shows EXACTLY ONE BUCKET FEWER than the frame before it. Keep applying that all the way to the last frame and draw whatever it comes to — I am deliberately not listing the counts, and the round is finished when it is finished.\n\nThose are the only buckets anywhere in the picture: none in the background, none behind him, none half hidden. Every bucket is fully visible, standing on the ground, clearly separated from its neighbours.\n\nSix different stops along his round, each drawn from a different distance. No text, no numerals, no lettering.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to show a comic strip: several separate panels, drawn side by side, with the same person appearing in each panel. Ignoring artistic quality and ignoring whether the story is right, does the image DEPICT that — a strip of separate panels with a recurring figure? A comic page, a storyboard or a picture-book strip all count as yes. Answer NO only if it is blank, a single picture with no panels, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 6,
+    "na": 6,
+    "qa": "This picture is a comic strip of 6 panels arranged as two rows of three panels. Look at every panel in reading order (the top row left to right, then the bottom row left to right). For EACH panel in that order, report how many green buckets are standing on the ground beside the window cleaner. Use only these words: 0, 1, 2, 3, 4, 5. Count them one at a time in each panel; the number changes from panel to panel. The panels do not have to agree with one another — report what each panel actually shows, one answer per panel, even if the answer repeats or changes from panel to panel. Answer with exactly 6 answers separated by commas, in panel order, and nothing else.",
+    "qa2": "The picture is a strip of separate drawings arranged as two rows of three panels. Going through them in the top row left to right, then the bottom row left to right order, tell me, for each drawing in turn, how many green buckets are standing on the ground beside the window cleaner. Allowed answers: 0, 1, 2, 3, 4, 5. Count them one at a time in each panel; the number changes from panel to panel. Judge each drawing on its own — two drawings may well disagree, so do not assume the strip is consistent. Reply with exactly 6 comma-separated answers and nothing else.",
+    "seq_a": [5, 4, 3, 2, 1, 0],
+    "count_noun": "a green bucket",
+    "enforce_notext": true,
+    "q_notext": "Is there any printed word or number anywhere in this image? Answer yes or no."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds",
+      "weight": 1.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one bordered comic panel standing in the left-hand column of the panel grid -- the leftmost panel of a row, boxed so that all four of that panel's frame edges are inside the rectangle; count a rectangle only if it holds exactly ONE whole panel and that panel is the first one on its own row; box one such panel per row, and do not box any panel further to the right and do not box the paper margin around the grid.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_lay"
+        },
+        {
+          "fail_if": ["box_lay.unreadable"]
+        },
+        {
+          "read_crop": "Answer yes only if this cut-out shows ONE complete comic panel with all four of its heavy black borders inside the picture. Answer no if it shows two or more panels side by side, or only part of a panel with one of its borders cut off by the edge of this cut-out. Answer yes or no only.",
+          "boxes": "box_lay",
+          "out": "crop_lay"
+        },
+        {
+          "fail_if": ["crop_lay.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_lay"],
+          "out": "cnt_lay"
+        },
+        {
+          "run": "count_as_read",
+          "args": ["cnt_lay"],
+          "out": "as_lay"
+        },
+        {
+          "run": "panel_grid_boxes",
+          "args": ["reference.na", "as_lay"],
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This picture is ONE panel cut out of a comic strip. A man stands on the left. Look only at what is drawn inside this one panel. On the ground beside him there may be some objects of this kind: {gt.count_noun}. Write down every one of them standing on the ground in this panel, each with a few plain words saying where it stands. Separate one item from the next with a semicolon; write no running total and nothing else. If there is none of them here, write the single word NONE.",
+          "boxes": "bx.boxes",
+          "pad": 0.0,
+          "out": "ra"
+        },
+        {
+          "fail_if": ["ra.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["ra", "empty_as='0'"],
+          "out": "ra__std"
+        },
+        {
+          "fail_if": ["ra__std.refused"]
+        },
+        {
+          "run": "check_panel_counts",
+          "args": ["ra__std", "reference.seq_a"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "panel_share",
+      "weight": 0.3,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one bordered comic panel standing in the left-hand column of the panel grid -- the leftmost panel of a row, boxed so that all four of that panel's frame edges are inside the rectangle; count a rectangle only if it holds exactly ONE whole panel and that panel is the first one on its own row; box one such panel per row, and do not box any panel further to the right and do not box the paper margin around the grid.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_lay"
+        },
+        {
+          "fail_if": ["box_lay.unreadable"]
+        },
+        {
+          "read_crop": "Answer yes only if this cut-out shows ONE complete comic panel with all four of its heavy black borders inside the picture. Answer no if it shows two or more panels side by side, or only part of a panel with one of its borders cut off by the edge of this cut-out. Answer yes or no only.",
+          "boxes": "box_lay",
+          "out": "crop_lay"
+        },
+        {
+          "fail_if": ["crop_lay.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_lay"],
+          "out": "cnt_lay"
+        },
+        {
+          "run": "count_as_read",
+          "args": ["cnt_lay"],
+          "out": "as_lay"
+        },
+        {
+          "run": "panel_grid_boxes",
+          "args": ["reference.na", "as_lay"],
+          "out": "bx"
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "This picture is ONE panel cut out of a comic strip. A man stands on the left. Look only at what is drawn inside this one panel. On the ground beside him there may be some objects of this kind: {gt.count_noun}. Write down every one of them standing on the ground in this panel, each with a few plain words saying where it stands. Separate one item from the next with a semicolon; write no running total and nothing else. If there is none of them here, write the single word NONE.",
+          "boxes": "bx.boxes",
+          "pad": 0.0,
+          "out": "ra"
+        },
+        {
+          "fail_if": ["ra.unreadable"]
+        },
+        {
+          "run": "count_listed_items",
+          "args": ["ra", "empty_as='0'"],
+          "out": "ra__std"
+        },
+        {
+          "fail_if": ["ra__std.refused"]
+        },
+        {
+          "run": "check_panel_counts",
+          "args": ["ra__std", "reference.seq_a"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    }
+  ],
+  "count_noun": {
+    "s1": "an orange crate",
+    "s2": "a green bucket"
+  },
+  "aspect_ratio": "3:2"
+}

@@ -1,0 +1,182 @@
+{
+  "id": "dye_lot_seam_grouping",
+  "axis": "long_range_consistency",
+  "prompt": "The cutting room needs its lay plan before the shift starts, so let us have the sheet the cutter works from: the two rolls of cloth run out one above the other along the table with a bare channel between them, all eight pattern pieces nested on the cloth, and the matching schedule down the side of the sheet.\n\nWhat the job pins. This batch came out of the dye house in two lots. The lot 41 roll is a paler sand and runs along the top of the table, the lot 58 roll is a deeper sand and runs along the bottom; each roll has its lot number lettered at its left end and both selvedge edges ruled. The eight pieces are FRONT LEFT, FRONT RIGHT, SIDE LEFT, SIDE RIGHT, SLEEVE LEFT, SLEEVE RIGHT, FACING LEFT and FACING RIGHT, and every one of them carries its own name lettered on it. The matching schedule gives six seams: FRONT LEFT to SIDE LEFT, FRONT RIGHT to SIDE RIGHT, SIDE LEFT to SLEEVE LEFT and SIDE RIGHT to SLEEVE RIGHT are all seen from outside the finished jacket, while FACING LEFT to FRONT LEFT and FACING RIGHT to FRONT RIGHT are inside and never seen. The house rule at the foot of the schedule is that the two pieces either side of a seam that shows have to come off the same roll, while an inside seam may cross the lots. The lot 41 roll is short: it yields exactly four of the eight pieces.\n\nWhich piece goes on which roll is the lay planner's own work and I am deliberately not telling you any of it. Apart from the two lot numbers at the ends of the rolls, the eight piece names, the matching schedule and the house rule, nothing else goes on the sheet: no lot number on any piece, no working. Keep every piece name and the bare channel between the rolls easy to make out.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a cutting table seen from above with lengths of cloth run out on it and a set of outlined garment pattern pieces nested on the cloth, together with a list down one side? A photograph, an illustration or a plain line drawing all count as yes. Answer no only if the image instead shows a bare card stating an answer with none of that around it, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "visible_pairs": [
+      "FRONT LEFT|SIDE LEFT",
+      "FRONT RIGHT|SIDE RIGHT",
+      "SIDE LEFT|SLEEVE LEFT",
+      "SIDE RIGHT|SLEEVE RIGHT"
+    ],
+    "n_visible": 4,
+    "pale_quota": 4,
+    "n_pieces": 8,
+    "channel_state": "match"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "every_seam_that_shows_has_both_its_pieces_off_one_roll_and_the_short_roll_yields_its_four",
+      "weight": 2.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the named pattern pieces nested on the cutting table",
+          "out": "dl_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["dl_r.unreadable"]
+        },
+        {
+          "read_crop": "What name is lettered on the pattern piece in this cut-out? Answer with that name only.",
+          "boxes": "dl_r",
+          "pad": 0.35,
+          "out": "dl_nm",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["dl_nm.unreadable"]
+        },
+        {
+          "read_crop": "Which of the two lengths of cloth is the pattern piece in this cut-out nested on? Answer with one of these two: the paler length, the deeper length.",
+          "boxes": "dl_r",
+          "pad": 0.75,
+          "out": "dl_sh",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["dl_sh.unreadable"]
+        },
+        {
+          "run": "check_lot_grouping",
+          "args": ["dl_nm", "dl_sh", "reference.visible_pairs", "reference.pale_quota"],
+          "out": "dl_s"
+        },
+        {
+          "compare_band": "dl_s.ok",
+          "to": "reference.n_visible",
+          "core_abs": 0.499,
+          "margin_abs": 2.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_pattern_piece_reaches_across_the_bare_channel_between_the_rolls",
+      "weight": 0.8,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the named pattern pieces nested on the cutting table",
+          "out": "ch_r",
+          "sweep": true
+        },
+        {
+          "fail_if": ["ch_r.unreadable"]
+        },
+        {
+          "read_crop": "Does the pattern piece in this cut-out lie wholly on one length of cloth, or does it reach across the bare channel between the two lengths? Answer with one of these two: wholly on one, across the channel.",
+          "boxes": "ch_r",
+          "pad": 0.75,
+          "out": "ch_a",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["ch_a.unreadable"]
+        },
+        {
+          "run": "channel_clear",
+          "args": ["ch_a", "reference.n_pieces"],
+          "out": "ch_s"
+        },
+        {
+          "compare": "ch_s.state",
+          "to": "reference.channel_state",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_sheet_carries_its_eight_named_pattern_pieces",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one of the named pattern pieces nested on the cutting table",
+          "out": "cen_r",
+          "sweep": true,
+          "propose_boxes": "vlm"
+        },
+        {
+          "fail_if": ["cen_r.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out hold ONE whole outlined pattern piece with a name lettered on it, rather than part of one or none at all? Answer yes or no only.",
+          "boxes": "cen_r",
+          "pad": 0.4,
+          "out": "cen_q",
+          "sort": "reading_order"
+        },
+        {
+          "fail_if": ["cen_q.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["cen_q"],
+          "out": "cen_n"
+        },
+        {
+          "compare_band": "cen_n.n",
+          "to": "reference.n_pieces",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_dye_lot_number_was_lettered_on_a_pattern_piece",
+      "weight": 0.3,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a dye lot number lettered on one of the nested pattern pieces",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "swp"
+        },
+        {
+          "fail_if": ["swp.unreadable"]
+        },
+        {
+          "compare": "swp.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

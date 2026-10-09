@@ -1,0 +1,84 @@
+{
+  "id": "one_van_fills_up_by_weight_and_the_other_by_floor",
+  "axis": "quantitative_precision",
+  "prompt": "Dispatch record for this morning's loading dock at Ashgrove Beverages. Two identical box vans stand backed up side by side at the bank with their rear doors fully open. Each is plated for a payload of 1950 kg, and each load floor runs 3600 mm from headboard to tail and takes standard 1200 by 800 mm pallets set two abreast, the 800 mm side across the van, in a flat layer with nothing stacked over anything. Pallets of bottled water at 620 kg apiece are going into the van on the left of the frame; pallets of boxed tissue at 90 kg apiece into the van on the right. The loader fills each van until the next pallet would either take it over its plated payload or leave no floor position free to stand on. Shoot from the dock platform, high and angled in from behind, so the whole floor of both vans reads clear and no pallet hides another. Morning daylight.",
+  "difficulty": "pA",
+  "easy_question": "Does this photograph show two box vans standing side by side at a loading dock with their rear doors fully open, taken from high up and angled in from behind so that the whole load floor of each van is visible? Answer yes or no only.",
+  "reference": {
+    "part1": "3",
+    "part2": "6"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "How many pallets are standing on the floor of the left-hand van?",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "How many pallets are standing on the floor of the right-hand van?",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "count_stated_in_answer",
+          "args": ["a_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

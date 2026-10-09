@@ -1,0 +1,251 @@
+{
+  "id": "count_pushpins_target_color",
+  "axis": "quantitative_precision",
+  "prompt": "A photorealistic straight-on photograph of a cork notice board studded with round-headed push-pins in an irregular scatter (uneven gaps, no rows). EXACTLY 14 of the pins have bright RED heads; a further 18 pins have deep BLUE heads, mixed in among the red ones. Every pin head is fully visible and separate from its neighbours. There must be EXACTLY 14 RED pins -- not 13, not 15 -- plus the blue ones. Even studio lighting, sharp focus, no text, no numerals.",
+  "difficulty": "s2",
+  "easy_question": "This image was supposed to depict a straight-on photo of a corkboard studded with mixed-colour push-pins, count only the RED push-pins among blue ones. Ignoring artistic quality, does the image actually DEPICT that requested subject / carrier / scene? A realistic photo, an illustration, a schematic or a clean diagram of the requested subject ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of the requested subject depicted, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 14,
+    "q": "How many RED push-pins are there in this image? Count ONLY the red-headed pins, ignore pins of any other colour. Answer with the single integer number of red pins only.",
+    "enforce_notext": true,
+    "q_notext": "Does this image have any printed number, digit, numeral, written label or caption overlaid on it (as opposed to being purely a photograph / drawing of the scene with no text)? Answer yes if you can see ANY printed number or word, no if there is none. Answer yes or no only.",
+    "d2_detect": true,
+    "d2_q_objform": "This image should show the countable objects described as: round-headed push-pins, some RED and some blue, on cork. Look at the individual objects being counted. Are they clearly the correct KIND of object (the right thing, of the right colour where a colour was specified) rather than some other object, blobs, or a mix that does not match the description? Answer with the single word yes or no only.",
+    "d2_q_arrange": "Are the countable objects in this image spread out in an IRREGULAR, natural, scattered arrangement (uneven gaps, clusters, no repeating pattern), as the scene describes, rather than being lined up in a tidy regular row, evenly-spaced ring or a rectangular grid/array? Answer yes if the arrangement is irregular/scattered, no if it is a neat regular row, grid or evenly-spaced pattern. Answer with the single word yes or no only.",
+    "d2_q_occlusion": "Look at the objects being counted in this image. Is EVERY one of them fully visible and clearly separate from its neighbours -- none hidden behind another, none merged or overlapping into a single blob, none cut off by the edge of the frame -- so that each one could be counted individually? Answer yes if every object is fully visible and separate, no if objects overlap, merge, are hidden or are cut off. Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_answer_text",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "check_no_answer": true,
+          "out": "s"
+        },
+        {
+          "fail_if": ["s.unreadable"]
+        },
+        {
+          "compare": "s.answer",
+          "to": "no",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "main_count",
+      "weight": 3.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "push-pin with a bright RED head stuck into the board",
+          "context": "the cork notice board (the whole board surface that the pins are stuck into)",
+          "out": "bx",
+          "sweep": true
+        },
+        {
+          "fail_if": ["bx.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show one push-pin whose head is bright RED? Answer no if the pin head is blue or any other colour, or if there is no pin here at all. Answer yes or no only.",
+          "boxes": "bx",
+          "out": "cr"
+        },
+        {
+          "fail_if": ["cr.unreadable"]
+        },
+        {
+          "count_yes": "cr",
+          "out": "cnt"
+        },
+        {
+          "compare_band": "cnt.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_form",
+      "weight": 1.0,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "Does this image show push-pins of more than one colour stuck into a cork board? Answer with the single word yes or no only.",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_object_form",
+      "weight": 0.0,
+      "premise": true,
+      "not_scored": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one round pin head pushed into the cork notice board",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_g"
+        },
+        {
+          "fail_if": ["box_g.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole round-headed push-pin with a red head or a blue head, rather than a pin of some other colour, a mark on the cork, a shapeless blob, or only part of a pin? Answer yes or no only.",
+          "boxes": "box_g",
+          "out": "crop_g"
+        },
+        {
+          "fail_if": ["crop_g.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_g"],
+          "out": "cnt_g"
+        },
+        {
+          "compare": "cnt_g.n",
+          "to": "cnt_g.asked",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_arrangement",
+      "weight": 0.0,
+      "premise": true,
+      "not_scored": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "ask": "reference.d2_q_arrange",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "extract": "(?i)(yes|no)",
+          "value": "g",
+          "out": "yn"
+        },
+        {
+          "fail_if": ["yn.none"]
+        },
+        {
+          "compare": "yn",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_no_occlusion",
+      "weight": 0.0,
+      "premise": true,
+      "not_scored": true,
+      "diagnostic": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a red-headed push-pin hidden behind another pin, merged into its neighbour, or cut off by the edge of the photo",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "sweep_g"
+        },
+        {
+          "fail_if": ["sweep_g.unreadable"]
+        },
+        {
+          "compare": "sweep_g.clean",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "count_detect_xev",
+      "weight": 0.5,
+      "not_scored": true,
+      "only_if": "reference.d2_detect",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one push-pin with a bright RED head stuck into the cork notice board -- one box per pin, round that single round pin head alone with its whole rim inside. Count a box only if the head inside it is bright RED: do not box a deep BLUE pin head, bare cork, a shadow or an empty pin hole, and do not put two pin heads in one box.",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_holistic"
+        },
+        {
+          "fail_if": ["box_holistic.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole push-pin head coloured bright red, rather than a blue pin head, bare cork board, or only part of a pin head? Answer yes or no only.",
+          "boxes": "box_holistic",
+          "out": "crop_holistic"
+        },
+        {
+          "fail_if": ["crop_holistic.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_holistic"],
+          "out": "cnt_holistic"
+        },
+        {
+          "compare_band": "cnt_holistic.n",
+          "to": "reference.n",
+          "core": 0,
+          "margin": 2,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "count_noun": "a red-headed push pin",
+  "count_total": "reference.n"
+}

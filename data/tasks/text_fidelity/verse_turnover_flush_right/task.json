@@ -1,0 +1,129 @@
+{
+  "id": "verse_turnover_flush_right",
+  "axis": "text_fidelity",
+  "prompt": "A short poem is being set for one of the poetry cards that ride above the windows of a suburban train. Photograph the finished card in place in the carriage, square on, the whole poem legible.\n\nThis is the poem, five lines of verse, in this order and this wording:\n  The tide comes in at Rothesay\n  and the ferry hands stand smoking on the pier as the gulls go over\n  The lamps come on at four\n  A dog runs out along the sand\n  and the whole grey firth turns silver for a moment then closes\n\nThe card is a narrow one. Its measure takes at most thirty-four letters and spaces of the size this poem is being set in, so two of these five lines will not go on the card in one piece.\n\nThe trade rule the card is set under, and the reason a poem never simply wraps: a line of verse too long for the measure is carried over, and the carried part is ranged right, pushed across to the right-hand edge of the poem with the gap left on its left. A carried part is not a new line of verse, which is why a reader can always tell the difference between a fresh line and the tail of the one above.\n\nWhich lines will not go, and therefore how many printed lines the poem ends up occupying, is deliberately being kept from you: measuring them is the setter's job. Nothing may be printed on the card except the poem, the poet's name and the programme's small credit line, and no line numbers, rules or marks of any kind may appear beside the verse.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a small printed card carrying a short poem, fixed above the windows inside a train carriage? A photograph, a rendering or an illustration ALL count as yes. Answer NO only if the image instead shows a blank card that just states an answer, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "ranged_right_lines": "3, 7",
+    "n_printed_lines": 7,
+    "clean_no_marks": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_carried_parts_range_right",
+      "weight": 2.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the block of verse printed on the poetry card",
+          "out": "pm"
+        },
+        {
+          "fail_if": ["pm.unreadable"]
+        },
+        {
+          "read_crop": "In this cut-out, number the printed lines of verse from the top downwards, starting at 1. Write one item for each printed line: its number, then a comma, then one word from this list for where that line's first letter starts: margin (it starts at the left-hand edge of the block of verse) or indented (it starts well in from that edge, with white space before it). Separate one item from the next with a semicolon, and add nothing else.",
+          "boxes": "pm",
+          "pad": 0.08,
+          "out": "pmr"
+        },
+        {
+          "fail_if": ["pmr.unreadable"]
+        },
+        {
+          "run": "select_item_numbers",
+          "args": ["pmr", "[[['indented'],'T'],[['margin'],'F']]", "'T'", "', '"],
+          "out": "pmr__mapped"
+        },
+        {
+          "run": "read_line_numbers",
+          "args": ["pmr__mapped"],
+          "out": "rr"
+        },
+        {
+          "compare_set": "rr.seq",
+          "to": "reference.ranged_right_lines",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_poem_takes_the_printed_lines_the_measure_needs",
+      "weight": 1.2,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one printed line of the poem on the card",
+          "sweep": true,
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.unreadable"]
+        },
+        {
+          "read_crop": "Does this cut-out show ONE whole printed line of the poem, rather than part of one? Answer yes or no only.",
+          "boxes": "pl",
+          "pad": 0.2,
+          "out": "plc"
+        },
+        {
+          "fail_if": ["plc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["plc"],
+          "out": "pln"
+        },
+        {
+          "compare_band": "pln.n",
+          "to": "reference.n_printed_lines",
+          "core_abs": 0.499,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_marks_or_overrun_beside_the_verse",
+      "weight": 0.4,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a line number, a rule or a mark printed beside the verse, or type running past the card edge",
+          "sweep": true,
+          "out": "ov",
+          "absent_ok": true,
+          "allow": 0
+        },
+        {
+          "fail_if": ["ov.unreadable"]
+        },
+        {
+          "compare": "ov.clean",
+          "to": "reference.clean_no_marks",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

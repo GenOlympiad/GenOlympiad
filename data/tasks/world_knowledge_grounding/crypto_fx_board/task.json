@@ -1,0 +1,384 @@
+{
+  "id": "crypto_fx_board",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A wall-mounted market TICKER BOARD glowing on the studio wall behind a radio-station finance desk, filmed during a live business bulletin. Use the real market values as of the 2026-07-16 close/session (the pinned quotes for this bulletin). Lay it out as a tidy dark dashboard table, one row per instrument: DOGE/USD, ADA/USD, XRP/USD, DOT/USD, TRX/USD, MATIC/USD, ATOM/USD, LTC/USD. For EACH row print (a) the instrument name, (b) its price with the correct number of decimals, and (c) the daily percent change with a colour-coded up/down arrow (green up, red down) matching how it actually moved. Use the REAL market values. Crisp, high-resolution, aligned columns, every number and label sharp and legible.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show radio-station studio wall-mounted market ticker board behind the on-air finance desk? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "symbols": [
+      "DOGE-USD",
+      "ADA-USD",
+      "XRP-USD",
+      "DOT-USD",
+      "TRX-USD",
+      "MATIC-USD",
+      "ATOM-USD",
+      "LTC-USD"
+    ],
+    "labels": [
+      "DOGE/USD",
+      "ADA/USD",
+      "XRP/USD",
+      "DOT/USD",
+      "TRX/USD",
+      "MATIC/USD",
+      "ATOM/USD",
+      "LTC/USD"
+    ],
+    "rel_tol": [0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "board_legible",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "On this markets board, read the instrument NAME printed on the very first (top) data row of the table. Report exactly what is printed on that row, character for character. Reply with that name only.",
+          "out": "toprow"
+        },
+        {
+          "fail_if": ["toprow.unreadable"]
+        },
+        {
+          "ask": "Is this a legible markets/finance board or table where the instrument names and their numeric prices are clearly readable? Answer yes or no.",
+          "out": "leg"
+        },
+        {
+          "fail_if": ["leg.unreadable"]
+        },
+        {
+          "compare": "leg",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "prices_match_live",
+      "weight": 3.0,
+      "steps": [
+        {
+          "fail_if": ["reference.board_empty"]
+        },
+        {
+          "read": "boxes",
+          "target": "the block of quote rows on the markets board -- ONE rectangle running from the TOP edge of the first quote row down to the BOTTOM edge of the last quote row, and from the LEFT edge of the instrument-name column across to the RIGHT edge of the percent-change column, so that every quote row lies inside it; not the heading row of column names above them, not the board's title line, and not the studio or desk around the screen",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_quote_grid",
+          "args": ["image", "anc", "reference.symbols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "pick_name_column",
+          "args": ["pl"],
+          "out": "nm"
+        },
+        {
+          "read_crop": "This is one cell cut out of a markets board. What instrument name is printed in that cell? If more than one name is visible in this cut-out, read the one nearest the middle of it. Answer with just that name, copied exactly as it is printed, and nothing else.",
+          "boxes": "nm.cells",
+          "pad": 0.0,
+          "out": "rdn"
+        },
+        {
+          "for_each_row": "reference.board",
+          "symbols": "reference.symbols",
+          "labels": "reference.board_labels",
+          "each": [
+            {
+              "run": "pick_quote_box",
+              "args": ["pl", "rdn", "reference.board_labels", "'{label}'", "1"],
+              "out": "cell"
+            },
+            {
+              "read_crop": "This is one cell cut out of a markets board. What price number is printed here? Answer with just the number -- no currency word, no percent sign -- and nothing else.",
+              "boxes": "cell.cells",
+              "pad": 0.0,
+              "out": "rd"
+            },
+            {
+              "run": "read_quote_number",
+              "args": ["rd"],
+              "out": "res"
+            },
+            {
+              "compare_band": "res.v",
+              "to": "board.price",
+              "core": "board.core_abs",
+              "margin": "board.margin_abs",
+              "out": "frac"
+            },
+            {
+              "run": "ag_paint_frac",
+              "args": ["cell", "frac"],
+              "out": "pa"
+            },
+            {
+              "overlay": "similarity",
+              "rects": "pa.hit",
+              "ref_anchors": "pa.ref_anchors",
+              "found_anchors": "pa.found_anchors",
+              "width_frac": 0.005,
+              "color": [0, 200, 0],
+              "out": "ovp_hit"
+            },
+            {
+              "overlay": "similarity",
+              "image": "ovp_hit.path",
+              "rects": "pa.miss",
+              "ref_anchors": "pa.ref_anchors",
+              "found_anchors": "pa.found_anchors",
+              "width_frac": 0.005,
+              "color": [230, 20, 20],
+              "out": "ovp_miss"
+            },
+            {
+              "overlay": "similarity",
+              "image": "ovp_miss.path",
+              "rects": "pa.edge",
+              "ref_anchors": "pa.ref_anchors",
+              "found_anchors": "pa.found_anchors",
+              "width_frac": 0.005,
+              "color": [235, 185, 0],
+              "out": "ovp_edge"
+            }
+          ],
+          "out": "frac"
+        },
+        {
+          "run": "pick_value_column",
+          "args": ["pl", "1"],
+          "out": "colsub"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["colsub", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "pct_change_match_live",
+      "weight": 1.4,
+      "steps": [
+        {
+          "fail_if": ["reference.board_empty"]
+        },
+        {
+          "read": "boxes",
+          "target": "the block of quote rows on the markets board -- ONE rectangle running from the TOP edge of the first quote row down to the BOTTOM edge of the last quote row, and from the LEFT edge of the instrument-name column across to the RIGHT edge of the percent-change column, so that every quote row lies inside it; not the heading row of column names above them, not the board's title line, and not the studio or desk around the screen",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "run": "plan_quote_grid",
+          "args": ["image", "anc", "reference.symbols"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "pick_name_column",
+          "args": ["pl"],
+          "out": "nm"
+        },
+        {
+          "read_crop": "This is one cell cut out of a markets board. What instrument name is printed in that cell? If more than one name is visible in this cut-out, read the one nearest the middle of it. Answer with just that name, copied exactly as it is printed, and nothing else.",
+          "boxes": "nm.cells",
+          "pad": 0.0,
+          "out": "rdn"
+        },
+        {
+          "for_each_row": "reference.board",
+          "symbols": "reference.symbols",
+          "labels": "reference.board_labels",
+          "only_if": "board.decisive",
+          "each": [
+            {
+              "run": "pick_quote_box",
+              "args": ["pl", "rdn", "reference.board_labels", "'{label}'", "2"],
+              "out": "cell"
+            },
+            {
+              "read_crop": "This is one cell cut out of a markets board. What percent change is printed here, including its plus or minus sign? Answer with just that signed number and a percent sign, and nothing else.",
+              "boxes": "cell.cells",
+              "pad": 0.0,
+              "out": "rd"
+            },
+            {
+              "run": "read_quote_number",
+              "args": ["rd"],
+              "out": "res"
+            },
+            {
+              "compare_band": "res.v",
+              "to": "board.change_pct",
+              "core": "board.pct_core_abs",
+              "margin": "board.pct_margin_abs",
+              "out": "frac"
+            },
+            {
+              "run": "ag_paint_frac",
+              "args": ["cell", "frac"],
+              "out": "pa"
+            },
+            {
+              "overlay": "similarity",
+              "rects": "pa.hit",
+              "ref_anchors": "pa.ref_anchors",
+              "found_anchors": "pa.found_anchors",
+              "width_frac": 0.005,
+              "color": [0, 200, 0],
+              "out": "ovp_hit"
+            },
+            {
+              "overlay": "similarity",
+              "image": "ovp_hit.path",
+              "rects": "pa.miss",
+              "ref_anchors": "pa.ref_anchors",
+              "found_anchors": "pa.found_anchors",
+              "width_frac": 0.005,
+              "color": [230, 20, 20],
+              "out": "ovp_miss"
+            },
+            {
+              "overlay": "similarity",
+              "image": "ovp_miss.path",
+              "rects": "pa.edge",
+              "ref_anchors": "pa.ref_anchors",
+              "found_anchors": "pa.found_anchors",
+              "width_frac": 0.005,
+              "color": [235, 185, 0],
+              "out": "ovp_edge"
+            }
+          ],
+          "out": "frac"
+        },
+        {
+          "run": "pick_value_column",
+          "args": ["pl", "2"],
+          "out": "colsub"
+        },
+        {
+          "run": "ag_paint_frac",
+          "args": ["colsub", "frac"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "const": {
+        "program": "code_anchorgrid"
+      },
+      "out": "code_anchorgrid"
+    },
+    {
+      "run": "fetch_reference_quotes",
+      "args": ["reference.symbols", "reference.labels", "reference.rel_tol"],
+      "out": "board"
+    },
+    {
+      "run": "board_labels",
+      "args": ["board"],
+      "out": "board_labels"
+    },
+    {
+      "run": "board_is_empty",
+      "args": ["board", "reference.symbols"],
+      "out": "board_empty"
+    }
+  ],
+  "grounding": "live"
+}

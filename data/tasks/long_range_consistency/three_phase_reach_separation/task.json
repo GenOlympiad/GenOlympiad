@@ -1,0 +1,84 @@
+{
+  "id": "three_phase_reach_separation",
+  "axis": "long_range_consistency",
+  "prompt": "The shop is handed back after a rewire and the sparks photographs the finished ends before the report is written, because the report is worth only what the tapes say.\n\nThe board hangs open on the wall at one end of the shop, its ways numbered and its printed schedule taped inside the door. Six machines stand down the far end, each with a numbered way tag on its gland box and a band of coloured tape below the tag, every band printed with its phase letter. The schedule gives ways one to six in order at 9, 8, 7, 6, 5 and 4 kilowatts. A notice on the door says brown, black and grey stand for L1, L2 and L3, that way one was made off in brown and way two in black, and that no phase may finish more than 1 kilowatt above the lightest of the three.\n\nWhich colour went on the other four ways is what the schedule does not say.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show an open wall mounted electrical board at one end of a workshop and, at the far end, machine gland boxes each carrying a numbered tag and a wrapped band of coloured tape? Answer yes or no only.",
+  "reference": {
+    "part1": "brown",
+    "part2": "l3"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Look at the machine at the far end of the shop whose way tag reads 6. Answer with one of: the tape below its tag is brown; the tape below its tag is black; the tape below its tag is grey.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Look at the machine whose way tag reads 4. Answer with one of: the letter printed on its tape is L1, the letter printed on its tape is L2, or the letter printed on its tape is L3.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

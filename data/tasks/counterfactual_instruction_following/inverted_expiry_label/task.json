@@ -1,0 +1,54 @@
+{
+  "id": "inverted_expiry_label",
+  "axis": "counterfactual_instruction_following",
+  "prompt": "I'm mocking up a canned-food tin label for a packaging-design brief and I need it to follow a made-up in-house standard, not the usual convention. On THIS label the two date tags are SWAPPED from their normal meaning:\n  - the tag \"EXP\" marks the date the product was MADE (the manufacture date), and\n  - the tag \"MFG\" marks the USE-BY / expiry date (the date to consume by).\n(Yes, that is the opposite of what EXP and MFG normally mean — that swap is the whole point of this fictional standard.)\n\nDraw the label for \"HARVEST GOLD PLUM TOMATOES 400 g\" with the product name at the top and TWO clearly legible date rows: one row labelled \"EXP:\" and one row labelled \"MFG:\". Use a 'Aug 2029' month-year style for the dates. Print two DIFFERENT dates on the two rows. Do not print any extra caption that spells out which date is the use-by date — just the two tagged rows.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a PRODUCT LABEL / packaging sticker that shows TWO dated rows: one row tagged 'EXP' and one row tagged 'MFG', each with a printed date. Ignoring what the tags mean and ignoring artistic quality, does the image actually DEPICT a product label with an EXP date row AND an MFG date row? A photo, render or clean graphic all count as yes. Answer NO only if it is a blank panel, an unrelated object, or a label with no EXP/MFG date rows. Answer yes or no only.",
+  "reference": {
+    "useby_date": "Aug 2029"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "useby_date",
+      "weight": 5.0,
+      "steps": [
+        {
+          "crop": [0.08, 0.18, 0.94, 0.92],
+          "out": "body"
+        },
+        {
+          "ask": "This product label has two date rows, one tagged 'EXP' and one tagged 'MFG'. Read the DATE printed on the row tagged 'MFG'. Transcribe just that date exactly as printed. Judge only by which date is physically on the MFG row; do NOT assume what EXP or MFG usually mean. Answer with just that date.",
+          "image": "body",
+          "out": "ud"
+        },
+        {
+          "fail_if": ["ud.unreadable"]
+        },
+        {
+          "run": "date_matches_reference",
+          "args": ["ud", "reference.useby_date"],
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

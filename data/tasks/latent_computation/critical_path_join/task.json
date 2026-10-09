@@ -1,0 +1,385 @@
+{
+  "id": "critical_path_join",
+  "axis": "latent_computation",
+  "prompt": "A sharp, straight-on photograph of a printed project bar chart pinned up in a builder's site office, filling the frame. A week axis runs along the top numbered W1 upwards, and six task rows sit one under another. Each row prints, in its own left-hand stub, the task name in capitals with its own duration and its own prerequisites in the form CABLE / TAKES 3 WK / AFTER SURVEY; FRAME / TAKES 4 WK / AFTER SURVEY; PANELS / TAKES 2 WK / AFTER FRAME; SURVEY / TAKES 2 WK / AFTER NOTHING; TEST / TAKES 2 WK / AFTER PANELS + WIRING; WIRING / TAKES 3 WK / AFTER CABLE + FRAME -- then its own horizontal bar across the week columns, and at the right-hand end of its own row the words START W followed by that task's starting week number. Every task starts in the earliest week it possibly can, and a task waiting on TWO others cannot start until BOTH have finished, so it starts after the LATER of them. Along the bottom the chart prints PROJECT FINISHES END OF WEEK followed by the week the last task ends. Finally, fill the bar of every task that has no slack at all -- every task whose slipping by even one week would push that finish week back -- in solid RED, and fill every other bar in solid BLUE. I am not listing which tasks those are; work it out from the figures printed in the picture.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to show a chart with a numbered scale along the top and several rows underneath, each row carrying a written label and one horizontal coloured bar. Ignoring artistic quality, and ignoring whether anything is right or wrong, does the image actually show that? Answer NO only if it shows something else entirely -- a blank sheet, a photograph, or an unrelated picture. Answer yes or no only.",
+  "reference": {
+    "names": ["cable", "frame", "panels", "survey", "test", "wiring"],
+    "n_tasks": 6,
+    "q_stubs": "Each row of this chart has a left-hand stub printing a name in capitals, then TAKES followed by a number of weeks, then AFTER followed by that row's prerequisites. Going down the chart row by row, transcribe each stub exactly as printed. Answer with exactly 6 items separated by semicolons, top row first, and no other text.",
+    "q_stubs2": "Read the label block at the left of every row of this chart, from the top row downwards, and copy each one out word for word including its week figure and its list of prerequisites. Answer with exactly 6 items separated by semicolons and no other text.",
+    "q_red": "Some of the horizontal bars in this chart are filled RED and the rest are filled BLUE. List the names written on the rows whose bar is RED. Answer with the names only, comma-separated, in alphabetical order, and no other text. If no bar is red, answer NONE.",
+    "q_red2": "Look at the fill colour of every horizontal bar in this chart. Report the row name of each bar that is red rather than blue, as a comma-separated list in alphabetical order. Answer with the names only; if there are none, answer NONE.",
+    "q_starts": "At the right-hand end of every row of this chart the words START W are printed followed by a week number. Going down the chart row by row, report each row as NAME=NUMBER. Answer with exactly 6 items separated by semicolons, top row first, and no other text.",
+    "q_finish": "One line along the foot of this chart states the week in which the project finishes. Answer with that week number only.",
+    "q_verbatim": "Transcribe EVERY line of printed, drawn or written text you can see anywhere in this picture -- the week axis, every row stub, every START W label and the line along the bottom. Copy each line exactly as it appears, character by character. Do NOT correct anything and do not leave any line out. Separate the lines with spaces. Answer with the transcribed lines only.",
+    "q_region_text": "This picture is one band cut across a photograph of a printed chart. Copy out every line of printed, drawn or written text you can see in it -- the figures along the scale, the label block at the left-hand end of a row, the wording at the right-hand end of a row and any line along the foot -- including a line that is only partly showing at the top or bottom edge. Copy each line exactly as it appears, character by character; do not correct anything and do not leave a line out. Put a single space between one line and the next, and write nothing else.",
+    "exp_lines": [
+      "CABLE TAKES 3 WK AFTER SURVEY",
+      "FRAME TAKES 4 WK AFTER SURVEY",
+      "PANELS TAKES 2 WK AFTER FRAME",
+      "SURVEY TAKES 2 WK AFTER NOTHING",
+      "TEST TAKES 2 WK AFTER PANELS + WIRING",
+      "WIRING TAKES 3 WK AFTER CABLE + FRAME",
+      "PROJECT FINISHES END OF WEEK 11"
+    ],
+    "exp_stubs": [
+      "CABLE TAKES 3 WK AFTER SURVEY",
+      "FRAME TAKES 4 WK AFTER SURVEY",
+      "PANELS TAKES 2 WK AFTER FRAME",
+      "SURVEY TAKES 2 WK AFTER NOTHING",
+      "TEST TAKES 2 WK AFTER PANELS + WIRING",
+      "WIRING TAKES 3 WK AFTER CABLE + FRAME"
+    ],
+    "critical": ["frame", "survey", "test", "wiring"],
+    "makespan": 11,
+    "start_week": {
+      "survey": 1,
+      "cable": 3,
+      "frame": 3,
+      "panels": 7,
+      "wiring": 7,
+      "test": 10
+    },
+    "float": {
+      "cable": 1,
+      "frame": 0,
+      "panels": 1,
+      "survey": 0,
+      "test": 0,
+      "wiring": 0
+    }
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "law_holds_critical",
+      "weight": 14.0,
+      "score": "res.law",
+      "steps": [
+        {
+          "read_sequence": "reference.q_stubs",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "rawstubs"
+        },
+        {
+          "read_sequence": "reference.q_stubs2",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "altstubs"
+        },
+        {
+          "ask": "reference.q_stubs",
+          "out": "askstubs"
+        },
+        {
+          "run": "first_usable_stubs",
+          "args": ["reference.names", "rawstubs", "altstubs", "askstubs"],
+          "out": "stubs"
+        },
+        {
+          "ask": "reference.q_red",
+          "out": "red"
+        },
+        {
+          "read_sequence": "reference.q_starts",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "starts"
+        },
+        {
+          "read_number": "reference.q_finish",
+          "out": "finish"
+        },
+        {
+          "fail_if": ["stubs.exhausted", "red.unreadable"]
+        },
+        {
+          "run": "check_critical_path",
+          "args": ["stubs.value", "red", "starts", "finish", "reference.names"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "critical_share",
+      "weight": 1.5,
+      "score": "res.share",
+      "steps": [
+        {
+          "read_sequence": "reference.q_stubs",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "rawstubs"
+        },
+        {
+          "read_sequence": "reference.q_stubs2",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "altstubs"
+        },
+        {
+          "ask": "reference.q_stubs",
+          "out": "askstubs"
+        },
+        {
+          "run": "first_usable_stubs",
+          "args": ["reference.names", "rawstubs", "altstubs", "askstubs"],
+          "out": "stubs"
+        },
+        {
+          "ask": "reference.q_red",
+          "out": "red"
+        },
+        {
+          "read_sequence": "reference.q_starts",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "starts"
+        },
+        {
+          "read_number": "reference.q_finish",
+          "out": "finish"
+        },
+        {
+          "fail_if": ["stubs.exhausted", "red.unreadable"]
+        },
+        {
+          "run": "check_critical_path",
+          "args": ["stubs.value", "red", "starts", "finish", "reference.names"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "makespan_ok",
+      "weight": 1.5,
+      "score": "res.makespan_ok",
+      "steps": [
+        {
+          "read_sequence": "reference.q_stubs",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "rawstubs"
+        },
+        {
+          "read_sequence": "reference.q_stubs2",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "altstubs"
+        },
+        {
+          "ask": "reference.q_stubs",
+          "out": "askstubs"
+        },
+        {
+          "run": "first_usable_stubs",
+          "args": ["reference.names", "rawstubs", "altstubs", "askstubs"],
+          "out": "stubs"
+        },
+        {
+          "ask": "reference.q_red",
+          "out": "red"
+        },
+        {
+          "read_sequence": "reference.q_starts",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "starts"
+        },
+        {
+          "read_number": "reference.q_finish",
+          "out": "finish"
+        },
+        {
+          "fail_if": ["stubs.exhausted", "red.unreadable"]
+        },
+        {
+          "run": "check_critical_path",
+          "args": ["stubs.value", "red", "starts", "finish", "reference.names"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "schedule",
+      "weight": 2.0,
+      "score": "res.schedule",
+      "steps": [
+        {
+          "read_sequence": "reference.q_stubs",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "rawstubs"
+        },
+        {
+          "read_sequence": "reference.q_stubs2",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "altstubs"
+        },
+        {
+          "ask": "reference.q_stubs",
+          "out": "askstubs"
+        },
+        {
+          "run": "first_usable_stubs",
+          "args": ["reference.names", "rawstubs", "altstubs", "askstubs"],
+          "out": "stubs"
+        },
+        {
+          "ask": "reference.q_red",
+          "out": "red"
+        },
+        {
+          "read_sequence": "reference.q_starts",
+          "n": "reference.n_tasks",
+          "delimiter": ";",
+          "out": "starts"
+        },
+        {
+          "read_number": "reference.q_finish",
+          "out": "finish"
+        },
+        {
+          "fail_if": ["stubs.exhausted", "red.unreadable"]
+        },
+        {
+          "run": "check_critical_path",
+          "args": ["stubs.value", "red", "starts", "finish", "reference.names"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    },
+    {
+      "name": "data_present",
+      "weight": 1.0,
+      "pass_at": 0.8,
+      "steps": [
+        {
+          "run": "row_bands",
+          "args": ["reference.n_tasks"],
+          "out": "bx"
+        },
+        {
+          "read_crop": "reference.q_region_text",
+          "boxes": "bx",
+          "pad": 0.06,
+          "out": "rt"
+        },
+        {
+          "fail_if": ["rt.unreadable"]
+        },
+        {
+          "run": "line_coverage",
+          "args": ["join(rt.answers)", "reference.exp_lines"],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_cpm_trace",
+      "weight": 0.0,
+      "score": "res.share",
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one whole row of the chart, its left-hand label block and its right-hand week label",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "rows_box"
+        },
+        {
+          "fail_if": ["rows_box.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a chart. Copy the block of writing at its left-hand end exactly as it stands, including its number of weeks and everything printed after the word AFTER. Write nothing else.",
+          "boxes": "rows_box",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "rawstubs"
+        },
+        {
+          "fail_if": ["rawstubs.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one row of a chart. Read the label block at its left-hand end and copy it out word for word, keeping its week figure and its list of prerequisites. Write nothing else.",
+          "boxes": "rows_box",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "altstubs"
+        },
+        {
+          "fail_if": ["altstubs.unreadable"]
+        },
+        {
+          "run": "first_usable_stubs",
+          "args": ["reference.names", "rawstubs.answers", "altstubs.answers"],
+          "out": "stubs"
+        },
+        {
+          "ask": "reference.q_red",
+          "out": "red"
+        },
+        {
+          "read_crop": "This cut-out is one row of a chart. Read the name printed at its left-hand end and the week number printed at its right-hand end. Answer as NAME=NUMBER and write nothing else.",
+          "boxes": "rows_box",
+          "layout": "column",
+          "sort": "reading_order",
+          "out": "starts"
+        },
+        {
+          "fail_if": ["starts.unreadable"]
+        },
+        {
+          "read_number": "reference.q_finish",
+          "out": "finish"
+        },
+        {
+          "fail_if": ["stubs.exhausted", "red.unreadable"]
+        },
+        {
+          "run": "check_critical_path",
+          "args": ["stubs.value", "red", "starts.answers", "finish", "reference.names"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.unreadable"]
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

@@ -1,0 +1,84 @@
+{
+  "id": "thermocouple_type_code_colour_reading",
+  "axis": "symbolic_systems",
+  "prompt": "The transmitters go back to the plant this week and the calibration record wants one frame of the bench with all of them live, so the shot is taken with the meter still connected.\n\nThree temperature transmitters stand in a row on the calibration bench under cold white light, each with its own compensating cable running into it and a bare stretch of the sheath showing where it enters. A type label sits above each display: J on the left, K in the centre, E on the right. One hand meter on the bench is wired to all three at once, its display showing the twenty point six millivolts it is feeding them, the same signal to each. The chart pinned to the wall behind gives, for every type letter, the sheath colour the standard calls for and the degrees that go with one millivolt on that type: eighteen for J, twenty-four for K, fifteen for E.\n\nWhat each display is showing is not written on the record.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show three instrument boxes standing in a row on a bench, each with a coloured cable running into it and a number showing on its display, and a chart pinned on the wall behind them? Answer yes or no only.",
+  "reference": {
+    "part1": "all_three_differ",
+    "part2": "in_band"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the number showing on each of the three transmitter displays. Answer with one of: the three displays show three different readings; all three displays show the same reading; two of the displays match each other and the third differs.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the number showing on the display of the transmitter whose label reads K. Write the number only.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "within_band",
+          "args": ["a_part2", "465", "530"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

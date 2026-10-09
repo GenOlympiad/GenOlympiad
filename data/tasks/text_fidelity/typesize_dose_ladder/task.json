@@ -1,0 +1,137 @@
+{
+  "id": "typesize_dose_ladder",
+  "axis": "text_fidelity",
+  "prompt": "A type foundry's specimen card for one serif text face, photographed flat on a light table so the whole card is legible in the one frame. Black ink on cream stock, nothing else on the card.\n\nSix settings of the face run down the card, one under the other. Their point sizes are 36, 24, 18, 12, 9 and 7 point, largest at the top. Beside each setting, out in the left margin, the card prints that setting's point size as a small figure in 10 point, so the margin figures stay readable all the way down.\n\nThese are the six phrases the card shows, in no particular order:\n  Jaded zombies acted quaintly but kept\n  Pack my box with jugs\n  Quartz glyph\n  Bright vixen jumps\n  Five wizards jump quickly; my vexed brown fox\n  Sphinx of black quartz\n\nThe house convention for a specimen card of this kind, which the foundry follows without printing it: a setting carries more words the smaller its body gets, so the line with the fewest words is shown at the largest size and each line below it carries more words than the line above.\n\nWork out for yourself which phrase belongs on which rung -- I am deliberately not telling you the pairing. Every phrase appears once and only once. Print each phrase exactly as it is given here, letter for letter, including the semicolon where there is one. Do not print any word count, any note about the convention, and no heading, caption or other text of any kind.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show a printed card with several lines of text set at clearly different sizes, one under the other? A photograph, a document mockup or an illustration ALL count as yes. Answer NO only if the image shows a blank card that just states an answer, or shows no printed lines at all. Answer yes or no only.",
+  "reference": {
+    "bearing_map": "12=pack my box with jugs|18=sphinx of black quartz|24=bright vixen jumps|36=quartz glyph",
+    "small_map": "7=five wizards jump quickly; my vexed brown fox|9=jaded zombies acted quaintly but kept",
+    "bearing_keys": "36,24,18,12",
+    "small_keys": "9,7",
+    "clean_no_counts": "yes"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "the_four_largest_rungs_carry_the_phrases_the_convention_gives_them",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one line of the specimen setting together with the small figure in the margin beside it",
+          "sweep": true,
+          "out": "rg"
+        },
+        {
+          "fail_if": ["rg.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one rung of a printed ladder with a small figure printed out in its margin. Copy that figure exactly as printed. If more than one figure is printed in this cut-out, copy the one nearest the middle of it. Write the figure only and nothing else.",
+          "boxes": "rg",
+          "pad": 0.12,
+          "out": "rgk"
+        },
+        {
+          "read_crop": "Copy the words of the setting printed in this cut-out. Write the words only.",
+          "boxes": "rg",
+          "pad": 0.12,
+          "out": "rgv"
+        },
+        {
+          "run": "read_size_ladder",
+          "args": ["rgk", "rgv", "reference.bearing_keys"],
+          "out": "bm"
+        },
+        {
+          "fail_if": ["bm.refused"]
+        },
+        {
+          "compare": "bm.seq",
+          "to": "reference.bearing_map",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "no_word_counts_or_working_printed_on_the_card",
+      "weight": 0.4,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "a printed word count, a heading, a caption or a note about how the lines were ordered",
+          "sweep": true,
+          "absent_ok": true,
+          "allow": 0,
+          "out": "wc"
+        },
+        {
+          "fail_if": ["wc.unreadable"]
+        },
+        {
+          "compare": "wc.clean",
+          "to": "reference.clean_no_counts",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_the_two_smallest_rungs",
+      "weight": 0.0,
+      "diagnostic": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "one line of the specimen setting together with the small figure in the margin beside it",
+          "sweep": true,
+          "out": "rg"
+        },
+        {
+          "fail_if": ["rg.unreadable"]
+        },
+        {
+          "read_crop": "This cut-out is one rung of a printed ladder with a small figure printed out in its margin. Copy that figure exactly as printed. If more than one figure is printed in this cut-out, copy the one nearest the middle of it. Write the figure only and nothing else.",
+          "boxes": "rg",
+          "pad": 0.12,
+          "out": "rgk"
+        },
+        {
+          "read_crop": "Copy the words of the setting printed in this cut-out. Write the words only.",
+          "boxes": "rg",
+          "pad": 0.12,
+          "out": "rgv"
+        },
+        {
+          "run": "read_size_ladder",
+          "args": ["rgk", "rgv", "reference.small_keys"],
+          "out": "sm"
+        },
+        {
+          "compare": "sm.seq",
+          "to": "reference.small_map",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

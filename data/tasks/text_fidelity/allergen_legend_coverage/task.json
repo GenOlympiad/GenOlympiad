@@ -1,0 +1,107 @@
+{
+  "id": "allergen_legend_coverage",
+  "axis": "text_fidelity",
+  "prompt": "A clean, straight-on printed restaurant MENU titled 'THE COPPER KETTLE' (Allergen-Coded Menu). At the top an ALLERGEN KEY defines 8 letter codes: G=Gluten, N=Tree Nuts, D=Dairy, E=Egg, F=Fish, S=Soy, C=Celery, M=Mustard. Below, a menu of 20 dishes, each printed with the letter codes of the allergens it contains in square brackets. CRITICAL coverage rule: the codes must close both ways -- every code printed on any dish must be one of the defined key letters (no stray undefined code), and every defined key letter must appear on at least one dish (no unused key entry). Make sure code 'C' appears on at least one dish, and that dish 'Cedar Bowl' carries only defined codes. Render it on plain white paper in portrait orientation with thin black ruled lines and a bold black header, like a clean office printout, photographed straight-on.",
+  "difficulty": "s1",
+  "easy_question": "This image was supposed to depict a restaurant menu with an allergen key (letter codes) and dishes each tagged with their allergen letter codes. Ignoring artistic quality, does the image DEPICT that? A photo, scan or clean printed page all count as yes. Answer NO only if it is a blank card, plain panel, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "n": 8,
+    "legend_keys": ["C", "D", "E", "F", "G", "M", "N", "S"],
+    "code": "C",
+    "sample_dish": "Cedar Bowl",
+    "q_carrier": "In the allergen key, code 'C' is defined. Name ONE dish on this menu whose bracketed allergen codes include the letter 'C'. Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. Answer with just the dish name.",
+    "q_dishcodes": "Find the menu dish named 'Cedar Bowl'. What allergen letter codes are printed in square brackets next to it? Report exactly what is printed, character for character, even if it looks wrong or inconsistent. Do NOT recompute, correct, or round it. List just the letters, separated by spaces.",
+    "q_count": "Count how many allergen codes are defined in the ALLERGEN KEY at the top (count the 'letter = name' lines). Whole number only.",
+    "carriers": ["Sea Platter", "River Grill", "Saffron Rice", "Cedar Bowl"]
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "allergen_legend_coverage_law",
+      "weight": 1.0,
+      "steps": [
+        {
+          "ask": "reference.q_carrier",
+          "out": "carrier"
+        },
+        {
+          "fail_if": ["carrier.unreadable"]
+        },
+        {
+          "ask": "reference.q_dishcodes",
+          "out": "dishcodes"
+        },
+        {
+          "fail_if": ["dishcodes.unreadable"]
+        },
+        {
+          "run": "dish_codes_in_key",
+          "args": [
+            "carrier",
+            "dishcodes",
+            "reference.code",
+            "reference.carriers",
+            "reference.legend_keys"
+          ],
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_count",
+      "weight": 0.2,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "allergen key entry that gives a capital letter and the ingredient name it stands for",
+          "propose_boxes": "vlm",
+          "sweep": true,
+          "out": "box_nc"
+        },
+        {
+          "fail_if": ["box_nc.unreadable"]
+        },
+        {
+          "read_crop": "Does this picture show ONE whole printed key entry pairing a single capital letter with an ingredient name rather than bare background or only part of one? Answer yes or no only.",
+          "boxes": "box_nc",
+          "out": "crop_nc"
+        },
+        {
+          "fail_if": ["crop_nc.unreadable"]
+        },
+        {
+          "run": "count_confirmed_cutouts",
+          "args": ["crop_nc"],
+          "out": "cnt_nc"
+        },
+        {
+          "compare_band": "cnt_nc.n",
+          "to": "reference.n",
+          "core_abs": 1.9,
+          "margin_abs": 0.0,
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

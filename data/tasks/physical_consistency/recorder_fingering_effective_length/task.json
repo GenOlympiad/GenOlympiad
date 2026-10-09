@@ -1,0 +1,84 @@
+{
+  "id": "recorder_fingering_effective_length",
+  "axis": "physical_consistency",
+  "prompt": "The batch cannot leave the workshop until the three samples are sounded and photographed together, so all of them lie on the bench with a clip tuner at each head.\n\nThree recorders of one model lie side by side, labelled A, B and C on their feet, every finger hole numbered from the mouthpiece end, hole 1 nearest the mouth. Black tape covers some holes on each: A over holes 1, 2 and 3; B over holes 1, 2, 3, 5 and 6; C over holes 1 and 2. Each has been blown steadily and its tuner left holding the note it gave. The workshop table pinned at the back of the bench says: with hole 3 the first left open the instrument sounds E5, with hole 4 the first left open it sounds D5, with hole 5 the first left open it sounds C5.\n\nWhat each of the three tuners now displays is the whole of the check and the table does not display it.",
+  "difficulty": "s1",
+  "easy_question": "Does this picture show several recorders lying side by side with a small electronic tuner at the head of each? Answer yes or no only.",
+  "reference": {
+    "part1": "a_and_b_agree",
+    "part2": "shows_e5"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part1",
+      "weight": 4.0,
+      "steps": [
+        {
+          "ask": "Read the note on the tuner display in front of the recorder labelled A and the note on the tuner display in front of the recorder labelled B. Answer with one of: the two displays show the same note as each other; the two displays show different notes from each other.",
+          "out": "a_part1"
+        },
+        {
+          "fail_if": ["a_part1.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part1", "TAB_part1"],
+          "out": "s_part1"
+        },
+        {
+          "fail_if": ["s_part1.refused"]
+        },
+        {
+          "compare": "s_part1.state",
+          "to": "reference.part1",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "part2",
+      "weight": 3.0,
+      "steps": [
+        {
+          "ask": "Read the note on the tuner display in front of the recorder labelled C. Answer with one of: the display shows D5; the display shows E5; the display shows C5.",
+          "out": "a_part2"
+        },
+        {
+          "fail_if": ["a_part2.unreadable"]
+        },
+        {
+          "run": "match_answer_state",
+          "args": ["a_part2", "TAB_part2"],
+          "out": "s_part2"
+        },
+        {
+          "fail_if": ["s_part2.refused"]
+        },
+        {
+          "compare": "s_part2.state",
+          "to": "reference.part2",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

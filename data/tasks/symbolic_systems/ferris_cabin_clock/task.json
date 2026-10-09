@@ -1,0 +1,161 @@
+{
+  "id": "ferris_cabin_clock",
+  "axis": "symbolic_systems",
+  "prompt": "Render a clean, straight-on illustration of a face-on FERRIS WHEEL titled 'PIER OBSERVATION WHEEL', drawn like a CLOCK FACE. The wheel has a central hub, spokes, an outer rim, and EXACTLY 8 passenger cabins spaced EVENLY all the way around the rim (like the 8 evenly spaced positions on a clock). Number the cabins 1 to 8: put cabin number 1 at the right (3 o'clock) position, and then number the following cabins clockwise around the wheel (cabin 2 is the next cabin clockwise from cabin 1, cabin 3 the next after that, and so on, evenly around). Print each cabin's number clearly on that cabin. Now put a bright RED MARKER -- a red flag and a red star -- on CABIN NUMBER 7 (and only on cabin 7), leaving every other cabin unmarked. Think of the wheel as a clock (12 straight up, 3 to the right, 6 straight down, 9 to the left) and make sure cabin number 7 ends up at its correct clock position for this numbering. Do NOT number the cabins the opposite way around; follow the stated clockwise direction exactly.",
+  "difficulty": "s3",
+  "easy_question": "This image was supposed to depict a face-on ferris wheel drawn like a clock, with numbered passenger cabins spaced around the rim and ONE cabin marked with a bright red marker. Ignoring artistic quality, does the image actually DEPICT that -- a ferris-wheel / round wheel with numbered cabins around its rim and a red marker on one cabin? A clean illustration or diagram counts as yes. Answer NO only if it shows just plain text, a blank card, or something unrelated. Answer yes or no only.",
+  "reference": {
+    "N": 8,
+    "start_hour": 3,
+    "dir": "CW",
+    "k": 7,
+    "clock_hour": 12,
+    "pos_word": "top",
+    "q_mark": "This picture shows a ferris wheel drawn like a clock face, with numbered passenger cabins spaced evenly around the rim. Exactly ONE cabin is marked with a bright RED marker (a red flag, a red star and a red ring around it). Treat the wheel as a clock: 12 o'clock is straight UP at the top, 3 o'clock is to the RIGHT, 6 o'clock is straight DOWN at the bottom, 9 o'clock is to the LEFT. Which of these four clock positions is the RED-marked cabin closest to? Answer with EXACTLY one word: top, right, bottom, or left.",
+    "q_premise": "Does this image show a ferris wheel (a big round wheel with passenger cabins spaced around its rim) with one cabin marked by a bright red marker? Answer with the single word yes or no only."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "marker_clock_position",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "the big wheel itself -- the round rim with the passenger cabins spaced around it, counting the whole wheel as one shape; not one cabin on its own, and not the title lettering, the support legs or the ground around it",
+          "expected_n": 1,
+          "out": "anc"
+        },
+        {
+          "fail_if": ["anc.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "the ONE passenger cabin that carries the bright red marker -- the cabin with the red flag and red star drawn on it -- boxed on its own, not the whole wheel and not any other cabin",
+          "expected_n": 1,
+          "out": "mk"
+        },
+        {
+          "fail_if": ["mk.unreadable"]
+        },
+        {
+          "run": "plan_rim_sectors",
+          "args": ["image", "anc", "reference.N"],
+          "out": "pl"
+        },
+        {
+          "fail_if": ["pl.no_plan"]
+        },
+        {
+          "run": "locate_marked_cabin",
+          "args": ["pl", "mk"],
+          "out": "res"
+        },
+        {
+          "fail_if": ["res.no_read"]
+        },
+        {
+          "run": "marked_cabin_sector",
+          "args": ["pl", "res.idx"],
+          "out": "sp"
+        },
+        {
+          "fail_if": ["sp.no_plan"]
+        },
+        {
+          "read_crop": "This is a piece cut from a picture of a big wheel with passenger cabins around its rim. Is a bright RED marker -- a red flag or a red star -- drawn on the cabin in this piece? Answer yes or no.",
+          "boxes": "sp.cells",
+          "pad": 0.0,
+          "out": "rd"
+        },
+        {
+          "run": "result_value",
+          "args": ["res"],
+          "out": "pos"
+        },
+        {
+          "run": "clock_side_word",
+          "args": ["pos"],
+          "out": "pw"
+        },
+        {
+          "compare": "pw",
+          "to": "reference.pos_word",
+          "out": "frac"
+        },
+        {
+          "run": "paint_cabin_mark",
+          "args": ["sp", "frac", "rd"],
+          "out": "pa"
+        },
+        {
+          "overlay": "similarity",
+          "rects": "pa.hit",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [0, 200, 0],
+          "out": "ovp_hit"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_hit.path",
+          "rects": "pa.miss",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [230, 20, 20],
+          "out": "ovp_miss"
+        },
+        {
+          "overlay": "similarity",
+          "image": "ovp_miss.path",
+          "rects": "pa.edge",
+          "ref_anchors": "pa.ref_anchors",
+          "found_anchors": "pa.found_anchors",
+          "width_frac": 0.005,
+          "color": [235, 185, 0],
+          "out": "ovp_edge"
+        }
+      ]
+    },
+    {
+      "name": "premise_ferris_marker",
+      "weight": 0.3,
+      "gate": true,
+      "premise": true,
+      "steps": [
+        {
+          "ask": "reference.q_premise",
+          "out": "g"
+        },
+        {
+          "fail_if": ["g.unreadable"]
+        },
+        {
+          "compare": "g",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    }
+  ]
+}

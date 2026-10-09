@@ -1,0 +1,172 @@
+{
+  "id": "golden_ratio_composition",
+  "axis": "quantitative_precision",
+  "prompt": "A minimalist fine-art landscape painting in TALL 2:3 PORTRAIT framing: a lone bare oak tree standing on the rounded crest of a grassy hill under a pale wash sky, nothing else in the scene. COMPOSITION IS THE SUBJECT and must be EXACT, measured as-is against the frame edges (do NOT default to centring the tree or placing the hill crest at the middle or on a rule-of-thirds line): the HILL-CREST HORIZON where the green hill meets the sky must run horizontally at a height of 61.8% of the way UP from the bottom edge (the golden ratio phi = 0.618, so the hill fills the lower 61.8% and the sky the upper 38.2%), and the SINGLE upright tree trunk must sit on the vertical golden-ratio line at 61.8% of the frame width FROM THE LEFT edge. The tree is a slim dark vertical form whose trunk column is clearly readable against the hill and sky. Flat matte painterly light, restrained palette. No text, no numbers, no grid lines, no border.",
+  "difficulty": "s2",
+  "easy_question": "This picture was supposed to show a minimalist landscape: a grassy hill meeting the sky, with a single upright bare tree on the crest. Never mind how well it is drawn. Does the picture show a hill-and-sky landscape with one standing tree? A realistic photo or an illustration BOTH count as yes. Answer NO only if the image instead shows just a blank card or plain panel, or something unrelated with no hill horizon and no tree. Answer yes or no only.",
+  "reference": {
+    "target": 0.618,
+    "tol": 0.03,
+    "object_noun": "bare tree standing on the hill"
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "phi_joint",
+      "weight": 4.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "sky -- the whole band of open sky above the horizon: draw ONE box running from the top edge of the picture down to the horizon where the sky meets the sea or the hill, and from the left edge across to the right edge, so its bottom edge lies on that horizon; the tower or tree standing up into the sky inside the box does not disqualify it; do NOT box a patch of sky only, and do NOT take in the sea or the hill below the horizon",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "sky"
+        },
+        {
+          "fail_if": ["sky.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "{gt.object_noun}",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "ob"
+        },
+        {
+          "fail_if": ["ob.unreadable"]
+        },
+        {
+          "run": "horizon_and_object",
+          "args": ["sky", "ob"],
+          "out": "hc"
+        },
+        {
+          "run": "golden_joint",
+          "args": ["hc", "reference['target']", "reference['tol']"],
+          "out": "j"
+        },
+        {
+          "fail_if": ["j.no_read"]
+        },
+        {
+          "compare_band": "j.joint",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d1_horizon_phi",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "sky -- the whole band of open sky above the horizon: draw ONE box running from the top edge of the picture down to the horizon where the sky meets the sea or the hill, and from the left edge across to the right edge, so its bottom edge lies on that horizon; the tower or tree standing up into the sky inside the box does not disqualify it; do NOT box a patch of sky only, and do NOT take in the sea or the hill below the horizon",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "sky"
+        },
+        {
+          "fail_if": ["sky.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "{gt.object_noun}",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "ob"
+        },
+        {
+          "fail_if": ["ob.unreadable"]
+        },
+        {
+          "run": "horizon_and_object",
+          "args": ["sky", "ob"],
+          "out": "hc2"
+        },
+        {
+          "run": "golden_joint",
+          "args": ["hc2", "reference['target']", "reference['tol']"],
+          "out": "j2"
+        },
+        {
+          "fail_if": ["j2.no_read"]
+        },
+        {
+          "compare_band": "j2.hz",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "d2_column_phi",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "sky -- the whole band of open sky above the horizon: draw ONE box running from the top edge of the picture down to the horizon where the sky meets the sea or the hill, and from the left edge across to the right edge, so its bottom edge lies on that horizon; the tower or tree standing up into the sky inside the box does not disqualify it; do NOT box a patch of sky only, and do NOT take in the sea or the hill below the horizon",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "sky"
+        },
+        {
+          "fail_if": ["sky.unreadable"]
+        },
+        {
+          "read": "boxes",
+          "target": "{gt.object_noun}",
+          "expected_n": 1,
+          "retries": 4,
+          "out": "ob"
+        },
+        {
+          "fail_if": ["ob.unreadable"]
+        },
+        {
+          "run": "horizon_and_object",
+          "args": ["sky", "ob"],
+          "out": "hc3"
+        },
+        {
+          "run": "golden_joint",
+          "args": ["hc3", "reference['target']", "reference['tol']"],
+          "out": "j3"
+        },
+        {
+          "fail_if": ["j3.no_read"]
+        },
+        {
+          "compare_band": "j3.col",
+          "to": 1.0,
+          "core": 0.0,
+          "margin": 0.5,
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "aspect_ratio": "3:2"
+}

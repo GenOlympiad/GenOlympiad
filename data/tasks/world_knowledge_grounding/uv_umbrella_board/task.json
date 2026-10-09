@@ -1,0 +1,122 @@
+{
+  "id": "uv_umbrella_board",
+  "axis": "world_knowledge_grounding",
+  "prompt": "A friendly public-health UV-index board titled 'UV Index Today -- Nairobi': a big coloured circle with today's real maximum UV index printed large inside it, and below it the correct World-Health-Organization risk band word for that value -- LOW (0-2), MODERATE (3-5), HIGH (6-7), VERY HIGH (8-10) or EXTREME (11+). Colour the circle to match the band (green/yellow/orange/red/purple) and add a 'Sun protection' line. Use the true present-day maximum UV index for Nairobi, and make the band word and colour agree with that number.",
+  "difficulty": "s1",
+  "easy_question": "Never mind how well it is drawn. Does this picture show public-health UV-index board printing today's live UV number and its WHO risk band for Nairobi? A realistic photo, an illustration, a schematic or a clean diagram ALL count as yes. Answer NO only if the image instead shows just a blank card or plain panel that prints an answer with none of that shown, or shows something unrelated. Answer yes or no only.",
+  "reference": {
+    "city": "Nairobi, Kenya",
+    "lat": -1.29,
+    "lng": 36.82,
+    "q_num": "This is a UV-index board. A UV index NUMBER is printed large in the coloured circle. Read ONLY that printed UV number and answer with just the number. Do NOT guess a typical value.",
+    "q_band": "This is a UV-index board. Below the number a risk-band WORD is printed. Read that word and answer with exactly one of: low, moderate, high, very high, extreme."
+  },
+  "checks": [
+    {
+      "name": "scene_compliance",
+      "weight": 1.0,
+      "gate": true,
+      "steps": [
+        {
+          "ask": "reference.easy_question",
+          "out": "sc"
+        },
+        {
+          "fail_if": ["sc.unreadable"]
+        },
+        {
+          "compare": "sc",
+          "to": "yes",
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "uv_number",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big number printed inside the large coloured circle on this board -- draw ONE box on that one large number, from its first character to its last (a decimal point and the digit after it belong to it); do not box the risk-band word printed under it, do not box the numbers of the colour-scale ranges, and do not box the coloured circle itself or the title.",
+          "expected_n": 1,
+          "out": "n_area"
+        },
+        {
+          "fail_if": ["n_area.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed board. One big number is printed in it. Write down just that number and nothing else.",
+          "boxes": "n_area",
+          "pad": 0.2,
+          "out": "n_cr"
+        },
+        {
+          "fail_if": ["n_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "n_cr",
+          "out": "n"
+        },
+        {
+          "compare_band": "n",
+          "to": "reference.uvd.uv",
+          "core": 1.0,
+          "margin": 2.0,
+          "out": "frac"
+        }
+      ]
+    },
+    {
+      "name": "uv_band",
+      "weight": 1.0,
+      "steps": [
+        {
+          "read": "boxes",
+          "target": "big rating word printed directly under the large number inside the coloured circle on this board, not any of the small words in the colour scale further down",
+          "expected_n": 1,
+          "out": "a_box"
+        },
+        {
+          "fail_if": ["a_box.unreadable"]
+        },
+        {
+          "read_crop": "This is a close-up cut from a printed board. A word or short phrase saying how strong the sun is today is printed in it. Which of these is printed here? Answer with exactly one of: low, moderate, high, very high, extreme.",
+          "boxes": "a_box",
+          "pad": 0.2,
+          "out": "a_cr"
+        },
+        {
+          "fail_if": ["a_cr.unreadable"]
+        },
+        {
+          "get": ".answers[0]",
+          "value": "a_cr",
+          "out": "a"
+        },
+        {
+          "compare": "a",
+          "to": "reference.uvd.band",
+          "out": "frac"
+        }
+      ]
+    }
+  ],
+  "reference_steps": [
+    {
+      "run": "build_forecast_url",
+      "args": ["reference.lat", "reference.lng"],
+      "out": "url"
+    },
+    {
+      "fetch": "url",
+      "out": "raw"
+    },
+    {
+      "run": "read_uv_band",
+      "value": "raw",
+      "out": "uvd"
+    }
+  ],
+  "grounding": "live"
+}
