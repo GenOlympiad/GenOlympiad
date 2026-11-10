@@ -8,6 +8,8 @@ GenOlympiad is a benchmark of 801 hard text prompts for text-to-image models. Ea
 
 ## News
 
+[2026/11/10] Added GPT-Image-2.6 Sunburst results: **17.4 Strict / 33.6 Relaxed**. The model was [released on November 4, 2026](https://openai.com/index/introducing-images-2-6/).
+
 [2026/10/09] GenOlympiad is released!
 
 ## Leaderboard
@@ -18,6 +20,8 @@ Overall is the mean over all scored tasks of a model.
 
 Withheld tasks are not included when calculating scores for individual axes or the overall benchmark.
 
+GPT-Image-2.6 Sunburst results follow the Table 1 protocol: the initial judgment plus four rounds of cold reads, with scored tasks as the denominator. Overall is aggregated over scored tasks, rather than an unweighted average of axis scores.
+
 ### Strict score
 
 | Model                                         | Text | C-Fact | Symbol | World | Phys | Quant | Spatial | Latent | Long | Overall |
@@ -25,12 +29,13 @@ Withheld tasks are not included when calculating scores for individual axes or t
 | **Coding Models**                       |      |        |        |       |      |       |         |        |      |         |
 | GPT-6 Astra                                   | 65.4 | 38.4   | 45.5   | 27.5  | 25.6 | 40.8  | 26.7    | 58.4   | 30.0 | 40.5    |
 | GPT-5.6 Sol                                   | 62.5 | 32.2   | 42.3   | 26.0  | 27.7 | 31.6  | 28.2    | 53.3   | 28.4 | 37.5    |
-| **Prompt Engineering on GPT-Image-2.5** |      |        |        |       |      |       |         |        |      |         |
+| **Prompt Engineering on GPT-Image-2.5 Sunburst** |      |        |        |       |      |       |         |        |      |         |
 | GPT 5.6 Sol                                   | 62.2 | 33.0   | 30.4   | 17.8  | 25.0 | 24.3  | 12.5    | 55.8   | 27.2 | 33.0    |
 | PromptEnhancer                                | 26.9 | 21.3   | 19.8   | 6.8   | 8.3  | 16.7  | 8.9     | 15.2   | 11.0 | 15.1    |
 | **Closed-source T2I Models**            |      |        |        |       |      |       |         |        |      |         |
 | Nano Banana Pro                               | 41.5 | 27.8   | 25.6   | 10.5  | 13.1 | 17.1  | 11.2    | 38.1   | 24.4 | 23.9    |
-| GPT-Image-2.5                                 | 30.4 | 23.0   | 20.5   | 6.8   | 8.1  | 13.2  | 18.4    | 6.5    | 9.8  | 14.9    |
+| GPT-Image-2.6 Sunburst | 30.9 | 26.7 | 22.7 | 15.2 | 10.5 | 16.7 | 10.0 | 11.2 | 14.6 | 17.4 |
+| GPT-Image-2.5 Sunburst                                 | 30.4 | 23.0   | 20.5   | 6.8   | 8.1  | 13.2  | 18.4    | 6.5    | 9.8  | 14.9    |
 | Seedream 5.0 Pro                              | 19.0 | 24.1   | 18.9   | 2.5   | 13.8 | 10.4  | 9.9     | 20.8   | 13.7 | 15.1    |
 | Nano Banana 2                                 | 19.5 | 13.4   | 6.6    | 13.9  | 8.9  | 6.8   | 8.1     | 16.2   | 15.9 | 12.4    |
 | GPT-Image-2                                   | 20.8 | 14.0   | 17.5   | 5.4   | 6.1  | 5.2   | 10.1    | 5.6    | 8.8  | 10.2    |
@@ -59,12 +64,13 @@ Withheld tasks are not included when calculating scores for individual axes or t
 | **Coding Models**                       |      |        |        |       |      |       |         |        |      |         |
 | GPT-6 Astra                                   | 74.1 | 50.2   | 56.4   | 46.9  | 43.0 | 54.0  | 48.3    | 73.7   | 53.1 | 56.1    |
 | GPT-5.6 Sol                                   | 72.4 | 43.3   | 55.5   | 43.5  | 41.6 | 45.8  | 49.4    | 69.1   | 46.7 | 52.4    |
-| **Prompt Engineering on GPT-Image-2.5** |      |        |        |       |      |       |         |        |      |         |
+| **Prompt Engineering on GPT-Image-2.5 Sunburst** |      |        |        |       |      |       |         |        |      |         |
 | GPT 5.6 Sol                                   | 71.7 | 48.7   | 44.7   | 36.2  | 39.4 | 40.8  | 34.3    | 72.3   | 43.2 | 48.9    |
 | PromptEnhancer                                | 38.7 | 33.9   | 30.7   | 19.0  | 24.5 | 27.7  | 26.8    | 30.6   | 22.3 | 28.4    |
 | **Closed-source T2I Models**            |      |        |        |       |      |       |         |        |      |         |
 | Nano Banana Pro                               | 55.8 | 39.3   | 38.6   | 29.5  | 33.8 | 27.0  | 30.7    | 56.0   | 43.2 | 40.0    |
-| GPT-Image-2.5                                 | 41.8 | 36.4   | 34.8   | 24.1  | 23.7 | 25.0  | 34.6    | 21.9   | 25.9 | 29.6    |
+| GPT-Image-2.6 Sunburst | 44.4 | 40.7 | 34.9 | 30.5 | 29.0 | 35.8 | 27.9 | 28.4 | 31.8 | 33.6 |
+| GPT-Image-2.5 Sunburst                                 | 41.8 | 36.4   | 34.8   | 24.1  | 23.7 | 25.0  | 34.6    | 21.9   | 25.9 | 29.6    |
 | Seedream 5.0 Pro                              | 30.8 | 36.0   | 32.7   | 16.6  | 30.8 | 20.7  | 23.7    | 34.7   | 26.6 | 28.4    |
 | Nano Banana 2                                 | 28.5 | 27.3   | 18.4   | 27.0  | 23.0 | 18.3  | 20.9    | 32.5   | 29.3 | 25.4    |
 | GPT-Image-2                                   | 32.8 | 26.7   | 29.6   | 17.2  | 20.3 | 17.3  | 24.9    | 18.2   | 25.1 | 23.4    |
@@ -86,7 +92,7 @@ Withheld tasks are not included when calculating scores for individual axes or t
 | Sana 0.6B                                     | 0.6  | 1.6    | 3.0    | 5.5   | 7.0  | 5.7   | 6.7     | 3.4    | 2.4  | 3.9     |
 | Sana 1.6B                                     | 1.7  | 4.0    | 2.6    | 6.7   | 5.8  | 1.1   | 6.3     | 2.7    | 2.0  | 3.6     |
 
-Text: text fidelity. C-Fact: counterfactual instruction following. Symbol: symbolic systems. World: world-knowledge grounding. Phys: physical consistency. Quant: quantitative precision. Spatial: spatial and 3-D reasoning. Latent: latent computation. Long: long-range consistency. Coding models write an HTML page that draws the image. The two prompt engineering entries rewrite each prompt before GPT-Image-2.5 draws it.
+Text: text fidelity. C-Fact: counterfactual instruction following. Symbol: symbolic systems. World: world-knowledge grounding. Phys: physical consistency. Quant: quantitative precision. Spatial: spatial and 3-D reasoning. Latent: latent computation. Long: long-range consistency. Coding models write an HTML page that draws the image. The two prompt engineering entries rewrite each prompt before GPT-Image-2.5 Sunburst draws it.
 
 ## Usage
 
@@ -182,6 +188,14 @@ The withheld rate is the share of judged tasks that were withheld. Tasks that we
 
 ## Citation
 
-```
-coming soon...
+```bibtex
+@misc{hu2026genolympiadbenchmarkingfrontierimage,
+  title={GenOlympiad: Benchmarking Frontier Image Models at Their Capability Boundaries},
+  author={Xi Hu and Martin Bell and Liang Zheng},
+  year={2026},
+  eprint={2610.26850},
+  archivePrefix={arXiv},
+  primaryClass={cs.CV},
+  url={https://arxiv.org/abs/2610.26850}
+}
 ```
