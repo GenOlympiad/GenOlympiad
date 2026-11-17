@@ -1,0 +1,11 @@
+OpenAI and ByteDance: Simple Icons v13.21.0 (cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/).
+Google, Black Forest Labs, Qwen, NVIDIA, Stability AI: favicon assets from their respective official websites.
+Brand marks identify model providers; no affiliation implied.
+Qwen corrected: official qwen.ai icon link, https://img.alicdn.com/imgextra/i4/O1CN01OXv3EM1FN8t9W4P79_!!6000000000474-2-tps-80-80.png
+Stability AI: original favicon PNG preserved as stability.png.
+kimi: https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@latest/icons/kimi-color.svg ; provider identity cross-checked with model release source in static/data/2026-11-17/model-metadata.json
+deepseek: https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@latest/icons/deepseek-color.svg ; provider identity cross-checked with model release source in static/data/2026-11-17/model-metadata.json
+mistral: https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@latest/icons/mistral-color.svg ; provider identity cross-checked with model release source in static/data/2026-11-17/model-metadata.json
+anthropic: https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@latest/icons/anthropic.svg ; provider identity cross-checked with model release source in static/data/2026-11-17/model-metadata.json
+zai: https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@latest/icons/zai.svg ; provider identity cross-checked with model release source in static/data/2026-11-17/model-metadata.json
+meta: https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@latest/icons/meta-color.svg ; provider identity cross-checked with model release source in static/data/2026-11-17/model-metadata.json
