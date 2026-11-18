@@ -8,6 +8,8 @@ GenOlympiad is a benchmark of 801 hard text prompts for text-to-image models. Ea
 
 ## News
 
+[2026/11/18] Added **Qwen4-Max**: **38.2 Strict / 54.4 Relaxed**. Final paper-protocol results converged after eight reread rounds: 791 generated images, 756 scored tasks, 32 withheld, 3 deferred, and 10 not generated out of 801 tasks.
+
 [2026/11/17] Added 17 new model entries to the existing tables. Previously published scores are retained for overlapping model names.
 
 [2026/11/10] Added GPT-Image-2.6 Sunburst results: **17.4 Strict / 33.6 Relaxed**. The model was [released on November 4, 2026](https://openai.com/index/introducing-images-2-6/).
@@ -35,6 +37,7 @@ New entries from the November 17 export use the scored-task denominator (`strict
 | DeepSeek V4.1 Flash | 64.4 | 40.8 | 46.2 | 20.0 | 30.0 | 38.9 | 33.3 | 56.5 | 35.2 | 43.4 |
 | GPT-6 Astra | 65.4 | 38.4 | 45.5 | 27.5 | 25.6 | 40.8 | 26.7 | 58.4 | 30.0 | 40.5 |
 | Gemini 4 Argon | 62.8 | 41.2 | 37.7 | 21.7 | 28.6 | 38.7 | 30.7 | 55.3 | 34.6 | 39.9 |
+| Qwen4-Max | 72.5 | 34.5 | 43.9 | 29.3 | 27.1 | 24.4 | 22.5 | 55.2 | 29.8 | 38.2 |
 | Gemini 3.8 Flash | 72.2 | 36.5 | 37.2 | 20.0 | 29.9 | 26.4 | 24.3 | 56.6 | 27.4 | 37.8 |
 | GPT-5.6 Sol | 62.5 | 32.2 | 42.3 | 26.0 | 27.7 | 31.6 | 28.2 | 53.3 | 28.4 | 37.5 |
 | Mistral Large 4 | 64.5 | 32.1 | 38.4 | 21.2 | 23.3 | 29.2 | 20.3 | 55.6 | 25.7 | 35.9 |
@@ -88,6 +91,7 @@ New entries from the November 17 export use the scored-task denominator (`strict
 | Gemini 4 Argon | 72.7 | 56.4 | 52.1 | 43.8 | 48.5 | 54.1 | 49.5 | 72.9 | 50.9 | 56.5 |
 | GPT-6 Astra | 74.1 | 50.2 | 56.4 | 46.9 | 43.0 | 54.0 | 48.3 | 73.7 | 53.1 | 56.1 |
 | DeepSeek V4.1 Flash | 68.8 | 51.8 | 59.4 | 34.2 | 45.9 | 52.6 | 49.0 | 72.9 | 47.9 | 56.0 |
+| Qwen4-Max | 80.3 | 43.6 | 56.2 | 50.2 | 45.0 | 43.1 | 48.0 | 70.9 | 48.2 | 54.4 |
 | GPT-5.6 Sol | 72.4 | 43.3 | 55.5 | 43.5 | 41.6 | 45.8 | 49.4 | 69.1 | 46.7 | 52.4 |
 | Gemini 3.8 Flash | 79.8 | 45.1 | 50.1 | 37.7 | 44.9 | 42.7 | 42.2 | 71.3 | 45.4 | 52.0 |
 | Mistral Large 4 | 76.5 | 45.8 | 55.3 | 35.8 | 41.9 | 46.2 | 38.7 | 72.6 | 42.0 | 51.9 |
