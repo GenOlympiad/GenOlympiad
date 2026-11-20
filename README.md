@@ -8,6 +8,8 @@ GenOlympiad is a benchmark of 801 hard text prompts for text-to-image models. Ea
 
 ## News
 
+[2026/11/20] Added **Qwen3.8-Max**: **31.8 Strict / 43.8 Relaxed**
+
 [2026/11/18] Added **Qwen4-Max**: **38.2 Strict / 54.4 Relaxed**
 
 [2026/11/17] Added 17 new model entries to the existing tables.
