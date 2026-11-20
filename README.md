@@ -78,7 +78,7 @@ New entries from the November 17 export use the scored-task denominator (`strict
 | Sana 0.6B | 0.0 | 0.0 | 1.7 | 1.9 | 4.3 | 1.8 | 1.6 | 0.0 | 0.0 | 1.2 |
 | SD3.5 medium | 0.0 | 0.0 | 1.6 | 3.8 | 2.8 | 1.6 | 0.0 | 0.0 | 0.0 | 1.0 |
 | Sana 4.8B | 0.0 | 0.0 | 0.0 | 1.9 | 6.0 | 0.0 | 1.7 | 0.0 | 0.0 | 1.0 |
-| **Coding Models (base checkpoints)** | | | | | | | | | | |
+| **Open Source Coding Models** | | | | | | | | | | |
 | Qwen3.8-27B (base) | 29.2 | 15.6 | 12.8 | 9.5 | 17.1 | 27.5 | 12.5 | 40.0 | 7.5 | 20.6 |
 | Qwen3.5-9B (base) | 0.0 | 6.2 | 15.4 | 0.0 | 0.0 | 8.3 | 0.0 | 28.1 | 9.5 | 9.2 |
 
@@ -132,7 +132,7 @@ New entries from the November 17 export use the scored-task denominator (`strict
 | Sana 4.8B | 0.7 | 1.9 | 2.7 | 5.2 | 10.5 | 3.6 | 5.3 | 4.4 | 2.4 | 4.1 |
 | Sana 0.6B | 0.6 | 1.6 | 3.0 | 5.5 | 7.0 | 5.7 | 6.7 | 3.4 | 2.4 | 3.9 |
 | Sana 1.6B | 1.7 | 4.0 | 2.6 | 6.7 | 5.8 | 1.1 | 6.3 | 2.7 | 2.0 | 3.6 |
-| **Coding Models (base checkpoints)** | | | | | | | | | | |
+| **Open Source Coding Models** | | | | | | | | | | |
 | Qwen3.8-27B (base) | 36.2 | 25.6 | 26.2 | 24.8 | 26.8 | 36.2 | 22.2 | 49.8 | 18.7 | 31.1 |
 | Qwen3.5-9B (base) | 2.0 | 6.8 | 25.5 | 4.4 | 3.8 | 14.9 | 6.9 | 35.8 | 11.6 | 14.1 |
 
