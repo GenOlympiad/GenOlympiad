@@ -10,7 +10,7 @@ GenOlympiad is a benchmark of 801 hard text prompts for text-to-image models. Ea
 
 [2026/11/18] Added **Qwen4-Max**: **38.2 Strict / 54.4 Relaxed**. Final paper-protocol results converged after eight reread rounds: 791 generated images, 756 scored tasks, 32 withheld, 3 deferred, and 10 not generated out of 801 tasks.
 
-[2026/11/17] Added 17 new model entries to the existing tables. Previously published scores are retained for overlapping model names.
+[2026/11/17] Added 17 new model entries to the existing tables.
 
 [2026/11/10] Added GPT-Image-2.6 Sunburst results: **17.4 Strict / 33.6 Relaxed**. The model was [released on November 4, 2026](https://openai.com/index/introducing-images-2-6/).
 
